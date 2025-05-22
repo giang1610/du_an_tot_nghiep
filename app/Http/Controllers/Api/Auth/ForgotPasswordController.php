@@ -28,9 +28,10 @@ class ForgotPasswordController extends Controller
             ['token' => $token, 'created_at' => Carbon::now()]
         );
 
-        $resetUrl = url("/api/reset-password?token={$token}&email=" . urlencode($user->email));
+        $resetUrl =  "http://localhost:5173/reset-password?token={$token}&email=" . urlencode($user->email);
 
-        Mail::raw("Nhấn vào link để đặt lại mật khẩu: $resetUrl", function ($message) use ($user) {
+
+        Mail::raw("Đây là Thông Báo Từ Website nhấp vào link để đổi mật khẩu: $resetUrl", function ($message) use ($user) {
             $message->to($user->email)
                     ->subject('Khôi phục mật khẩu');
         });
