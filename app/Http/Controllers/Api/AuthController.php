@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -24,6 +25,18 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('api_token')->plainTextToken;
+
+        $verifyUrl = "http://localhost:5173/verify-email?email=" . urlencode($user->email);
+
+        Mail::send([], [], function ($message) use ($user, $verifyUrl) {
+            $message->to($user->email)
+                ->subject('Xác nhận email đăng ký')
+                ->html(
+                    '<p>Đây là Thông Báo Từ Website. Vui lòng nhấn vào nút bên dưới để xác nhận email:</p>
+                    <a href="' . $verifyUrl . '" style="display:inline-block;padding:10px 20px;background:#007bff;color:#fff;text-decoration:none;border-radius:5px;">Xác nhận email</a>
+                    <p>Nếu bạn không đăng ký tài khoản, vui lòng bỏ qua email này.</p>'
+                );
+        });
 
         return response()->json([
             'message' => 'Đăng ký thành công',
