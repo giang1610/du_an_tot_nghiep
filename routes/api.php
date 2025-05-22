@@ -27,3 +27,9 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 use App\Http\Controllers\Api\MailController;
 
 Route::post('/send-test-mail', [MailController::class, 'sendTestMail']);
+
+use App\Http\Controllers\API\Auth\ForgotPasswordController;
+use App\Http\Controllers\API\Auth\ResetPasswordController;
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
