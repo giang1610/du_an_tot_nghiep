@@ -7,6 +7,7 @@ const timeout=+process.env.REACT_APP_TIME_OUT||20000;
 const axiosInstance =axios.create({
     baseURL,
     timeout,
+    withCredentials: true,
 });
 
 axiosInstance.interceptors.request.use(

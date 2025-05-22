@@ -1,21 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar, Container, Nav, Form, FormControl, Button, NavDropdown, Badge } from 'react-bootstrap';
 import { FaUser, FaShoppingCart } from 'react-icons/fa';
 import { useNavigate, NavLink } from 'react-router-dom';
 
 const Header = () => {
   const [search, setSearch] = useState('');
+  const [user, setUser] = useState(null);
+  const [cartItemCount, setCartItemCount] = useState(0);
   const navigate = useNavigate();
-  const isLoggedIn = true;
-  const username = 'Nguyen Van A';
-  const cartItemCount = 3;
+
+  useEffect(() => {
+    // Kiểm tra localStorage để biết user đã đăng nhập chưa
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    setUser(storedUser);
+
+    // Ví dụ: Lấy số lượng sản phẩm từ localStorage
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    setCartItemCount(cart.reduce((total, item) => total + item.quantity, 0));
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
-      navigate(`/products?search=${encodeURIComponent(search)}`);  // Điều hướng sang trang /products với từ khóa tìm kiếm
+      navigate(`/products?search=${encodeURIComponent(search)}`);
       setSearch('');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    // Nếu lưu token hoặc cookies thì xoá ở đây nữa
+    window.location.reload(); // Reload lại trang để cập nhật trạng thái header
   };
 
   return (
@@ -26,7 +41,7 @@ const Header = () => {
         <Navbar.Collapse>
           <Nav className="me-auto">
             <Nav.Link as={NavLink} to="/">Trang Chủ</Nav.Link>
-            <Nav.Link as={NavLink} to="/products">Sản Phẩm</Nav.Link>  {/* Link chuyển đến trang danh sách sản phẩm */}
+            <Nav.Link as={NavLink} to="/products">Sản Phẩm</Nav.Link>
             <Nav.Link as={NavLink} to="/about">Giới Thiệu</Nav.Link>
             <Nav.Link as={NavLink} to="/contact">Liên Hệ</Nav.Link>
           </Nav>
@@ -56,12 +71,12 @@ const Header = () => {
           </Nav>
 
           <Nav>
-            {isLoggedIn ? (
-              <NavDropdown title={<><FaUser /> {username}</>} id="user-dropdown">
+            {user ? (
+              <NavDropdown title={<><FaUser className="me-1" /> {user.name}</>} id="user-dropdown">
                 <NavDropdown.Item as={NavLink} to="/profile">Thông tin cá nhân</NavDropdown.Item>
                 <NavDropdown.Item as={NavLink} to="/orders">Đơn hàng của tôi</NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item as={NavLink} to="/logout">Đăng xuất</NavDropdown.Item>
+                <NavDropdown.Item onClick={handleLogout}>Đăng xuất</NavDropdown.Item>
               </NavDropdown>
             ) : (
               <NavDropdown title={<FaUser />} id="guest-dropdown">
