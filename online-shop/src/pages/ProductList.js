@@ -36,22 +36,22 @@ const ProductList = () => {
                   alt={product.name}
                 />
                 <Card.Body>
-                            <Card.Title>
-                                <Link to={`/products/${product.id}`} style={{ textDecoration: 'none' }}>
-                                {product.name}
-                                </Link>
-                            </Card.Title>
-                            <Link to={`/products/${product.id}`}>
-                                <Card.Img
-                                variant="top"
-                                src={product.img}
-                                style={{ height: '200px', objectFit: 'cover', cursor: 'pointer' }}
-                                alt={product.name}
-                                />
-                            </Link>
-                            <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
-                            <Button variant="primary" size="sm" className="w-100">Mua Ngay</Button>
-                        </Card.Body>
+                  <Card.Title>
+                    <Link to={`/products/${product.id}`} style={{ textDecoration: 'none' }}>
+                      {product.name}
+                    </Link>
+                  </Card.Title>
+                  <Link to={`/products/${product.id}`}>
+                    <Card.Img
+                      variant="top"
+                      src={product.img}
+                      style={{ height: '200px', objectFit: 'cover', cursor: 'pointer' }}
+                      alt={product.name}
+                    />
+                  </Link>
+                  <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
+                  <Button variant="primary" size="sm" className="w-100">Mua Ngay</Button>
+                </Card.Body>
               </Card>
             </Col>
           ))}

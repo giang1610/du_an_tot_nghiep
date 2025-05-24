@@ -6,13 +6,13 @@ import Footer from '../components/Footer'
 function HomePage() {
   return (
     <>
-    <Header/>
-    <Banner/>
-    <div className="container mt-4">
-      <h2>Sản phẩm mới nhất</h2>
-      <ProductList />
-    </div>
-    <Footer/>
+      <Header />
+      <Banner />
+      <div className="container mt-4">
+        <h2>Sản phẩm mới nhất</h2>
+        <ProductList />
+      </div>
+      <Footer />
     </>
   );
 }

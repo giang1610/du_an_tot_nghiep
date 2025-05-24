@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar, Container, Nav, Form, FormControl, Button, NavDropdown, Badge } from 'react-bootstrap';
+import {
+  Navbar, Container, Nav, Form, FormControl, Button, NavDropdown, Badge
+} from 'react-bootstrap';
 import { FaUser, FaShoppingCart } from 'react-icons/fa';
 import { useNavigate, NavLink } from 'react-router-dom';
 
@@ -10,11 +12,9 @@ const Header = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Kiểm tra localStorage để biết user đã đăng nhập chưa
     const storedUser = JSON.parse(localStorage.getItem('user'));
     setUser(storedUser);
 
-    // Ví dụ: Lấy số lượng sản phẩm từ localStorage
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     setCartItemCount(cart.reduce((total, item) => total + item.quantity, 0));
   }, []);
@@ -29,8 +29,7 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    // Nếu lưu token hoặc cookies thì xoá ở đây nữa
-    window.location.reload(); // Reload lại trang để cập nhật trạng thái header
+    window.location.reload();
   };
 
   return (
@@ -72,7 +71,25 @@ const Header = () => {
 
           <Nav>
             {user ? (
-              <NavDropdown title={<><FaUser className="me-1" /> {user.name}</>} id="user-dropdown">
+              <NavDropdown
+                title={
+                  <span className="d-flex align-items-center">
+                    <img
+                      src={user.avatar || '/default-avatar.png'}
+                      alt="avatar"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        marginRight: '8px'
+                      }}
+                    />
+                    {user.name}
+                  </span>
+                }
+                id="user-dropdown"
+              >
                 <NavDropdown.Item as={NavLink} to="/profile">Thông tin cá nhân</NavDropdown.Item>
                 <NavDropdown.Item as={NavLink} to="/orders">Đơn hàng của tôi</NavDropdown.Item>
                 <NavDropdown.Divider />

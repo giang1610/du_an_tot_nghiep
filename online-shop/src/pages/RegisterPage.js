@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { Container, Form, Button, Alert, Card, Spinner } from 'react-bootstrap';
+import {
+  Container,
+  Form,
+  Button,
+  Alert,
+  Card,
+  InputGroup,
+} from 'react-bootstrap';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-
+import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import { Link, Navigate } from 'react-router-dom';
 const RegisterPage = () => {
   const [form, setForm] = useState({
     name: '',
@@ -10,9 +17,10 @@ const RegisterPage = () => {
     password: '',
     password_confirmation: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,28 +29,13 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:8000/api/register', form);
-      setSuccess('Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.');
-      setForm({
-        name: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
-      });
+      await axios.post('http://localhost:8000/api/register', form);
+      setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
+      Navigate('/login');
     } catch (err) {
-      if (err.response?.data?.errors) {
-        const firstError = Object.values(err.response.data.errors)[0];
-        setError(firstError);
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError('Có lỗi xảy ra. Vui lòng thử lại.');
-      }
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.message || 'Có lỗi xảy ra');
     }
   };
 
@@ -58,8 +51,8 @@ const RegisterPage = () => {
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
-          <Form onSubmit={handleSubmit} noValidate>
-            <Form.Group className="mb-3" controlId="name">
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
               <Form.Label>Họ tên</Form.Label>
               <Form.Control
                 name="name"
@@ -67,11 +60,10 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 placeholder="Nhập họ tên"
                 required
-                autoFocus
               />
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="email">
+            <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
@@ -83,49 +75,57 @@ const RegisterPage = () => {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="password">
+            <Form.Group className="mb-3">
               <Form.Label>Mật khẩu</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Nhập mật khẩu"
-                required
-              />
+              <InputGroup>
+                <Form.Control
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeSlash /> : <Eye />}
+                </Button>
+              </InputGroup>
             </Form.Group>
 
-            <Form.Group className="mb-4" controlId="password_confirmation">
+            <Form.Group className="mb-3">
               <Form.Label>Nhập lại mật khẩu</Form.Label>
-              <Form.Control
-                type="password"
-                name="password_confirmation"
-                value={form.password_confirmation}
-                onChange={handleChange}
-                placeholder="Nhập lại mật khẩu"
-                required
-              />
+              <InputGroup>
+                <Form.Control
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="password_confirmation"
+                  value={form.password_confirmation}
+                  onChange={handleChange}
+                  placeholder="Nhập lại mật khẩu"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeSlash /> : <Eye />}
+                </Button>
+              </InputGroup>
             </Form.Group>
 
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-100"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  Đang đăng ký...
-                </>
-              ) : (
-                'Đăng Ký'
-              )}
+            <Button type="submit" variant="primary" className="w-100">
+              Đăng Ký
             </Button>
           </Form>
 
           <div className="mt-3 text-center">
-            <Link to="/login">Đã có tài khoản? Đăng nhập ngay</Link>
+            <Link to="/login">Đã có tài khoản? Đăng nhập</Link>
           </div>
         </Card.Body>
       </Card>

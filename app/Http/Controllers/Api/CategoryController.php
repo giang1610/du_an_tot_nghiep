@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -11,7 +12,6 @@ class CategoryController extends Controller
         $categories = Category::all();
 
         return response()->json([
-            'success' => true,
             'data' => $categories,
         ]);
     }
