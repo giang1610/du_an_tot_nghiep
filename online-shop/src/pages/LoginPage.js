@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { Container, Form, Button, Alert, Card, Spinner } from 'react-bootstrap';
+import { Container, Form, Button, Alert, Card, Spinner, InputGroup } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-
+import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import { useAuth } from '../context/AuthContext';  // Đường dẫn đúng
+axios.defaults.withCredentials = true;
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); // Lấy hàm login từ context
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -18,9 +22,12 @@ const LoginPage = () => {
 
     try {
       await axios.get('http://localhost:8000/sanctum/csrf-cookie', { withCredentials: true });
-      const res = await axios.post('http://localhost:8000/api/login', form, { withCredentials: true });
-
-      localStorage.setItem('user', JSON.stringify(res.data));
+      const res = await axios.post('http://localhost:8000/api/login', form, {
+        withCredentials: true,
+      });
+      // Gọi login để lưu token và user
+      login(res.data.user, res.data.token);
+      console.log(res.data)
       navigate('/');
     } catch (err) {
       if (err.response) {
@@ -34,10 +41,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Container
-      className="d-flex justify-content-center align-items-center"
-      style={{ minHeight: '80vh' }}
-    >
+    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
       <Card style={{ width: '100%', maxWidth: '420px', padding: '20px' }} className="shadow">
         <Card.Body>
           <h3 className="mb-4 text-center">Đăng Nhập</h3>
@@ -60,14 +64,23 @@ const LoginPage = () => {
 
             <Form.Group className="mb-4" controlId="password">
               <Form.Label>Mật khẩu</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Nhập mật khẩu"
-                required
-              />
+              <InputGroup>
+                <Form.Control
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeSlash /> : <Eye />}
+                </Button>
+              </InputGroup>
             </Form.Group>
 
             <Button type="submit" variant="success" className="w-100" disabled={loading}>
