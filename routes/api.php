@@ -1,12 +1,19 @@
 <?php
 
+use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
+<<<<<<< HEAD
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\ProductController;
+=======
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\CommentController;
+>>>>>>> b0ca560353e2869b0feee85a75af71ae0bb9b699
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +29,7 @@ use App\Http\Controllers\Api\ProductController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+<<<<<<< HEAD
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -36,3 +44,40 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::middleware('auth:sanctum')->post('/products/{id}/comments', [CommentController::class, 'store']);
 Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
 
+=======
+//Trang chủ
+
+Route::get('/products', [ProductController::class, 'index']);
+
+Route::get('/products/{id}', [ProductController::class, 'show']);
+
+//Tài khoản
+Route::post('/register', [AuthController::class, 'register']);
+
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+
+Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+
+
+//  Mail xác thực
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+
+//Reset pass
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+
+//Hiển thị comment
+
+// Route::middleware('auth:sanctum')->post('/comments', [CommentController::class, 'store']);
+
+Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
+
+
+//Sản phẩm liên quan
+Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']);
+
+Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
+
+Route::get('/categories', [CategoryController::class, 'index']);
+>>>>>>> b0ca560353e2869b0feee85a75af71ae0bb9b699
