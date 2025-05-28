@@ -44,16 +44,13 @@ class ProductController extends Controller
 
     public function show($id)
     {
-<<<<<<< HEAD
         $product = Product::with([
             'comments.user',
             'category',
             'variants.options', // Tải variants và các options của chúng
             'images'
         ])->find($id);
-=======
-        $product = Product::find($id);
->>>>>>> b0ca560353e2869b0feee85a75af71ae0bb9b699
+
 
         if (!$product) {
             return response()->json([
@@ -62,28 +59,19 @@ class ProductController extends Controller
             ], 404);
         }
 
-<<<<<<< HEAD
+
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->with(['variants', 'images']) // Tải variants và images cho sản phẩm liên quan
             ->take(4)
-=======
-        // Lấy sản phẩm liên quan cùng danh mục, trừ sản phẩm hiện tại, giới hạn 4 sản phẩm
-        $relatedProducts = Product::where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->limit(4)
->>>>>>> b0ca560353e2869b0feee85a75af71ae0bb9b699
+
             ->get();
 
         return response()->json([
             'success' => true,
-<<<<<<< HEAD
+
             'product' => $product,
             'related_products' => $relatedProducts,
-=======
-            'data' => $product,
-            'related' => $relatedProducts,
->>>>>>> b0ca560353e2869b0feee85a75af71ae0bb9b699
         ]);
     }
 
