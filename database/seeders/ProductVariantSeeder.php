@@ -4,55 +4,33 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
+use Faker\Factory as Faker;
 
 class ProductVariantSeeder extends Seeder
 {
     public function run()
     {
-        // Xóa dữ liệu ở bảng con trước để tránh lỗi foreign key
-        DB::table('product_variant_options')->delete();
-        DB::table('product_variants')->delete();
+        $faker = Faker::create();
 
-        // Dữ liệu mẫu
-        $variants = [
-            [
-                'product_id'     => 1,
-                'sku'            => 'ATCOTTON-M',
-                'price'          => 150000,
-                'sale_price'     => 140000,
-                'sale_start_date'=> Carbon::now()->subDays(5),
-                'sale_end_date'  => Carbon::now()->addDays(5),
-                'stock'          => 50,
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ],
-            [
-                'product_id'     => 1,
-                'sku'            => 'ATCOTTON-L',
-                'price'          => 150000,
-                'sale_price'     => null,
-                'sale_start_date'=> null,
-                'sale_end_date'  => null,
-                'stock'          => 30,
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ],
-            [
-                'product_id'     => 2,
-                'sku'            => 'JEANS-32',
-                'price'          => 300000,
-                'sale_price'     => 270000,
-                'sale_start_date'=> Carbon::now()->subDays(3),
-                'sale_end_date'  => Carbon::now()->addDays(7),
-                'stock'          => 40,
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ],
-        ];
+        // Giả sử bạn đã có product_id, color_id, size_id từ các bảng tương ứng
+        $productIds = DB::table('products')->pluck('id')->toArray();
+        $colorIds = DB::table('colors')->pluck('id')->toArray();
+        $sizeIds = DB::table('sizes')->pluck('id')->toArray();
 
-        // Chèn dữ liệu vào bảng
-        DB::table('product_variants')->insert($variants);
+        for ($i = 0; $i < 50; $i++) {
+            DB::table('product_variants')->insert([
+                'product_id'       => $faker->randomElement($productIds),
+                'sku'              => strtoupper($faker->bothify('SKU-###??')),
+                'price'            => $faker->randomFloat(2, 10, 200), // giá từ 10 đến 200
+                'sale_price'       => null, // mặc định chưa giảm giá
+                'sale_start_date'  => null,
+                'sale_end_date'    => null,
+                'stock'            => $faker->numberBetween(0, 100),
+                'color_id'         => $faker->randomElement($colorIds),
+                'size_id'          => $faker->randomElement($sizeIds),
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
+        }
     }
 }

@@ -22,10 +22,17 @@ class CreateProductVariantsTable extends Migration
 
             $table->integer('stock')->default(0); // Số lượng tồn kho
 
+             $table->unsignedBigInteger('color_id'); // khóa ngoại đến bảng color
+             $table->unsignedBigInteger('size_id'); // khóa ngoại đến bảng size
+
             $table->timestamps();
 
             // Ràng buộc khóa ngoại
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            //  // Ràng buộc khóa ngoại
+            // $table->foreign('color_id')->references('id')->on('colors')->onDelete('cascade');
+            //  // Ràng buộc khóa ngoại
+            // $table->foreign('size_id')->references('id')->on('sizes')->onDelete('cascade');
 
             // Đảm bảo SKU là duy nhất theo product_id
             $table->unique(['product_id', 'sku']);

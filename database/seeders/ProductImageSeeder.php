@@ -32,7 +32,7 @@ class ProductImageSeeder extends Seeder
             [
                 'url' => 'variants/ao-thun-red-m.jpg',
                 'product_id' => null,
-                'product_variant_id' => 1,
+                'product_variant_id' => null,
                 'is_default' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -42,7 +42,7 @@ class ProductImageSeeder extends Seeder
             [
                 'url' => 'variants/ao-thun-blue-l.jpg',
                 'product_id' => null,
-                'product_variant_id' => 2,
+                'product_variant_id' => null,
                 'is_default' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),

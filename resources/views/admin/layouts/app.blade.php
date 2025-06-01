@@ -49,7 +49,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="/admin/users">
+                        <a class="nav-link text-white" href="{{ route('products.index') }}">
                             <i class="fas fa-users me-2"></i> Sản phẩm
                         </a>
                     </li>
