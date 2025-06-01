@@ -8,6 +8,12 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
+@if (session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+@endif
+
       <div class="container">
         <h2>Danh mục</h2>
         <a href="{{route('categories.create')}}" class="btn btn-primary"><i class="bi bi-plus-circle"></i></a>

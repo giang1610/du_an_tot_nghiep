@@ -70,25 +70,34 @@
            </div>
 
     <div class="mb-3">
-        <label class="form-label">Màu sắc</label>
-        <select name="color_id[]" class="form-select select2-color" multiple id="colorSelect">
-            @foreach($colors as $color)
-                <option value="{{ $color->id }}" data-name="{{ $color->name }}">{{ $color->name }}</option>
-            @endforeach
-            
-        </select>
-        <button type="button" class="btn btn-sm btn-primary mt-2 select-all" data-target=".select2-color">Chọn tất cả màu</button>
-        </div>
+    <label class="form-label">Màu sắc</label>
+    <select name="color_id[]" class="form-select select2-color" multiple id="colorSelect">
+        @foreach($colors as $color)
+            <option value="{{ $color->id }}"
+                data-name="{{ $color->name }}"
+                {{ in_array($color->id, old('color_id', [])) ? 'selected' : '' }}>
+                {{ $color->name }}
+            </option>
+        @endforeach
+    </select>
+    <button type="button" class="btn btn-sm btn-primary mt-2 select-all" data-target=".select2-color">Chọn tất cả màu</button>
+    </div>
+
 
     <div class="mb-3">
-        <label class="form-label">Kích cỡ</label>
-        <select name="size_id[]" class="form-select select2-size" multiple id="sizeSelect">
-            @foreach($sizes as $size)
-                <option value="{{ $size->id }}" data-name="{{ $size->name }}">{{ $size->name }}</option>
-            @endforeach
-        </select>
-        <button type="button" class="btn btn-sm btn-primary mt-2 select-all" data-target=".select2-size">Chọn tất cả size</button>
-    </div>
+    <label class="form-label">Kích cỡ</label>
+    <select name="size_id[]" class="form-select select2-size" multiple id="sizeSelect">
+        @foreach($sizes as $size)
+            <option value="{{ $size->id }}"
+                data-name="{{ $size->name }}"
+                {{ in_array($size->id, old('size_id', [])) ? 'selected' : '' }}>
+                {{ $size->name }}
+            </option>
+        @endforeach
+    </select>
+    <button type="button" class="btn btn-sm btn-primary mt-2 select-all" data-target=".select2-size">Chọn tất cả size</button>
+</div>
+
 
     <button type="button" class="btn btn-primary mb-3" id="generateVariants">Tạo các biến thể</button>
     <input type="hidden" name="has_variants" value="1">

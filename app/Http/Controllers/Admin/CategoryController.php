@@ -76,11 +76,22 @@ class CategoryController extends Controller
     //     //
     // }
     public function destroy($id)
-    {
-        Category::findOrFail($id)->delete();
+{
+    $category = Category::findOrFail($id);
 
-        return redirect()->route('categories.index')->with('success', 'Đã chuyển vào thùng rác');
+    // Kiểm tra nếu danh mục có sản phẩm liên quan
+    if ($category->products()->count() > 0) {
+        return redirect()->route('categories.index')
+            ->with('error', 'Không thể xóa danh mục vì đang chứa sản phẩm.');
     }
+
+    // Nếu không có sản phẩm thì xóa
+    $category->delete();
+
+    return redirect()->route('categories.index')
+        ->with('success', 'Đã chuyển vào thùng rác');
+}
+
     public function trash()
     {
         // dd('Controller called'); // phải thấy dòng này

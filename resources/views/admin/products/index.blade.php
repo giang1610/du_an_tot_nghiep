@@ -104,13 +104,13 @@
                             @endif
                         </td>
                         <td>
-                           <a href="{{route('categories.edit', $p->id)}}" class="btn btn-warning"><i class="bi bi-pencil-square"></i></a>
-                            {{--  <form action="{{route('categories.destroy', $c->id)}}" method="POST" class="d-inline">
+                           <a href="{{route('products.edit', $p->id)}}" class="btn btn-warning"><i class="bi bi-pencil-square"></i></a>
+                             <form action="{{route('products.destroy', $p->id)}}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger"
-                                    onclick="return confirm('Danh mục này sẽ chuyển vô thùng rác?')"><i class="bi bi-trash3"></i></button>
-                            </form>  --}}
+                                    onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm này?')"><i class="bi bi-trash3"></i></button>
+                            </form> 
                         </td>
                     </tr>
                 @endforeach
