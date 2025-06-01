@@ -38,6 +38,16 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+     // Quan hệ nhiều-nhiều với Color
+    public function colors()
+    {
+        return $this->belongsToMany(Color::class, 'color_product', 'product_id', 'color_id');
+    }
+    public function sizes()
+    {
+        return $this->belongsToMany(Size::class, 'product_size', 'product_id', 'size_id');
+    }
+
     /**
      * Quan hệ: 1 sản phẩm có nhiều ảnh
      */

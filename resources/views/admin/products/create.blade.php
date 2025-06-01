@@ -65,32 +65,6 @@
                   {{-- Biến thể (có thể làm dạng group) --}}
     <div id="variants">
         <div class="variant">
-            {{-- <input type="text" name="variants[0][sku]" placeholder="SKU">
-            <input type="number" name="variants[0][price]" placeholder="Giá">
-            <input type="number" name="variants[0][sale_price]" placeholder="Giá khuyến mãi" id="sale_price"> <br>
-        Từ...
-        <input type="datetime-local" name="variants[0][sale_start_date]" placeholder="Ngày bắt đầu khuyến mãi" id="sale_start_date" disabled>
-        Đến...
-        <input type="datetime-local" name="variants[0][sale_end_date]" placeholder="Ngày kết thúc khuyến mãi" id="sale_end_date" disabled>--}}
-
-        {{-- <script>
-            const salePriceInput = document.getElementById('sale_price');
-            const startDateInput = document.getElementById('sale_start_date');
-            const endDateInput = document.getElementById('sale_end_date');
-
-            salePriceInput.addEventListener('input', function () {
-                if (this.value.trim() !== '') {
-                    startDateInput.disabled = false;
-                    endDateInput.disabled = false;
-                } else {
-                    startDateInput.disabled = true;
-                    endDateInput.disabled = true;
-                    startDateInput.value = '';
-                    endDateInput.value = '';
-                }
-            });
-        </script>  --}}
-
             
         </div>
            </div>

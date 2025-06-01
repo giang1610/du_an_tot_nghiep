@@ -67,7 +67,7 @@
                                 $stock = optional($p->variants->first())->stock;
                             @endphp
 
-                            {{ $stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                            {{ $stock == 0 ? 'Còn hàng' : 'Hết hàng' }}
                         </td>
 
                        {{-- Màu --}}
@@ -84,7 +84,7 @@
                             @endforeach
                         </td>
                         <td>
-                                {{-- <img src="http://127.0.0.1:8000/storage/products/vJmoVkKKQOw9BPJju5qSOdPu7nIatWefIMVrfVi8.png" alt="Product Image" style="width: 100px; height: auto;"> --}}
+                                
 
                             @if ($p->thumbnail)
                                 <img src="{{ asset('storage/' . $p->thumbnail) }}" alt="Product Image" style="width: 100px; height: auto;">
@@ -98,14 +98,14 @@
                             @if ($p->status === 1)
                                 hành động
                             @elseif ($p->status === 0)
-                                tạm dừng
+                                Chưa xuất bản
                             @else
-                                nháp
+                               tạm dừng
                             @endif
                         </td>
-                        
-                            {{-- <a href="{{route('categories.edit', $c->id)}}" class="btn btn-warning"><i class="bi bi-pencil-square"></i></a>
-                            <form action="{{route('categories.destroy', $c->id)}}" method="POST" class="d-inline">
+                        <td>
+                           <a href="{{route('categories.edit', $p->id)}}" class="btn btn-warning"><i class="bi bi-pencil-square"></i></a>
+                            {{--  <form action="{{route('categories.destroy', $c->id)}}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger"
@@ -119,18 +119,7 @@
         </table>
         {{$products->links()}}
     </div>
-    {{-- @if (session('success'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            Swal.fire({
-                icon: 'success',
-                title: 'Thành công',
-                text: '{{ session('success') }}',
-                confirmButtonText: 'OK'
-            });
-        });
-    </script> --}}
-{{-- @endif --}}
+  
 
 
 @endsection
