@@ -49,6 +49,7 @@ class ProductController extends Controller
      */
 public function store(ProductRequest $request)
 {
+   
     try {
         // Ảnh đại diện sản phẩm
         $thumbnailPath = null;
@@ -98,7 +99,7 @@ public function store(ProductRequest $request)
                 $product->variants()->save($variant);
             }
         }
-
+    //    dd($variant);
         return redirect()->route('products.index')->with('success', 'Thêm sản phẩm thành công!');
     } catch (\Exception $e) {
         return back()->with('error', 'Đã có lỗi xảy ra: ' . $e->getMessage());
@@ -134,6 +135,7 @@ public function store(ProductRequest $request)
      */
     public function update(ProductRequest $request, $id)
 {
+   
     try {
         $product = Product::findOrFail($id);
 
@@ -220,7 +222,7 @@ public function store(ProductRequest $request)
             }
             $variant->delete();
         });
-
+       
         return redirect()->route('products.index')->with('success', 'Cập nhật sản phẩm thành công!');
     } catch (\Exception $e) {
         return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());

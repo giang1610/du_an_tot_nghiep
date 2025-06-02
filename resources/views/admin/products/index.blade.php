@@ -60,14 +60,30 @@
                         <td>{{$p->category->name}}</td>
                         <td>{{$p->name}}</td>
                         <td>{{$p->slug}}</td>
-                        <td>{{ optional($p->variants->first())->price ?? 'Không có' }} đ</td>
-                        <td>{{ optional($p->variants->first())->sku ?? 'Không có' }} </td>
+                         {{-- giá --}}
                         <td>
+                            @foreach ($p->variants as $variant)
+                                <div>{{ $variant->price ?? 'Không có' }}</div>
+                            @endforeach
+                        </td>
+                         {{-- Mã --}}
+                        <td>
+                            @foreach ($p->variants as $variant)
+                                <div>{{ $variant->sku ?? 'Không có' }}</div>
+                            @endforeach
+                        </td>
+                        {{-- <td>
                             @php
                                 $stock = optional($p->variants->first())->stock;
                             @endphp
 
                             {{ $stock == 0 ? 'Còn hàng' : 'Hết hàng' }}
+                        </td> --}}
+                         {{-- Mã --}}
+                        <td>
+                            @foreach ($p->variants as $variant)
+                                <div>{{ $variant->stock == 0 ? 'còn hàng' : 'Hết hàng'  }}</div>
+                            @endforeach
                         </td>
 
                        {{-- Màu --}}
