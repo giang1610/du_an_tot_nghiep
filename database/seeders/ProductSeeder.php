@@ -1,58 +1,72 @@
 <?php
-
 namespace Database\Seeders;
-
 use Illuminate\Database\Seeder;
-use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class ProductSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
-        Product::create([
-            'name' => 'Giày di bo Nam',
-            'slug' => 'giay di bo nam',
-            'category_id' => 1,
-            'price' => 1200000,
-            'description' => 'Đẹp'
+    
+        // 2. Sản phẩm
+        DB::table('products')->insert([
+            [
+                'id' => null,
+                'category_id' => 3,
+                'name' => 'Áo thun cotton 100%',
+                'slug' => Str::slug('Áo thun cotton 100%'),
+                'type' => 1,
+                'status' => 1,
+                'short_description' => 'Áo thun mát mẻ, thoải mái.',
+                'description' => 'Chất liệu cotton 100%, mềm mại và co giãn tốt.',
+                'thumbnail' => 'products/ao-thun.jpg'
+            ]
         ]);
 
-        Product::create([
-            'name' => 'Giày da Nữ',
-            'slug' => 'Giay da nu',
-            'category_id' => 1,
-            'price' => 1500000,
-            'description' => 'Đẹp'
-        ]);
-         Product::create([
-            'name' => 'Giày Thể Thao Nữ',
-            'slug' => 'giay the thao nu',
-            'category_id' => 1,
-            'price' => 1500000,
-            'description' => 'Đẹp'
-        ]);
-         Product::create([
-            'name' => 'Giày Nike Nam',
-            'slug' => 'Giay nike nam',
-            'category_id' => 1,
-            'price' => 1500000,
-            'description' => 'Đẹp'
-        ]);
-         Product::create([
-            'name' => 'Giày the thao nam',
-            'slug' => 'Giay the thao nam',
-            'category_id' => 1,
-            'price' => 1500000,
-            'description' => 'Đẹp'
-        ]);
-         Product::create([
-            'name' => 'Giày đi bộ Nữ',
-            'slug' => 'Giay di bo nu',
-            'category_id' => 1,
-            'price' => 1500000,
-            'description' => 'Đẹp'
-        ]);
+        // 3. Biến thể sản phẩm
+    //     DB::table('product_variants')->insert([
+    //         [
+    //             'id' => 1,
+    //             'product_id' => 1,
+    //             'sku' => 'ATCOTTON-M',
+    //             'price' => 150000,
+    //             'sale_price' => 140000,
+    //             'stock' => 50,
+    //             'sale_start' => Carbon::now()->subDays(3),
+    //             'sale_end' => Carbon::now()->addDays(7),
+    //         ]
+    //     ]);
 
-        // Thêm sản phẩm khác nếu cần
-    }
+    //     // 4. Thuộc tính biến thể
+    //     DB::table('product_variant_options')->insert([
+    //         [
+    //             'product_variant_id' => 1,
+    //             'name' => 'Màu sắc',
+    //             'value' => 'Đỏ'
+    //         ],
+    //         [
+    //             'product_variant_id' => 1,
+    //             'name' => 'Kích cỡ',
+    //             'value' => 'M'
+    //         ]
+    //     ]);
+
+    //     // 5. Hình ảnh sản phẩm và biến thể
+    //     DB::table('product_images')->insert([
+    //         [
+    //             'url' => 'products/ao-thun-cotton.jpg',
+    //             'product_id' => 1,
+    //             'product_variant_id' => null,
+    //             'is_default' => 1
+    //         ],
+    //         [
+    //             'url' => 'products/ao-thun-cotton-m.jpg',
+    //             'product_id' => 1,
+    //             'product_variant_id' => 1,
+    //             'is_default' => 0
+    //         ]
+    //     ]);
+     }
 }
