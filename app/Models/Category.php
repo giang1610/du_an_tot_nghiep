@@ -2,16 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use HasFactory;
+     use SoftDeletes;
+    public $timestamps = false;
+    protected $table = 'categories';
+    protected $fillable = [
+        'name',
+        'slug',
+        'parent_id', // Khóa ngoại đến bảng categories
+        'status',
+    ];
+    // hasMany là 1-n
+ 
+    
 
-    // Nếu bạn muốn, có thể thêm quan hệ products
     public function products()
     {
-        return $this->hasMany(Product::class, 'category_id');
+        return $this->hasMany(Product::class);
     }
-}
+
+};
