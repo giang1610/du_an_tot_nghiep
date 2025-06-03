@@ -35,10 +35,11 @@ class ProductController extends Controller
         }
 
         $products = $query->get();
-
+      
         return response()->json([
             'success' => true,
             'data' => $products,
+           
         ]);
     }
 
