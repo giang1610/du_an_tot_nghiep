@@ -19,6 +19,7 @@ const CartPage = () => {
             <thead>
               <tr>
                 <th>Sản phẩm</th>
+                <th>Hình ảnh</th>
                 <th>Giá</th>
                 <th>Số lượng</th>
                 <th>Tổng</th>
@@ -29,6 +30,13 @@ const CartPage = () => {
               {cart.map(item => (
                 <tr key={item.id}>
                   <td>{item.name}</td>
+                  <td>
+                    <img 
+                      src={item.img} 
+                      alt={item.name} 
+                      style={{ width: '80px', height: '80px', objectFit: 'cover' }} 
+                    />
+                  </td>
                   <td>{item.price.toLocaleString()} đ</td>
                   <td>
                     <Form.Control

@@ -8,7 +8,7 @@ use App\Http\Controllers\API\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\CommentController;
-
+use App\Http\Controllers\Api\OrderController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -58,3 +58,8 @@ Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']
 Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
+//Gửi mail đặt hàng
+
+
+Route::post('/orders', [OrderController::class, 'store']);
+
