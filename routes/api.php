@@ -36,11 +36,24 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
-Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+   
+
+    // Các route yêu cầu người dùng phải đăng nhập VÀ đã xác thực email (verified)
+    Route::middleware('verified')->group(function () {
+       
+    });
+});
 
 
-//  Mail xác thực
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+
+
+
 
 //Reset pass
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
