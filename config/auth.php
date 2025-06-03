@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [ // <-- THÊM GUARD NÀY
+            'driver' => 'sanctum', // Sử dụng driver của Sanctum
+            'provider' => 'users',
+        ],
 
     ],
 
