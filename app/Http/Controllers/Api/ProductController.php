@@ -45,7 +45,7 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = Product::find($id);
-
+        $product = Product::with(['comments.user'])->find($id);
         if (!$product) {
             return response()->json([
                 'success' => false,

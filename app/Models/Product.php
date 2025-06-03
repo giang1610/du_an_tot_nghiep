@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Comment;
 class Product extends Model
 {
     use HasFactory;
@@ -37,7 +37,7 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-     // Quan hệ nhiều-nhiều với Color
+     // Quan hệ nhiều-nhiều với Color0
     public function colors()
     {
         return $this->belongsToMany(Color::class, 'color_product', 'product_id', 'color_id');
@@ -54,6 +54,9 @@ class Product extends Model
     // {
     //     return $this->hasMany(ProductImage::class);
     // }
-    
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
     
 }

@@ -18,7 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable(); // FK đến chính nó
             $table->tinyInteger('status')->default(0); // 0: bản nháp, 1: hiển thị, 2: lưu trữ
             $table->timestamps();
-
+            
+            $table->softDeletes(); 
             // Thiết lập khóa ngoại đến chính bảng categories
             $table->foreign('parent_id')->references('id')->on('categories')->onDelete('cascade');
         });
