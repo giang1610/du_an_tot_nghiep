@@ -49,7 +49,7 @@
                         alt={product.name}
                       />
                     </Link>
-                    <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
+                    // <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
                     <Button variant="primary" size="sm" className="w-100">Mua Ngay</Button>
                   </Card.Body>
                 </Card>
