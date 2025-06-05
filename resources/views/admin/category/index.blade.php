@@ -20,11 +20,11 @@
         <form method="GET" class="mb-4">
             <br>
             <div class="input-group shadow-sm rounded">
-                <input 
-                    type="text" 
-                    name="search" 
-                    class="form-control border-primary" 
-                    placeholder="🔍 Tìm kiếm danh mục..." 
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control border-primary"
+                    placeholder="🔍 Tìm kiếm danh mục..."
                     value="{{ request('search') }}"
                     style="height: 48px;"
                 >
@@ -63,26 +63,19 @@
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger"
                                     onclick="return confirm('Danh mục này sẽ chuyển vô thùng rác?')"><i class="bi bi-trash3"></i></button>
-                            </form> 
+                            </form>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
-        {{$categories->links()}}
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="">
+                {{ $categories->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
     </div>
-    {{-- @if (session('success'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            Swal.fire({
-                icon: 'success',
-                title: 'Thành công',
-                text: '{{ session('success') }}',
-                confirmButtonText: 'OK'
-            });
-        });
-    </script> --}}
-{{-- @endif --}}
+
 
 
 @endsection

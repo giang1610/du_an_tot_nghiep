@@ -34,11 +34,16 @@ Route::resource('products', ProductController::class);
 
 
 
-Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) { // THAY ĐỔI Ở ĐÂY
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
 
     $request->fulfill(); // Gọi fulfill từ CustomEmailVerificationRequest
 
     return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/email-verified-successfully?user_id=' . $request->route('id'));
 
 })->middleware(['signed'])->name('verification.verify');
+
+
+
+
+
 
