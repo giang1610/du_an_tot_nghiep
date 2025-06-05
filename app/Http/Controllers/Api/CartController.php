@@ -39,7 +39,7 @@ class CartController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Đã thêm vào giỏ hàng thành công.']);
+        return response()->json(['message' => 'Đã thêm sản phẩm vào giỏ hàng.']);
     }
 
     public function viewCart()
