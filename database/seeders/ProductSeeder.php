@@ -9,7 +9,11 @@ class ProductSeeder extends Seeder
 {
     public function run()
     {
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> test
         // 2. Sản phẩm
         DB::table('products')->insert([
             [
@@ -25,6 +29,7 @@ class ProductSeeder extends Seeder
             ]
         ]);
 
+<<<<<<< HEAD
         // 3. Biến thể sản phẩm
     //     DB::table('product_variants')->insert([
     //         [
@@ -68,5 +73,8 @@ class ProductSeeder extends Seeder
     //             'is_default' => 0
     //         ]
     //     ]);
+=======
+
+>>>>>>> test
      }
 }

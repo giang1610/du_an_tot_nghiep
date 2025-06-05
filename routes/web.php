@@ -3,7 +3,11 @@
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Requests\CustomEmailVerificationRequest;
+use Illuminate\Http\Request;
+use App\Models\User;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -27,3 +31,14 @@ Route::post('categories/restore-all', [CategoryController::class, 'restoreAll'])
 Route::delete('force-delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
 
 Route::resource('products', ProductController::class);
+
+
+
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) { // THAY ĐỔI Ở ĐÂY
+
+    $request->fulfill(); // Gọi fulfill từ CustomEmailVerificationRequest
+
+    return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/email-verified-successfully?user_id=' . $request->route('id'));
+
+})->middleware(['signed'])->name('verification.verify');
+
