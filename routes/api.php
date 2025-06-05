@@ -32,7 +32,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/products/{slug}', [ProductController::class, 'show']);
 
 
 Route::middleware('auth:sanctum')->post('/products/{id}/comments', [CommentController::class, 'store']);

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class ProductImage extends Model
 {
     use HasFactory;
@@ -12,13 +13,15 @@ class ProductImage extends Model
         'url',
         'product_id',
         'product_variant_id',
+        'is_default',
     ];
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
-    public function productVariant()
+
+    public function variant()
     {
-        return $this->belongsTo(ProductVariant::class);
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }
