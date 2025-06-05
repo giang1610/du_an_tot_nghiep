@@ -20,7 +20,8 @@ class CategoryController extends Controller
         if($request->filled('search')){
             $query->where('name','like','%' . $request->search .'%');
         }
-        $categories = $query->orderBy('id','desc')->paginate(10);
+        $categories = $query->orderBy('id','desc')->paginate(5);
+
          return view('admin.category.index', compact('categories'));
     }
 
@@ -55,7 +56,7 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-       
+
         return view('admin.category.edit', compact('category'));
     }
 

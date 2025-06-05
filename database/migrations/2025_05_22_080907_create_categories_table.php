@@ -14,9 +14,11 @@ return new class extends Migration
     Schema::create('categories', function (Blueprint $table) {
         $table->id();
         $table->string('name');
-        $table->string('slug')->unique();
-        $table->tinyInteger('status')->default(1)->comment('1 = hoạt động, 0 = tạm dừng');
+        $table->string('slug');
+        $table->tinyInteger('status');
+        $table->timestamp('deleted_at')->nullable();
     });
+
 }
 
 

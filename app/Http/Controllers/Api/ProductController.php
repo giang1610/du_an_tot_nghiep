@@ -18,13 +18,13 @@ class ProductController extends Controller
     {
         if ($product->variants && $product->variants->isNotEmpty()) {
             $now = Carbon::now('Asia/Ho_Chi_Minh');
-            $minPrice = null;
+            $minDisplayPrice = null;
 
             foreach ($product->variants as $variant) {
                 $saleStartDate = $variant->sale_start_date ? Carbon::parse($variant->sale_start_date, 'Asia/Ho_Chi_Minh') : null;
                 $saleEndDate = $variant->sale_end_date ? Carbon::parse($variant->sale_end_date, 'Asia/Ho_Chi_Minh') : null;
 
-                $isPromotionActive = $saleStartDate && $saleEndDate && $now->gte($saleStartDate) && $now->lte($saleEndDate);
+                $isPromotionActive = $saleStartDate && $saleEndDate && $now->between($saleStartDate, $saleEndDate);
 
                 if ($isPromotionActive && $variant->sale_price) {
                     $variant->display_price = $variant->sale_price;
@@ -33,14 +33,14 @@ class ProductController extends Controller
                     $variant->sale_price = null;
                 }
 
-                // Tìm giá thấp nhất
-                if (is_null($minPrice) || $variant->price < $minPrice) {
-                    $minPrice = $variant->price;
+                // Gán giá hiển thị nhỏ nhất
+                if (is_null($minDisplayPrice) || $variant->display_price < $minDisplayPrice) {
+                    $minDisplayPrice = $variant->display_price;
                 }
             }
 
-            // Gán giá gốc thấp nhất vào sản phẩm
-            $product->price_original = $minPrice;
+            // Cập nhật giá gốc của sản phẩm là giá hiển thị nhỏ nhất
+            $product->price_original = $minDisplayPrice;
         } else {
             $product->price_original = null;
         }
@@ -91,10 +91,10 @@ class ProductController extends Controller
         foreach ($products as $product) {
             $this->processProductPricing($product);
         }
-
         return response()->json([
             'success' => true,
             'data' => $products,
+
         ]);
     }
 

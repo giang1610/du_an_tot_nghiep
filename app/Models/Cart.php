@@ -5,21 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-use App\Models\User;
-
 class Cart extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id']; // Chỉ giữ user_id
-
+    protected $fillable = [
+        'user_id',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    // Thêm quan hệ với cart_items
-    public function cartItems()
+    public function items()
     {
-        return $this->hasMany(CartItem::class); // Giả sử có mô hình CartItem
+        return $this->hasMany(CartItem::class);
     }
 }
