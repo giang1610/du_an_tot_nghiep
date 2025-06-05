@@ -25,48 +25,6 @@ class ProductSeeder extends Seeder
             ]
         ]);
 
-        // 3. Biến thể sản phẩm
-    //     DB::table('product_variants')->insert([
-    //         [
-    //             'id' => 1,
-    //             'product_id' => 1,
-    //             'sku' => 'ATCOTTON-M',
-    //             'price' => 150000,
-    //             'sale_price' => 140000,
-    //             'stock' => 50,
-    //             'sale_start' => Carbon::now()->subDays(3),
-    //             'sale_end' => Carbon::now()->addDays(7),
-    //         ]
-    //     ]);
 
-    //     // 4. Thuộc tính biến thể
-    //     DB::table('product_variant_options')->insert([
-    //         [
-    //             'product_variant_id' => 1,
-    //             'name' => 'Màu sắc',
-    //             'value' => 'Đỏ'
-    //         ],
-    //         [
-    //             'product_variant_id' => 1,
-    //             'name' => 'Kích cỡ',
-    //             'value' => 'M'
-    //         ]
-    //     ]);
-
-    //     // 5. Hình ảnh sản phẩm và biến thể
-    //     DB::table('product_images')->insert([
-    //         [
-    //             'url' => 'products/ao-thun-cotton.jpg',
-    //             'product_id' => 1,
-    //             'product_variant_id' => null,
-    //             'is_default' => 1
-    //         ],
-    //         [
-    //             'url' => 'products/ao-thun-cotton-m.jpg',
-    //             'product_id' => 1,
-    //             'product_variant_id' => 1,
-    //             'is_default' => 0
-    //         ]
-    //     ]);
      }
 }
