@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,3 +18,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::resource('categories', CategoryController::class);
+Route::get('trash', [CategoryController::class, 'trash'])->name('categories.trash');
+Route::post('restore/{id}', [CategoryController::class, 'restore'])->name('categories.restore');
+Route::delete('force-delete/{id}', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
+Route::post('categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
+Route::delete('force-delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
+
+Route::resource('products', ProductController::class);

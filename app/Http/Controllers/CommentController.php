@@ -1,10 +1,12 @@
 <?php
+// app/Http/Controllers/Api/CommentController.php
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Comment;
 use App\Models\Product;
+use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
@@ -12,7 +14,8 @@ class CommentController extends Controller
     public function store(Request $request, $productId)
     {
         $request->validate([
-            'content' => 'required|string'
+            'content' => 'required|string',
+            'rating' => 'required|integer|min:1|max:5'
         ]);
 
         if (!Auth::check()) {
@@ -30,16 +33,35 @@ class CommentController extends Controller
             ], 404);
         }
 
-        $comment = new Comment();
-        $comment->product_id = $productId;
-        $comment->user_id = Auth::id();
-        $comment->content = $request->content;
-        $comment->save();
+        // Kiểm tra người dùng đã mua sản phẩm
+        // $user = Auth::user();
+        // $hasPurchased = Order::where('user_id', $user->id)
+        //     ->where('status', 'completed')
+        //     ->whereHas('items', function ($query) use ($productId) {
+        //         $query->where('product_id', $productId);
+        //     })
+        //     ->exists();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Bình luận thành công.',
-            'comment' => $comment->load('user')
-        ]);
+        // if (!$hasPurchased) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Bạn chỉ có thể bình luận sau khi mua sản phẩm.'
+        //     ], 403);
+        // }
+
+        // $comment = new Comment();
+        // $comment->product_id = $productId;
+        // $comment->user_id = $user->id;
+        // $comment->content = $request->content;
+        // $comment->rating = $request->rating;
+        // $comment->save();
+
+        // return response()->json([
+        //     'success' => true,
+        //     'message' => 'Bình luận thành công.',
+        //     'data' => $comment->load(['user' => function ($query) {
+        //         $query->select('id', 'name', 'email');
+        //     }])
+        // ], 201);
     }
 }
