@@ -13,6 +13,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
+
         'category_id',
         'name',
         'slug',
@@ -60,5 +61,6 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+
 
 }

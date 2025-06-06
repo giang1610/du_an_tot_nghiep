@@ -69,14 +69,20 @@
                 @endforeach
             </tbody>
         </table>
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="">
-                {{ $categories->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
+        {{$categories->links()}}
     </div>
-
-
+    {{-- @if (session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công',
+                text: '{{ session('success') }}',
+                confirmButtonText: 'OK'
+            });
+        });
+    </script> --}}
+{{-- @endif --}}
 
 @endsection
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
