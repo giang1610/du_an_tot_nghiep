@@ -42,11 +42,16 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+
+
     // Các route yêu cầu người dùng phải đăng nhập VÀ đã xác thực email (verified)
     Route::middleware('verified')->group(function () {
 
     });
 });
+
+
+
 
 
 

@@ -9,6 +9,7 @@ class ProductSeeder extends Seeder
 {
     public function run()
     {
+
         // 2. Sản phẩm
         DB::table('products')->insert([
             [
@@ -23,5 +24,7 @@ class ProductSeeder extends Seeder
                 'thumbnail' => 'products/ao-thun.jpg'
             ]
         ]);
+
+
      }
 }

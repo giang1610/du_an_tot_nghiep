@@ -10,13 +10,17 @@ class CreateProductImagesTable extends Migration
     {
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
-            $table->string('url');
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->onDelete('cascade');
-            $table->boolean('is_default')->default(false);
-            $table->timestamps();
-        });
+            $table->string('url', 255); // Đường dẫn hình ảnh
 
+            $table->unsignedBigInteger('product_id')->nullable();         // FK đến products
+            $table->unsignedBigInteger('product_variant_id')->nullable(); // FK đến product_variants
+
+            $table->tinyInteger('is_default')->default(0); // 0: không mặc định, 1: mặc định
+            $table->timestamps();
+
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('product_variant_id')->references('id')->on('product_variants')->onDelete('cascade');
+        });
     }
 
     public function down()
