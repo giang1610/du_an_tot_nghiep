@@ -22,7 +22,6 @@ class CreateProductVariantsTable extends Migration
             $table->foreignId('size_id')->constrained('sizes');
             $table->timestamps();
         });
-
     }
 
     public function down()

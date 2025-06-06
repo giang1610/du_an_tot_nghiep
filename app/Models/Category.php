@@ -17,6 +17,9 @@ class Category extends Model
         'status',
     ];
     // hasMany là 1-n
+
+
+
     public function products()
     {
         return $this->hasMany(Product::class);
