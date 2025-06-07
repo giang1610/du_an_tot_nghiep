@@ -201,6 +201,25 @@
             }
         }
     </style>
+    <style>
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: #4b5563;
+        font-weight: 500;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .back-link:hover {
+        color: #1f2937;
+        transform: translateX(-3px);
+    }
+    .back-link i {
+        font-size: 1.3rem;
+        margin-right: 6px;
+    }
+</style>
 </head>
 <body>
     <div class="d-flex">

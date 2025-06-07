@@ -112,11 +112,11 @@
                         
                         <td>
                             @if ($p->status === 1)
-                                hành động
+                                Hoạt động
                             @elseif ($p->status === 0)
                                 Chưa xuất bản
                             @else
-                               tạm dừng
+                                Tạm dừng
                             @endif
                         </td>
                         <td>
