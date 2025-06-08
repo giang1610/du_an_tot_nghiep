@@ -51,6 +51,9 @@ class ProductController extends Controller
     {
         $query = Product::query();
 
+        // Thêm điều kiện lọc sản phẩm đang hoạt động
+        $query->where('status', 1);
+
         // Lọc theo danh mục
         if ($request->has('category') && $request->category != '') {
             $query->where('category_id', $request->category);
