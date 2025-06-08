@@ -82,7 +82,7 @@
                          {{-- Mã --}}
                         <td>
                             @foreach ($p->variants as $variant)
-                                <div>{{ $variant->stock == 0 ? 'còn hàng' : 'Hết hàng'  }}</div>
+                                <div>{{ $variant->stock == 0 ? 'Còn hàng' : 'Hết hàng'  }}</div>
                             @endforeach
                         </td>
 
@@ -112,11 +112,11 @@
 
                         <td>
                             @if ($p->status === 1)
-                                hành động
+                                Hoạt động
                             @elseif ($p->status === 0)
                                 Chưa xuất bản
                             @else
-                               tạm dừng
+                                Tạm dừng
                             @endif
                         </td>
                         <td>

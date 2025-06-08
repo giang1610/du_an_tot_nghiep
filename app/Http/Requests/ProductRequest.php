@@ -16,21 +16,21 @@ class ProductRequest extends FormRequest
     public function rules()
     {
         return [
-        'name' => 'required|string|max:255',
-        'description' => 'nullable|string|max:255',
-        'short_description' => 'nullable|string|max:255',
-        'slug' => 'required|string|max:255|unique:products,slug,',
+        // 'name' => 'required|string|max:255',
+        // 'description' => 'nullable|string|max:255',
+        // 'short_description' => 'nullable|string|max:255',
+        // 'slug' => 'required|string|max:255|unique:products,slug,',
 
-        'thumbnail' => $this->isMethod('post') ? 'required|image|mimes:jpg,jpeg,png,webp|max:2048' : 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        'category_id' => 'required|exists:categories,id',
-        'status' => 'required|in:0,1,2',
-        'variants.*.sku' => 'nullable|string|max:100',
-        'variants.*.price' => 'nullable|numeric|min:0',
-        'variants.*.sale_price' => 'nullable|numeric|min:0|lt:variants.*.price',
-        'variants.*.sale_start_date' => 'required_with:variants.*.sale_price|date',
-        'variants.*.sale_end_date' => 'required_with:variants.*.sale_price|date|after:variants.*.sale_start_date',
-        'variants.*.stock' => 'nullable|integer|min:0',
-        'variants.*.image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        // 'thumbnail' => $this->isMethod('post') ? 'required|image|mimes:jpg,jpeg,png,webp|max:2048' : 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        // 'category_id' => 'required|exists:categories,id',
+        // 'status' => 'required|in:0,1,2',
+        // 'variants.*.sku' => 'nullable|string|max:100',
+        // 'variants.*.price' => 'nullable|numeric|min:0',
+        // 'variants.*.sale_price' => 'nullable|numeric|min:0|lt:variants.*.price',
+        // 'variants.*.sale_start_date' => 'required_with:variants.*.sale_price|date',
+        // 'variants.*.sale_end_date' => 'required_with:variants.*.sale_price|date|after:variants.*.sale_start_date',
+        // 'variants.*.stock' => 'nullable|integer|min:0',
+        // 'variants.*.image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
 
