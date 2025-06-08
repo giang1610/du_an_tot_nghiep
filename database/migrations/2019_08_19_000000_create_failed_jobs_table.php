@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('failed_jobs', function (Blueprint $table) {
             $table->id();
+            // Foreign keys
             $table->string('uuid')->unique();
             $table->text('connection');
             $table->text('queue');
