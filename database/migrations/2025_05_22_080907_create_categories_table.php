@@ -13,7 +13,6 @@ return new class extends Migration
 {
     Schema::create('categories', function (Blueprint $table) {
         $table->id();
-        // Foreign keys
         $table->string('name');
         $table->string('slug');
         $table->tinyInteger('status');

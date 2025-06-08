@@ -13,7 +13,6 @@ class CreateProductsTable extends Migration
             $table->foreignId('category_id')->constrained('categories');
             $table->string('name');
             $table->string('slug');
-            // trạng thái
             $table->tinyInteger('status');
             $table->text('short_description')->nullable();
             $table->longText('description')->nullable();

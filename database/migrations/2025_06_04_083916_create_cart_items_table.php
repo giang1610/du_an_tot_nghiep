@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('cart_id');
             $table->unsignedBigInteger('product_variant_id');
             $table->unsignedInteger('quantity')->default(1);
-            // trạng thái trong giỏ hàng
             $table->boolean('selected')->default(true);
             $table->string('note', 255)->nullable();
             $table->timestamps();
