@@ -10,7 +10,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-       
+
         'category_id',
         'name',
         'slug',
@@ -27,6 +27,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
     }
 
     /**
@@ -50,10 +55,10 @@ class Product extends Model
     /**
      * Quan hệ: 1 sản phẩm có nhiều ảnh
      */
-    // public function images()
-    // {
-    //     return $this->hasMany(ProductImage::class);
-    // }
-    
-    
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
+
 }
