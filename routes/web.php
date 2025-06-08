@@ -34,7 +34,7 @@ Route::resource('products', ProductController::class);
 
 
 
-Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) { // THAY ĐỔI Ở ĐÂY
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) { 
     
     $request->fulfill(); // Gọi fulfill từ CustomEmailVerificationRequest
 
