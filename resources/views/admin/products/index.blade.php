@@ -82,7 +82,7 @@
                          {{-- Mã --}}
                         <td>
                             @foreach ($p->variants as $variant)
-                                <div>{{ $variant->stock == 0 ? 'còn hàng' : 'Hết hàng'  }}</div>
+                                <div>{{ $variant->stock == 0 ? 'Còn hàng' : 'Hết hàng'  }}</div>
                             @endforeach
                         </td>
 
