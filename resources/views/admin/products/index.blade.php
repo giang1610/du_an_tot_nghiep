@@ -109,7 +109,6 @@
                                 <span>Không có ảnh</span>
                             @endif
                         </td>
-
                         <td>
                             @if ($p->status === 1)
                                 Hoạt động

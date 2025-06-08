@@ -75,7 +75,6 @@ class ProductController extends Controller
         if ($request->has('search') && $request->search != '') {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
-
         // Lấy dữ liệu sản phẩm cùng biến thể
         $products = $query->with([
             'variants' => function ($q) {
@@ -97,6 +96,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'data' => $products,
+
         ]);
     }
 

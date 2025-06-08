@@ -9,7 +9,6 @@ class ProductSeeder extends Seeder
 {
     public function run()
     {
-
         // 2. Sản phẩm
         DB::table('products')->insert([
             [
