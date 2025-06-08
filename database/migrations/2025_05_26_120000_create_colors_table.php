@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('colors', function (Blueprint $table) {
             $table->id();
+            // tên màu sắc
             $table->string('name');
             $table->string('image');
             $table->timestamps();

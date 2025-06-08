@@ -12,6 +12,7 @@ class CreateProductVariantsTable extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained('products');
             $table->string('sku');
+            // giá sản phẩm
             $table->decimal('price', 10, 2);
             $table->decimal('sale_price', 10, 2)->nullable();
             $table->datetime('sale_start_date')->nullable();

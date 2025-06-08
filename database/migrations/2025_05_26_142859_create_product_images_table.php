@@ -10,6 +10,7 @@ class CreateProductImagesTable extends Migration
     {
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
+            // The URL of the product image
             $table->string('url');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->onDelete('cascade');
