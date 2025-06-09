@@ -14,6 +14,7 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
+    
     public function index(Request $request)
     {
         $query = Category::query();
@@ -94,13 +95,9 @@ class CategoryController extends Controller
 
     public function trash()
     {
-        // dd('Controller called'); // phải thấy dòng này
         $categories = Category::onlyTrashed()->get();
-    //  dd($categories);
-        return view('admin.category.trash', compact('categories'));
+    return view('admin.category.trash', compact('categories'));
     }
-
-
 
     // Khôi phục
     public function restore($id)

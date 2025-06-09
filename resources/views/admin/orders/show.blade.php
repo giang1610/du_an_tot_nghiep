@@ -1,8 +1,20 @@
-@extends('layouts.admin') {{-- hoặc layouts.app nếu chưa có layout admin --}}
+@extends('admin.layouts.app')
 
 @section('content')
 <div class="container mt-4">
-    <h2>Chi tiết đơn hàng: {{ $order->order_number ?? 'N/A' }}</h2>
+    <h2>
+        Chi tiết đơn hàng: {{ $order->order_number }}
+        <span class="badge bg-info text-dark">
+            {{ match($order->status) {
+                'pending' => 'Chờ xử lý',
+                'processing' => 'Đang xử lý',
+                'shipped' => 'Đã giao hàng',
+                'cancelled' => 'Đã hủy',
+                'completed' => 'Hoàn tất',
+                default => ucfirst($order->status)
+            } }}
+        </span>
+    </h2>
 
     <hr>
 
@@ -16,34 +28,59 @@
         <li><strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</li>
     </ul>
 
-    <h4>Sản phẩm</h4>
+    <h4>Sản phẩm đã đặt</h4>
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Sản phẩm</th>
-                <th>Hình ảnh</th>
+                <th>Ảnh</th>
                 <th>Phân loại</th>
                 <th>Số lượng</th>
-                <th>Giá</th>
+                <th>Giá gốc</th>
+                <th>Giá khuyến mãi</th>
                 <th>Thành tiền</th>
             </tr>
         </thead>
         <tbody>
             @foreach($order->items as $item)
+                @php
+                    $variant = $item->variant;
+                    $product = $variant->product ?? null;
+                    $color = $variant->color->value ?? null;
+                    $size = $variant->size->name ?? null;
+                    $thumbnail = $product?->thumbnail;
+                    $price = $item->price;
+                    $salePrice = $item->sale_price ?? $price;
+                    $totalPrice = $salePrice * $item->quantity;
+                @endphp
                 <tr>
-                    <td>{{ $item->variant->product->name }}</td>
+                    <td>{{ $product->name ?? 'Không rõ' }}</td>
                     <td>
-                        @if($item->variant->product->thumbnail)
-                            <img src="{{ asset('storage/' . $item->variant->product->thumbnail) }}" width="60">
+                        @if($thumbnail)
+                            <img src="{{ asset('storage/' . $thumbnail) }}" width="60">
+                        @else
+                            Không có ảnh
                         @endif
                     </td>
                     <td>
-                        Màu: <img src="{{ asset('storage/' . $item->variant->color->value) }}" width="20">
-                        | Size: {{ $item->variant->size->name }}
+                        Màu:
+                        @if($color && file_exists(public_path('storage/' . $color)))
+                            <img src="{{ asset('storage/' . $color) }}" width="20">
+                        @else
+                            {{ $color ?? 'Không có' }}
+                        @endif
+                        | Size: {{ $size ?? 'Không có' }}
                     </td>
                     <td>{{ $item->quantity }}</td>
-                    <td>{{ number_format($item->price) }}₫</td>
-                    <td>{{ number_format($item->price * $item->quantity) }}₫</td>
+                    <td>{{ number_format($price) }}₫</td>
+                    <td>
+                        @if($salePrice < $price)
+                            <span class="text-danger">{{ number_format($salePrice) }}₫</span>
+                        @else
+                            {{ number_format($salePrice) }}₫
+                        @endif
+                    </td>
+                    <td>{{ number_format($totalPrice) }}₫</td>
                 </tr>
             @endforeach
         </tbody>

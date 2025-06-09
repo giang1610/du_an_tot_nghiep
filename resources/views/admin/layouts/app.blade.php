@@ -32,6 +32,16 @@
     </style>
 </head>
 <body>
+    <!-- Hiển thị tên người dùng nếu đã đăng nhập -->
+@auth
+    <div>{{ Auth::user()->name }}</div>
+@endauth
+
+<!-- Hiển thị link đăng nhập nếu chưa đăng nhập -->
+@guest
+    <a href="{{ route('login') }}">Đăng nhập</a>
+@endguest
+
     <div class="d-flex">
         <!-- Sidebar -->
         <aside class="sidebar bg-dark text-white w-250 p-5" id="sidebar">
