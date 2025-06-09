@@ -57,6 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 //Reset pass
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+
 
 //Hiển thị comment
 
