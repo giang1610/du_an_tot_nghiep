@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\ProductVariant;
 
 
 class CartController extends Controller
@@ -14,9 +15,26 @@ class CartController extends Controller
     public function addToCart(Request $request)
     {
         $request->validate([
-            'product_variant_id' => 'required|exists:product_variants,id',
+            'product_id' => 'required|exists:products,id',
+            'color_id' => 'required|exists:colors,id',
+            'size_id' => 'required|exists:sizes,id',
             'quantity' => 'required|integer|min:1',
+        ], [
+            'color_id.required' => 'Vui lòng chọn màu sắc.',
+            'size_id.required' => 'Vui lòng chọn kích cỡ.',
         ]);
+
+        // Tìm biến thể sản phẩm
+        $variant = ProductVariant::where('product_id', $request->product_id)
+            ->where('color_id', $request->color_id)
+            ->where('size_id', $request->size_id)
+            ->first();
+
+        if (!$variant) {
+            return response()->json([
+                'message' => 'Không tìm thấy biến thể phù hợp với sản phẩm, màu sắc và kích cỡ đã chọn.'
+            ], 404);
+        }
 
         $user = Auth::user();
 
@@ -25,8 +43,8 @@ class CartController extends Controller
 
         // Kiểm tra sản phẩm đã có trong giỏ chưa
         $item = CartItem::where('cart_id', $cart->id)
-                        ->where('product_variant_id', $request->product_variant_id)
-                        ->first();
+            ->where('product_variant_id', $variant->id)
+            ->first();
 
         if ($item) {
             $item->quantity += $request->quantity;
@@ -34,7 +52,7 @@ class CartController extends Controller
         } else {
             CartItem::create([
                 'cart_id' => $cart->id,
-                'product_variant_id' => $request->product_variant_id,
+                'product_variant_id' => $variant->id,
                 'quantity' => $request->quantity,
             ]);
         }
