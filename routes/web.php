@@ -49,5 +49,5 @@ Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest
 //Đơn hàng
 // Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
 // });
