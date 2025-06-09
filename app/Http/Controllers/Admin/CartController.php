@@ -162,6 +162,8 @@ class CartController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->variant->price,
                     'sale_price' => $item->variant->sale_price,
+                    'color_id' => $item->variant->color_id,
+                'size_id' => $item->variant->size_id,
                 ]);
 
                 $item->variant->decrement('stock', $item->quantity);
