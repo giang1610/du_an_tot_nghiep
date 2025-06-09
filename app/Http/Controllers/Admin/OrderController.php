@@ -10,13 +10,18 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with('user')->latest()->paginate(10);
+        // Lấy danh sách đơn hàng mới nhất, phân trang
+        $orders = Order::with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10); // hoặc ->get() nếu không muốn phân trang
+
         return view('admin.orders.index', compact('orders'));
     }
 
-    public function show(Order $order)
+    public function show($id)
     {
-        $order->load('items.variant.product', 'items.variant.color', 'items.variant.size');
+        $order = Order::with('items.variant.product', 'items.variant.color', 'items.variant.size')->findOrFail($id);
+
         return view('admin.orders.show', compact('order'));
     }
 }
