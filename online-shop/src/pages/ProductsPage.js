@@ -130,7 +130,10 @@ const ProductsPage = () => {
                               alt={product.name}
                             />
                           </Link>
-                          <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
+                          {/* <Card.Text className="text-danger fw-bold">
+                            {product.price ? product.price.toLocaleString() : 'Giá không rõ'}
+                            đ
+                          </Card.Text> */}
                           <Button variant="primary" size="sm" className="w-100">Mua Ngay</Button>
                         </Card.Body>
 

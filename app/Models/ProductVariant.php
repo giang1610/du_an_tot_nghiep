@@ -30,7 +30,6 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(Product::class);
     }
-   
     
     public function color()
     {
@@ -45,5 +44,12 @@ class ProductVariant extends Model
     public function cartItems()
     {
         return $this->hasMany(CartItem::class);
+    }
+    public function getCurrentPriceAttribute()
+    {
+        if ($this->sale_price && now()->between($this->sale_start_date, $this->sale_end_date)) {
+            return $this->sale_price;
+        }
+        return $this->price;
     }
 }
