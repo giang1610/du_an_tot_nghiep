@@ -225,6 +225,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="{{ route('orders.index') }}" class="nav-link text-white">
+                            <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link text-white" href="">
                             <i class="fas fa-cog"></i> Thuộc tính
                         </a>

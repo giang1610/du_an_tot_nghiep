@@ -98,7 +98,7 @@ const ProductDetail = () => {
           </Col>
           <Col md={6}>
             <h2>{product.name}</h2>
-            <h4 className="text-danger fw-bold">{product.price.toLocaleString()} đ</h4>
+            {/* <h4 className="text-danger fw-bold">{product.price.toLocaleString()} đ</h4> */}
             <p>{product.description || "Chưa có mô tả sản phẩm."}</p>
             <div className="d-flex gap-2 mt-4">
               <Button variant="primary" onClick={handleAddToCart}>Mua Ngay</Button>

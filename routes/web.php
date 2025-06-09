@@ -2,12 +2,16 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use App\Http\Requests\CustomEmailVerificationRequest; 
+use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\CartController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -34,16 +38,16 @@ Route::resource('products', ProductController::class);
 
 
 
-Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) { 
-    
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
+
     $request->fulfill(); // Gọi fulfill từ CustomEmailVerificationRequest
 
     return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/email-verified-successfully?user_id=' . $request->route('id'));
-
 })->middleware(['signed'])->name('verification.verify');
 
 
-
-
-
-
+//Đơn hàng
+// Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+// });
