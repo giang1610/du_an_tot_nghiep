@@ -19,7 +19,6 @@ return new class extends Migration
             $table->boolean('selected')->default(true);
             $table->string('note', 255)->nullable();
             $table->timestamps();
-
             $table->foreign('cart_id')->references('id')->on('carts')->onDelete('cascade');
             $table->foreign('product_variant_id')->references('id')->on('product_variants')->onDelete('cascade');
         });

@@ -182,17 +182,6 @@ class CartController extends Controller
                 'size_id' => $item->variant->size_id,
             ]);
 
-            // // Chỉ thêm color_id và size_id nếu có giá trị
-            // if (!is_null($item->variant->color_id)) {
-            //     $orderItemData['color_id'] = $item->variant->color_id;
-            // }
-
-            // if (!is_null($item->variant->size_id)) {
-            //     $orderItemData['size_id'] = $item->variant->size_id;
-            // }
-
-            // $order->items()->create($orderItemData);
-
             $item->variant->decrement('stock', $item->quantity);
         }
 
@@ -210,3 +199,4 @@ class CartController extends Controller
         ]);
     }
 }
+

@@ -7,7 +7,7 @@ use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\CommentController;
+use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\API\OrderController;
 
@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/products', [ProductController::class, 'index']);
 
-Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/products/{slug}', [ProductController::class, 'show']);
 
 //Tài khoản
 Route::post('/register', [AuthController::class, 'register']);
@@ -31,8 +31,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+
+
     // Các route yêu cầu người dùng phải đăng nhập VÀ đã xác thực email (verified)
-    Route::middleware('verified')->group(function () {});
+    Route::middleware('verified')->group(function () {
+
+    });
 });
 
 //Reset pass
