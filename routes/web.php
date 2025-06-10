@@ -23,6 +23,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// đường dẫn category
+
 Route::resource('categories', CategoryController::class);
 Route::get('trash', [CategoryController::class, 'trash'])->name('categories.trash');
 Route::post('restore/{id}', [CategoryController::class, 'restore'])->name('categories.restore');
@@ -30,9 +32,13 @@ Route::delete('force-delete/{id}', [CategoryController::class, 'forceDelete'])->
 Route::post('categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
 Route::delete('force-delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
 
+
+// đường dẫn product
 Route::resource('products', ProductController::class);
 
 
+
+// Đăng nhập, đăng xuất, đăng ký
 
 Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) { 
     

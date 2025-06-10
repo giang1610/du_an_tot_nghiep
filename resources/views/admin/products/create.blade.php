@@ -51,16 +51,32 @@
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-6">
+                   {{-- <div class="col-md-6">
                         <label for="thumbnail" class="form-label fw-medium">Ảnh sản phẩm</label>
                         <div class="mb-2">
-                            <img id="img" class="rounded" style="max-width: 100px;" src="" alt="Preview">
+                            <img id="thumbnail-preview"
+                                class="rounded"
+                                style="max-width: 100px;"
+                                src="{{ old('thumbnail') ? '' : (isset($product) ? asset('storage/' . $product->thumbnail) : '') }}"
+                                alt="Preview">
                         </div>
-                        <input type="file" name="thumbnail" class="form-control" onchange="img.src = window.URL.createObjectURL(this.files[0])">
+                        <input type="file" name="thumbnail" class="form-control"
+                            onchange="previewThumbnail(event)">
                         @error('thumbnail')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
-                    </div>
+                    </div> --}}
+
+                    <div class="col-md-6">
+                    <label for="form-label">Ảnh sản phẩm</label> <br>
+                    <img id="img" style="max-width: 100px;"> <br>
+                    <input type="file" name="thumbnail" class="form-control" onchange="img.src = window.URL.createObjectURL(this.files[0])">
+                    @error('thumbnail')
+                    <div class="text-danger">{{$message}}</div>
+                    @enderror
+        </div>
+
+
                     <div class="col-md-6">
                         <label for="category_id" class="form-label fw-medium">Danh mục</label>
                         <select name="category_id" class="form-select">
@@ -118,6 +134,89 @@
         </div>
 
         <div id="variantContainer"></div>
+        {{-- // giữ biến biến thể khi có validate --}}
+        <div id="variantContainer">
+    @if(old('variants'))
+        @foreach(old('variants') as $i => $variant)
+            <div class="card p-3 mb-3 border shadow-sm" id="variant-{{ $i }}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title mb-0">
+                        {{ $colors->firstWhere('id', $variant['color_id'])?->name ?? '' }} - 
+                        {{ $sizes->firstWhere('id', $variant['size_id'])?->name ?? '' }}
+                    </h5>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-warning me-1 btn-edit" data-bs-target="#details-variant-{{ $i }}">Ẩn</button>
+                        <button type="button" class="btn btn-sm btn-danger btn-delete" data-bs-target="#variant-{{ $i }}">Xóa</button>
+                    </div>
+                </div>
+                <input type="hidden" name="variants[{{ $i }}][color_id]" value="{{ $variant['color_id'] }}">
+                <input type="hidden" name="variants[{{ $i }}][size_id]" value="{{ $variant['size_id'] }}">
+                <div class="variant-details mt-2" id="details-variant-{{ $i }}" style="display: block;">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Mã SP</label>
+                            <input type="text" name="variants[{{ $i }}][sku]" class="form-control form-control-sm" value="{{ old('variants.'.$i.'.sku', $variant['sku'] ?? '') }}">
+                            @error('variants.'.$i.'.sku')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Kho</label>
+                            <select name="variants[{{ $i }}][stock]" class="form-select form-select-sm">
+                               
+                                <option value="0" {{ old('variants.'.$i.'.stock', $variant['stock'] ?? '') == '0' ? 'selected' : '' }}>Còn hàng</option>
+                                <option value="1" {{ old('variants.'.$i.'.stock', $variant['stock'] ?? '') == '1' ? 'selected' : '' }}>Hết hàng</option>
+                            </select>
+                            @error('variants.'.$i.'.stock')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Giá</label>
+                            <input type="number" name="variants[{{ $i }}][price]" class="form-control form-control-sm" value="{{ old('variants.'.$i.'.price', $variant['price'] ?? '') }}">
+                            @error('variants.'.$i.'.price')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Giá khuyến mãi</label>
+                            <input type="number" name="variants[{{ $i }}][sale_price]" class="form-control form-control-sm" id="sale_price_{{ $i }}" value="{{ old('variants.'.$i.'.sale_price', $variant['sale_price'] ?? '') }}">
+                            @error('variants.'.$i.'.sale_price')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Ngày bắt đầu khuyến mãi</label>
+                            <input type="datetime-local" name="variants[{{ $i }}][sale_start_date]" class="form-control form-control-sm" id="sale_start_date_{{ $i }}" value="{{ old('variants.'.$i.'.sale_start_date', $variant['sale_start_date'] ?? '') }}">
+                            @error('variants.'.$i.'.sale_start_date')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Ngày kết thúc khuyến mãi</label>
+                            <input type="datetime-local" name="variants[{{ $i }}][sale_end_date]" class="form-control form-control-sm" id="sale_end_date_{{ $i }}" value="{{ old('variants.'.$i.'.sale_end_date', $variant['sale_end_date'] ?? '') }}">
+                            @error('variants.'.$i.'.sale_end_date')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Ảnh biến thể</label>
+                            <div class="mb-2">
+                                <img class="preview-image mb-2 rounded" style="max-width: 100px;" src="" alt="Preview" id="img-preview-{{ $i }}">
+                            </div>
+                            <input type="file" name="variants[{{ $i }}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-{{ $i }}').src = window.URL.createObjectURL(this.files[0])">
+                            @error('variants.'.$i.'.image')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
+</div>
+
+         {{-- kết thúc --}}
 
         <div class="mt-4">
             <button type="submit" class="btn btn-primary">Thêm sản phẩm</button>
@@ -150,13 +249,13 @@ document.getElementById('generateVariants').addEventListener('click', function (
                     <div class="variant-details mt-2" id="details-${variantId}" style="display: none;">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small">Mã SKU</label>
+                                <label class="form-label small">Mã SP</label>
                                 <input type="text" name="variants[${index}][sku]" class="form-control form-control-sm">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small">Kho</label>
                                 <select name="variants[${index}][stock]" class="form-select form-select-sm">
-                                    <option value="">-- Chọn kho --</option>
+                                  
                                     <option value="0">Còn hàng</option>
                                     <option value="1">Hết hàng</option>
                                 </select>
@@ -180,9 +279,9 @@ document.getElementById('generateVariants').addEventListener('click', function (
                             <div class="col-12">
                                 <label class="form-label small">Ảnh</label>
                                 <div class="mb-2">
-                                    <img class="preview-image mb-2 rounded" style="max-width: 100px;" src="" alt="Preview">
+                                    <img class="preview-image mb-2 rounded" style="max-width: 100px;" src="" alt="Preview" id="img-preview-${index}">
                                 </div>
-                                <input type="file" name="variants[${index}][image]" class="form-control form-control-sm" onchange="previewImage(this)">
+                                <input type="file" name="variants[${index}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-${index}').src = window.URL.createObjectURL(this.files[0])">
                             </div>
                         </div>
                     </div>
@@ -216,12 +315,12 @@ document.getElementById('generateVariants').addEventListener('click', function (
     });
 });
 
-function previewImage(input) {
-    const img = input.closest('.col-12').querySelector('.preview-image');
-    if (input.files && input.files[0]) {
-        img.src = URL.createObjectURL(input.files[0]);
-    }
-}
+// function previewImage(input) {
+//     const img = input.closest('.col-12').querySelector('.preview-image');
+//     if (input.files && input.files[0]) {
+//         img.src = URL.createObjectURL(input.files[0]);
+//     }
+// }
 
 // Slug generation
 function slugify(text) {
@@ -290,4 +389,14 @@ $(document).ready(function () {
     });
 });
 </script>
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const img = document.getElementById('img-preview');
+        if (input.files && input.files[0]) {
+            img.src = URL.createObjectURL(input.files[0]);
+        }
+    }
+</script>
+
 @endsection
