@@ -1,11 +1,15 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<a href="/products">
-    <i class="bi bi-arrow-left" style="font-size: 1.5rem; color: red;"></i> Quay lại danh sách sản phẩm
-</a>
 
-<div class="container">
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <a href="/products" class="d-flex align-items-center text-decoration-none back-link">
+            <i class="bi bi-arrow-left me-2" style="font-size: 1.5rem; color: #4b5563;"></i>
+            <span class="text-dark">Quay lại danh sách sản phẩm</span>
+        </a>
+    </div>
+    
     <h1 class="h4 mb-4">Chỉnh sửa sản phẩm</h1>
 
     @if (session('error'))

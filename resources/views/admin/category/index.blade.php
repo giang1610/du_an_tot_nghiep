@@ -20,8 +20,14 @@
         <form method="GET" class="mb-4">
             <br>
             <div class="input-group shadow-sm rounded">
-                <input type="text" name="search" class="form-control border-primary" placeholder="🔍 Tìm kiếm danh mục..."
-                    value="{{ request('search') }}" style="height: 48px;">
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control border-primary"
+                    placeholder="🔍 Tìm kiếm danh mục..."
+                    value="{{ request('search') }}"
+                    style="height: 48px;"
+                >
                 <button type="submit" class="btn btn-primary px-4" style="height: 48px;">
                     Tìm kiếm
                 </button>
@@ -57,8 +63,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger"
-                                    onclick="return confirm('Danh mục này sẽ chuyển vô thùng rác?')"><i
-                                        class="bi bi-trash3"></i></button>
+                                    onclick="return confirm('Danh mục này sẽ chuyển vô thùng rác?')"><i class="bi bi-trash3"></i></button>
                             </form>
                         </td>
                     </tr>

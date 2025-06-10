@@ -2,12 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-
 use App\Http\Requests\CustomEmailVerificationRequest;
+use Illuminate\Http\Request;
+use App\Models\User;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
@@ -30,7 +28,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 
 // Trang chủ
 Route::get('/', function () {
-    return view('welcome');
+    return view('admin.layouts.app');
 });
 
 // Đăng ký, đăng nhập, quên mật khẩu
@@ -50,7 +48,6 @@ Route::middleware('guest')->group(function () {
 
 // Logout
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-
 // Email Verification
 Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])
     ->middleware('auth')->name('verification.notice');
