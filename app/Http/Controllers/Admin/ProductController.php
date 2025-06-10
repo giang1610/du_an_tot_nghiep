@@ -21,8 +21,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with('category', 'variants');
-    //    $a = now();
-    //      dd($a);
+        // Kiểm tra xem có tìm kiếm hay không
         if($request->has('search')){
             $query->where('name','like','%' . $request->search .'%');
         }
@@ -55,6 +54,8 @@ public function store(ProductRequest $request)
         $thumbnailPath = null;
         if ($request->hasFile('thumbnail')) {
             $thumbnailPath = $request->file('thumbnail')->store('products', 'public');
+        }else{
+            $thumbnailPath = $request->thumbnail; // Nếu không có ảnh mới, giữ nguyên ảnh cũ
         }
 
         // Tạo sản phẩm cha
