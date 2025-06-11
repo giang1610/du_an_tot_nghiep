@@ -27,7 +27,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('api_token')->plainTextToken;
 
-        $verifyUrl = "http://localhost:5173/verify-email?email=" . urlencode($user->email);
+        $verifyUrl = "http://localhost:3000/verify-email?email=" . urlencode($user->email);
 
         Mail::send([], [], function ($message) use ($user, $verifyUrl) {
             $message->to($user->email)
@@ -46,6 +46,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar' => $user->avatar ? asset('storage/avatars/' . $user->avatar) : null,
+                'email_verified_at' => $user->email_verified_at
             ],
             'token' => $token,
         ]);

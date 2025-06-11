@@ -36,6 +36,8 @@ class ProductController extends Controller
 
         $products = $query->get();
 
+        // Map thêm đường dẫn ảnh
+
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -45,20 +47,18 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = Product::find($id);
-        $product = Product::with(['comments.user'])->find($id);
+
         if (!$product) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sản phẩm không tồn tại',
             ], 404);
         }
-
         // Lấy sản phẩm liên quan cùng danh mục, trừ sản phẩm hiện tại, giới hạn 4 sản phẩm
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->limit(4)
             ->get();
-
         return response()->json([
             'success' => true,
             'data' => $product,
@@ -109,4 +109,57 @@ class ProductController extends Controller
 
         return response()->json(['data' => $comment]);
     }
+    public function getBySlug($slug)
+{
+    $product = Product::where('slug', $slug)->first();
+
+    if (!$product) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Sản phẩm không tồn tại',
+        ], 404);
+    }
+
+    // Lấy sản phẩm liên quan
+    $related = Product::where('category_id', $product->category_id)
+        ->where('id', '!=', $product->id)
+        ->limit(4)
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $product,
+        'related' => $related,
+    ]);
+}
+public function showBySlug($slug)
+{
+    $product = Product::with([
+        'comments.user',
+        'variants.color',
+        'variants.size',
+    ])->where('slug', $slug)->firstOrFail();
+
+    // Lấy danh sách các sản phẩm liên quan
+    $related = Product::where('category_id', $product->category_id)
+                ->where('id', '!=', $product->id)
+                ->take(4)
+                ->get();
+
+    return response()->json([
+        'data' => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'price' => $product->price,
+            'description' => $product->description,
+            'img' => $product->img,
+            'variants' => $product->variants, // <--- phần quan trọng
+            'comments' => $product->comments,
+        ],
+        'related' => $related,
+    ]);
+}
+
+
 }

@@ -8,7 +8,8 @@ use App\Http\Controllers\API\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\SizeController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -28,6 +29,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/products', [ProductController::class, 'index']);
 
 Route::get('/products/{id}', [ProductController::class, 'show']);
+//Hiển thị ảnh 
+Route::post('/products', [ProductController::class, 'store']);
+//Chi tiết
+Route::get('/products/slug/{slug}', [ProductController::class, 'getBySlug']);
 
 //Tài khoản
 Route::post('/register', [AuthController::class, 'register']);
@@ -58,8 +63,6 @@ Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']
 Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
-//Gửi mail đặt hàng
-
-
-Route::post('/orders', [OrderController::class, 'store']);
+//Lọc theo size
+Route::get('/sizes', [SizeController::class, 'index']);
 

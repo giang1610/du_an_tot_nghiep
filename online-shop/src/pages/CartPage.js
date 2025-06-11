@@ -1,63 +1,66 @@
-import React from "react";
-import { useCart } from "../contexts/CartContext";
+import React from 'react';
+import { Container, Table, Button, Form } from 'react-bootstrap';
+import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
 
-function CartPage() {
-  const { cartItems, dispatch } = useCart();
-
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  const handleQuantityChange = (id, quantity) => {
-    dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
-  };
-
-  const handleRemove = (id) => {
-    dispatch({ type: "REMOVE_FROM_CART", payload: id });
-  };
+const CartPage = () => {
+  const { cart, updateQuantity, removeFromCart, total } = useCart();
+  const navigate = useNavigate();
 
   return (
-    <div className="container mt-4">
-      <h2>Giỏ hàng</h2>
-      {cartItems.length === 0 ? (
-        <p>Giỏ hàng trống.</p>
+    <Container className="my-5">
+      <h2 className="mb-4 text-center">Giỏ Hàng</h2>
+
+      {cart.length === 0 ? (
+        <p className="text-center">Giỏ hàng của bạn đang trống.</p>
       ) : (
         <>
-          {cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="d-flex align-items-center justify-content-between border-bottom py-2"
-            >
-              <div>
-                <h5>{item.name}</h5>
-                <p>Giá: {item.price.toLocaleString()}₫</p>
-                <input
-                  type="number"
-                  value={item.quantity}
-                  min="1"
-                  className="form-control"
-                  style={{ width: "80px" }}
-                  onChange={(e) =>
-                    handleQuantityChange(item.id, parseInt(e.target.value))
-                  }
-                />
-              </div>
-              <button
-                className="btn btn-danger"
-                onClick={() => handleRemove(item.id)}
-              >
-                Xóa
-              </button>
-            </div>
-          ))}
-          <hr />
-          <h4>Tổng tiền: {total.toLocaleString()}₫</h4>
-          <button className="btn btn-success">Tiến hành thanh toán</button>
+          <Table bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Sản phẩm</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Tổng</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cart.map(item => (
+                <tr key={item.id}>
+                  <td>{item.name}</td>
+                  <td>{item.price.toLocaleString()} đ</td>
+                  <td>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                      style={{ width: '80px' }}
+                    />
+                  </td>
+                  <td>{(item.price * item.quantity).toLocaleString()} đ</td>
+                  <td>
+                    <Button variant="danger" size="sm" onClick={() => removeFromCart(item.id)}>Xóa</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+
+          <div className="text-end fs-5 fw-bold mb-4">
+            Tổng cộng: {total.toLocaleString()} đ
+          </div>
+
+          <div className="text-end">
+            <Button variant="success" onClick={() => navigate('/checkout')}>
+              Thanh Toán
+            </Button>
+          </div>
         </>
       )}
-    </div>
+    </Container>
   );
-}
+};
 
 export default CartPage;

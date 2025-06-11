@@ -1,49 +1,31 @@
-  import React from "react";
-  import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-  import Header from "./components/Header";
-  import Footer from "./components/Footer";
-  import HomePage from "./pages/HomePage";
-  import ProductDetailPage from "./pages/ProductDetailPage";
-  import AllProducts from "./pages/AllProducts";
-  import Login from "./pages/Login";
-  import Register from "./pages/Register";
-  import ForgotPassword from "./pages/ForgotPassword";
-  import ChangePassword from "./pages/ChangePassword";
-  import { CartProvider } from "./contexts/CartContext";
-import CartPage from "./pages/CartPage";
-import { AuthProvider } from "./contexts/AuthContext";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import ProductDetail from './pages/ProductDetail';
+import ProductsPage from './pages/ProductsPage';
+import CartPage from './pages/CartPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
-  function App() {
-    return (
-      <AuthProvider>
-      <CartProvider>
-      <Router>
-        <Header />
-        <Routes>
 
-          <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<AllProducts/>} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ChangePassword />} />
-          <Route path="/cart" element={<CartPage />} />
 
-          <Route
-            path="*"
-            element={
-              <div className="container mt-5">
-                <h2>Trang không tồn tại</h2>
-              </div>
-            }
-          />
-        </Routes>
-        <Footer />
-      </Router>
-      </CartProvider>
-      </AuthProvider>
-    );
-  }
 
-  export default App;
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<ProductsPage />} />
+       <Route path="/products/:slug" element={<ProductDetail />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
