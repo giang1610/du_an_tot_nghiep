@@ -4,17 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-<<<<<<< HEAD
-use App\Models\Comment;
-=======
 
->>>>>>> 498c9d628d49aa7a1e5326bd88ff5d9cf5a95a1b
 class Product extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-       
+
         'category_id',
         'name',
         'slug',
@@ -41,11 +37,7 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-<<<<<<< HEAD
-     // Quan hệ nhiều-nhiều với Color0
-=======
-     // Quan hệ nhiều-nhiều với Color
->>>>>>> 498c9d628d49aa7a1e5326bd88ff5d9cf5a95a1b
+    // Quan hệ nhiều-nhiều với Color
     public function colors()
     {
         return $this->belongsToMany(Color::class, 'color_product', 'product_id', 'color_id');
@@ -62,13 +54,10 @@ class Product extends Model
     // {
     //     return $this->hasMany(ProductImage::class);
     // }
-<<<<<<< HEAD
-    public function comments()
+
+    public function getImgAttribute()
     {
-        return $this->hasMany(Comment::class);
+        return url('uploads/products/' . $this->thumbnail);
     }
-=======
-    
->>>>>>> 498c9d628d49aa7a1e5326bd88ff5d9cf5a95a1b
-    
+    protected $appends = ['img'];
 }

@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart, FaSearch, FaUser } from "react-icons/fa";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 const Header = () => {
-  const { user, logoutUser } = useAuth(); // lấy thông tin user
+  const { user, logoutUser } = useAuth(); // Lấy thông tin user từ context
 
   return (
     <header className="border-bottom bg-white shadow-sm">
