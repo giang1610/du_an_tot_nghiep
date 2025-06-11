@@ -13,17 +13,20 @@ use Database\Seeders\ProductImageSeeder;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run()
-{
-        $this->call([
-        // CategorySeeder::class,
-        // ColorSeeder::class,
-        // SizeSeeder::class,
-        ProductSeeder::class,
-        ProductVariantSeeder::class,
-        ProductImageSeeder::class,
-    ]);
-
-}
-
+        public function run()
+        {
+                $this->call([
+                        // CategorySeeder::class,
+                        // ColorSeeder::class,
+                        // SizeSeeder::class,
+                        ProductSeeder::class,
+                        ProductVariantSeeder::class,
+                        ProductImageSeeder::class,
+                        ColorSeeder::class,
+                        SizeSeeder::class,
+                        // ProductSeeder::class,
+                        // ProductVariantSeeder::class,
+                        // ProductImageSeeder::class,
+                ]);
+        }
 }

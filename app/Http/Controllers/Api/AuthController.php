@@ -70,6 +70,18 @@ class AuthController extends Controller
 
         $token = $user->createToken('api_token')->plainTextToken;
 
+        $verifyUrl = "http://localhost:3000/verify-email?email=" . urlencode($user->email);
+
+        Mail::send([], [], function ($message) use ($user, $verifyUrl) {
+            $message->to($user->email)
+                ->subject('Xác nhận email đăng ký')
+                ->html(
+                    '<p>Đây là Thông Báo Từ Website. Vui lòng nhấn vào nút bên dưới để xác nhận email:</p>
+                    <a href="' . $verifyUrl . '" style="display:inline-block;padding:10px 20px;background:#007bff;color:#fff;text-decoration:none;border-radius:5px;">Xác nhận email</a>
+                    <p>Nếu bạn không đăng ký tài khoản, vui lòng bỏ qua email này.</p>'
+                );
+        });
+
         return response()->json([
             'message' => 'Đăng nhập thành công',
             'user' => [
@@ -77,6 +89,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar' => $user->avatar ? asset('storage/avatars/' . $user->avatar) : null,
+                'email_verified_at' => $user->email_verified_at
             ],
             'token' => $token,
         ]);
