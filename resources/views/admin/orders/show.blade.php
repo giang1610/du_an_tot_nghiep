@@ -43,58 +43,58 @@
         </thead>
         <tbody>
             @foreach($order->items as $item)
-    @php
-        $variant = $item->variant;
-        $product = $variant->product ?? null;
-        $thumbnail = $product?->thumbnail;
-        $price = $item->price;
-        $salePrice = $item->sale_price ?? $price;
-        $totalPrice = $salePrice * $item->quantity;
-        $hasDiscount = $salePrice < $price;
-    @endphp
-    <tr>
-        <td>{{ $product->name ?? 'Không rõ' }}</td>
-        <td>
-            @if($thumbnail)
-                <img src="{{ asset('storage/' . $thumbnail) }}" width="60">
-            @else
-                Không có ảnh
-            @endif
-        </td>
-        <td>
-            Màu: 
-            @if($variant->color && $variant->color->image)
-                <img src="{{ asset('storage/' . $variant->color->image) }}" width="20">
-                ({{ $variant->color->name }})
-            @else
-                Không có
-            @endif
-            |
-            Size: {{ $variant->size->name ?? 'Không có' }}
-        </td>
-        <td>{{ $item->quantity }}</td>
+            @php
+            $variant = $item->variant;
+            $product = $variant->product ?? null;
+            $thumbnail = $product?->thumbnail;
+            $price = $item->price;
+            $salePrice = $item->sale_price ?? $price;
+            $totalPrice = $salePrice * $item->quantity;
+            $hasDiscount = $salePrice < $price;
+                @endphp
+                <tr>
+                <td>{{ $product->name ?? 'Không rõ' }}</td>
+                <td>
+                    @if($thumbnail)
+                    <img src="{{ asset('storage/' . $thumbnail) }}" width="60">
+                    @else
+                    Không có ảnh
+                    @endif
+                </td>
+                <td>
+                    Màu:
+                    @if($variant->color && $variant->color->image)
+                    <img src="{{ asset('storage/' . $variant->color->image) }}" width="20">
+                    ({{ $variant->color->name }})
+                    @else
+                    Không có
+                    @endif
+                    |
+                    Size: {{ $variant->size->name ?? 'Không có' }}
+                </td>
+                <td>{{ $item->quantity }}</td>
 
-        {{-- Giá gốc --}}
-        <td>
-            @if($hasDiscount)
-                <del>{{ number_format($price) }}₫</del>
-            @else
-                {{ number_format($price) }}₫
-            @endif
-        </td>
+                {{-- Giá gốc --}}
+                <td>
+                    @if($hasDiscount)
+                    <del>{{ number_format($price) }}₫</del>
+                    @else
+                    {{ number_format($price) }}₫
+                    @endif
+                </td>
 
-        {{-- Giá khuyến mãi --}}
-        <td>
-            @if($hasDiscount)
-                <span class="text-danger">{{ number_format($salePrice) }}₫</span>
-            @else
-                -
-            @endif
-        </td>
+                {{-- Giá khuyến mãi --}}
+                <td>
+                    @if($hasDiscount)
+                    <span class="text-danger">{{ number_format($salePrice) }}₫</span>
+                    @else
+                    -
+                    @endif
+                </td>
 
-        <td>{{ number_format($totalPrice) }}₫</td>
-    </tr>
-@endforeach
+                <td>{{ number_format($totalPrice) }}₫</td>
+                </tr>
+                @endforeach
 
         </tbody>
     </table>

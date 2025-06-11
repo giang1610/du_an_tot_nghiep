@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Events\OrderStatusUpdated; // Import sự kiện OrderStatusUpdated
 
 class OrderController extends Controller
 {
@@ -53,5 +54,30 @@ class OrderController extends Controller
         ])->findOrFail($id);
 
         return view('admin.orders.show', compact('order'));
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        // $order = Order::findOrFail($id);
+        // $this->authorize('update', $order); // Kiểm tra quyền cập nhật
+
+        // $request->validate([
+        //     'status' => 'required|in:pending,processing,completed,cancelled',
+        // ]);
+
+        // $order->status = $request->status;
+        // $order->save();
+
+        // // Phát sự kiện cập nhật trạng thái đơn hàng
+        // broadcast(new \App\Events\OrderStatusUpdated($order->id, $order->status))->toOthers();
+
+        // return redirect()->route('admin.orders.show', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+        $order = Order::findOrFail($id);
+        $order->status = $request->input('status');
+        $order->save();
+
+        // Gửi sự kiện WebSocket tới client
+        broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
+
+        return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
     }
 }

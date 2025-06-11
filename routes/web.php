@@ -85,7 +85,8 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-
+    Route::post('/admin/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus']);
+    Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
 
