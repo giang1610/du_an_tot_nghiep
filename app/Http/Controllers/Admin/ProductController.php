@@ -50,12 +50,13 @@ public function store(ProductRequest $request)
 {
    
     try {
+        // dd($request->all());
         // Ảnh đại diện sản phẩm
         $thumbnailPath = null;
         if ($request->hasFile('thumbnail')) {
             $thumbnailPath = $request->file('thumbnail')->store('products', 'public');
         }else{
-            $thumbnailPath = $request->thumbnail; // Nếu không có ảnh mới, giữ nguyên ảnh cũ
+            $thumbnailPath = $request->input('thumbnail_old'); // Giữ ảnh cũ nếu có
         }
 
         // Tạo sản phẩm cha
@@ -67,6 +68,7 @@ public function store(ProductRequest $request)
             'thumbnail' => $thumbnailPath,
             'category_id' => $request->category_id,
             'status' => $request->status,
+            'price_products' => $request->price_products, // Thêm giá sản phẩm
         ]);
 
         // Gắn màu & size chung nếu có
@@ -95,6 +97,9 @@ public function store(ProductRequest $request)
                 if ($request->hasFile("variants.{$index}.image")) {
                     $image = $request->file("variants.{$index}.image");
                     $variant->image = $image->store('variants', 'public');
+                }else {
+                    // Giữ lại ảnh cũ nếu không upload mới
+                    $variant->image = $variantData['image_old'] ?? $variant->image ?? null;
                 }
 
                 $product->variants()->save($variant);
@@ -138,14 +143,18 @@ public function store(ProductRequest $request)
 {
    
     try {
+        // dd($request->all());
         $product = Product::findOrFail($id);
 
         // Cập nhật ảnh đại diện nếu có
-        if ($request->hasFile('thumbnail')) {
+       if ($request->hasFile('thumbnail')) {
             if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
                 Storage::disk('public')->delete($product->thumbnail);
             }
             $product->thumbnail = $request->file('thumbnail')->store('products', 'public');
+        } else {
+            // Giữ lại ảnh cũ nếu không upload mới
+            $product->thumbnail = $request->input('thumbnail_old', $product->thumbnail);
         }
 
         // Cập nhật thông tin sản phẩm
@@ -157,6 +166,7 @@ public function store(ProductRequest $request)
             'category_id' => $request->category_id,
             'status' => $request->status,
             'thumbnail' => $product->thumbnail,
+            'price_products' => $request->price_products, // Cập nhật giá sản phẩm
         ]);
 
         // Sync màu và size
@@ -186,6 +196,9 @@ public function store(ProductRequest $request)
                         if ($request->hasFile("variants.{$index}.image")) {
                             if ($variant->image && Storage::disk('public')->exists($variant->image)) {
                                 Storage::disk('public')->delete($variant->image);
+                            }else {
+                                // Giữ lại ảnh cũ nếu không upload mới
+                                $variant->image = $variantData['image_old'] ?? $variant->image ?? null;
                             }
                             $variant->image = $request->file("variants.{$index}.image")->store('variants', 'public');
                         }

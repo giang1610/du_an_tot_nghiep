@@ -19,11 +19,12 @@ class ProductRequest extends FormRequest
         'name' => 'required|string|max:255',
         'description' => 'nullable|string|max:255',
         'short_description' => 'nullable|string|max:255',
-        'slug' => 'required|string|max:255|unique:products,slug,',
+        'slug' => ['required','string','max:255', Rule::unique('products', 'slug')->ignore($this->route('product') ?? $this->id),],
 
         'thumbnail' => $this->isMethod('post') ? 'required|image|mimes:jpg,jpeg,png,webp|max:2048' : 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         'category_id' => 'required|exists:categories,id',
         'status' => 'required|in:0,1,2',
+        'price_products' => 'required|numeric|min:0.01',
        
         'variants.*.sku' => 'required|string|max:100',
         'variants.*.price' => 'required|numeric|min:1',
@@ -46,6 +47,9 @@ class ProductRequest extends FormRequest
         'thumbnail.required' => 'Ảnh sản phẩm không được để trống.',
         'thumbnail.image' => 'Ảnh không hợp lệ.',
         'category_id.required' => 'Vui lòng chọn danh mục.',
+        'price_products.required' => 'Giá sản phẩm không được để trống.',
+        'price_products.numeric' => 'Giá sản phẩm phải là số.',
+        'price_products.min' => 'Giá sản phẩm phải lớn hơn 0.',
         
         'variants.*.sku.required' => 'Mã sản phẩm không được để trống.',
         'variants.*.price.required' => 'Giá không được để trống.',

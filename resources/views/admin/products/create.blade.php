@@ -44,37 +44,31 @@
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-12">
+                    <div class="col-6">
                         <label for="short_description" class="form-label fw-medium">Mô tả ngắn</label>
                         <input type="text" name="short_description" id="short_description" class="form-control" placeholder="Nhập mô tả ngắn" value="{{ old('short_description') }}">
                         @error('short_description')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
-                   {{-- <div class="col-md-6">
-                        <label for="thumbnail" class="form-label fw-medium">Ảnh sản phẩm</label>
-                        <div class="mb-2">
-                            <img id="thumbnail-preview"
-                                class="rounded"
-                                style="max-width: 100px;"
-                                src="{{ old('thumbnail') ? '' : (isset($product) ? asset('storage/' . $product->thumbnail) : '') }}"
-                                alt="Preview">
-                        </div>
-                        <input type="file" name="thumbnail" class="form-control"
-                            onchange="previewThumbnail(event)">
-                        @error('thumbnail')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
+                     {{-- giá sản phẩm --}}
+                    <div class="col-6">
+                        <label for="price_products" class="form-label fw-medium">Giá sản phẩm</label>
+                        <input type="number" name="price_products" id="price_products" class="form-control" placeholder="Nhập giá sản phẩm" value="{{ old('price_products') }}">
+                        @error('price_products')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
-                    </div> --}}
+                    </div>
 
                     <div class="col-md-6">
                     <label for="form-label">Ảnh sản phẩm</label> <br>
                     <img id="img" style="max-width: 100px;"> <br>
                     <input type="file" name="thumbnail" class="form-control" onchange="img.src = window.URL.createObjectURL(this.files[0])">
+                    <input type="hidden" name="thumbnail_old" >
                     @error('thumbnail')
                     <div class="text-danger">{{$message}}</div>
                     @enderror
-        </div>
+                  </div>
 
 
                     <div class="col-md-6">
@@ -89,6 +83,7 @@
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
+                   
                     <div class="col-md-6">
                         <label for="colorSelect" class="form-label fw-medium">Màu sắc</label>
                         <select name="color_id[]" class="form-select select2-color" multiple id="colorSelect">
@@ -205,6 +200,7 @@
                                 <img class="preview-image mb-2 rounded" style="max-width: 100px;" src="" alt="Preview" id="img-preview-{{ $i }}">
                             </div>
                             <input type="file" name="variants[{{ $i }}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-{{ $i }}').src = window.URL.createObjectURL(this.files[0])">
+                            <input type="file" name="variants[{{ $i }}][image_old]" value="{{ $variant['image'] ?? '' }}">
                             @error('variants.'.$i.'.image')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -282,6 +278,7 @@ document.getElementById('generateVariants').addEventListener('click', function (
                                     <img class="preview-image mb-2 rounded" style="max-width: 100px;" src="" alt="Preview" id="img-preview-${index}">
                                 </div>
                                 <input type="file" name="variants[${index}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-${index}').src = window.URL.createObjectURL(this.files[0])">
+                                <input type="hidden" name="variants[${index}]][image_old]" value="{{ $variant['image'] ?? '' }}">
                             </div>
                         </div>
                     </div>
