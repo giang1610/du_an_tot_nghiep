@@ -22,7 +22,6 @@ class ProductImageSeeder extends Seeder
             [
                 'url' => 'products/ao-thun-2.jpg',
                 'product_id' => 1,
-                'product_variant_id' => null,
                 'is_default' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -31,6 +30,9 @@ class ProductImageSeeder extends Seeder
             // Ảnh cho biến thể sản phẩm ID = 1
             [
                 'url' => 'variants/ao-thun-red-m.jpg',
+
+                'product_id' => 1,
+                'product_variant_id' => 2,
                 'product_id' => null,
                 'product_variant_id' => null,
                 'is_default' => 1,
@@ -39,6 +41,15 @@ class ProductImageSeeder extends Seeder
             ],
 
             // Ảnh cho biến thể sản phẩm ID = 2
+
+            // [
+            //     'url' => 'variants/ao-thun-blue-l.jpg',
+            //     'product_id' => null,
+            //     'product_variant_id' => null,
+            //     'is_default' => 1,
+            //     'created_at' => now(),
+            //     'updated_at' => now(),
+            // ],
             [
                 'url' => 'variants/ao-thun-blue-l.jpg',
                 'product_id' => null,

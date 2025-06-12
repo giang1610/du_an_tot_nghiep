@@ -3,15 +3,15 @@ import { Container, Form, Button, Alert, Card, Spinner, InputGroup } from 'react
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
-import { useAuth } from '../context/AuthContext';  // Đường dẫn đúng
-axios.defaults.withCredentials = true;
+import { useAuth } from '../context/AuthContext';
+
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth(); // Lấy hàm login từ context
+  const { login } = useAuth();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -21,13 +21,8 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      await axios.get('http://localhost:8000/sanctum/csrf-cookie', { withCredentials: true });
-      const res = await axios.post('http://localhost:8000/api/login', form, {
-        withCredentials: true,
-      });
-      // Gọi login để lưu token và user
-      login(res.data.user, res.data.token);
-      console.log(res.data)
+      const res = await axios.post('http://localhost:8000/api/login', form); // Không cần withCredentials
+      login(res.data.user, res.data.token); // Lưu vào localStorage
       navigate('/');
     } catch (err) {
       if (err.response) {
@@ -45,9 +40,7 @@ const LoginPage = () => {
       <Card style={{ width: '100%', maxWidth: '420px', padding: '20px' }} className="shadow">
         <Card.Body>
           <h3 className="mb-4 text-center">Đăng Nhập</h3>
-
           {error && <Alert variant="danger">{error}</Alert>}
-
           <Form onSubmit={handleSubmit} noValidate>
             <Form.Group className="mb-3" controlId="email">
               <Form.Label>Email</Form.Label>
@@ -73,11 +66,7 @@ const LoginPage = () => {
                   placeholder="Nhập mật khẩu"
                   required
                 />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                >
+                <Button variant="outline-secondary" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
                   {showPassword ? <EyeSlash /> : <Eye />}
                 </Button>
               </InputGroup>

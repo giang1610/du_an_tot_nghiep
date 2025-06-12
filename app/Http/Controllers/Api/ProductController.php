@@ -89,11 +89,6 @@ class ProductController extends Controller
                 );
             }
         ])->get();
-
-        // Xử lý giá hiển thị cho từng sản phẩm
-        foreach ($products as $product) {
-            $this->processProductPricing($product);
-        }
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -134,10 +129,6 @@ class ProductController extends Controller
             ], 404);
         }
 
-        // Xử lý giá hiển thị cho sản phẩm chính
-        $this->processProductPricing($product);
-
-        // Lấy 5 sản phẩm liên quan
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->with([
@@ -153,12 +144,6 @@ class ProductController extends Controller
             ])
             ->take(5)
             ->get();
-
-        // Xử lý giá hiển thị cho sản phẩm liên quan
-        foreach ($relatedProducts as $relatedProduct) {
-            $this->processProductPricing($relatedProduct);
-        }
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -248,4 +233,57 @@ class ProductController extends Controller
             'data' => $comment
         ], 201);
     }
+    public function getBySlug($slug)
+{
+    $product = Product::where('slug', $slug)->first();
+
+    if (!$product) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Sản phẩm không tồn tại',
+        ], 404);
+    }
+
+    // Lấy sản phẩm liên quan
+    $related = Product::where('category_id', $product->category_id)
+        ->where('id', '!=', $product->id)
+        ->limit(4)
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $product,
+        'related' => $related,
+    ]);
+}
+public function showBySlug($slug)
+{
+    $product = Product::with([
+        'comments.user',
+        'variants.color',
+        'variants.size',
+    ])->where('slug', $slug)->firstOrFail();
+
+    // Lấy danh sách các sản phẩm liên quan
+    $related = Product::where('category_id', $product->category_id)
+                ->where('id', '!=', $product->id)
+                ->take(4)
+                ->get();
+
+    return response()->json([
+        'data' => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'price' => $product->price,
+            'description' => $product->description,
+            'img' => $product->img,
+            'variants' => $product->variants, // <--- phần quan trọng
+            'comments' => $product->comments,
+        ],
+        'related' => $related,
+    ]);
+}
+
+
 }
