@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
+use Illuminate\Auth\Events\Registered;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -11,45 +11,42 @@ use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+   public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|confirmed|min:6',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|confirmed|min:8', 
         ]);
 
+        // Tạo người dùng mới
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'password' => Hash::make($request->password),
         ]);
 
+
         $token = $user->createToken('api_token')->plainTextToken;
-
         $verifyUrl = "http://localhost:3000/verify-email?email=" . urlencode($user->email);
-
-        Mail::send([], [], function ($message) use ($user, $verifyUrl) {
-            $message->to($user->email)
-                ->subject('Xác nhận email đăng ký')
-                ->html(
-                    '<p>Đây là Thông Báo Từ Website. Vui lòng nhấn vào nút bên dưới để xác nhận email:</p>
-                    <a href="' . $verifyUrl . '" style="display:inline-block;padding:10px 20px;background:#007bff;color:#fff;text-decoration:none;border-radius:5px;">Xác nhận email</a>
-                    <p>Nếu bạn không đăng ký tài khoản, vui lòng bỏ qua email này.</p>'
-                );
-        });
+        // Kích hoạt sự kiện Registered.
+        // Laravel sẽ tự động gửi email xác thực nếu User model implement MustVerifyEmail.
+        event(new Registered($user));
+        // Tùy chọn: Tạo API token ngay sau khi đăng ký hoặc yêu cầu xác thực email trước.
+        // Nếu bạn muốn cấp token ngay:
+        // $token = $user->createToken('api_token_sau_dang_ky')->plainTextToken;
 
         return response()->json([
-            'message' => 'Đăng ký thành công',
-            'user' => [
+            'message' => 'Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản của bạn.',
+            'user' => [ // Trả về thông tin cơ bản của người dùng
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar' => $user->avatar ? asset('storage/avatars/' . $user->avatar) : null,
                 'email_verified_at' => $user->email_verified_at
             ],
-            'token' => $token,
-        ]);
+            // 'token' => $token, // Nếu bạn tạo token ở trên
+        ], 201); // HTTP status 201 Created
     }
 
    public function login(Request $request)
@@ -67,11 +64,11 @@ class AuthController extends Controller
         ], 401);
     }
 
-    if (is_null($user->email_verified_at)) {
-        return response()->json([
-            'message' => 'Vui lòng xác nhận email trước khi đăng nhập.',
-        ], 403);
-    }
+    // if (is_null($user->email_verified_at)) {
+    //     return response()->json([
+    //         'message' => 'Vui lòng xác nhận email trước khi đăng nhập.',
+    //     ], 403);
+    // }
 
     $token = $user->createToken('api_token')->plainTextToken;
 
