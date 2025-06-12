@@ -26,10 +26,12 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+
+        $token = $user->createToken('api_token')->plainTextToken;
+        $verifyUrl = "http://localhost:3000/verify-email?email=" . urlencode($user->email);
         // Kích hoạt sự kiện Registered.
         // Laravel sẽ tự động gửi email xác thực nếu User model implement MustVerifyEmail.
         event(new Registered($user));
-
         // Tùy chọn: Tạo API token ngay sau khi đăng ký hoặc yêu cầu xác thực email trước.
         // Nếu bạn muốn cấp token ngay:
         // $token = $user->createToken('api_token_sau_dang_ky')->plainTextToken;
@@ -40,7 +42,8 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'email_verified_at' => $user->email_verified_at, // Ban đầu sẽ là null
+                'avatar' => $user->avatar ? asset('storage/avatars/' . $user->avatar) : null,
+                'email_verified_at' => $user->email_verified_at
             ],
             // 'token' => $token, // Nếu bạn tạo token ở trên
         ], 201); // HTTP status 201 Created
