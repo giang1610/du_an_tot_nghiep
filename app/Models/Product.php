@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ProductVariant;
+use App\Models\ProductImage;
+
 
 class Product extends Model
 {
@@ -29,6 +32,10 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
     /**
      * Quan hệ: 1 sản phẩm có nhiều biến thể
      */
@@ -50,6 +57,7 @@ class Product extends Model
     /**
      * Quan hệ: 1 sản phẩm có nhiều ảnh
      */
+
     // public function images()
     // {
     //     return $this->hasMany(ProductImage::class);
@@ -60,4 +68,9 @@ class Product extends Model
         return url('uploads/products/' . $this->thumbnail);
     }
     protected $appends = ['img'];
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
 }
