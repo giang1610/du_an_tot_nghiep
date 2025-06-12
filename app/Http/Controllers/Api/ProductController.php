@@ -156,12 +156,6 @@ class ProductController extends Controller
             ])
             ->take(5)
             ->get();
-
-        // Xử lý giá hiển thị cho sản phẩm liên quan
-        foreach ($relatedProducts as $relatedProduct) {
-            $this->processProductPricing($relatedProduct);
-        }
-
         return response()->json([
             'success' => true,
             'data' => [

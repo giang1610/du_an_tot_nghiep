@@ -215,7 +215,7 @@ const ProductDetail = () => {
                     <div className="border rounded p-2 h-100">
                       <img src={rel.img} alt={rel.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                       <h6 className="mt-2">{rel.name}</h6>
-                      <p className="text-danger fw-bold">{rel.price.toLocaleString()} đ</p>
+                      {/* <p className="text-danger fw-bold">{rel.price.toLocaleString()} đ</p> */}
                     </div>
                   </Link>
                 </Col>

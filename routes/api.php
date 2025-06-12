@@ -1,11 +1,13 @@
 <?php
 
-use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Import các Controller
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CartController;
@@ -17,64 +19,23 @@ use App\Http\Controllers\SizeController;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
+| Đây là nơi đăng ký tất cả route API cho ứng dụng của bạn.
+| Nhóm các routes theo chức năng để dễ quản lý và tránh trùng lặp.
 |
 */
 
+// Route kiểm tra đăng nhập và lấy thông tin user
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-//Trang chủ
 
-Route::get('/products', [ProductController::class, 'index']);
-
-Route::get('/products/{slug}', [ProductController::class, 'show']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
-//Hiển thị ảnh 
-Route::post('/products', [ProductController::class, 'store']);
-//Chi tiết
-Route::get('/products/slug/{slug}', [ProductController::class, 'getBySlug']);
-
-//Tài khoản
-Route::post('/register', [AuthController::class, 'register']);
-
-Route::post('/login', [AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-
+// Nhóm các route yêu cầu đăng nhập (auth:sanctum)
 Route::middleware('auth:sanctum')->group(function () {
+    // Thông tin người dùng
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-
-
-    // Các route yêu cầu người dùng phải đăng nhập VÀ đã xác thực email (verified)
-    Route::middleware('verified')->group(function () {
-
-    });
-});
-
-//Reset pass
-Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
-
-//Hiển thị comment
-
-// Route::middleware('auth:sanctum')->post('/comments', [CommentController::class, 'store']);
-
-Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
-
-
-//Sản phẩm liên quan
-Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']);
-
-Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
-
-Route::get('/categories', [CategoryController::class, 'index']);
-
-Route::middleware('auth:sanctum')->group(function () {
     // Giỏ hàng
     Route::post('/cart/add', [CartController::class, 'addToCart']);
     Route::get('/cart', [CartController::class, 'viewCart']);
@@ -88,7 +49,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show']);
 });
 
-Route::middleware('auth:sanctum')->post('/cart/checkout', [CartController::class, 'checkout']);
-//Lọc theo size
+// Routes liên quan đến xác thực và dự liệu người dùng từ hệ thống
+// Đăng xuất
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+
+// Đăng ký, đăng nhập
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+// Reset password
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+
+// Các route công khai (bất cứ ai cũng truy cập được)
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::post('/products', [ProductController::class, 'store']); // Tạo sản phẩm (cần phân quyền admin)
+Route::get('/products/slug/{slug}', [ProductController::class, 'getBySlug']);
+Route::get('/products/{slug}', [ProductController::class, 'show']); // Trùng này có thể tách ra
+
+// Comment related
+Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
+Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']);
+
+// Các chức năng liên quan đến sản phẩm
+Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
+
+// Categories
+Route::get('/categories', [CategoryController::class, 'index']);
+
+// Sizes
 Route::get('/sizes', [SizeController::class, 'index']);
 
+
+// Route search hoặc các chức năng mở rộng có thể thêm tùy ý

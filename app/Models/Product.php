@@ -57,11 +57,6 @@ class Product extends Model
     /**
      * Quan hệ: 1 sản phẩm có nhiều ảnh
      */
-    public function images()
-    {
-        return $this->hasMany(ProductImage::class);
-    }
-
 
     // public function images()
     // {
@@ -70,7 +65,12 @@ class Product extends Model
 
     public function getImgAttribute()
     {
-        return url('uploads/products/' . $this->thumbnail);
+        return url('storage/' . $this->thumbnail);
     }
     protected $appends = ['img'];
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
 }
