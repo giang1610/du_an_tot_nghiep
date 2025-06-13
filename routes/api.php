@@ -58,7 +58,7 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// xác minh mail -- tuấn anh
+// xác minh mail -- tuấn anh đẹp
 Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
    
     $request->fulfill();
