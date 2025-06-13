@@ -153,10 +153,10 @@ class CartController extends Controller
             return ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
         });
 
-        $shipping = 10;
+        $shipping = 15000; // Giả sử phí vận chuyển là 15000
         $tax = $subtotal * 0.1;
         $total = $subtotal + $shipping + $tax;
-        /** @var \App\Models\User $user */
+        /** @var \App\Models\User $user */      //Nếu user báo lỗi thì thêm dòng này vào đầu file
         // Tạo đơn hàng
         $order = $user->orders()->create([
             'subtotal' => $subtotal,

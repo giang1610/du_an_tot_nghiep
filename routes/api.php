@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\SizeController;
+use App\Http\Requests\CustomEmailVerificationRequest;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +57,15 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 // Đăng ký, đăng nhập
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// xác minh mail -- tuấn anh
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
+   
+    $request->fulfill();
+    return redirect('http://localhost:3000/login?verified=true');
+
+
+})->middleware(['signed'])->name('verification.verify.fotn');
 
 // Reset password
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);

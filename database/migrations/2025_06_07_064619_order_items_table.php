@@ -16,8 +16,11 @@ return new class extends Migration
     $table->foreignId('order_id')->constrained()->onDelete('cascade');
     $table->foreignId('product_variant_id')->constrained()->onDelete('cascade');
     $table->integer('quantity');
+    $table->unsignedBigInteger('color_id')->nullable()->after('sale_price');   //Thêm cột color_id khi order sản phảm, có thông báo về mail
+    $table->unsignedBigInteger('size_id')->nullable()->after('color_id');
     $table->decimal('price', 10, 2);
     $table->decimal('sale_price', 10, 2)->nullable();
+    
     $table->timestamps();
 });
     }
