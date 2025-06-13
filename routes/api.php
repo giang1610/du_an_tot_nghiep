@@ -7,7 +7,6 @@ use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\CommentController;
 use App\Http\Controllers\SizeController;
 
 /*
@@ -59,7 +58,7 @@ Route::get('/products/related/{category_id}', [ProductController::class, 'relate
 
 Route::get('/categories', [CategoryController::class, 'index']);
 //Lọc theo size
-Route::get('/sizes', [SizeController::class, 'index'])
+Route::get('/sizes', [SizeController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cart/add', [CartController::class, 'addToCart']);
     Route::get('/cart', [CartController::class, 'viewCart']);
