@@ -33,12 +33,8 @@ return [
     |
     */
 
-<<<<<<< HEAD
-    'guard' => [],
-=======
     // 'guard' => ['web'],
     'guard' => [''],
->>>>>>> 3a50e1c6c225bc2e6b80d2a96e58e83b09d34a1c
 
     /*
     |--------------------------------------------------------------------------
@@ -80,13 +76,9 @@ return [
     */
 
     'middleware' => [
-<<<<<<< HEAD
-       
-=======
         // 'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class,
         // 'encrypt_cookies' => App\Http\Middleware\EncryptCookies::class,
         // 'verify_csrf_token' => App\Http\Middleware\VerifyCsrfToken::class,
->>>>>>> 3a50e1c6c225bc2e6b80d2a96e58e83b09d34a1c
     ],
 
 ];
