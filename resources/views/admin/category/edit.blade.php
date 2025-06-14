@@ -9,7 +9,6 @@
       <div class="container">
          <h1 class="h4 mb-4">Thêm danh mục mới</h1>
          {{-- <a href="{{ route('categories.create') }}" class="btn btn-primary mb-3">Thêm danh mục</a> --}}
-   
          @if (session('error'))
             <div class="mb-0 alert alert-success">
                 {{session('error')}}
@@ -45,9 +44,9 @@
                 </div>
                 </form>
 
-        
-   
-        
+
+
+
       </div>
       <script>
     // Hàm chuyển tiếng Việt có dấu thành không dấu và chuyển khoảng trắng thành dấu gạch ngang

@@ -19,7 +19,11 @@ return [
 
     'allowed_methods' => ['*'],
 
+<<<<<<< HEAD
     'allowed_origins' => ['http://localhost:3000','https://online-shop-sigma-eight.vercel.app'],
+=======
+    'allowed_origins' => ['http://localhost:3000','FRONTEND_URL','https://online-shop-sigma-eight.vercel.app'],
+>>>>>>> 3a50e1c6c225bc2e6b80d2a96e58e83b09d34a1c
 
     'allowed_origins_patterns' => [],
 
