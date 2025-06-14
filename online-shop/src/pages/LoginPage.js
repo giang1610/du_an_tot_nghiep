@@ -3,6 +3,7 @@ import { Container, Form, Button, Alert, Card, Spinner, InputGroup } from 'react
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -10,6 +11,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -19,13 +21,8 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:8000/api/login', form);
-      const { token } = res.data;
-
-      // Lưu token vào localStorage ngay sau login thành công
-      localStorage.setItem('token', token);
-
-      // Redirect hoặc làm gì tiếp theo
+      const res = await axios.post('http://localhost:8000/api/login', form); // Không cần withCredentials
+      login(res.data.user, res.data.token); // Lưu vào localStorage
       navigate('/');
     } catch (err) {
       if (err.response) {
@@ -44,7 +41,6 @@ const LoginPage = () => {
         <Card.Body>
           <h3 className="mb-4 text-center">Đăng Nhập</h3>
           {error && <Alert variant="danger">{error}</Alert>}
-
           <Form onSubmit={handleSubmit} noValidate>
             <Form.Group className="mb-3" controlId="email">
               <Form.Label>Email</Form.Label>
@@ -70,11 +66,7 @@ const LoginPage = () => {
                   placeholder="Nhập mật khẩu"
                   required
                 />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                >
+                <Button variant="outline-secondary" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
                   {showPassword ? <EyeSlash /> : <Eye />}
                 </Button>
               </InputGroup>

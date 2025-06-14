@@ -14,11 +14,11 @@
         <form method="GET" class="mb-4">
             <br>
             <div class="input-group shadow-sm rounded">
-                <input 
-                    type="text" 
-                    name="search" 
-                    class="form-control border-primary" 
-                    placeholder="🔍 Tìm kiếm sản phẩm..." 
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control border-primary"
+                    placeholder="🔍 Tìm kiếm sản phẩm..."
                     value="{{ request('search') }}"
                     style="height: 48px;"
                 >
@@ -51,8 +51,8 @@
                 </tr>
             </thead>
             <tbody>
-             
-              
+
+
                 @foreach ($products as $p)
 
                     <tr>
@@ -82,7 +82,7 @@
                          {{-- Mã --}}
                         <td>
                             @foreach ($p->variants as $variant)
-                                <div>{{ $variant->stock == 0 ? 'còn hàng' : 'Hết hàng'  }}</div>
+                                <div>{{ $variant->stock == 0 ? 'Còn hàng' : 'Hết hàng'  }}</div>
                             @endforeach
                         </td>
 
@@ -100,23 +100,22 @@
                             @endforeach
                         </td>
                         <td>
-                                
+
 
                             @if ($p->thumbnail)
                                 <img src="{{ asset('storage/' . $p->thumbnail) }}" alt="Product Image" style="width: 100px; height: auto;">
-                                
+
                             @else
                                 <span>Không có ảnh</span>
                             @endif
                         </td>
-                        
                         <td>
                             @if ($p->status === 1)
-                                hành động
+                                Hoạt động
                             @elseif ($p->status === 0)
                                 Chưa xuất bản
                             @else
-                               tạm dừng
+                                Tạm dừng
                             @endif
                         </td>
                         <td>
@@ -126,16 +125,15 @@
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger"
                                     onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm này?')"><i class="bi bi-trash3"></i></button>
-                            </form> 
+                            </form>
                         </td>
                     </tr>
                 @endforeach
-                
+
             </tbody>
         </table>
         {{$products->links()}}
     </div>
-  
 
 
 @endsection
