@@ -1,31 +1,29 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+<!-- resources/views/auth/verify-email.blade.php -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xác minh Email</title>
+</head>
+<body>
+    <h2>Vui lòng xác minh email của bạn</h2>
 
     @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+        <div style="color: green;">
+            Một link xác minh mới đã được gửi đến email của bạn.
         </div>
     @endif
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
+    <p>Trước khi tiếp tục, vui lòng kiểm tra email của bạn để lấy link xác minh.</p>
+    <p>Nếu bạn chưa nhận được email, vui lòng nhấn nút dưới đây để gửi lại.</p>
 
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
-            </div>
-        </form>
+    <form method="POST" action="{{ route('verification.send') }}">
+        @csrf
+        <button type="submit">Gửi lại link xác minh</button>
+    </form>
 
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-
-            <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                {{ __('Log Out') }}
-            </button>
-        </form>
-    </div>
-</x-guest-layout>
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit">Đăng xuất</button>
+    </form>
+</body>
+</html>
