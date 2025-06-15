@@ -1,15 +1,24 @@
 import React from 'react';
-import { Container } from 'react-bootstrap';
 
-const Footer = () => {
-  return (
-    <footer className="bg-dark text-light py-4">
-      <Container className="text-center">
-        <p>© 2025 GiayXShop. All rights reserved.</p>
-        <p>Liên hệ: info@giayxshop.vn | 0123 456 789</p>
-      </Container>
-    </footer>
-  );
-};
+const Footer = () => (
+  <footer className="bg-dark text-white mt-5 py-4">
+    <div className="container d-flex justify-content-between flex-wrap">
+      <div>
+        <h5 className="fw-bold">TORANO</h5>
+        <p>Thời trang nam cao cấp | Áo sơ mi, quần âu, vest</p>
+        <p>Email: support@torano.vn</p>
+        <p>Hotline: 1900 866 644</p>
+      </div>
+      <div>
+        <h6 className="fw-bold">Chính sách</h6>
+        <ul className="list-unstyled">
+          <li>Chính sách đổi trả</li>
+          <li>Chính sách bảo hành</li>
+          <li>Chính sách bảo mật</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+);
 
 export default Footer;

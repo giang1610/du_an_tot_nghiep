@@ -11,6 +11,8 @@ const ProductsPage = () => {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [sizes, setSizes] = useState([]);
+  const sizeFilter = searchParams.get('size') || '';
 
   // Lấy tham số từ URL
   const searchQuery = searchParams.get('search') || '';
@@ -22,7 +24,11 @@ const ProductsPage = () => {
     axios.get('http://localhost:8000/api/categories')
       .then(res => setCategories(res.data.data))
       .catch(err => console.error(err));
+    axios.get('http://localhost:8000/api/sizes')
+      .then(res => setSizes(res.data.data))
+      .catch(err => console.error(err));
   }, []);
+
 
   // Lấy sản phẩm với params lọc
   useEffect(() => {
@@ -31,7 +37,8 @@ const ProductsPage = () => {
       params: {
         search: searchQuery,
         category: categoryFilter,
-        price: priceFilter
+        price: priceFilter,
+        size: sizeFilter
       }
     })
       .then(res => {
@@ -42,8 +49,7 @@ const ProductsPage = () => {
         console.error(err);
         setLoading(false);
       });
-  }, [searchQuery, categoryFilter, priceFilter]);
-
+  }, [searchQuery, categoryFilter, priceFilter, sizeFilter]);
   // Xử lý lọc danh mục
   const handleCategoryChange = (e) => {
     const value = e.target.value;
@@ -69,6 +75,17 @@ const ProductsPage = () => {
       return prev;
     });
   };
+  const handleSizeChange = (e) => {
+    const value = e.target.value;
+    setSearchParams(prev => {
+      if (value) {
+        prev.set('size', value);
+      } else {
+        prev.delete('size');
+      }
+      return prev;
+    });
+  };
 
   return (
     <>
@@ -88,7 +105,15 @@ const ProductsPage = () => {
                 ))}
               </Form.Select>
             </Form>
-
+                 <h5>Kích thước</h5>
+            <Form className="mb-3">
+              <Form.Select value={sizeFilter} onChange={handleSizeChange}>
+                <option value="">-- Tất cả size --</option>
+                {sizes.map(size => (
+                  <option key={size.id} value={size.id}>{size.name}</option>
+                ))}
+              </Form.Select>
+            </Form>
             <h5>Khoảng giá</h5>
             <Form>
               <Form.Select value={priceFilter} onChange={handlePriceChange}>
@@ -113,24 +138,16 @@ const ProductsPage = () => {
                         <Card.Img
                           variant="top"
                           src={product.img}
-                          style={{ height: '200px', objectFit: 'cover' }}
+                          style={{  height: '250px', objectFit: 'contain'  }}
                           alt={product.name}
                         />
                         <Card.Body>
                           <Card.Title>
-                            <Link to={`/products/${product.id}`} style={{ textDecoration: 'none' }}>
+                            <Link to={`/products/${product.slug}`} style={{ textDecoration: 'none' }}>
                               {product.name}
                             </Link>
                           </Card.Title>
-                          <Link to={`/products/${product.id}`}>
-                            <Card.Img
-                              variant="top"
-                              src={product.img}
-                              style={{ height: '200px', objectFit: 'cover', cursor: 'pointer' }}
-                              alt={product.name}
-                            />
-                          </Link>
-                          <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
+                          {/* <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text> */}
                           <Button variant="primary" size="sm" className="w-100">Mua Ngay</Button>
                         </Card.Body>
 
