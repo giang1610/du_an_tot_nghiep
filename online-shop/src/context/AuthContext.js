@@ -1,20 +1,29 @@
 // src/context/AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
-// Tạo Context để quản lý auth
 const AuthContext = createContext();
 
-// Provider chứa state và các hàm login/logout
+const isTokenValid = (token) => {
+  try {
+    const { exp } = jwtDecode(token);
+    return exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  // Khởi tạo user và token từ localStorage nếu có
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const savedUser = localStorage.getItem('user');
+  const savedToken = localStorage.getItem('token');
 
-  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+  const [user, setUser] = useState(() =>
+    savedUser && savedToken && isTokenValid(savedToken) ? JSON.parse(savedUser) : null
+  );
+  const [token, setToken] = useState(() =>
+    savedToken && isTokenValid(savedToken) ? savedToken : null
+  );
 
-  // Hàm gọi khi đăng nhập thành công
   const login = (userData, token) => {
     setUser(userData);
     setToken(token);
@@ -22,7 +31,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
   };
 
-  // Hàm gọi khi logout
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -30,22 +38,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  // Đồng bộ lại khi reload trang
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedToken = localStorage.getItem('token');
-    if (savedUser && savedToken) {
-      setUser(JSON.parse(savedUser));
-      setToken(savedToken);
-    }
-  }, []);
+  const isAuthenticated = !!user && !!token;
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook tiện lợi để sử dụng context trong component khác
 export const useAuth = () => useContext(AuthContext);

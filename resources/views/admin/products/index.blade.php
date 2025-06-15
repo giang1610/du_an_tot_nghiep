@@ -14,11 +14,11 @@
         <form method="GET" class="mb-4">
             <br>
             <div class="input-group shadow-sm rounded">
-                <input 
-                    type="text" 
-                    name="search" 
-                    class="form-control border-primary" 
-                    placeholder="🔍 Tìm kiếm sản phẩm..." 
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control border-primary"
+                    placeholder="🔍 Tìm kiếm sản phẩm..."
                     value="{{ request('search') }}"
                     style="height: 48px;"
                 >
@@ -51,8 +51,8 @@
                 </tr>
             </thead>
             <tbody>
-             
-              
+
+
                 @foreach ($products as $p)
 
                     <tr>
@@ -100,16 +100,15 @@
                             @endforeach
                         </td>
                         <td>
-                                
+
 
                             @if ($p->thumbnail)
                                 <img src="{{ asset('storage/' . $p->thumbnail) }}" alt="Product Image" style="width: 100px; height: auto;">
-                                
+
                             @else
                                 <span>Không có ảnh</span>
                             @endif
                         </td>
-                        
                         <td>
                             @if ($p->status === 1)
                                 Hoạt động
@@ -126,16 +125,15 @@
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger"
                                     onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm này?')"><i class="bi bi-trash3"></i></button>
-                            </form> 
+                            </form>
                         </td>
                     </tr>
                 @endforeach
-                
+
             </tbody>
         </table>
         {{$products->links()}}
     </div>
-  
 
 
 @endsection
