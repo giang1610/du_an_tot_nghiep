@@ -125,6 +125,5 @@
         )}
       </Container>
     );
-  };
 
   export default ProductList;
