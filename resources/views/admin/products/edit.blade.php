@@ -4,7 +4,7 @@
 
 <div class="container py-4">
     <div class="d-flex align-items-center mb-4">
-        <a href="/products" class="d-flex align-items-center text-decoration-none back-link">
+        <a href="/admin/products" class="d-flex align-items-center text-decoration-none back-link">
             <i class="bi bi-arrow-left me-2" style="font-size: 1.5rem; color: #4b5563;"></i>
             <span class="text-dark">Quay lại danh sách sản phẩm</span>
         </a>
