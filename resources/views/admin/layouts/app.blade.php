@@ -264,9 +264,14 @@
             </div>
             <nav>
                 <ul class="nav flex-column">
+                     <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ route('admin') }}">
+                            <i class="fas fa-home"></i> Quản Trị
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('categories.index') }}">
-                            <i class="fas fa-home"></i> Danh mục
+                            <i class="fas fa-list"></i> Danh mục
                         </a>
                     </li>
                     <li class="nav-item">
@@ -280,15 +285,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="">
-                            <i class="fas fa-cog"></i> Thuộc tính
+                        <a class="nav-link text-white" href="{{ route('admin') }}">
+                             <i class="fas fa-user-cog"></i> Quản lý tài khoản
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="/logout">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </li>
+
+                  
                 </ul>
             </nav>
         </aside>

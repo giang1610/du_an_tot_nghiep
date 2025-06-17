@@ -28,7 +28,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 
 // Trang chủ
 Route::get('/', function () {
-    return view('admin.layouts.app');
+    return view('welcome');
 });
 
 // Đăng ký, đăng nhập, quên mật khẩu
@@ -75,8 +75,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Admin routes
 Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/', function () {
-        return 'Chào admin!';
-    })->name('admin.dashboard');
+      return view('admin.dasboard');
+    })->name('admin');
 
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
     Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
