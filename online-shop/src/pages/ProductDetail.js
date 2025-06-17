@@ -137,7 +137,7 @@ const ProductDetail = () => {
           </Col>
           <Col md={6}>
             <h2>{product.name}</h2>
-            <h4 className="text-danger fw-bold">{product.price.toLocaleString()} đ</h4>
+            {/* <h4 className="text-danger fw-bold">{product.price.toLocaleString()} đ</h4> */}
             <p>{product.description || "Chưa có mô tả sản phẩm."}</p>
 
             {/* Chọn kích cỡ */}
@@ -215,7 +215,7 @@ const ProductDetail = () => {
                     <div className="border rounded p-2 h-100">
                       <img src={rel.img} alt={rel.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                       <h6 className="mt-2">{rel.name}</h6>
-                      <p className="text-danger fw-bold">{rel.price.toLocaleString()} đ</p>
+                      {/* <p className="text-danger fw-bold">{rel.price.toLocaleString()} đ</p> */}
                     </div>
                   </Link>
                 </Col>

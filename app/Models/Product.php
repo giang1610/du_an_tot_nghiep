@@ -65,7 +65,7 @@ class Product extends Model
 
     public function getImgAttribute()
     {
-        return url('uploads/products/' . $this->thumbnail);
+        return url('storage/' . $this->thumbnail);
     }
     protected $appends = ['img'];
     public function images()

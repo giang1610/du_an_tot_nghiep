@@ -9,20 +9,21 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::table('categories', function (Blueprint $table) {
-             $table->softDeletes(); // Thêm cột deleted_at
-        });
-    }
+    public function up()
+{
+    Schema::create('roles', function (Blueprint $table) {
+        $table->id();
+        $table->string('name'); // admin, user, etc.
+        $table->timestamps();
+    });
+}
+
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        Schema::dropIfExists('roles');
     }
 };
