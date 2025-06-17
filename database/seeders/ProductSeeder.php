@@ -9,11 +9,10 @@ class ProductSeeder extends Seeder
 {
     public function run()
     {
-    
         // 2. Sản phẩm
         DB::table('products')->insert([
             [
-                'id' => null,
+                // 'id' => null,
                 'category_id' => 3,
                 'name' => 'Áo thun cotton 100%',
                 'slug' => Str::slug('Áo thun cotton 100%'),
