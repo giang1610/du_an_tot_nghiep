@@ -22,7 +22,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     function (response){
         if(response.data){
-            return response.data
+            return response.data    
         }
         return response
     },

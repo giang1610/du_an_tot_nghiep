@@ -89,6 +89,13 @@ class ProductController extends Controller
                 );
             }
         ])->get();
+
+        // Xử lý giá hiển thị cho từng sản phẩm
+        foreach ($products as $product) {
+            $this->processProductPricing($product);
+        }
+        // Map thêm đường dẫn ảnh
+
         return response()->json([
             'success' => true,
             'data' => $products,
@@ -129,6 +136,11 @@ class ProductController extends Controller
             ], 404);
         }
 
+        // Xử lý giá hiển thị cho sản phẩm chính
+        $this->processProductPricing($product);
+
+        // Lấy 5 sản phẩm liên quan
+        // Lấy sản phẩm liên quan cùng danh mục, trừ sản phẩm hiện tại, giới hạn 4 sản phẩm
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->with([

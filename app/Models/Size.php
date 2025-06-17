@@ -8,12 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Size extends Model
 {
-
+   use HasFactory;
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);
     }
-    use HasFactory;
 
     protected $table = 'sizes';
 

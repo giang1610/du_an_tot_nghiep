@@ -19,4 +19,16 @@ class Cart extends Model
     {
         return $this->hasMany(CartItem::class);
     }
+    
+    public function selectedItems()
+    {
+        return $this->hasMany(CartItem::class)->where('selected', true);
+    }
+
+    public function getTotalAttribute()
+    {
+        return $this->selectedItems->sum(function ($item) {
+            return $item->quantity * $item->variant->current_price;
+        });
+    }
 }
