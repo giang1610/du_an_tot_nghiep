@@ -1,110 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Navbar, Container, Nav, Form, FormControl, Button, NavDropdown, Badge
-} from 'react-bootstrap';
-import { FaUser, FaShoppingCart } from 'react-icons/fa';
-import { useNavigate, NavLink } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
+import { FaShoppingCart, FaSearch, FaUser } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
 
 const Header = () => {
-  const [search, setSearch] = useState('');
-  const [user, setUser] = useState(null);
-  const [cartItemCount, setCartItemCount] = useState(0);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    setUser(storedUser);
-
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    setCartItemCount(cart.reduce((total, item) => total + item.quantity, 0));
-  }, []);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (search.trim()) {
-      navigate(`/products?search=${encodeURIComponent(search)}`);
-      setSearch('');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.location.reload();
-  };
+  const { user, logoutUser } = useAuth(); // Lấy thông tin user từ context
 
   return (
-    <Navbar bg="light" expand="lg" sticky="top" className="shadow-sm">
-      <Container>
-        <Navbar.Brand as={NavLink} to="/">GiayXShop</Navbar.Brand>
-        <Navbar.Toggle />
-        <Navbar.Collapse>
-          <Nav className="me-auto">
-            <Nav.Link as={NavLink} to="/">Trang Chủ</Nav.Link>
-            <Nav.Link as={NavLink} to="/products">Sản Phẩm</Nav.Link>
-            <Nav.Link as={NavLink} to="/about">Giới Thiệu</Nav.Link>
-            <Nav.Link as={NavLink} to="/contact">Liên Hệ</Nav.Link>
-          </Nav>
+    <header className="border-bottom bg-white shadow-sm">
+      <div className="container py-2 d-flex justify-content-between align-items-center">
+        <Link to="/" className="navbar-brand fw-bold fs-3 text-dark">
+          TORANO
+        </Link>
 
-          <Form className="d-flex me-3" onSubmit={handleSearch}>
-            <FormControl
-              type="search"
-              placeholder="Tìm kiếm giày..."
-              className="me-2"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Button type="submit" variant="outline-primary">
-              <i className="bi bi-search"></i>
-            </Button>
-          </Form>
+        <form className="d-flex" style={{ maxWidth: 400, width: "100%" }}>
+          <input
+            className="form-control rounded-start"
+            type="search"
+            placeholder="Tìm sản phẩm..."
+          />
+          <button className="btn btn-dark rounded-end" type="submit">
+            <FaSearch />
+          </button>
+        </form>
 
-          <Nav className="me-3">
-            <Nav.Link as={NavLink} to="/cart" className="position-relative">
-              <FaShoppingCart size={20} />
-              {cartItemCount > 0 && (
-                <Badge bg="danger" pill className="position-absolute top-0 start-100 translate-middle">
-                  {cartItemCount}
-                </Badge>
+        <div className="d-flex align-items-center gap-3">
+          <Link to="/cart" className="btn btn-outline-dark">
+            <FaShoppingCart /> Giỏ hàng
+          </Link>
+
+          <div className="dropdown">
+            <button
+              className="btn btn-outline-secondary dropdown-toggle d-flex align-items-center"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <FaUser className="me-2" />
+              {user ? user.name : "Tài khoản"}
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end">
+              {user ? (
+                <>
+                  <li>
+                    <Link className="dropdown-item" to="/account">
+                      Tài khoản của tôi
+                    </Link>
+                  </li>
+                  <li>
+                    <button className="dropdown-item" onClick={logoutUser}>
+                      Đăng xuất
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link className="dropdown-item" to="/login">
+                      Đăng nhập
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="dropdown-item" to="/register">
+                      Đăng ký
+                    </Link>
+                  </li>
+                </>
               )}
-            </Nav.Link>
-          </Nav>
+            </ul>
+          </div>
+        </div>
+      </div>
 
-          <Nav>
-            {user ? (
-              <NavDropdown
-                title={
-                  <span className="d-flex align-items-center">
-                    <img
-                      src={user.avatar || '/default-avatar.png'}
-                      alt="avatar"
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        marginRight: '8px'
-                      }}
-                    />
-                    {user.name}
-                  </span>
-                }
-                id="user-dropdown"
-              >
-                <NavDropdown.Item as={NavLink} to="/profile">Thông tin cá nhân</NavDropdown.Item>
-                <NavDropdown.Item as={NavLink} to="/orders">Đơn hàng của tôi</NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item onClick={handleLogout}>Đăng xuất</NavDropdown.Item>
-              </NavDropdown>
-            ) : (
-              <NavDropdown title={<FaUser />} id="guest-dropdown">
-                <NavDropdown.Item as={NavLink} to="/login">Đăng nhập</NavDropdown.Item>
-                <NavDropdown.Item as={NavLink} to="/register">Đăng ký</NavDropdown.Item>
-              </NavDropdown>
-            )}
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+      <nav className="bg-light border-top">
+        <div className="container d-flex justify-content-center gap-4 py-2">
+          <Link className="text-dark fw-semibold" to="/">
+            Trang chủ
+          </Link>
+          <Link className="text-dark fw-semibold" to="/products">
+            Sản phẩm
+          </Link>
+          <Link className="text-dark fw-semibold" to="/collections">
+            Bộ sưu tập
+          </Link>
+          <Link className="text-dark fw-semibold" to="/about">
+            Giới thiệu
+          </Link>
+          <Link className="text-dark fw-semibold" to="/contact">
+            Liên hệ
+          </Link>
+        </div>
+      </nav>
+    </header>
   );
 };
 

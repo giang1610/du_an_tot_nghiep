@@ -9,14 +9,18 @@ import {
 } from 'react-bootstrap';
 import axios from 'axios';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
 const RegisterPage = () => {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
     password_confirmation: '',
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
@@ -31,11 +35,23 @@ const RegisterPage = () => {
     setSuccess('');
 
     try {
-      await axios.post('http://localhost:8000/api/register', form);
-      setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
-      Navigate('/login');
+      const response = await axios.post('http://localhost:8000/api/register', form);
+
+      if (response.status === 200 || response.status === 201) {
+        setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError('Đăng ký thất bại. Vui lòng thử lại.');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra');
+      if (err.response?.data?.errors) {
+        const messages = Object.values(err.response.data.errors)
+          .flat()
+          .join(' ');
+        setError(messages);
+      } else {
+        setError(err.response?.data?.message || 'Có lỗi xảy ra');
+      }
     }
   };
 

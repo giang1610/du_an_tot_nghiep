@@ -32,7 +32,7 @@ class ProductRequest extends FormRequest
         'variants.*.sale_start_date' => 'required_with:variants.*.sale_price|nullable|date',
         'variants.*.sale_end_date' => 'required_with:variants.*.sale_price|nullable|date|after:variants.*.sale_start_date',
         'variants.*.stock' => 'nullable|integer|min:0',
-        'variants.*.image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        'variants.*.image' => $this->isMethod('post')? 'required|image|mimes:jpeg,png,jpg|max:2048': 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
 
@@ -46,6 +46,7 @@ class ProductRequest extends FormRequest
         'slug.unique' => 'Đường dẫn đã tồn tại.',
         'thumbnail.required' => 'Ảnh sản phẩm không được để trống.',
         'thumbnail.image' => 'Ảnh không hợp lệ.',
+        'thumbnail_old' => 'nullable|string',
         'category_id.required' => 'Vui lòng chọn danh mục.',
         'price_products.required' => 'Giá sản phẩm không được để trống.',
         'price_products.numeric' => 'Giá sản phẩm phải là số.',
@@ -60,7 +61,7 @@ class ProductRequest extends FormRequest
         'variants.*.sale_end_date.after' => 'Ngày kết thúc phải sau ngày bắt đầu.',
         'variants.*.image.required' => 'Ảnh biến thể không được để trống.',
         'variants.*.image.image' => 'Tệp tải lên phải là ảnh.',
+        
         ];
     }
 }
-

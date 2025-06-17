@@ -1,17 +1,16 @@
 @extends('admin.layouts.app')
 
 @section('content')
+
 <div class="container py-4">
     <div class="d-flex align-items-center mb-4">
-        {{-- Nút quay lại danh sách sản phẩm --}}
-        <a href="{{ route('products.index') }}" class="d-flex align-items-center text-decoration-none back-link">
+        <a href="/admin/products" class="d-flex align-items-center text-decoration-none back-link">
             <i class="bi bi-arrow-left me-2" style="font-size: 1.5rem; color: #4b5563;"></i>
             <span class="text-dark">Quay lại danh sách sản phẩm</span>
         </a>
     </div>
 
-    {{-- Tiêu đề trang chỉnh sửa sản phẩm --}}
-    <h1 class="h4 mb-4">Chỉnh sửa sản phẩm: {{ $product->name }}</h1>
+    <h1 class="h4 mb-4">Chỉnh sửa sản phẩm</h1>
 
     {{-- Hiển thị thông báo lỗi (nếu có) --}}
     @if (session('error'))
@@ -72,10 +71,14 @@
 
                     {{-- Ảnh sản phẩm chính --}}
                     <div class="col-md-6">
-                        <label for="thumbnail" class="form-label">Ảnh sản phẩm</label> <br>
-                        <img id="img" src="{{ old('thumbnail_old', $product->thumbnail ? asset('storage/'.$product->thumbnail) : '') }}" style="max-width: 100px;"> <br>
-                        <input type="file" name="thumbnail" class="form-control" onchange="img.src = window.URL.createObjectURL(this.files[0])">
-                        <input type="hidden" name="thumbnail_old" value="{{ $product->thumbnail }}">
+                        <label for="thumbnail" class="form-label">Ảnh sản phẩm chính</label> <br>
+                        <img id="img-main-preview"
+                            style="max-width: 100px; {{ old('thumbnail_old', $product->thumbnail) ? 'display: block;' : 'display: none;' }}"
+                            src="{{ old('thumbnail_old', $product->thumbnail) ? asset('storage/' . old('thumbnail_old', $product->thumbnail)) : asset('path/to/default-placeholder.png') }}"> <br>
+                        <input type="file" name="thumbnail" id="thumbnail" class="form-control"
+                            onchange="document.getElementById('img-main-preview').src = window.URL.createObjectURL(this.files[0]); document.getElementById('img-main-preview').style.display = 'block';">
+                        {{-- Input hidden này GIỮ đường dẫn ảnh cũ --}}
+                        <input type="hidden" name="thumbnail_old" value="{{ old('thumbnail_old', $product->thumbnail) }}">
                         @error('thumbnail')
                         <div class="text-danger">{{$message}}</div>
                         @enderror
@@ -156,6 +159,7 @@
             {{-- Kiểm tra nếu có dữ liệu biến thể cũ từ lỗi validate hoặc từ sản phẩm hiện có --}}
             @php
                 $variantsToDisplay = empty(old('variants')) ? $product->variants->toArray() : old('variants');
+                $nextVariantIndex = count($variantsToDisplay); // Để đặt index cho các biến thể mới tạo
             @endphp
             @foreach($variantsToDisplay as $i => $variant)
                 <div class="card p-3 mb-3 border shadow-sm" id="variant-{{ $i }}">
@@ -167,7 +171,10 @@
                         </h5>
                         <div>
                             {{-- Nút để ẩn/hiện chi tiết biến thể --}}
-                            <button type="button" class="btn btn-sm btn-warning me-1 btn-edit" data-bs-target="#details-variant-{{ $i }}">Ẩn</button>
+                            <button type="button" class="btn btn-sm btn-warning me-1 btn-edit" data-bs-target="#details-variant-{{ $i }}">
+                                {{-- Khi tải trang, mặc định hiển thị chi tiết nên nút là "Ẩn" --}}
+                                Ẩn
+                            </button>
                             {{-- Nút để xóa biến thể (trước khi gửi form) --}}
                             <button type="button" class="btn btn-sm btn-danger btn-delete" data-bs-target="#variant-{{ $i }}">Xóa</button>
                         </div>
@@ -236,14 +243,15 @@
                             <div class="col-12">
                                 <label class="form-label small">Ảnh biến thể</label>
                                 <div class="mb-2">
-                                    {{-- Hiển thị ảnh biến thể hiện có hoặc ảnh đã chọn nếu có lỗi validate --}}
-                                    <img class="preview-image mb-2 rounded" style="max-width: 100px;"
-                                    src="{{ isset($variant['image']) && $variant['image'] ? asset('storage/'.$variant['image']) : '' }}"
-                                    alt="Preview" id="img-preview-{{ $i }}">
+                                    <img class="preview-image-variant mb-2 rounded"
+                                        style="max-width: 100px; {{ old('variants.'.$i.'.existing_image', $variant['image'] ?? '') ? 'display: block;' : 'display: none;' }}"
+                                        src="{{ old('variants.'.$i.'.existing_image', $variant['image'] ?? '') ? asset('storage/' . old('variants.'.$i.'.existing_image', $variant['image'] ?? '')) : '' }}"
+                                        alt="Preview" id="img-preview-{{ $i }}">
                                 </div>
-                                </div>
-                                <input type="file" name="variants[{{ $i }}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-{{ $i }}').src = window.URL.createObjectURL(this.files[0])">
-                                <input type="file" name="variants[{{ $i }}][image_old]" value="{{ $variant['image'] ?? '' }}">
+                                <input type="file" name="variants[{{ $i }}][image]" class="form-control form-control-sm"
+                                    onchange="document.getElementById('img-preview-{{ $i }}').style.display = 'block'; document.getElementById('img-preview-{{ $i }}').src = window.URL.createObjectURL(this.files[0])">
+                                    <input type="hidden" name="variants[{{ $i }}][image_old]" value="{{ old('variants.'.$i.'.image_old', $variant['image'] ?? '') }}">
+                                <small class="text-muted mt-1">Để thay đổi ảnh, hãy chọn tệp mới. Ảnh hiện tại sẽ được giữ nếu không chọn.</small>
                                 @error('variants.'.$i.'.image')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -255,7 +263,7 @@
         </div> <br> <br>
 
         <div class="mt-4 product-update-button-container"> {{-- Thêm class mới --}}
-        <button type="submit" class="btn btn-primary">Cập nhật sản phẩm</button>
+            <button type="submit" class="btn btn-primary">Cập nhật sản phẩm</button>
         </div>
     </form>
 </div>
@@ -265,12 +273,14 @@
     // Hàm slugify để tạo slug từ tên sản phẩm
     function slugify(text) {
         return text.toString().normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-');
+        .replace(/đ/g, 'd') // chuyển đ thành d
+        .replace(/Đ/g, 'D') // chuyển Đ thành D
+        .replace(/[\u0300-\u036f]/g, '') // loại bỏ dấu
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '') // bỏ ký tự đặc biệt
+        .replace(/\s+/g, '-') // thay khoảng trắng thành dấu -
+        .replace(/-+/g, '-'); // loại bỏ dấu - liên tiếp
     }
 
     // Tự động tạo slug khi nhập tên sản phẩm
@@ -286,18 +296,26 @@
         const sizes = Array.from(document.querySelectorAll('#sizeSelect option:checked'));
         const container = document.getElementById('variantContainer');
 
-        let currentIndex = container.children.length; // Bắt đầu từ index hiện tại của các biến thể đã có
+        // Bắt đầu từ index hiện tại của các biến thể đã có hoặc được tạo lại từ old input
+        // Sử dụng giá trị $nextVariantIndex từ Blade để đảm bảo tính duy nhất
+        let currentIndex = {{ $nextVariantIndex ?? 0 }};
+        if (container.children.length > currentIndex) {
+            currentIndex = container.children.length; // Đảm bảo index luôn lớn nhất hiện có
+        }
+
 
         colors.forEach(color => {
             sizes.forEach(size => {
-                // Kiểm tra xem biến thể này đã tồn tại chưa để tránh tạo trùng lặp khi nhấn lại nút
+                // Kiểm tra xem biến thể này đã tồn tại chưa (trong DOM) để tránh tạo trùng lặp
                 const existingVariant = Array.from(container.children).find(card => {
-                    const existingColorId = card.querySelector('input[name$="[color_id]"]').value;
-                    const existingSizeId = card.querySelector('input[name$="[size_id]"]').value;
-                    return existingColorId === color.value && existingSizeId === size.value;
+                    const existingColorIdInput = card.querySelector('input[name$="[color_id]"]');
+                    const existingSizeIdInput = card.querySelector('input[name$="[size_id]"]');
+                    return existingColorIdInput && existingSizeIdInput &&
+                           existingColorIdInput.value === color.value &&
+                           existingSizeIdInput.value === size.value;
                 });
 
-                if (!existingVariant) { // Chỉ tạo nếu biến thể chưa tồn tại
+                if (!existingVariant) { // Chỉ tạo nếu biến thể chưa tồn tại trong DOM
                     const variantId = `variant-${currentIndex}`;
                     const html = `
                         <div class="card p-3 mb-3 border shadow-sm" id="${variantId}">
@@ -345,6 +363,7 @@
                                             <img class="preview-image mb-2 rounded" style="max-width: 100px; display: none;" src="" alt="Preview" id="img-preview-${currentIndex}">
                                         </div>
                                         <input type="file" name="variants[${currentIndex}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-${currentIndex}').style.display = 'block'; document.getElementById('img-preview-${currentIndex}').src = window.URL.createObjectURL(this.files[0])">
+                                        {{-- Không cần existing_image cho biến thể mới tạo ở đây vì nó chưa có --}}
                                     </div>
                                 </div>
                             </div>
@@ -388,21 +407,19 @@
     // Hàm xử lý xóa thẻ biến thể
     function deleteVariantCard() {
         const variantCard = document.querySelector(this.dataset.bsTarget);
-        // Thêm một input hidden để đánh dấu biến thể này cần xóa khỏi DB
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = `variants_to_delete[]`;
         // Tìm ID của biến thể nếu nó là biến thể hiện có (có ID)
         const variantIdInput = variantCard.querySelector('input[name$="[id]"]');
-        if (variantIdInput) {
+
+        if (variantIdInput && variantIdInput.value) { // Nếu có input ID và có giá trị (là biến thể đã lưu)
+            // Thêm một input hidden để đánh dấu biến thể này cần xóa khỏi DB
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = `variants_to_delete[]`;
             hiddenInput.value = variantIdInput.value;
-        } else {
-            // Nếu không có ID, đây là biến thể mới được tạo trong phiên hiện tại, chỉ cần xóa khỏi DOM
-            variantCard.remove();
-            return;
+            document.querySelector('form').appendChild(hiddenInput); // Thêm vào form
         }
-        document.querySelector('form').appendChild(hiddenInput); // Thêm vào form
-        variantCard.remove(); // Xóa khỏi DOM
+        // Xóa khỏi DOM (cả biến thể mới tạo và biến thể đã lưu)
+        variantCard.remove();
     }
 
 
@@ -427,14 +444,15 @@
     // Khởi tạo các sự kiện khi DOM đã tải xong
     document.addEventListener('DOMContentLoaded', function() {
         attachVariantEventListeners(); // Gắn sự kiện cho các biến thể hiện có
+
         // Cập nhật trạng thái disabled của sale dates khi tải trang
         document.querySelectorAll('input[name$="[sale_price]"]').forEach(input => {
             const index = input.name.match(/\[(\d+)\]/)[1];
             const startDateInput = document.getElementById(`sale_start_date_${index}`);
             const endDateInput = document.getElementById(`sale_end_date_${index}`);
             if (input.value.trim() === '' || parseFloat(input.value) <= 0) {
-                startDateInput.disabled = true;
-                endDateInput.disabled = true;
+                if (startDateInput) startDateInput.disabled = true;
+                if (endDateInput) endDateInput.disabled = true;
             }
         });
     });

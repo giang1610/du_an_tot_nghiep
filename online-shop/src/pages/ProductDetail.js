@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Image, Button, Spinner, Form, Alert } from 'react-bootstrap';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
+
 axios.defaults.withCredentials = true;
+
 const ProductDetail = () => {
-  const { id } = useParams();
-  const { token, user } = useAuth();  // Lấy token và user từ context
+  const { slug } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [product, setProduct] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -17,10 +21,14 @@ const ProductDetail = () => {
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
 
+  // NEW: State cho biến thể
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/api/products/${id}`);
+        const res = await axios.get(`http://localhost:8000/api/products/slug/${slug}`);
         setProduct(res.data.data);
         setComments(res.data.data.comments || []);
         setRelatedProducts(res.data.related || []);
@@ -31,59 +39,90 @@ const ProductDetail = () => {
       }
     };
     fetchData();
-  }, [id]);
+  }, [slug]);
 
   const handleAddToCart = () => {
+    if (!selectedSize || !selectedColor) {
+      alert('Vui lòng chọn kích cỡ và màu sắc!');
+      return;
+    }
+
+    const variant = product.variants?.find(
+      v => v.size === selectedSize && v.color === selectedColor
+    );
+
+    if (!variant) {
+      alert('Biến thể không hợp lệ!');
+      return;
+    }
+
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const existing = cart.find(item => item.id === product.id);
+    const existing = cart.find(item => item.variantId === variant.id);
+
     if (existing) {
       existing.quantity += 1;
     } else {
-      cart.push({ ...product, quantity: 1 });
+      cart.push({
+        id: product.id,
+        name: product.name,
+        img: product.img,
+        price: product.price,
+        variantId: variant.id,
+        size: selectedSize,
+        color: selectedColor,
+        quantity: 1,
+      });
     }
+
     localStorage.setItem('cart', JSON.stringify(cart));
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1500);
   };
 
-  const handleSubmitComment = async (e) => {
-  e.preventDefault();
-  setCommentError('');
-  if (!commentContent.trim()) {
-    setCommentError('Vui lòng nhập nội dung bình luận');
-    return;
-  }
-  if (!token) {
-    setCommentError('Bạn cần đăng nhập để bình luận');
-    return;
+ const handleGoToCart = () => {
+  if (!selectedSize || !selectedColor) {
+    alert('Vui lòng chọn kích cỡ và màu sắc!');
+    return; 
   }
 
-  setCommentSubmitting(true);
-  try {
-    // Gọi lấy CSRF cookie trước khi gửi POST
-    await axios.get('http://localhost:8000/sanctum/csrf-cookie', { withCredentials: true });
-    
-    const res = await axios.post(
-      `http://localhost:8000/api/products/${id}/comments`,
-      { content: commentContent },
-      { withCredentials: true,
-        headers: {
-      Authorization: `Bearer ${token}` 
-    }
-      }
-      
-      
-    );
-    setComments([...comments, res.data.data]);
-    setCommentContent('');
-  } catch (err) {
-    console.error('Lỗi gửi bình luận:', err.response || err.message);
-    setCommentError(err.response?.data?.message || 'Không thể gửi bình luận');
-  } finally {
-    setCommentSubmitting(false);
-  }
+  handleAddToCart();
+  navigate('/cart');
 };
 
+  const handleSubmitComment = async (e) => {
+    e.preventDefault();
+    setCommentError('');
+    if (!commentContent.trim()) {
+      setCommentError('Vui lòng nhập nội dung bình luận');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCommentError('Bạn cần đăng nhập để bình luận');
+      return;
+    }
+
+    setCommentSubmitting(true);
+    try {
+      const res = await axios.post(
+        `http://localhost:8000/api/products/${slug}/comments`,
+        { content: commentContent },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      setComments([...comments, res.data.data]);
+      setCommentContent('');
+    } catch (err) {
+      console.error('Lỗi gửi bình luận:', err.response || err.message);
+      setCommentError(err.response?.data?.message || 'Không thể gửi bình luận');
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
 
   if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
   if (!product) return <div className="text-center text-danger">Không tìm thấy sản phẩm</div>;
@@ -98,11 +137,34 @@ const ProductDetail = () => {
           </Col>
           <Col md={6}>
             <h2>{product.name}</h2>
-            <h4 className="text-danger fw-bold">{product.price.toLocaleString()} đ</h4>
+            {/* <h4 className="text-danger fw-bold">{product.price.toLocaleString()} đ</h4> */}
             <p>{product.description || "Chưa có mô tả sản phẩm."}</p>
+
+            {/* Chọn kích cỡ */}
+            <Form.Group className="mb-3">
+              <Form.Label>Chọn kích cỡ</Form.Label>
+              <Form.Select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)}>
+                <option value="">-- Chọn kích cỡ --</option>
+                {[...new Set(product.variants?.map(v => v.size))].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            {/* Chọn màu sắc */}
+            <Form.Group className="mb-3">
+              <Form.Label>Chọn màu sắc</Form.Label>
+              <Form.Select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)}>
+                <option value="">-- Chọn màu sắc --</option>
+                {[...new Set(product.variants?.map(v => v.color))].map(color => (
+                  <option key={color} value={color}>{color}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
             <div className="d-flex gap-2 mt-4">
               <Button variant="primary" onClick={handleAddToCart}>Mua Ngay</Button>
-              <Button as={Link} to="/cart" variant="outline-success">Giỏ Hàng</Button>
+              <Button variant="outline-success" onClick={handleGoToCart}>Thêm vào Giỏ Hàng</Button>
             </div>
             {addedToCart && <div className="mt-3 text-success">Đã thêm vào giỏ hàng!</div>}
           </Col>
@@ -120,7 +182,6 @@ const ProductDetail = () => {
             </div>
           ))}
 
-          {/* Form bình luận */}
           {user ? (
             <Form onSubmit={handleSubmitComment}>
               <Form.Group controlId="commentContent" className="mb-3">
@@ -150,11 +211,11 @@ const ProductDetail = () => {
             <Row>
               {relatedProducts.map((rel) => (
                 <Col md={3} key={rel.id} className="mb-3">
-                  <Link to={`/products/${rel.id}`} className="text-decoration-none text-dark">
+                  <Link to={`/products/${rel.slug}`} className="text-decoration-none text-dark">
                     <div className="border rounded p-2 h-100">
                       <img src={rel.img} alt={rel.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                       <h6 className="mt-2">{rel.name}</h6>
-                      <p className="text-danger fw-bold">{rel.price.toLocaleString()} đ</p>
+                      {/* <p className="text-danger fw-bold">{rel.price.toLocaleString()} đ</p> */}
                     </div>
                   </Link>
                 </Col>
