@@ -61,22 +61,17 @@ Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest
 })->middleware(['signed'])->name('custom.verification.verify');
 
 
-// Người dùng đã xác thực
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
 
+// Admin routes
+Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(function () {
+    Route::get('/', function () {
+      return view('admin.dashboard');
+    })->name('admin');
+
+    //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-// Admin routes
-Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
-    Route::get('/', function () {
-      return view('admin.dasboard');
-    })->name('admin');
 
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
     Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');

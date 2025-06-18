@@ -284,6 +284,10 @@
                             <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
                         </a>
                     </li>
+                     <a href="{{ route('profile.edit') }}" class="nav-link text-white">
+                     <i class="fas fa-user me-2"></i>Profile
+                    </a>
+
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('admin') }}">
                              <i class="fas fa-user-cog"></i> Quản lý tài khoản
