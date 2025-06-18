@@ -41,13 +41,24 @@ const RegisterPage = () => {
 
 
     try {
-      await axios.post('http://localhost:8000/api/register', form);
-      setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
+      const response = await axios.post('http://localhost:8000/api/register', form);
 
 
-      setTimeout(() => navigate('/login'), 2000);
+      if (response.status === 200 || response.status === 201) {
+        setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError('Đăng ký thất bại. Vui lòng thử lại.');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra');
+      if (err.response?.data?.errors) {
+        const messages = Object.values(err.response.data.errors)
+          .flat()
+          .join(' ');
+        setError(messages);
+      } else {
+        setError(err.response?.data?.message || 'Có lỗi xảy ra');
+      }
     }
   };
 
@@ -155,3 +166,6 @@ const RegisterPage = () => {
 
 
 export default RegisterPage;
+
+
+
