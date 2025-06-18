@@ -99,6 +99,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'data' => $products,
+            
 
         ]);
     }
