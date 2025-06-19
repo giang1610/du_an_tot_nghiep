@@ -20,8 +20,6 @@ const ProductDetail = () => {
   const [addedToCart, setAddedToCart] = useState(false);
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
-
-  // NEW: State cho biến thể
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
 
@@ -29,7 +27,7 @@ const ProductDetail = () => {
     const fetchData = async () => {
       try {
         const res = await axios.get(`http://localhost:8000/api/products/slug/${slug}`);
-        setProduct(res.data.data);
+        setProduct(res.data.data); 
         setComments(res.data.data.comments || []);
         setRelatedProducts(res.data.related || []);
       } catch (error) {
@@ -48,7 +46,7 @@ const ProductDetail = () => {
     }
 
     const variant = product.variants?.find(
-      v => v.size === selectedSize && v.color === selectedColor
+      v => v.size?.name === selectedSize && v.color?.name === selectedColor
     );
 
     if (!variant) {
@@ -79,15 +77,15 @@ const ProductDetail = () => {
     setTimeout(() => setAddedToCart(false), 1500);
   };
 
- const handleGoToCart = () => {
-  if (!selectedSize || !selectedColor) {
-    alert('Vui lòng chọn kích cỡ và màu sắc!');
-    return; 
-  }
+  const handleGoToCart = () => {
+    if (!selectedSize || !selectedColor) {
+      alert('Vui lòng chọn kích cỡ và màu sắc!');
+      return;
+    }
 
-  handleAddToCart();
-  navigate('/cart');
-};
+    handleAddToCart();
+    navigate('/cart');
+  };
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -137,29 +135,39 @@ const ProductDetail = () => {
           </Col>
           <Col md={6}>
             <h2>{product.name}</h2>
-            {/* <h4 className="text-danger fw-bold">{product.price.toLocaleString()} đ</h4> */}
             <p>{product.description || "Chưa có mô tả sản phẩm."}</p>
 
             {/* Chọn kích cỡ */}
             <Form.Group className="mb-3">
-              <Form.Label>Chọn kích cỡ</Form.Label>
-              <Form.Select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)}>
-                <option value="">-- Chọn kích cỡ --</option>
-                {[...new Set(product.variants?.map(v => v.size))].map(size => (
-                  <option key={size} value={size}>{size}</option>
+              <Form.Label>Kích thước</Form.Label>
+              <div className="d-flex flex-wrap gap-3">
+                {[...new Set(product.variants?.map(v => v.size?.name))].map((sizeName, index) => (
+                  <Form.Check
+                    key={`size-${index}-${sizeName}`}
+                    type="checkbox"
+                    id={`size-${sizeName}`}
+                    label={sizeName}
+                    checked={selectedSize === sizeName}
+                    onChange={() => setSelectedSize(selectedSize === sizeName ? '' : sizeName)}
+                  />
                 ))}
-              </Form.Select>
+              </div>
             </Form.Group>
 
             {/* Chọn màu sắc */}
             <Form.Group className="mb-3">
               <Form.Label>Chọn màu sắc</Form.Label>
-              <Form.Select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)}>
-                <option value="">-- Chọn màu sắc --</option>
-                {[...new Set(product.variants?.map(v => v.color))].map(color => (
-                  <option key={color} value={color}>{color}</option>
+              <div className="d-flex flex-wrap gap-2">
+                {[...new Set(product.variants?.map(v => v.color?.name))].map((colorName, index) => (
+                  <Button
+                    key={`color-${index}-${colorName}`}
+                    variant={selectedColor === colorName ? 'dark' : 'outline-secondary'}
+                    onClick={() => setSelectedColor(colorName)}
+                  >
+                    {colorName}
+                  </Button>
                 ))}
-              </Form.Select>
+              </div>
             </Form.Group>
 
             <div className="d-flex gap-2 mt-4">
@@ -215,7 +223,6 @@ const ProductDetail = () => {
                     <div className="border rounded p-2 h-100">
                       <img src={rel.img} alt={rel.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                       <h6 className="mt-2">{rel.name}</h6>
-                      {/* <p className="text-danger fw-bold">{rel.price.toLocaleString()} đ</p> */}
                     </div>
                   </Link>
                 </Col>
