@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('content')
-  <a href="/categories"><i class="bi bi-arrow-left" style="font-size: 1.5rem; color: red;"></i>
+  <a href="/admin/categories"><i class="bi bi-arrow-left" style="font-size: 1.5rem; color: red;"></i>
 
         Quay lại danh sách danh mục
 
@@ -51,14 +51,16 @@
       <script>
     // Hàm chuyển tiếng Việt có dấu thành không dấu và chuyển khoảng trắng thành dấu gạch ngang
         function slugify(text) {
-            return text.toString().normalize('NFD') // tách dấu
+            return text.toString().normalize('NFD')
+                .replace(/đ/g, 'd') // chuyển đ thành d
+                .replace(/Đ/g, 'D') // chuyển Đ thành D
                 .replace(/[\u0300-\u036f]/g, '') // loại bỏ dấu
                 .toLowerCase()
                 .trim()
                 .replace(/[^a-z0-9\s-]/g, '') // bỏ ký tự đặc biệt
                 .replace(/\s+/g, '-') // thay khoảng trắng thành dấu -
                 .replace(/-+/g, '-'); // loại bỏ dấu - liên tiếp
-        }
+            }
 
         document.getElementById('name').addEventListener('input', function() {
             const nameValue = this.value;
