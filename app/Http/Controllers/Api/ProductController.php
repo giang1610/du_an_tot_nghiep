@@ -105,66 +105,66 @@ class ProductController extends Controller
     }
 
 
-    public function show($slug, Request $request)
-    {
-        $product = Product::where('slug', $slug)
-            ->with([
-                'comments.user' => function ($query) {
-                    $query->select('id', 'name', 'email');
-                },
-                'category' => function ($query) {
-                    $query->select('id', 'name', 'slug');
-                },
-                'variants.color' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'variants.size' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'variants.images' => function ($query) {
-                    $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
-                },
-                'images' => function ($query) {
-                    $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
-                }
-            ])
-            ->first();
+    // public function show($slug, Request $request)
+    // {
+    //     $product = Product::where('slug', $slug)
+    //         ->with([
+    //             'comments.user' => function ($query) {
+    //                 $query->select('id', 'name', 'email');
+    //             },
+    //             'category' => function ($query) {
+    //                 $query->select('id', 'name', 'slug');
+    //             },
+    //             'variants.color' => function ($query) {
+    //                 $query->select('id', 'name');
+    //             },
+    //             'variants.size' => function ($query) {
+    //                 $query->select('id', 'name');
+    //             },
+    //             'variants.images' => function ($query) {
+    //                 $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
+    //             },
+    //             'images' => function ($query) {
+    //                 $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
+    //             }
+    //         ])
+    //         ->first();
 
-        if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sản phẩm không tồn tại'
-            ], 404);
-        }
+    //     if (!$product) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Sản phẩm không tồn tại'
+    //         ], 404);
+    //     }
 
-        // Xử lý giá hiển thị cho sản phẩm chính
-        $this->processProductPricing($product);
+    //     // Xử lý giá hiển thị cho sản phẩm chính
+    //     $this->processProductPricing($product);
 
-        // Lấy 5 sản phẩm liên quan
-        // Lấy sản phẩm liên quan cùng danh mục, trừ sản phẩm hiện tại, giới hạn 4 sản phẩm
-        $relatedProducts = Product::where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->with([
-                'variants.color' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'variants.size' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'images' => function ($query) {
-                    $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
-                }
-            ])
-            ->take(5)
-            ->get();
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'product' => $product,
-                'related_products' => $relatedProducts
-            ]
-        ], 200);
-    }
+    //     // Lấy 5 sản phẩm liên quan
+    //     // Lấy sản phẩm liên quan cùng danh mục, trừ sản phẩm hiện tại, giới hạn 4 sản phẩm
+    //     $relatedProducts = Product::where('category_id', $product->category_id)
+    //         ->where('id', '!=', $product->id)
+    //         ->with([
+    //             'variants.color' => function ($query) {
+    //                 $query->select('id', 'name');
+    //             },
+    //             'variants.size' => function ($query) {
+    //                 $query->select('id', 'name');
+    //             },
+    //             'images' => function ($query) {
+    //                 $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
+    //             }
+    //         ])
+    //         ->take(5)
+    //         ->get();
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => [
+    //             'product' => $product,
+    //             'related_products' => $relatedProducts
+    //         ]
+    //     ], 200);
+    // }
 
     public function related($category_id, Request $request)
     {
@@ -246,57 +246,96 @@ class ProductController extends Controller
             'data' => $comment
         ], 201);
     }
-    public function getBySlug($slug)
+//     public function getBySlug($slug)
+// {
+//     $product = Product::where('slug', $slug)->first();
+
+//     if (!$product) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Sản phẩm không tồn tại',
+//         ], 404);
+//     }
+
+//     // Lấy sản phẩm liên quan
+//     $related = Product::where('category_id', $product->category_id)
+//         ->where('id', '!=', $product->id)
+//         ->limit(4)
+//         ->get();
+
+//     return response()->json([
+//         'success' => true,
+//         'data' => $product,
+//         'related' => $related,
+//     ]);
+// }
+// public function showBySlug($slug)
+// {
+//     $product = Product::with(['variants', 'comments.user'])
+//         ->where('slug', $slug)
+//         ->first();
+
+//     if (!$product) {
+//         return response()->json(['message' => 'Không tìm thấy sản phẩm'], 404);
+//     }
+
+//     $related = Product::where('category_id', $product->category_id)
+//         ->where('id', '!=', $product->id)
+//         ->limit(4)
+//         ->get();
+
+//     return response()->json([
+//         'data' => $product,
+//         'related' => $related
+//     ]);
+// }
+public function showBySlug($slug)
 {
-    $product = Product::where('slug', $slug)->first();
+    $product = Product::with([
+        'variants.size',
+        'variants.color',
+        'variants.images',
+        'comments.user',
+        'images',
+        'category'
+    ])
+    ->where('slug', $slug)
+    ->first();
 
     if (!$product) {
         return response()->json([
             'success' => false,
-            'message' => 'Sản phẩm không tồn tại',
+            'message' => 'Sản phẩm không tồn tại'
         ], 404);
     }
 
-    // Lấy sản phẩm liên quan
-    $related = Product::where('category_id', $product->category_id)
+    // Xử lý giá hiển thị
+    $this->processProductPricing($product);
+
+    // Sản phẩm liên quan cùng danh mục
+    $related = Product::with(['images'])
+        ->where('category_id', $product->category_id)
         ->where('id', '!=', $product->id)
-        ->limit(4)
+        ->take(4)
         ->get();
 
     return response()->json([
         'success' => true,
-        'data' => $product,
-        'related' => $related,
-    ]);
-}
-public function showBySlug($slug)
-{
-    $product = Product::with([
-        'comments.user',
-        'variants.color',
-        'variants.size',
-    ])->where('slug', $slug)->firstOrFail();
-
-    // Lấy danh sách các sản phẩm liên quan
-    $related = Product::where('category_id', $product->category_id)
-                ->where('id', '!=', $product->id)
-                ->take(4)
-                ->get();
-
-    return response()->json([
         'data' => [
-            'id' => $product->id,
-            'name' => $product->name,
-            'slug' => $product->slug,
-            'price' => $product->price,
-            'description' => $product->description,
-            'img' => $product->img,
-            'variants' => $product->variants, // <--- phần quan trọng
-            'comments' => $product->comments,
-        ],
-        'related' => $related,
+            'product' => $product,
+            'related_products' => $related
+        ]
     ]);
 }
+public function showById($id)
+{
+    $product = Product::with(['variants'])->find($id);
 
+    if (!$product) {
+        return response()->json(['message' => 'Sản phẩm không tồn tại'], 404);
+    }
+
+    return response()->json(['success' => true, 'data' => $product]);
+}
 
 }
