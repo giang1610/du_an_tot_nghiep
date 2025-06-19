@@ -1,11 +1,11 @@
-  import React, { useEffect, useState } from 'react';
-  import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
-  import axios from 'axios';
-  import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 
-  const ProductList = () => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+const ProductList = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
 
   // Gọi API khi component được mount
@@ -15,13 +15,13 @@
         console.log('DATA:', response.data.data);
         setProducts(response.data.data); // lấy danh sách sản phẩm
         setLoading(false);
-        
+
       })
       .catch(error => {
         console.error('Lỗi khi tải sản phẩm:', error);
         setLoading(false);
       });
-      
+
   }, []);
 
   return (
@@ -42,7 +42,7 @@
                   <Card.Img
                     variant="top"
                     src={product.img} // hoặc product.thumbnail nếu dùng slug ảnh
-                    style={{  height: '250px', objectFit: 'contain', backgroundColor: '#f8f9fa'  }}
+                    style={{ height: '250px', objectFit: 'contain', backgroundColor: '#f8f9fa' }}
                     alt={product.name}
                   />
                 </Link>
@@ -61,9 +61,11 @@
                   </Card.Text>
 
                   {/* Nút mua */}
-                  <Button variant="primary" size="sm" className="w-100">
-                    Mua Ngay
-                  </Button>
+                  <Link to={`/products/${product.slug}`} style={{ textDecoration: 'none', color: 'black' }}>
+                    <Button variant="primary" size="sm" className="w-100">
+                      Xem chi tiết
+                    </Button>
+                  </Link>
                 </Card.Body>
               </Card>
             </Col>
@@ -74,4 +76,4 @@
   );
 };
 
-  export default ProductList;
+export default ProductList;
