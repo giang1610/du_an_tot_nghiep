@@ -7,7 +7,8 @@ use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\CommentController;
+use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\SizeController;
 
 /*
@@ -20,8 +21,6 @@ use App\Http\Controllers\SizeController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-use App\Http\Controllers\Api\CommentController;
-use App\Http\Controllers\Api\CartController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
