@@ -62,7 +62,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
    
     $request->fulfill();
-    return redirect('http://localhost:3000/login?verified=true');
+    return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
 
 
 })->middleware(['signed'])->name('verification.verify.fotn');

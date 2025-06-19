@@ -46,7 +46,8 @@
             @php
             $variant = $item->variant;
             $product = $variant->product ?? null;
-            $thumbnail = $product?->thumbnail;
+            // $thumbnail = $product?->thumbnail;
+            $thumbnail = $variant->image ?? ($product?->image ?? null);
             $price = $item->price;
             $salePrice = $item->sale_price ?? $price;
             $totalPrice = $salePrice * $item->quantity;
