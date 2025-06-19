@@ -16,7 +16,7 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
     \Illuminate\Auth\Events\Registered::class => [
-        \App\Listeners\AssignRoleToUserAfterRegistered::class,
+    \App\Listeners\AssignRoleToUserAfterRegistered::class,
     ],
 ];
 

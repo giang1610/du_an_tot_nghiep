@@ -10,7 +10,7 @@ class IsAdmin
 {
     public function handle(Request $request, Closure $next)
     {
-        // Giả sử có cột 'role' trong bảng users, và admin có role = 'admin'
+      
         if (Auth::check() && Auth::user()->role == 1) {
             return $next($request);
         }
