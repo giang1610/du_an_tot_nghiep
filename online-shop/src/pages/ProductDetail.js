@@ -1,238 +1,252 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Image, Button, Spinner, Form, Alert } from 'react-bootstrap';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Spinner, Form } from 'react-bootstrap';
 import axios from 'axios';
 import Header from '../components/Header';
-import { useAuth } from '../context/AuthContext';
-
-axios.defaults.withCredentials = true;
-
 const ProductDetail = () => {
   const { slug } = useParams();
-  const { user } = useAuth();
   const navigate = useNavigate();
-
   const [product, setProduct] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [commentContent, setCommentContent] = useState('');
-  const [commentError, setCommentError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [addedToCart, setAddedToCart] = useState(false);
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
-  const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+
+  // Load product detail
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/api/products/slug/${slug}`);
-        setProduct(res.data.data); 
-        setComments(res.data.data.comments || []);
-        setRelatedProducts(res.data.related || []);
-      } catch (error) {
-        console.error('Lỗi khi lấy sản phẩm:', error);
-      } finally {
+        const url = `${process.env.REACT_APP_API_URI}/products/${slug}`;
+        console.log("Server:", url);
+        const res = await axios.get(url);
+        setProduct(res.data.data.product);
+        setLoading(false);
+      } catch (err) {
+        console.error('Lỗi khi load chi tiết sản phẩm:', err);
         setLoading(false);
       }
     };
-    fetchData();
+    fetchProduct();
   }, [slug]);
+
+  // Get sizes and colors
+  const sizes = [...new Set(product?.variants?.map(v => v.size?.name).filter(Boolean))];
+  const colors = [...new Set(product?.variants?.map(v => v.color?.name).filter(Boolean))];
+
+  const getMatchingVariant = () => {
+    return product?.variants?.find(
+      v => v.size?.name === selectedSize && v.color?.name === selectedColor
+    );
+  };
+  const selectedVariant = getMatchingVariant();
+  const addToCart = () => {
+    const variant = getMatchingVariant();
+    if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
+
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      image: product.image,
+      variant_id: variant.id,
+      size: selectedSize,
+      color: selectedColor,
+      price: variant.price,
+      quantity: 1,
+    };
+
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    const existingIndex = cart.findIndex(item => item.variant_id === cartItem.variant_id);
+    if (existingIndex !== -1) {
+      cart[existingIndex].quantity += 1;
+    } else {
+      cart.push(cartItem);
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) {
-      alert('Vui lòng chọn kích cỡ và màu sắc!');
-      return;
+      return alert('Vui lòng chọn kích cỡ và màu sắc!');
     }
-
-    const variant = product.variants?.find(
-      v => v.size?.name === selectedSize && v.color?.name === selectedColor
-    );
-
-    if (!variant) {
-      alert('Biến thể không hợp lệ!');
-      return;
-    }
-
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const existing = cart.find(item => item.variantId === variant.id);
-
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        img: product.img,
-        price: product.price,
-        variantId: variant.id,
-        size: selectedSize,
-        color: selectedColor,
-        quantity: 1,
-      });
-    }
-
-    localStorage.setItem('cart', JSON.stringify(cart));
+    addToCart();
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1500);
   };
 
   const handleGoToCart = () => {
     if (!selectedSize || !selectedColor) {
-      alert('Vui lòng chọn kích cỡ và màu sắc!');
-      return;
+      return alert('Vui lòng chọn kích cỡ và màu sắc!');
     }
-
-    handleAddToCart();
+    addToCart();
     navigate('/cart');
   };
 
-  const handleSubmitComment = async (e) => {
+  const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    setCommentError('');
-    if (!commentContent.trim()) {
-      setCommentError('Vui lòng nhập nội dung bình luận');
-      return;
-    }
+    if (!commentText.trim()) return alert('Bình luận không được để trống!');
 
     const token = localStorage.getItem('token');
-    if (!token) {
-      setCommentError('Bạn cần đăng nhập để bình luận');
-      return;
-    }
+    if (!token) return alert('Vui lòng đăng nhập để bình luận!');
 
     setCommentSubmitting(true);
     try {
-      const res = await axios.post(
-        `http://localhost:8000/api/products/${slug}/comments`,
-        { content: commentContent },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URI}/products/${product.id}/comments`,
+        { content: commentText },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setComments([...comments, res.data.data]);
-      setCommentContent('');
+      setProduct(prev => ({
+        ...prev,
+        comments: [response.data.data, ...(prev.comments || [])],
+      }));
+      setCommentText('');
     } catch (err) {
-      console.error('Lỗi gửi bình luận:', err.response || err.message);
-      setCommentError(err.response?.data?.message || 'Không thể gửi bình luận');
+      console.error('Lỗi gửi bình luận:', err);
     } finally {
       setCommentSubmitting(false);
     }
   };
 
-  if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
-  if (!product) return <div className="text-center text-danger">Không tìm thấy sản phẩm</div>;
+  if (loading) {
+    <Header />
+    return (
+      <div className="text-center my-5">
+        <Spinner animation="border" />
+        <div>Đang tải sản phẩm...</div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    <Header />
+    return <div className="text-danger text-center">Không tìm thấy sản phẩm</div>;
+  }
 
   return (
-    <>
+   <>
       <Header />
       <Container className="my-5">
         <Row>
           <Col md={6}>
-            <Image src={product.img} alt={product.name} fluid style={{ maxHeight: '500px', objectFit: 'cover' }} />
+            <Card>
+              <Card.Img variant="top" src={product.image} />
+            </Card>
           </Col>
           <Col md={6}>
-            <h2>{product.name}</h2>
-            <p>{product.description || "Chưa có mô tả sản phẩm."}</p>
+            <h3>{product.name}</h3>
+            <p>{product.description}</p>
 
-            {/* Chọn kích cỡ */}
-            <Form.Group className="mb-3">
-              <Form.Label>Kích thước</Form.Label>
-              <div className="d-flex flex-wrap gap-3">
-                {[...new Set(product.variants?.map(v => v.size?.name))].map((sizeName, index) => (
-                  <Form.Check
-                    key={`size-${index}-${sizeName}`}
-                    type="checkbox"
-                    id={`size-${sizeName}`}
-                    label={sizeName}
-                    checked={selectedSize === sizeName}
-                    onChange={() => setSelectedSize(selectedSize === sizeName ? '' : sizeName)}
-                  />
-                ))}
-              </div>
-            </Form.Group>
-
-            {/* Chọn màu sắc */}
-            <Form.Group className="mb-3">
-              <Form.Label>Chọn màu sắc</Form.Label>
-              <div className="d-flex flex-wrap gap-2">
-                {[...new Set(product.variants?.map(v => v.color?.name))].map((colorName, index) => (
-                  <Button
-                    key={`color-${index}-${colorName}`}
-                    variant={selectedColor === colorName ? 'dark' : 'outline-secondary'}
-                    onClick={() => setSelectedColor(colorName)}
-                  >
-                    {colorName}
-                  </Button>
-                ))}
-              </div>
-            </Form.Group>
-
-            <div className="d-flex gap-2 mt-4">
-              <Button variant="primary" onClick={handleAddToCart}>Mua Ngay</Button>
-              <Button variant="outline-success" onClick={handleGoToCart}>Thêm vào Giỏ Hàng</Button>
+            <h5>Kích cỡ</h5>
+            <div className="mb-3">
+              {sizes.map(size => (
+                <Form.Check
+                  inline
+                  key={size}
+                  type="radio"
+                  name="sizeOptions"
+                  label={size}
+                  checked={selectedSize === size}
+                  onChange={() => setSelectedSize(size)}
+                />
+              ))}
             </div>
-            {addedToCart && <div className="mt-3 text-success">Đã thêm vào giỏ hàng!</div>}
+
+            <h5>Màu sắc</h5>
+            <div className="mb-3">
+              {colors.map(color => (
+                <Form.Check
+                  inline
+                  key={color}
+                  type="radio"
+                  name="colorOptions"
+                  label={color}
+                  checked={selectedColor === color}
+                  onChange={() => setSelectedColor(color)}
+                />
+              ))}
+            </div>
+            {selectedVariant && (
+              <h5 className="text-danger mb-3">
+                Giá: {selectedVariant
+                  ? selectedVariant.price.toLocaleString()
+                  : product.price?.toLocaleString() || 'Vui lòng chọn size và màu'}₫
+              </h5>
+            )}
+            <div className="mb-3">
+              <Button variant="primary" onClick={handleAddToCart} className="me-2">
+                {addedToCart ? 'Đã thêm!' : 'Thêm vào giỏ'}
+              </Button>
+              <Button variant="success" onClick={handleGoToCart}>
+                Mua ngay
+              </Button>
+            </div>
           </Col>
         </Row>
 
-        {/* Bình luận */}
-        <div className="mt-5">
-          <h5>Bình luận ({comments.length})</h5>
-          {comments.length === 0 && <p>Chưa có bình luận nào.</p>}
+        <hr className="my-5" />
 
-          {comments.map((comment) => (
-            <div key={comment.id} className="border rounded p-3 my-2">
-              <strong>{comment.user.name}</strong> <small className="text-muted">{new Date(comment.created_at).toLocaleString()}</small>
-              <p>{comment.content}</p>
-            </div>
-          ))}
+        <h4>Bình luận</h4>
+        <Form onSubmit={handleCommentSubmit} className="mb-4">
+          <Form.Group controlId="comment">
+            <Form.Control
+              as="textarea"
+              rows={3}
+              placeholder="Nhập bình luận..."
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+            />
+          </Form.Group>
+          <Button type="submit" disabled={commentSubmitting} className="mt-2">
+            {commentSubmitting ? (
+              <>
+                <Spinner size="sm" animation="border" className="me-2" />
+                Đang gửi...
+              </>
+            ) : 'Gửi bình luận'}
+          </Button>
+        </Form>
 
-          {user ? (
-            <Form onSubmit={handleSubmitComment}>
-              <Form.Group controlId="commentContent" className="mb-3">
-                <Form.Label>Viết bình luận</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="Nhập bình luận..."
-                />
-              </Form.Group>
-              {commentError && <Alert variant="danger">{commentError}</Alert>}
-              <Button type="submit" disabled={commentSubmitting}>
-                {commentSubmitting ? 'Đang gửi...' : 'Gửi bình luận'}
-              </Button>
-            </Form>
-          ) : (
-            <Alert variant="info">Bạn cần <Link to="/login">đăng nhập</Link> để bình luận.</Alert>
-          )}
-        </div>
-
-        {/* Sản phẩm liên quan */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-5">
-            <h5>Sản phẩm liên quan</h5>
-            <Row>
-              {relatedProducts.map((rel) => (
-                <Col md={3} key={rel.id} className="mb-3">
-                  <Link to={`/products/${rel.slug}`} className="text-decoration-none text-dark">
-                    <div className="border rounded p-2 h-100">
-                      <img src={rel.img} alt={rel.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
-                      <h6 className="mt-2">{rel.name}</h6>
-                    </div>
-                  </Link>
-                </Col>
-              ))}
-            </Row>
-          </div>
+        {product.comments?.length > 0 ? (
+          product.comments.map((cmt, index) => (
+            <Card key={index} className="mb-2">
+              <Card.Body>
+                <strong>{cmt.user?.name || 'Khách'}</strong>
+                <p>{cmt.content}</p>
+              </Card.Body>
+            </Card>
+          ))
+        ) : (
+          <p>Chưa có bình luận nào.</p>
         )}
+
+        <hr className="my-5" />
+
+        <h4>Sản phẩm liên quan</h4>
+        <Row>
+          {product.related_products?.map(rp => (
+            <Col key={rp.id} md={3} className="mb-4">
+              <Card>
+                <Card.Img variant="top" src={rp.image} />
+                <Card.Body>
+                  <Card.Title>{rp.name}</Card.Title>
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => navigate(`/products/${rp.slug}`)}
+                  >
+                    Xem chi tiết
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
       </Container>
     </>
-  );
+
+      );
 };
 
-export default ProductDetail;
+      export default ProductDetail;
