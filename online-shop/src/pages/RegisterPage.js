@@ -11,10 +11,8 @@ import axios from 'axios';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
 import { Link, useNavigate } from 'react-router-dom';
 
-
 const RegisterPage = () => {
   const navigate = useNavigate();
-
 
   const [form, setForm] = useState({
     name: '',
@@ -23,27 +21,26 @@ const RegisterPage = () => {
     password_confirmation: '',
   });
 
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-
     try {
       const response = await axios.post('http://localhost:8000/api/register', form);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/giang1610
       if (response.status === 200 || response.status === 201) {
         setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
         setTimeout(() => navigate('/login'), 2000);
@@ -62,7 +59,6 @@ const RegisterPage = () => {
     }
   };
 
-
   return (
     <Container
       className="d-flex justify-content-center align-items-center"
@@ -72,10 +68,8 @@ const RegisterPage = () => {
         <Card.Body>
           <h3 className="mb-4 text-center">Đăng Ký</h3>
 
-
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
-
 
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
@@ -89,7 +83,6 @@ const RegisterPage = () => {
               />
             </Form.Group>
 
-
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -101,7 +94,6 @@ const RegisterPage = () => {
                 required
               />
             </Form.Group>
-
 
             <Form.Group className="mb-3">
               <Form.Label>Mật khẩu</Form.Label>
@@ -123,7 +115,6 @@ const RegisterPage = () => {
                 </Button>
               </InputGroup>
             </Form.Group>
-
 
             <Form.Group className="mb-3">
               <Form.Label>Nhập lại mật khẩu</Form.Label>
@@ -148,12 +139,10 @@ const RegisterPage = () => {
               </InputGroup>
             </Form.Group>
 
-
             <Button type="submit" variant="primary" className="w-100">
               Đăng Ký
             </Button>
           </Form>
-
 
           <div className="mt-3 text-center">
             <Link to="/login">Đã có tài khoản? Đăng nhập</Link>
@@ -163,7 +152,6 @@ const RegisterPage = () => {
     </Container>
   );
 };
-
 
 export default RegisterPage;
 
