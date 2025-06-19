@@ -37,10 +37,6 @@ const RegisterPage = () => {
     try {
       const response = await axios.post('http://localhost:8000/api/register', form);
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/giang1610
       if (response.status === 200 || response.status === 201) {
         setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
         setTimeout(() => navigate('/login'), 2000);
