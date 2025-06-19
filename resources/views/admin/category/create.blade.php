@@ -144,7 +144,7 @@
 </style>
 
 <div class="container">
-    <a href="/categories" class="back-link">
+    <a href="/admin/categories" class="back-link">
         <i class="bi bi-arrow-left"></i> Quay lại danh sách danh mục
     </a>
 
@@ -190,13 +190,15 @@
 
 <script>
     function slugify(text) {
-        return text.toString().normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
+         return text.toString().normalize('NFD')
+            .replace(/đ/g, 'd') // chuyển đ thành d
+            .replace(/Đ/g, 'D') // chuyển Đ thành D
+            .replace(/[\u0300-\u036f]/g, '') // loại bỏ dấu
             .toLowerCase()
             .trim()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-');
+            .replace(/[^a-z0-9\s-]/g, '') // bỏ ký tự đặc biệt
+            .replace(/\s+/g, '-') // thay khoảng trắng thành dấu -
+            .replace(/-+/g, '-'); // loại bỏ dấu - liên tiếp
     }
 
     document.getElementById('name').addEventListener('input', function() {

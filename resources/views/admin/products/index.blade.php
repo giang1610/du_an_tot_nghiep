@@ -37,9 +37,10 @@
                 <tr>
                     <th>ID</th>
                     <th>Danh mục</th>
-                    <th>Tên</th>
+                    <th>Tên sản phẩm</th>
                     <th>Đường dẫn</th>
-                    <th>Giá</th>
+                    <th>Giá sản phẩm</th>
+                    {{-- <th>Giá biến thể</th> --}}
                     <th>Mã</th>
                     <th>Kho</th>
                     <th>Màu</th>
@@ -60,26 +61,20 @@
                         <td>{{$p->category->name}}</td>
                         <td>{{$p->name}}</td>
                         <td>{{$p->slug}}</td>
+                        <td>{{$p->price_products}}</td>
                          {{-- giá --}}
-                        <td>
+                        {{-- <td>
                             @foreach ($p->variants as $variant)
                                 <div>{{ $variant->price ?? 'Không có' }}</div>
                             @endforeach
-                        </td>
+                        </td> --}}
                          {{-- Mã --}}
                         <td>
                             @foreach ($p->variants as $variant)
                                 <div>{{ $variant->sku ?? 'Không có' }}</div>
                             @endforeach
                         </td>
-                        {{-- <td>
-                            @php
-                                $stock = optional($p->variants->first())->stock;
-                            @endphp
-
-                            {{ $stock == 0 ? 'Còn hàng' : 'Hết hàng' }}
-                        </td> --}}
-                         {{-- Mã --}}
+                         {{-- Kho --}}
                         <td>
                             @foreach ($p->variants as $variant)
                                 <div>{{ $variant->stock == 0 ? 'Còn hàng' : 'Hết hàng'  }}</div>
