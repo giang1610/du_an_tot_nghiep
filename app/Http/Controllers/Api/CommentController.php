@@ -34,34 +34,35 @@ class CommentController extends Controller
         }
 
         // Kiểm tra người dùng đã mua sản phẩm
-        // $user = Auth::user();
-        // $hasPurchased = Order::where('user_id', $user->id)
-        //     ->where('status', 'completed')
-        //     ->whereHas('items', function ($query) use ($productId) {
-        //         $query->where('product_id', $productId);
-        //     })
-        //     ->exists();
+        $user = Auth::user();
+        $hasPurchased = Order::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->whereHas('items', function ($query) use ($productId) {
+                $query->where('product_id', $productId);
+            })
+            ->exists();
 
-        // if (!$hasPurchased) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'Bạn chỉ có thể bình luận sau khi mua sản phẩm.'
-        //     ], 403);
-        // }
+        if (!$hasPurchased) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn chỉ có thể bình luận sau khi mua sản phẩm.'
+            ], 403);
+        }
 
-        // $comment = new Comment();
-        // $comment->product_id = $productId;
-        // $comment->user_id = $user->id;
-        // $comment->content = $request->content;
-        // $comment->rating = $request->rating;
-        // $comment->save();
+        $comment = new Comment();
+        $comment->product_id = $productId;
+        $comment->user_id = $user->id;
+        $comment->content = $request->content;
+        $comment->rating = $request->rating ?? null;
+        $comment->save();
 
-        // return response()->json([
-        //     'success' => true,
-        //     'message' => 'Bình luận thành công.',
-        //     'data' => $comment->load(['user' => function ($query) {
-        //         $query->select('id', 'name', 'email');
-        //     }])
-        // ], 201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Bình luận thành công.',
+            'data' => $comment->load(['user' => function ($query) {
+                $query->select('id', 'name', 'email');
+            }])
+        ], 201);
+         dd($request->all()); // ← thêm dòng này để xem client gửi gì
     }
 }

@@ -82,7 +82,7 @@ Route::post('/products', [ProductController::class, 'store']); // Tạo sản ph
 // Route::get('/products/{slug}', [ProductController::class, 'showBySlug']); // Trùng này có thể tách ra
 
 // Comment related
-Route::middleware('auth:')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
+Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
 Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']);
 
 // Các chức năng liên quan đến sản phẩm

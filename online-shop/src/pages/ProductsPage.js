@@ -105,7 +105,7 @@ const ProductsPage = () => {
                 ))}
               </Form.Select>
             </Form>
-                 <h5>Kích thước</h5>
+            <h5>Kích thước</h5>
             <Form className="mb-3">
               <Form.Select value={sizeFilter} onChange={handleSizeChange}>
                 <option value="">-- Tất cả size --</option>
@@ -138,7 +138,7 @@ const ProductsPage = () => {
                         <Card.Img
                           variant="top"
                           src={product.img}
-                          style={{  height: '250px', objectFit: 'contain'  }}
+                          style={{ height: '250px', objectFit: 'contain' }}
                           alt={product.name}
                         />
                         <Card.Body>
@@ -147,8 +147,10 @@ const ProductsPage = () => {
                               {product.name}
                             </Link>
                           </Card.Title>
-                          {/* <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text> */}
-                          <Button variant="primary" size="sm" className="w-100">Mua Ngay</Button>
+                          <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
+                          <Link to={`/products/${product.slug}`} style={{ textDecoration: 'none' }}>
+                            <Button variant="primary" size="sm" className="w-100">Xem chi tiết</Button>
+                          </Link>
                         </Card.Body>
 
                       </Card>

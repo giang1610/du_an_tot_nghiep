@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Form } from 'react-bootstrap';
 import axios from 'axios';
 import Header from '../components/Header';
+import { useCart } from '../context/CartContext';
 const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -13,7 +14,8 @@ const ProductDetail = () => {
   const [commentText, setCommentText] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [rating, setRating] = useState(5);
+  const { addToCart } = useCart();
 
   // Load product detail
   useEffect(() => {
@@ -42,45 +44,70 @@ const ProductDetail = () => {
     );
   };
   const selectedVariant = getMatchingVariant();
-  const addToCart = () => {
-    const variant = getMatchingVariant();
-    if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
+  // const addToCart = () => {
+  //   const variant = getMatchingVariant();
+  //   if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
 
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      image: product.image,
-      variant_id: variant.id,
-      size: selectedSize,
-      color: selectedColor,
-      price: variant.price,
-      quantity: 1,
-    };
+  //   const cartItem = {
+  //     id: product.id,
+  //     name: product.name,
+  //     image: product.image,
+  //     variant_id: variant.id,
+  //     size: selectedSize,
+  //     color: selectedColor,
+  //     price: variant.price,
+  //     quantity: 1,
+  //   };
 
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const existingIndex = cart.findIndex(item => item.variant_id === cartItem.variant_id);
-    if (existingIndex !== -1) {
-      cart[existingIndex].quantity += 1;
-    } else {
-      cart.push(cartItem);
-    }
-    localStorage.setItem('cart', JSON.stringify(cart));
-  };
+  //   const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  //   const existingIndex = cart.findIndex(item => item.variant_id === cartItem.variant_id);
+  //   if (existingIndex !== -1) {
+  //     cart[existingIndex].quantity += 1;
+  //   } else {
+  //     cart.push(cartItem);
+  //   }
+  //   localStorage.setItem('cart', JSON.stringify(cart));
+  // };
 
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) {
       return alert('Vui lòng chọn kích cỡ và màu sắc!');
     }
-    addToCart();
+
+    const variant = getMatchingVariant();
+    if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
+
+    addToCart({
+      id: variant.id, // dùng variant.id để phân biệt sản phẩm khác size/color
+      name: product.name,
+      price: variant.price,
+      image: product.image,
+      size: selectedSize,
+      color: selectedColor,
+    });
+
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1500);
   };
+
 
   const handleGoToCart = () => {
     if (!selectedSize || !selectedColor) {
       return alert('Vui lòng chọn kích cỡ và màu sắc!');
     }
-    addToCart();
+
+    const variant = getMatchingVariant();
+    if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
+
+    addToCart({
+      id: variant.id,
+      name: product.name,
+      price: variant.price,
+      image: product.image,
+      size: selectedSize,
+      color: selectedColor,
+    });
+
     navigate('/cart');
   };
 
@@ -92,11 +119,17 @@ const ProductDetail = () => {
     if (!token) return alert('Vui lòng đăng nhập để bình luận!');
 
     setCommentSubmitting(true);
+
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URI}/products/${product.id}/comments`,
-        { content: commentText },
+        {
+          content: commentText,
+          rating: rating
+        },
+
         { headers: { Authorization: `Bearer ${token}` } }
+
       );
       setProduct(prev => ({
         ...prev,
@@ -108,6 +141,8 @@ const ProductDetail = () => {
     } finally {
       setCommentSubmitting(false);
     }
+
+
   };
 
   if (loading) {
@@ -126,7 +161,7 @@ const ProductDetail = () => {
   }
 
   return (
-   <>
+    <>
       <Header />
       <Container className="my-5">
         <Row>
@@ -199,6 +234,17 @@ const ProductDetail = () => {
               onChange={e => setCommentText(e.target.value)}
             />
           </Form.Group>
+
+          {/* ⭐ Giao diện chọn số sao */}
+          <Form.Group controlId="rating" className="mt-3">
+            <Form.Label>Đánh giá</Form.Label>
+            <Form.Select value={rating} onChange={e => setRating(Number(e.target.value))}>
+              {[5, 4, 3, 2, 1].map(r => (
+                <option key={r} value={r}>{r} sao</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+
           <Button type="submit" disabled={commentSubmitting} className="mt-2">
             {commentSubmitting ? (
               <>
@@ -208,6 +254,7 @@ const ProductDetail = () => {
             ) : 'Gửi bình luận'}
           </Button>
         </Form>
+
 
         {product.comments?.length > 0 ? (
           product.comments.map((cmt, index) => (
@@ -220,6 +267,7 @@ const ProductDetail = () => {
           ))
         ) : (
           <p>Chưa có bình luận nào.</p>
+
         )}
 
         <hr className="my-5" />
@@ -246,7 +294,7 @@ const ProductDetail = () => {
       </Container>
     </>
 
-      );
+  );
 };
 
-      export default ProductDetail;
+export default ProductDetail;
