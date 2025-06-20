@@ -26,7 +26,7 @@ class ProductRequest extends FormRequest
         'status' => 'required|in:0,1,2',
         'price_products' => 'required|numeric|min:0.01',
        
-        'variants.*.sku' => 'required|string|max:100',
+        'variants.*.sku' => ['required','string','max:255', Rule::unique('product_variants', 'sku')->ignore($this->route('product_variants') ?? $this->id),],
         'variants.*.price' => 'required|numeric|min:1',
         'variants.*.sale_price' => 'nullable|numeric|min:1|lt:variants.*.price',
         'variants.*.sale_start_date' => 'required_with:variants.*.sale_price|nullable|date',
@@ -53,6 +53,7 @@ class ProductRequest extends FormRequest
         'price_products.min' => 'Giá sản phẩm phải lớn hơn 0.',
         
         'variants.*.sku.required' => 'Mã sản phẩm không được để trống.',
+        'variants.*.sku.unique' => 'Mã sản phẩm đã tồn tại.',
         'variants.*.price.required' => 'Giá không được để trống.',
         'variants.*.price.min' => 'Giá phải lớn hơn hoặc bằng 1.',
         'variants.*.sale_price.lt' => 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
