@@ -57,7 +57,7 @@ const ProductList = () => {
 
                   {/* Giá sản phẩm */}
                   <Card.Text className="text-danger fw-bold">
-                    {/* {product.price.toLocaleString()} đ */}
+                    {product.price.toLocaleString()} đ
                   </Card.Text>
 
                   {/* Nút mua */}

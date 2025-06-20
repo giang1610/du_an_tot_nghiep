@@ -18,6 +18,7 @@ const CartPage = () => {
           <Table bordered hover responsive>
             <thead>
               <tr>
+                <th>Hình ảnh</th>
                 <th>Sản phẩm</th>
                 <th>Giá</th>
                 <th>Số lượng</th>
@@ -28,6 +29,13 @@ const CartPage = () => {
             <tbody>
               {cart.map(item => (
                 <tr key={item.id}>
+                  <td>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      style={{ width: '60px', height: '60px', objectFit: 'cover' }}
+                    />
+                  </td>
                   <td>{item.name}</td>
                   <td>{item.price.toLocaleString()} đ</td>
                   <td>
