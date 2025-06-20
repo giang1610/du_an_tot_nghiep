@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class SizeSeeder extends Seeder
 {
     public function run()
-    
+
     {
         DB::table('sizes')->delete();
         $sizes = [
