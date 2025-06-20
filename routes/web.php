@@ -19,6 +19,11 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 
+//use của fotn
+use App\Http\Controllers\Auth\EmailVerifiFotnController;
+use App\Http\Controllers\Auth\NewEmailVerificationController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -55,10 +60,15 @@ Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke
 Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
     ->middleware(['auth', 'signed'])->name('verification.verify');
 
-Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
-    $request->fulfill();
-    return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/email-verified-successfully?user_id=' . $request->route('id'));
-})->middleware(['signed'])->name('custom.verification.verify');
+    //xác minh mail client
+Route::get('/verify-email-custom', [EmailVerifiFotnController::class, 'verify'])
+    ->middleware(['signed'])
+    ->name('verification.verify.fotn');
+
+//cập nhật mail client nếu có nhu cầu và xác minh
+Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'])
+    ->name('email.update.verify')
+    ->middleware('signed');
 
 
 
