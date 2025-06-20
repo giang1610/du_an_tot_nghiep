@@ -1,19 +1,30 @@
 @extends('admin.layouts.app')
 
 @section('content')
+  <div class="d-flex align-items-center mb-4">
+        <a href="/admin/orders" class="d-flex align-items-center text-decoration-none back-link">
+            <i class="bi bi-arrow-left me-2" style="font-size: 1.5rem; color: #4b5563;"></i>
+            <span class="text-dark">Quay lại danh sách đơn hàng</span>
+        </a>
+    </div>
 <div class="container mt-4">
     <h2>
         Chi tiết đơn hàng: {{ $order->order_number }}
         <span class="badge bg-info text-dark">
-            {{ match($order->status) {
+        {{
+            match($order->status) {
                 'pending' => 'Chờ xử lý',
                 'processing' => 'Đang xử lý',
+                'picking' => 'Đang lấy hàng',
+                'shipping' => 'Đang giao hàng',
                 'shipped' => 'Đã giao hàng',
+                'completed' => 'Xác minh nhận hàng',
                 'cancelled' => 'Đã hủy',
-                'completed' => 'Hoàn tất',
                 default => ucfirst($order->status)
-            } }}
-        </span>
+            }
+        }}
+    </span>
+
     </h2>
 
     <hr>
@@ -65,7 +76,7 @@
                 <td>
                     Màu:
                     @if($variant->color && $variant->color->image)
-                    <img src="{{ asset('storage/' . $variant->color->image) }}" width="20">
+                    {{-- <img src="{{ asset('storage/' . $variant->color->image) }}" width="20"> --}}
                     ({{ $variant->color->name }})
                     @else
                     Không có

@@ -1,6 +1,12 @@
 @extends('admin.layouts.app')
 
 @section('content')
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 <h2>Danh sách đơn hàng</h2>
 <div class="container mt-4">
     
@@ -14,10 +20,13 @@
     <div class="col-auto">
         <select name="status" class="form-select">
             <option value="">-- Tất cả trạng thái --</option>
+            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
             <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+            <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
+            <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
+            <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
+            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Xác minh nhận hàng</option>
         </select>
     </div>
 
@@ -44,10 +53,11 @@
             <tr>
                 <th>Mã đơn</th>
                 <th>Khách hàng</th>
-                <!-- <th>Email</th> -->
+                <th>Email</th> 
+                <th>Số điện thoại</th> 
                 <th>Ngày tạo</th>
-                <th>Trạng thái</th>
                 <th>Tổng tiền</th>
+                <th>Trạng thái</th>
                 <th>Thao tác</th>
             </tr>
         </thead>
@@ -56,8 +66,10 @@
             <tr>
                 <td>{{ $order->order_number ?? 'ORD-' . $order->id }}</td>
                 <td>{{ $order->user->name ?? 'N/A' }}</td>
-                <!-- <td>{{ $order->customer_email }}</td> -->
+                <td>{{ $order->customer_email }}</td> 
+                <td>{{ $order->customer_phone }}</td> 
                 <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                <td>{{ number_format($order->total) }}₫</td>
                 <td>
                     @switch($order->status)
                     @case('pending')
@@ -66,8 +78,17 @@
                     @case('processing')
                     <span class="badge bg-primary">Đang xử lý</span>
                     @break
+                    @case('picking')
+                    <span class="badge bg-info">Đang lấy hàng</span>
+                    @break
+                    @case('shipping')
+                    <span class="badge bg-secondary">Đang giao hàng</span>
+                    @break
+                    @case('shipped')
+                    <span class="badge bg-success">Đã giao hàng</span>
+                    @break
                     @case('completed')
-                    <span class="badge bg-success">Hoàn thành</span>
+                    <span class="badge bg-success">Xác minh nhận hàng</span>
                     @break
                     @case('cancelled')
                     <span class="badge bg-danger">Đã hủy</span>
@@ -76,11 +97,14 @@
                     <span class="badge bg-secondary">Không rõ</span>
                     @endswitch
                 </td>
-                <td>{{ number_format($order->total) }}₫</td>
+
+                
                 <td>
                     <a href="{{ route('orders.show', $order->id) }}" class="btn btn-sm btn-info">Xem</a>
-                    <a href="" class="btn btn-sm btn-toolbar">In đơn</a>
-                    <!-- <a href="" class="btn btn-sm btn-info">Sửa</a> -->
+                    {{-- <a href="" class="btn btn-sm btn-toolbar">In đơn</a> --}}
+                    @if (!in_array($order->status, ['completed', 'cancelled']))
+                        <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-sm btn-success">Sửa</a>
+                    @endif
                 </td>
             </tr>
             @empty

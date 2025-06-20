@@ -6,6 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Events\OrderStatusUpdated; // Import sự kiện OrderStatusUpdated
+use App\Mail\OrderGiao; // Import mail OrderGiao
+use App\Mail\OrderErrors; // Import mail OrderErrors
+use App\Mail\OrderPicking;
+use App\Mail\OrderProcessing;
+use App\Mail\OrderShipped;
+use Illuminate\Support\Facades\Mail; // Import facade Mail
 
 class OrderController extends Controller
 {
@@ -79,5 +85,34 @@ class OrderController extends Controller
         broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
 
         return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
+    }
+    public function edit(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+        return view('admin.orders.edit', compact('order'));
+    }
+    public function update(Request $request, $id)
+    {
+       $order = Order::findOrFail($id);
+    $oldStatus = $order->status;
+    $order->update($request->all());
+
+    // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
+    if ($order->status !== $oldStatus && $order->status === 'shipping') {
+        Mail::to($order->user->email)->send(new OrderGiao($order));
+    }
+    if ($order->status !== $oldStatus && $order->status === 'cancelled') {
+        Mail::to($order->user->email)->send(new OrderErrors($order));
+    }
+    if ($order->status !== $oldStatus && $order->status === 'picking') {
+        Mail::to($order->user->email)->send(new OrderPicking($order));
+    }
+    if ($order->status !== $oldStatus && $order->status === 'processing') {
+        Mail::to($order->user->email)->send(new OrderProcessing($order));
+    }
+    if ($order->status !== $oldStatus && $order->status === 'shipped') {
+        Mail::to($order->user->email)->send(new OrderShipped($order));
+    }
+        return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
 }

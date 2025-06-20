@@ -32,12 +32,13 @@
                 @enderror
             </div>
                 <div class="mb-3">
-                <label class="form-label">Trạng thái</label>
-                <select name="status" class="form-select" required>
-                    <option value="1" selected>Hoạt động</option>
-                    <option value="0">Tạm dừng</option>
-                </select>
+                    <label class="form-label">Trạng thái</label>
+                    <select name="status" class="form-select" required>
+                        <option value="1" {{ old('status', $category->status ?? '') == '1' ? 'selected' : '' }}>Hoạt động</option>
+                        <option value="0" {{ old('status', $category->status ?? '') == '0' ? 'selected' : '' }}>Tạm dừng</option>
+                    </select>
                 </div>
+
 
                 <div>
                     <button type="submit" class="btn btn-primary">Sửa</button>
