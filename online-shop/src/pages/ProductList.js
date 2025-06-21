@@ -27,7 +27,7 @@ const ProductList = () => {
 
   return (
     <Container className="my-5">
-      <h2 className="mb-4 text-center fw-bold">🛍️ Tất cả sản phẩm</h2>
+      {/* <h2 className="mb-4 text-center fw-bold">🛍️ Tất cả sản phẩm</h2> */}
 
       {loading ? (
         <div className="text-center py-5">
