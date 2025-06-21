@@ -4,6 +4,7 @@ import { Container, Row, Col, Card, Button, Spinner, Form } from 'react-bootstra
 import axios from 'axios';
 import Header from '../components/Header';
 import { useCart } from '../context/CartContext';
+
 const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -16,14 +17,13 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(5);
   const { addToCart } = useCart();
-  
+  const [mainImage, setMainImage] = useState('');
 
-  // Load product detail
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const url = `${process.env.REACT_APP_API_URI}/products/${slug}`;
-        console.log("Server:", url);
         const res = await axios.get(url);
         setProduct(res.data.data.product);
         setLoading(false);
@@ -35,7 +35,6 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
-  // Get sizes and colors
   const sizes = [...new Set(product?.variants?.map(v => v.size?.name).filter(Boolean))];
   const colors = [...new Set(product?.variants?.map(v => v.color?.name).filter(Boolean))];
 
@@ -44,31 +43,8 @@ const ProductDetail = () => {
       v => v.size?.name === selectedSize && v.color?.name === selectedColor
     );
   };
+
   const selectedVariant = getMatchingVariant();
-  // const addToCart = () => {
-  //   const variant = getMatchingVariant();
-  //   if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
-
-  //   const cartItem = {
-  //     id: product.id,
-  //     name: product.name,
-  //     image: product.image,
-  //     variant_id: variant.id,
-  //     size: selectedSize,
-  //     color: selectedColor,
-  //     price: variant.price,
-  //     quantity: 1,
-  //   };
-
-  //   const cart = JSON.parse(localStorage.getItem('cart')) || [];
-  //   const existingIndex = cart.findIndex(item => item.variant_id === cartItem.variant_id);
-  //   if (existingIndex !== -1) {
-  //     cart[existingIndex].quantity += 1;
-  //   } else {
-  //     cart.push(cartItem);
-  //   }
-  //   localStorage.setItem('cart', JSON.stringify(cart));
-  // };
 
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) {
@@ -79,7 +55,7 @@ const ProductDetail = () => {
     if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
 
     addToCart({
-      id: variant.id, // dùng variant.id để phân biệt sản phẩm khác size/color
+      id: variant.id,
       name: product.name,
       price: variant.price,
       image: product.image,
@@ -90,7 +66,11 @@ const ProductDetail = () => {
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1500);
   };
-
+useEffect(() => {
+  if (product) {
+    setMainImage(selectedVariant?.img || product.img);
+  }
+}, [product, selectedVariant]);
 
   const handleGoToCart = () => {
     if (!selectedSize || !selectedColor) {
@@ -120,17 +100,11 @@ const ProductDetail = () => {
     if (!token) return alert('Vui lòng đăng nhập để bình luận!');
 
     setCommentSubmitting(true);
-
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URI}/products/${product.id}/comments`,
-        {
-          content: commentText,
-          rating: rating
-        },
-
+        { content: commentText, rating },
         { headers: { Authorization: `Bearer ${token}` } }
-
       );
       setProduct(prev => ({
         ...prev,
@@ -142,23 +116,27 @@ const ProductDetail = () => {
     } finally {
       setCommentSubmitting(false);
     }
-
-
   };
 
   if (loading) {
-    <Header />
     return (
-      <div className="text-center my-5">
-        <Spinner animation="border" />
-        <div>Đang tải sản phẩm...</div>
-      </div>
+      <>
+        <Header />
+        <div className="text-center my-5">
+          <Spinner animation="border" />
+          <div>Đang tải sản phẩm...</div>
+        </div>
+      </>
     );
   }
 
   if (!product) {
-    <Header />
-    return <div className="text-danger text-center">Không tìm thấy sản phẩm</div>;
+    return (
+      <>
+        <Header />
+        <div className="text-danger text-center my-5">Không tìm thấy sản phẩm</div>
+      </>
+    );
   }
 
   return (
@@ -167,20 +145,47 @@ const ProductDetail = () => {
       <Container className="my-5">
         <Row>
           <Col md={6}>
-            <Card>
-              <Card.Img
-                src={selectedVariant?.img || product.img}
-                style={{ height: '250px', objectFit: 'contain', backgroundColor: '#f8f9fa' }}
-              />
+           <Card className="shadow-sm border-0 rounded-3 p-3 bg-white position-relative">
+  <div className="d-flex" style={{ height: '300px' }}>
+    {/* Cột ảnh nhỏ bên trái */}
+    <div className="d-flex flex-column align-items-start gap-2 me-3">
+      {[product.img, ...(product.product_images || []).map(imgObj => imgObj.url)].map((img, idx) => (
+        <img
+          key={idx}
+          src={img}
+          alt={`Thumb ${idx}`}
+          onClick={() => setMainImage(img)}
+          style={{
+            width: 60,
+            height: 60,
+            objectFit: 'cover',
+            borderRadius: '0.25rem',
+            border: img === mainImage ? '2px solid #0d6efd' : '1px solid #ccc',
+            cursor: 'pointer',
+            backgroundColor: '#fff'
+          }}
+        />
+      ))}
+    </div>
 
+    {/* Ảnh lớn */}
+    <div className="flex-grow-1 d-flex justify-content-center align-items-center bg-light rounded-3 w-100">
+      <Card.Img
+        src={mainImage}
+        className="img-fluid"
+        style={{ maxHeight: '100%', objectFit: 'contain' }}
+      />
+    </div>
+  </div>
+</Card>
 
-            </Card>
           </Col>
-          <Col md={6}>
-            <h3>{product.name}</h3>
-            <p>{product.short_description}</p>
 
-            <h5>Kích cỡ</h5>
+          <Col md={6}>
+            <h3 className="fw-bold">{product.name}</h3>
+            <p className="text-muted">{product.short_description}</p>
+
+            <h5 className="mt-4">Kích cỡ</h5>
             <div className="mb-3">
               {sizes.map(size => (
                 <Form.Check
@@ -191,6 +196,7 @@ const ProductDetail = () => {
                   label={size}
                   checked={selectedSize === size}
                   onChange={() => setSelectedSize(size)}
+                  className="me-3"
                 />
               ))}
             </div>
@@ -206,19 +212,20 @@ const ProductDetail = () => {
                   label={color}
                   checked={selectedColor === color}
                   onChange={() => setSelectedColor(color)}
+                  className="me-3"
                 />
               ))}
             </div>
+
             {selectedVariant && (
-              <h5 className="text-danger mb-3">
-                Giá: {selectedVariant
-                  ? selectedVariant.price.toLocaleString()
-                  : product.price?.toLocaleString() || 'Vui lòng chọn size và màu'}₫
+              <h5 className="text-danger fw-bold mb-3">
+                Giá: {selectedVariant.price.toLocaleString()}₫
               </h5>
             )}
-            <div className="mb-3">
-              <Button variant="primary" onClick={handleAddToCart} className="me-2">
-                {addedToCart ? 'Đã thêm!' : 'Thêm vào giỏ'}
+
+            <div className="d-flex gap-2 mb-3">
+              <Button variant="primary" onClick={handleAddToCart}>
+                {addedToCart ? '✔ Đã thêm!' : '🛒 Thêm vào giỏ'}
               </Button>
               <Button variant="success" onClick={handleGoToCart}>
                 Mua ngay
@@ -229,7 +236,7 @@ const ProductDetail = () => {
 
         <hr className="my-5" />
 
-        <h4>Bình luận</h4>
+        <h4 className="mb-3">Bình luận</h4>
         <Form onSubmit={handleCommentSubmit} className="mb-4">
           <Form.Group controlId="comment">
             <Form.Control
@@ -238,11 +245,11 @@ const ProductDetail = () => {
               placeholder="Nhập bình luận..."
               value={commentText}
               onChange={e => setCommentText(e.target.value)}
+              className="mb-3"
             />
           </Form.Group>
 
-          {/* ⭐ Giao diện chọn số sao */}
-          <Form.Group controlId="rating" className="mt-3">
+          <Form.Group controlId="rating" className="mb-3">
             <Form.Label>Đánh giá</Form.Label>
             <Form.Select value={rating} onChange={e => setRating(Number(e.target.value))}>
               {[5, 4, 3, 2, 1].map(r => (
@@ -251,7 +258,7 @@ const ProductDetail = () => {
             </Form.Select>
           </Form.Group>
 
-          <Button type="submit" disabled={commentSubmitting} className="mt-2">
+          <Button type="submit" disabled={commentSubmitting}>
             {commentSubmitting ? (
               <>
                 <Spinner size="sm" animation="border" className="me-2" />
@@ -261,38 +268,45 @@ const ProductDetail = () => {
           </Button>
         </Form>
 
-
         {product.comments?.length > 0 ? (
           product.comments.map((cmt, index) => (
-            <Card key={index} className="mb-2">
+            <Card key={index} className="mb-3 shadow-sm border-0">
               <Card.Body>
-                <strong>{cmt.user?.name || 'Khách'}</strong>
-                <p>{cmt.content}</p>
+                <strong className="text-primary">{cmt.user?.name || 'Khách'}</strong>
+                <p className="mb-1">{cmt.content}</p>
+                <div className="text-warning">
+                  {'★'.repeat(cmt.rating)}{'☆'.repeat(5 - cmt.rating)}
+                </div>
               </Card.Body>
             </Card>
           ))
         ) : (
-          <p>Chưa có bình luận nào.</p>
-
+          <p className="text-muted">Chưa có bình luận nào.</p>
         )}
 
         <hr className="my-5" />
 
-        <h4>Sản phẩm liên quan</h4>
+        <h4 className="mb-3">Sản phẩm liên quan</h4>
         <Row>
           {product.related_products?.map(rp => (
-            <Col key={rp.id} md={3} className="mb-4">
-              <Card>
-                <Card.Img
-                  variant="top"
-                  src={rp.img}
-                  style={{ height: '200px', objectFit: 'cover' }}
-                  alt={rp.name}
-                />
+            <Col key={rp.id} md={3} sm={6} xs={12} className="mb-4">
+              <Card className="h-100 shadow-sm border-0 rounded-3">
+                <div
+                  className="bg-light d-flex align-items-center justify-content-center rounded-top"
+                  style={{ height: '180px' }}
+                >
+                  <Card.Img
+                    variant="top"
+                    src={rp.img}
+                    style={{ maxHeight: '100%', objectFit: 'contain', maxWidth: '100%' }}
+                    alt={rp.name}
+                  />
+                </div>
                 <Card.Body>
-                  <Card.Title>{rp.name}</Card.Title>
+                  <Card.Title className="text-truncate">{rp.name}</Card.Title>
                   <Button
                     variant="outline-primary"
+                    size="sm"
                     onClick={() => navigate(`/products/${rp.slug}`)}
                   >
                     Xem chi tiết
@@ -304,7 +318,6 @@ const ProductDetail = () => {
         </Row>
       </Container>
     </>
-
   );
 };
 
