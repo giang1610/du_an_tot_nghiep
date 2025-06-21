@@ -15,13 +15,13 @@
         console.log('DATA:', response.data.data);
         setProducts(response.data.data); // lấy danh sách sản phẩm
         setLoading(false);
-        
+
       })
       .catch(error => {
         console.error('Lỗi khi tải sản phẩm:', error);
         setLoading(false);
       });
-      
+
   }, []);
 
   return (
