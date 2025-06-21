@@ -1,32 +1,29 @@
-import axios from "axios";
+import axios from 'axios';
 
-const baseURL=process.env.REACT_APP_API_URI;
-const timeout=+process.env.REACT_APP_TIME_OUT||20000;
+// Thiết lập mặc định
+const baseURL = process.env.REACT_APP_API_URI || 'http://localhost:8000/api';
+const timeout = Number(process.env.REACT_APP_TIME_OUT) || 20000;
 
-const axiosInstance =axios.create({
-    baseURL,
-    timeout,
-    withCredentials: true,
+// Tạo instance
+const axiosInstance = axios.create({
+  baseURL,
+  timeout,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
+// Interceptor request
 axiosInstance.interceptors.request.use(
-
-    function(config){
-        config.headers["Content-Type"]= "application/json";
-        return config
-    },
-    function(error){
-        return Promise.reject(error)
-    }
+  (config) => config,
+  (error) => Promise.reject(error)
 );
+
+// Interceptor response
 axiosInstance.interceptors.response.use(
-    function (response){
-        if(response.data){
-            return response.data    
-        }
-        return response
-    },
-    function(error){
-        return Promise.reject(error)
-    }
-)
+  (response) => response?.data ?? response,
+  (error) => Promise.reject(error)
+);
+
+export default axiosInstance;

@@ -17,14 +17,12 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(5);
   const { addToCart } = useCart();
-  const [mainImage, setMainImage] = useState('');
-
+  const [mainImage, setMainImage] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const url = `${process.env.REACT_APP_API_URI}/products/${slug}`;
-        const res = await axios.get(url);
+        const res = await axios.get(`${process.env.REACT_APP_API_URI}/products/${slug}`);
         setProduct(res.data.data.product);
         setLoading(false);
       } catch (err) {
@@ -35,6 +33,7 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
+  
   const sizes = [...new Set(product?.variants?.map(v => v.size?.name).filter(Boolean))];
   const colors = [...new Set(product?.variants?.map(v => v.color?.name).filter(Boolean))];
 
@@ -45,20 +44,22 @@ const ProductDetail = () => {
   };
 
   const selectedVariant = getMatchingVariant();
+  useEffect(() => {
+    if (product) {
+      setMainImage(selectedVariant?.img || product.img);
+    }
+  }, [product, selectedSize, selectedColor,selectedVariant]);
+
 
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
-      return alert('Vui lòng chọn kích cỡ và màu sắc!');
-    }
-
-    const variant = getMatchingVariant();
-    if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
+    if (!selectedSize || !selectedColor) return alert('Vui lòng chọn kích cỡ và màu sắc!');
+    if (!selectedVariant) return alert('Biến thể sản phẩm không tồn tại.');
 
     addToCart({
-      id: variant.id,
+      id: selectedVariant.id,
       name: product.name,
-      price: variant.price,
-      image: product.image,
+      price: selectedVariant.price,
+      image: selectedVariant.img || product.img,
       size: selectedSize,
       color: selectedColor,
     });
@@ -66,36 +67,15 @@ const ProductDetail = () => {
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1500);
   };
-useEffect(() => {
-  if (product) {
-    setMainImage(selectedVariant?.img || product.img);
-  }
-}, [product, selectedVariant]);
 
   const handleGoToCart = () => {
-    if (!selectedSize || !selectedColor) {
-      return alert('Vui lòng chọn kích cỡ và màu sắc!');
-    }
-
-    const variant = getMatchingVariant();
-    if (!variant) return alert('Biến thể sản phẩm không tồn tại.');
-
-    addToCart({
-      id: variant.id,
-      name: product.name,
-      price: variant.price,
-      image: product.image,
-      size: selectedSize,
-      color: selectedColor,
-    });
-
+    handleAddToCart();
     navigate('/cart');
   };
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return alert('Bình luận không được để trống!');
-
     const token = localStorage.getItem('token');
     if (!token) return alert('Vui lòng đăng nhập để bình luận!');
 
@@ -145,40 +125,31 @@ useEffect(() => {
       <Container className="my-5">
         <Row>
           <Col md={6}>
-           <Card className="shadow-sm border-0 rounded-3 p-3 bg-white position-relative">
-  <div className="d-flex" style={{ height: '300px' }}>
-    {/* Cột ảnh nhỏ bên trái */}
-    <div className="d-flex flex-column align-items-start gap-2 me-3">
-      {[product.img, ...(product.product_images || []).map(imgObj => imgObj.url)].map((img, idx) => (
-        <img
-          key={idx}
-          src={img}
-          alt={`Thumb ${idx}`}
-          onClick={() => setMainImage(img)}
-          style={{
-            width: 60,
-            height: 60,
-            objectFit: 'cover',
-            borderRadius: '0.25rem',
-            border: img === mainImage ? '2px solid #0d6efd' : '1px solid #ccc',
-            cursor: 'pointer',
-            backgroundColor: '#fff'
-          }}
-        />
-      ))}
-    </div>
-
-    {/* Ảnh lớn */}
-    <div className="flex-grow-1 d-flex justify-content-center align-items-center bg-light rounded-3 w-100">
-      <Card.Img
-        src={mainImage}
-        className="img-fluid"
-        style={{ maxHeight: '100%', objectFit: 'contain' }}
-      />
-    </div>
-  </div>
-</Card>
-
+            <Card className="shadow-sm border-0 rounded-3 p-3 bg-white">
+              <Row className="g-3">
+                <Col xs="auto" className="d-flex flex-column gap-2">
+                  {[product.img, ...(product.product_images || []).map(img => img.url)].map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`Thumb ${idx}`}
+                      onClick={() => setMainImage(img)}
+                      className={`border rounded ${img === mainImage ? 'border-primary' : 'border-secondary'}`}
+                      style={{ width: 60, height: 60, objectFit: 'cover', cursor: 'pointer' }}
+                    />
+                  ))}
+                </Col>
+                <Col>
+                  <div className="ratio ratio-1x1 bg-light rounded">
+                    <img
+                      src={mainImage}
+                      alt="Main"
+                      className="img-fluid object-fit-contain rounded"
+                    />
+                  </div>
+                </Col>
+              </Row>
+            </Card>
           </Col>
 
           <Col md={6}>
@@ -186,34 +157,28 @@ useEffect(() => {
             <p className="text-muted">{product.short_description}</p>
 
             <h5 className="mt-4">Kích cỡ</h5>
-            <div className="mb-3">
+            <div className="mb-3 d-flex flex-wrap gap-2">
               {sizes.map(size => (
-                <Form.Check
-                  inline
+                <Button
                   key={size}
-                  type="radio"
-                  name="sizeOptions"
-                  label={size}
-                  checked={selectedSize === size}
-                  onChange={() => setSelectedSize(size)}
-                  className="me-3"
-                />
+                  variant={selectedSize === size ? 'primary' : 'outline-secondary'}
+                  onClick={() => setSelectedSize(size)}
+                >
+                  {size}
+                </Button>
               ))}
             </div>
 
             <h5>Màu sắc</h5>
-            <div className="mb-3">
+            <div className="mb-3 d-flex flex-wrap gap-2">
               {colors.map(color => (
-                <Form.Check
-                  inline
+                <Button
                   key={color}
-                  type="radio"
-                  name="colorOptions"
-                  label={color}
-                  checked={selectedColor === color}
-                  onChange={() => setSelectedColor(color)}
-                  className="me-3"
-                />
+                  variant={selectedColor === color ? 'primary' : 'outline-secondary'}
+                  onClick={() => setSelectedColor(color)}
+                >
+                  {color}
+                </Button>
               ))}
             </div>
 
@@ -272,11 +237,13 @@ useEffect(() => {
           product.comments.map((cmt, index) => (
             <Card key={index} className="mb-3 shadow-sm border-0">
               <Card.Body>
-                <strong className="text-primary">{cmt.user?.name || 'Khách'}</strong>
-                <p className="mb-1">{cmt.content}</p>
-                <div className="text-warning">
-                  {'★'.repeat(cmt.rating)}{'☆'.repeat(5 - cmt.rating)}
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <strong className="text-primary">{cmt.user?.name || 'Khách'}</strong>
+                  <div className="text-warning">
+                    {'★'.repeat(cmt.rating)}{'☆'.repeat(5 - cmt.rating)}
+                  </div>
                 </div>
+                <p className="mb-0">{cmt.content}</p>
               </Card.Body>
             </Card>
           ))
@@ -291,15 +258,12 @@ useEffect(() => {
           {product.related_products?.map(rp => (
             <Col key={rp.id} md={3} sm={6} xs={12} className="mb-4">
               <Card className="h-100 shadow-sm border-0 rounded-3">
-                <div
-                  className="bg-light d-flex align-items-center justify-content-center rounded-top"
-                  style={{ height: '180px' }}
-                >
+                <div className="bg-light d-flex align-items-center justify-content-center p-2 rounded-top" style={{ height: 180 }}>
                   <Card.Img
                     variant="top"
                     src={rp.img}
-                    style={{ maxHeight: '100%', objectFit: 'contain', maxWidth: '100%' }}
                     alt={rp.name}
+                    className="img-fluid object-fit-contain"
                   />
                 </div>
                 <Card.Body>
