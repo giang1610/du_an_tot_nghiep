@@ -37,12 +37,10 @@ class CommentController extends Controller
             ], 404);
         }
 
-        // Lấy user hiện tại
+        // Kiểm tra người dùng đã mua sản phẩm
         $user = Auth::user();
-
-        // Kiểm tra user đã mua sản phẩm và đơn hàng đã giao (status = shipped)
         $hasPurchased = Order::where('user_id', $user->id)
-            ->where('status', 'shipped') // Chỉ cho phép khi đơn đã giao
+            ->where('status', 'completed')
             ->whereHas('items', function ($query) use ($productId) {
                 $query->where('product_id', $productId);
             })
@@ -51,26 +49,24 @@ class CommentController extends Controller
         if (!$hasPurchased) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bạn chỉ có thể bình luận sau khi đơn hàng đã giao thành công.'
+                'message' => 'Bạn chỉ có thể bình luận sau khi mua sản phẩm.'
             ], 403);
         }
 
-        // Lưu bình luận
         $comment = new Comment();
         $comment->product_id = $productId;
         $comment->user_id = $user->id;
         $comment->content = $request->content;
-        $comment->rating = $request->rating;
+        $comment->rating = $request->rating ?? null;
         $comment->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Bình luận thành công.',
-            'data' => $comment->load([
-                'user' => function ($query) {
-                    $query->select('id', 'name', 'email');
-                }
-            ])
+            'data' => $comment->load(['user' => function ($query) {
+                $query->select('id', 'name', 'email');
+            }])
         ], 201);
+         dd($request->all()); // ← thêm dòng này để xem client gửi gì
     }
 }
