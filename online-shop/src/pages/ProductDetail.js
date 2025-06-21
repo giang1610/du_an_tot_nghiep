@@ -16,6 +16,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(5);
   const { addToCart } = useCart();
+  
 
   // Load product detail
   useEffect(() => {
@@ -167,12 +168,17 @@ const ProductDetail = () => {
         <Row>
           <Col md={6}>
             <Card>
-              <Card.Img variant="top" src={product.image} />
+              <Card.Img
+                src={selectedVariant?.img || product.img}
+                style={{ height: '250px', objectFit: 'contain', backgroundColor: '#f8f9fa' }}
+              />
+
+
             </Card>
           </Col>
           <Col md={6}>
             <h3>{product.name}</h3>
-            <p>{product.description}</p>
+            <p>{product.short_description}</p>
 
             <h5>Kích cỡ</h5>
             <div className="mb-3">
@@ -277,7 +283,12 @@ const ProductDetail = () => {
           {product.related_products?.map(rp => (
             <Col key={rp.id} md={3} className="mb-4">
               <Card>
-                <Card.Img variant="top" src={rp.image} />
+                <Card.Img
+                  variant="top"
+                  src={rp.img}
+                  style={{ height: '200px', objectFit: 'cover' }}
+                  alt={rp.name}
+                />
                 <Card.Body>
                   <Card.Title>{rp.name}</Card.Title>
                   <Button

@@ -7,13 +7,13 @@ export const useCart = () => useContext(CartContext);
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
-  // ✅ Tải cart từ localStorage khi app khởi động
+  //  Tải cart từ localStorage khi app khởi động
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
     setCart(storedCart);
   }, []);
 
-  // ✅ Cập nhật localStorage mỗi khi cart thay đổi
+  //  Cập nhật localStorage mỗi khi cart thay đổi
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);

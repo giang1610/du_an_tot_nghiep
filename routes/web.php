@@ -77,7 +77,9 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
     Route::resource('products', ProductController::class);
 
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
+    Route::resource('orders', OrderController::class);
+    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
