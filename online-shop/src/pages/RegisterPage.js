@@ -6,10 +6,11 @@ import {
   Alert,
   Card,
   InputGroup,
+  Spinner,
 } from 'react-bootstrap';
-import axios from 'axios';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -21,52 +22,90 @@ const RegisterPage = () => {
     password_confirmation: '',
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPass, setShowPass] = useState({
+    password: false,
+    password_confirmation: false,
+  });
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  const toggleShowPass = (field) =>
+    setShowPass((prev) => ({ ...prev, [field]: !prev[field] }));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/register', form);
-      if (response.status === 200 || response.status === 201) {
-        setSuccess('Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.');
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URI}/register`,
+        form
+      );
+
+      if (res.status === 200 || res.status === 201) {
+        setSuccess('Đăng ký thành công! Vui lòng kiểm tra email.');
         setTimeout(() => navigate('/login'), 2000);
       } else {
-        setError('Đăng ký thất bại. Vui lòng thử lại.');
+        setError('Đăng ký thất bại, thử lại.');
       }
     } catch (err) {
-      if (err.response?.data?.errors) {
-        const messages = Object.values(err.response.data.errors)
-          .flat()
-          .join(' ');
-        setError(messages);
-      } else {
-        setError(err.response?.data?.message || 'Có lỗi xảy ra');
-      }
+      const errors = err.response?.data?.errors;
+      setError(
+        errors
+          ? Object.values(errors).flat().join(' ')
+          : err.response?.data?.message || 'Đã xảy ra lỗi.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
+
+  const renderPasswordInput = (label, name) => (
+    <Form.Group className="mb-3">
+      <Form.Label>{label}</Form.Label>
+      <InputGroup>
+        <Form.Control
+          type={showPass[name] ? 'text' : 'password'}
+          name={name}
+          value={form[name]}
+          onChange={handleChange}
+          placeholder={label}
+          required
+        />
+        <Button
+          variant="outline-secondary"
+          onClick={() => toggleShowPass(name)}
+          tabIndex={-1}
+        >
+          {showPass[name] ? <EyeSlash /> : <Eye />}
+        </Button>
+      </InputGroup>
+    </Form.Group>
+  );
 
   return (
     <Container
       className="d-flex justify-content-center align-items-center"
       style={{ minHeight: '80vh' }}
     >
-      <Card style={{ width: '100%', maxWidth: '500px', padding: '20px' }} className="shadow">
+      <Card
+        style={{ width: '100%', maxWidth: '500px', padding: '20px' }}
+        className="shadow"
+      >
         <Card.Body>
           <h3 className="mb-4 text-center">Đăng Ký</h3>
 
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} noValidate>
             <Form.Group className="mb-3">
               <Form.Label>Họ tên</Form.Label>
               <Form.Control
@@ -90,52 +129,18 @@ const RegisterPage = () => {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Mật khẩu</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Nhập mật khẩu"
-                  required
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeSlash /> : <Eye />}
-                </Button>
-              </InputGroup>
-            </Form.Group>
+            {renderPasswordInput('Mật khẩu', 'password')}
+            {renderPasswordInput('Nhập lại mật khẩu', 'password_confirmation')}
 
-            <Form.Group className="mb-3">
-              <Form.Label>Nhập lại mật khẩu</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="password_confirmation"
-                  value={form.password_confirmation}
-                  onChange={handleChange}
-                  placeholder="Nhập lại mật khẩu"
-                  required
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? <EyeSlash /> : <Eye />}
-                </Button>
-              </InputGroup>
-            </Form.Group>
-
-            <Button type="submit" variant="primary" className="w-100">
-              Đăng Ký
+            <Button type="submit" variant="primary" className="w-100" disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Đang đăng ký...
+                </>
+              ) : (
+                'Đăng Ký'
+              )}
             </Button>
           </Form>
 
@@ -149,6 +154,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-
-
-
