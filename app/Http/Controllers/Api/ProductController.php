@@ -99,7 +99,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'data' => $products,
-            
+
 
         ]);
     }
@@ -214,50 +214,7 @@ class ProductController extends Controller
             'data' => $comments
         ], 200);
     }
-    // Lưu bình luận cho sản phẩm
-    public function storeComment(Request $request, $id)
-    {
-        // Lấy thông tin user đang đăng nhập
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 401);
-        }
-        // Validate dữ liệu gửi lên
-        $request->validate([
-            'content' => 'required|string',
-            'rating' => 'required|integer|min:1|max:5'
-        ]);
-        // Kiểm tra sản phẩm có tồn tại không
-        $product = Product::find($id);
-        if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sản phẩm không tồn tại.'
-            ], 404);
-        }
-        // Tạo bình luận mới
-        $comment = Comment::create([
-            'user_id' => $user->id,
-            'product_id' => $id,
-            'content' => $request->content,
-            'rating' => $request->rating,
-        ]);
-        // Load thêm thông tin user cho bình luận vừa tạo
-        $comment->load([
-            'user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }
-        ]);
-        // Trả về kết quả thành công và dữ liệu bình luận vừa tạo
-        return response()->json([
-            'success' => true,
-            'message' => 'Bình luận thành công.',
-            'data' => $comment
-        ], 201);
-    }
+    
     public function getBySlug($slug)
     {
         $product = Product::where('slug', $slug)->first();
