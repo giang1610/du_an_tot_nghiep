@@ -28,6 +28,9 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+
+        $token = $user->createToken('api_token')->plainTextToken;
+        $verifyUrl = "http://localhost:3000/verify-email?email=" . urlencode($user->email);
         // Kích hoạt sự kiện Registered.
         // Laravel sẽ tự động gửi email xác thực nếu User model implement MustVerifyEmail.
         // event(new Registered($user));

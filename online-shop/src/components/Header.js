@@ -1,34 +1,53 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { FaShoppingCart, FaSearch, FaUser } from "react-icons/fa";
-import { useAuth } from "../context/AuthContext";
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaShoppingCart, FaSearch, FaUser } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
-  const { user, logoutUser } = useAuth(); // Lấy thông tin user từ context
+  const { user, logoutUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = e.target.elements.search.value.trim();
+    if (query) navigate(`/search?q=${encodeURIComponent(query)}`);
+  };
 
   return (
     <header className="border-bottom bg-white shadow-sm">
-      <div className="container py-2 d-flex justify-content-between align-items-center">
+      <div className="container py-2 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        {/* Logo */}
         <Link to="/" className="navbar-brand fw-bold fs-3 text-dark">
           TORANO
         </Link>
 
-        <form className="d-flex" style={{ maxWidth: 400, width: "100%" }}>
+        {/* Search bar */}
+        <form
+          className="d-flex flex-grow-1 mx-3"
+          onSubmit={handleSearch}
+          style={{ maxWidth: 400 }}
+        >
           <input
+            name="search"
             className="form-control rounded-start"
             type="search"
             placeholder="Tìm sản phẩm..."
+            aria-label="Search"
           />
           <button className="btn btn-dark rounded-end" type="submit">
             <FaSearch />
           </button>
         </form>
 
+        {/* Actions */}
         <div className="d-flex align-items-center gap-3">
+          {/* Cart */}
           <Link to="/cart" className="btn btn-outline-dark">
-            <FaShoppingCart /> Giỏ hàng
+            <FaShoppingCart className="me-1" />
+            Giỏ hàng
           </Link>
 
+          {/* Account dropdown */}
           <div className="dropdown">
             <button
               className="btn btn-outline-secondary dropdown-toggle d-flex align-items-center"
@@ -37,7 +56,7 @@ const Header = () => {
               aria-expanded="false"
             >
               <FaUser className="me-2" />
-              {user ? user.name : "Tài khoản"}
+              {user ? user.name : 'Tài khoản'}
             </button>
             <ul className="dropdown-menu dropdown-menu-end">
               {user ? (
@@ -72,21 +91,22 @@ const Header = () => {
         </div>
       </div>
 
+      {/* Navigation */}
       <nav className="bg-light border-top">
-        <div className="container d-flex justify-content-center gap-4 py-2">
-          <Link className="text-dark fw-semibold" to="/">
+        <div className="container d-flex flex-wrap justify-content-center gap-4 py-2">
+          <Link className="text-dark fw-semibold text-decoration-none" to="/">
             Trang chủ
           </Link>
-          <Link className="text-dark fw-semibold" to="/products">
+          <Link className="text-dark fw-semibold text-decoration-none" to="/products">
             Sản phẩm
           </Link>
-          <Link className="text-dark fw-semibold" to="/collections">
+          <Link className="text-dark fw-semibold text-decoration-none" to="/collections">
             Bộ sưu tập
           </Link>
-          <Link className="text-dark fw-semibold" to="/about">
+          <Link className="text-dark fw-semibold text-decoration-none" to="/about">
             Giới thiệu
           </Link>
-          <Link className="text-dark fw-semibold" to="/contact">
+          <Link className="text-dark fw-semibold text-decoration-none" to="/contact">
             Liên hệ
           </Link>
         </div>

@@ -1,13 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
@@ -81,9 +81,9 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::resource('orders', OrderController::class);
     // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
-    // Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-    // Route::post('/admin/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus']);
-    // Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
 

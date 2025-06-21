@@ -79,10 +79,13 @@ Route::middleware('auth:sanctum')->post('/products/{id}/rate', [CommentControlle
 
 // Các route công khai (bất cứ ai cũng truy cập được)
 Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
-Route::post('/products', [ProductController::class, 'store']); // Tạo sản phẩm (cần phân quyền admin)
-Route::get('/products/slug/{slug}', [ProductController::class, 'getBySlug']);
-Route::get('/products/{slug}', [ProductController::class, 'show']); // Trùng này có thể tách ra
+Route::get('/products/{slug}', [ProductController::class, 'showBySlug']);
+Route::get('/products/id/{id}', [ProductController::class, 'showById']);
+// Route::get('/products/id/{id}', [ProductController::class, 'show']);
+// Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::post('/products', [ProductController::class, 'store']); // Tạo sản phẩm (cần phân quyền admi n)
+// Route::get('/products/slug/{slug}', [ProductController::class, 'showBySlug']);
+// Route::get('/products/{slug}', [ProductController::class, 'showBySlug']); // Trùng này có thể tách ra
 
 
 // Các chức năng liên quan đến sản phẩm

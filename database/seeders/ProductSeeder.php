@@ -16,6 +16,7 @@ class ProductSeeder extends Seeder
                 'category_id' => 3,
                 'name' => 'Áo thun cotton 100%',
                 'slug' => Str::slug('Áo thun cotton 100%'),
+                'price'=>10000,
                 // 'type' => 1,
                 'status' => 1,
                 'short_description' => 'Áo thun mát mẻ, thoải mái.',
