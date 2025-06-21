@@ -1,5 +1,5 @@
 // src/context/AuthContext.js
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
@@ -14,15 +14,22 @@ const isTokenValid = (token) => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const savedUser = localStorage.getItem('user');
-  const savedToken = localStorage.getItem('token');
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
-  const [user, setUser] = useState(() =>
-    savedUser && savedToken && isTokenValid(savedToken) ? JSON.parse(savedUser) : null
-  );
-  const [token, setToken] = useState(() =>
-    savedToken && isTokenValid(savedToken) ? savedToken : null
-  );
+  // Load user/token từ localStorage nếu hợp lệ
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('token');
+
+    if (savedUser && savedToken && isTokenValid(savedToken)) {
+      setUser(JSON.parse(savedUser));
+      setToken(savedToken);
+    } else {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    }
+  }, []);
 
   const login = (userData, token) => {
     setUser(userData);
@@ -38,10 +45,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  const isAuthenticated = !!user && !!token;
-
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated: !!user && !!token,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
