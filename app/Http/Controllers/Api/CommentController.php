@@ -11,13 +11,16 @@ use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
+
     public function store(Request $request, $productId)
     {
+        // Validate dữ liệu đầu vào
         $request->validate([
             'content' => 'required|string',
             'rating' => 'required|integer|min:1|max:5'
         ]);
 
+        // Kiểm tra đăng nhập
         if (!Auth::check()) {
             return response()->json([
                 'success' => false,
@@ -25,6 +28,7 @@ class CommentController extends Controller
             ], 401);
         }
 
+        // Kiểm tra sản phẩm tồn tại
         $product = Product::find($productId);
         if (!$product) {
             return response()->json([
@@ -33,10 +37,12 @@ class CommentController extends Controller
             ], 404);
         }
 
-        //Kiểm tra người dùng đã mua sản phẩm
+        // Lấy user hiện tại
         $user = Auth::user();
+
+        // Kiểm tra user đã mua sản phẩm và đơn hàng đã giao (status = shipped)
         $hasPurchased = Order::where('user_id', $user->id)
-            ->where('status', 'completed')
+            ->where('status', 'shipped') // Chỉ cho phép khi đơn đã giao
             ->whereHas('items', function ($query) use ($productId) {
                 $query->where('product_id', $productId);
             })
@@ -45,10 +51,11 @@ class CommentController extends Controller
         if (!$hasPurchased) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bạn chỉ có thể bình luận sau khi mua sản phẩm.'
+                'message' => 'Bạn chỉ có thể bình luận sau khi đơn hàng đã giao thành công.'
             ], 403);
         }
 
+        // Lưu bình luận
         $comment = new Comment();
         $comment->product_id = $productId;
         $comment->user_id = $user->id;
@@ -59,9 +66,11 @@ class CommentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Bình luận thành công.',
-            'data' => $comment->load(['user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }])
+            'data' => $comment->load([
+                'user' => function ($query) {
+                    $query->select('id', 'name', 'email');
+                }
+            ])
         ], 201);
     }
 }
