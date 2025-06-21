@@ -13,43 +13,54 @@ const ForgotPasswordPage = () => {
     setError('');
     setSuccess('');
     setLoading(true);
+
     try {
-      await axios.post('http://localhost:8000/api/forgot-password', { email });
-      setSuccess('Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu.');
+      await axios.post(`${process.env.REACT_APP_API_URI}/forgot-password`, { email });
+      setSuccess('✅ Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.');
       setEmail('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra.');
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.message || 'Lỗi máy chủ. Vui lòng thử lại.'
+        : 'Đã xảy ra lỗi.';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container
-      className="d-flex justify-content-center align-items-center"
-      style={{ minHeight: '80vh' }}
-    >
-      <Card style={{ width: '100%', maxWidth: '420px', padding: '20px' }} className="shadow">
+    <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '100vh' }}>
+      <Card className="p-4 shadow-lg w-100" style={{ maxWidth: '420px' }}>
         <Card.Body>
-          <h3 className="mb-4 text-center">Quên Mật Khẩu</h3>
+          <div className="text-center mb-4">
+            <h3 className="fw-bold">🔐 Quên Mật Khẩu</h3>
+            <p className="text-muted small">
+              Nhập email của bạn để nhận hướng dẫn đặt lại mật khẩu.
+            </p>
+          </div>
 
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
           <Form onSubmit={handleSubmit} noValidate>
-            <Form.Group className="mb-4" controlId="email">
-              <Form.Label>Email</Form.Label>
+            <Form.Group className="mb-3" controlId="email">
+              <Form.Label>Địa chỉ Email</Form.Label>
               <Form.Control
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Nhập email của bạn"
+                placeholder="Nhập email đăng ký"
                 required
                 autoFocus
               />
             </Form.Group>
 
-            <Button type="submit" variant="primary" className="w-100" disabled={loading}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-100 fw-semibold"
+              disabled={loading || !email}
+            >
               {loading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-2" />

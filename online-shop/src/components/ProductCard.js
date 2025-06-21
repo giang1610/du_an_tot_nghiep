@@ -18,23 +18,26 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="col-6 col-md-3 mb-4">
-      <div className="card h-100 border-0">
-        <Link to={`/products/${product.slug}`}>
+    <div className="col-6 col-md-4 col-lg-3 mb-4">
+      <div className="card h-100 border shadow-sm rounded hover-shadow transition">
+        <Link to={`/products/${product.slug}`} className="text-decoration-none">
           <img
             src={product.thumbnail}
             alt={product.name}
-            className="card-img-top rounded"
+            className="card-img-top"
+            style={{ height: '240px', objectFit: 'cover' }}
           />
         </Link>
-        <div className="card-body text-center">
-        <Link to={`/products/${product.slug}`}>
-          <h6 className="card-title fw-bold">{product.name}</h6>
-          <p className="text-danger fw-semibold">
+
+        <div className="card-body d-flex flex-column text-center p-3">
+          <Link to={`/products/${product.slug}`} className="text-decoration-none text-dark mb-2">
+            <h6 className="card-title fw-bold">{product.name}</h6>
+          </Link>
+          <p className="text-danger fw-semibold mb-3">
             {product.price?.toLocaleString()}₫
           </p>
-        </Link>
-        <button className="btn btn-primary btn-sm" onClick={handleBuyNow}>
+
+          <button className="btn btn-primary btn-sm mt-auto" onClick={handleBuyNow}>
             Mua ngay
           </button>
         </div>
