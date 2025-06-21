@@ -60,7 +60,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // xác minh mail -- tuấn anh đẹp
 Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
-   
+
     $request->fulfill();
     return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
 
@@ -71,6 +71,12 @@ Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 
+// Bình luận (ai cũng bình luận được, chỉ cần đăng nhập)
+// Route::middleware('auth:sanctum')->post('/products/{id}/comment', [CommentController::class, 'comment']);
+
+// Đánh giá (chỉ khi đã nhận hàng)
+Route::middleware('auth:sanctum')->post('/products/{id}/rate', [CommentController::class, 'rate']);
+
 // Các route công khai (bất cứ ai cũng truy cập được)
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
@@ -78,9 +84,6 @@ Route::post('/products', [ProductController::class, 'store']); // Tạo sản ph
 Route::get('/products/slug/{slug}', [ProductController::class, 'getBySlug']);
 Route::get('/products/{slug}', [ProductController::class, 'show']); // Trùng này có thể tách ra
 
-// Comment related
-Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
-Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']);
 
 // Các chức năng liên quan đến sản phẩm
 Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
