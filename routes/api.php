@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\SizeController;
@@ -71,11 +71,10 @@ Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 
-// Bình luận (ai cũng bình luận được, chỉ cần đăng nhập)
-// Route::middleware('auth:sanctum')->post('/products/{id}/comment', [CommentController::class, 'comment']);
+// Routes liên quan đến đánh giá sản phẩm
+Route::middleware('auth:sanctum')->post('/reviews', [ReviewController::class, 'store']);
+Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
 
-// Đánh giá (chỉ khi đã nhận hàng)
-Route::middleware('auth:sanctum')->post('/products/{id}/rate', [CommentController::class, 'rate']);
 
 // Các route công khai (bất cứ ai cũng truy cập được)
 Route::get('/products', [ProductController::class, 'index']);
