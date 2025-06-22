@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Comment;
+use App\Models\Review;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -129,76 +129,12 @@ class ProductController extends Controller
         ]);
     }
 
-    // Lấy danh sách bình luận của sản phẩm theo ID
-    public function comments($id)
-    {
-        // Lấy danh sách bình luận, kèm thông tin user (id, name, email) cho từng bình luận
-        $comments = Comment::with([
-            'user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }
-        ])
-            ->where('product_id', $id) // Lọc theo ID sản phẩm
-            ->orderBy('created_at', 'desc') // Sắp xếp mới nhất lên đầu
-            ->get();
-        // Trả về danh sách bình luận dạng JSON
-        return response()->json([
-            'success' => true,
-            'data' => $comments
-        ], 200);
-    }
-    // Lưu bình luận cho sản phẩm
-    public function storeComment(Request $request, $id)
-    {
-        // Lấy thông tin user đang đăng nhập
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 401);
-        }
-        // Validate dữ liệu gửi lên
-        $request->validate([
-            'content' => 'required|string',
-            'rating' => 'required|integer|min:1|max:5'
-        ]);
-        // Kiểm tra sản phẩm có tồn tại không
-        $product = Product::find($id);
-        if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sản phẩm không tồn tại.'
-            ], 404);
-        }
-        // Tạo bình luận mới
-        $comment = Comment::create([
-            'user_id' => $user->id,
-            'product_id' => $id,
-            'content' => $request->content,
-            'rating' => $request->rating,
-        ]);
-        // Load thêm thông tin user cho bình luận vừa tạo
-        $comment->load([
-            'user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }
-        ]);
-        // Trả về kết quả thành công và dữ liệu bình luận vừa tạo
-        return response()->json([
-            'success' => true,
-            'message' => 'Bình luận thành công.',
-            'data' => $comment
-        ], 201);
-    }
-
     public function showBySlug($slug)
     {
         $product = Product::with([
             'variants.size',
             'variants.color',
             'variants.images',
-            'comments.user',
             'images',
             'category'
         ])
@@ -214,6 +150,14 @@ class ProductController extends Controller
         // Xử lý giá hiển thị
         $this->processProductPricing($product);
 
+        // Lấy danh sách đánh giá cho sản phẩm (tổng hợp từ các variant)
+        $reviews = Review::with(['user:id,name'])
+            ->whereHas('productVariant', function ($q) use ($product) {
+                $q->where('product_id', $product->id);
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
         // Sản phẩm liên quan cùng danh mục
         $related = Product::with(['images'])
             ->where('category_id', $product->category_id)
@@ -225,6 +169,7 @@ class ProductController extends Controller
             'success' => true,
             'data' => [
                 'product' => $product,
+                'reviews' => $reviews,
                 'related_products' => $related
             ]
         ]);
