@@ -5,15 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\Product;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ProductController extends Controller
 {
-    /**
-     * Tính toán giá hiển thị của sản phẩm (gồm giá khuyến mãi nếu có)
-     */
     private function processProductPricing($product)
     {
         if ($product->variants && $product->variants->isNotEmpty()) {
@@ -29,7 +27,9 @@ class ProductController extends Controller
                     ? $variant->sale_price
                     : $variant->price;
 
-                if (!$isOnSale) $variant->sale_price = null;
+                if (!$isOnSale) {
+                    $variant->sale_price = null;
+                }
 
                 if (is_null($minDisplayPrice) || $variant->display_price < $minDisplayPrice) {
                     $minDisplayPrice = $variant->display_price;
@@ -42,9 +42,6 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Lấy danh sách sản phẩm với bộ lọc
-     */
     public function index(Request $request)
     {
         $query = Product::query()->where('status', 1);
@@ -72,93 +69,93 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $products,
-
-
+            'data' => $products
         ]);
     }
-
 
     public function related($category_id, Request $request)
     {
-        // Lấy tham số 'exclude' từ query string để loại trừ sản phẩm hiện tại (nếu có)
         $excludeId = $request->query('exclude');
-        // Khởi tạo query lấy các sản phẩm cùng danh mục
         $query = Product::where('category_id', $category_id);
-        // Nếu có truyền excludeId, loại trừ sản phẩm này khỏi kết quả
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
-        // Lấy danh sách sản phẩm liên quan, kèm theo các quan hệ: variants.color, variants.size, images
+
         $relatedProducts = $query->with(['variants.color', 'variants.size', 'images'])->get();
 
-        // Duyệt qua từng sản phẩm để xử lý giá hiển thị (giá khuyến mãi, giá gốc, ...)
         foreach ($relatedProducts as $relatedProduct) {
             $this->processProductPricing($relatedProduct);
         }
-        // Trả về kết quả dạng JSON
+
         return response()->json([
-            'success' => true, // Trạng thái thành công
-            'data' => $relatedProducts, // Danh sách sản phẩm liên quan
+            'success' => true,
+            'data' => $relatedProducts,
         ]);
     }
 
-    // Lấy danh sách bình luận của sản phẩm theo ID
     public function comments($id)
     {
-        // Lấy danh sách bình luận, kèm thông tin user (id, name, email) cho từng bình luận
-        $comments = Comment::with([
-            'user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }
-        ])
-            ->where('product_id', $id) // Lọc theo ID sản phẩm
-            ->orderBy('created_at', 'desc') // Sắp xếp mới nhất lên đầu
+        $comments = Comment::with(['user:id,name,email'])
+            ->where('product_id', $id)
+            ->orderBy('created_at', 'desc')
             ->get();
-        // Trả về danh sách bình luận dạng JSON
+
         return response()->json([
             'success' => true,
             'data' => $comments
         ], 200);
     }
-    // Lưu bình luận cho sản phẩm
+
     public function storeComment(Request $request, $id)
     {
-        // Lấy thông tin user đang đăng nhập
         $user = Auth::user();
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Bạn cần đăng nhập.'
             ], 401);
         }
-        // Validate dữ liệu gửi lên
+
+        // Kiểm tra user đã mua và nhận hàng chưa
+        $hasPurchased = OrderItem::where('product_id', $id)
+            ->whereHas('order', function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->where('status', 'delivered'); // 'delivered' hoặc 'completed'
+            })->exists();
+
+        if (!$hasPurchased) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ những người đã mua và nhận sản phẩm mới có thể đánh giá.'
+            ], 403);
+        }
+
         $request->validate([
-            'content' => 'required|string',
+            'content' => 'required|string|max:1000',
             'rating' => 'required|integer|min:1|max:5'
         ]);
-        // Kiểm tra sản phẩm có tồn tại không
+
         $product = Product::find($id);
         if (!$product) {
-            return response()->json(['success' => false, 'message' => 'Sản phẩm không tồn tại'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Sản phẩm không tồn tại.'
+            ], 404);
         }
-        // Tạo bình luận mới
+
         $comment = Comment::create([
             'user_id' => $user->id,
             'product_id' => $id,
             'content' => $request->content,
             'rating' => $request->rating,
         ]);
-        // Load thêm thông tin user cho bình luận vừa tạo
-        $comment->load([
-            'user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }
-        ]);
-        // Trả về kết quả thành công và dữ liệu bình luận vừa tạo
+
+        $comment->load(['user:id,name,email']);
+
         return response()->json([
             'success' => true,
-            'message' => 'Bình luận thành công.',
+            'message' => 'Đánh giá thành công.',
             'data' => $comment
         ], 201);
     }
@@ -175,6 +172,7 @@ class ProductController extends Controller
         ])
             ->where('slug', $slug)
             ->first();
+
         if (!$product) {
             return response()->json([
                 'success' => false,
@@ -182,24 +180,34 @@ class ProductController extends Controller
             ], 404);
         }
 
-        // Xử lý giá hiển thị
         $this->processProductPricing($product);
 
-        // Sản phẩm liên quan cùng danh mục
         $related = Product::with(['images'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->take(4)
             ->get();
 
+        // Xác định xem người dùng hiện tại có thể đánh giá không
+        $canComment = false;
+        if (Auth::check()) {
+            $user = Auth::user();
+            $canComment = OrderItem::where('product_id', $product->id)
+                ->whereHas('order', function ($q) use ($user) {
+                    $q->where('user_id', $user->id)->where('status', 'delivered');
+                })->exists();
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
                 'product' => $product,
-                'related_products' => $related
+                'related_products' => $related,
+                'can_comment' => $canComment
             ]
         ]);
     }
+
     public function showById($id)
     {
         $product = Product::with(['variants'])->find($id);
