@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Comment;
+use App\Models\Review;
 use App\Models\Product;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
@@ -93,20 +93,6 @@ class ProductController extends Controller
             'data' => $relatedProducts,
         ]);
     }
-
-    public function comments($id)
-    {
-        $comments = Comment::with(['user:id,name,email'])
-            ->where('product_id', $id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $comments
-        ], 200);
-    }
-
     public function storeComment(Request $request, $id)
     {
         $user = Auth::user();
@@ -143,21 +129,6 @@ class ProductController extends Controller
                 'message' => 'Sản phẩm không tồn tại.'
             ], 404);
         }
-
-        $comment = Comment::create([
-            'user_id' => $user->id,
-            'product_id' => $id,
-            'content' => $request->content,
-            'rating' => $request->rating,
-        ]);
-
-        $comment->load(['user:id,name,email']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Đánh giá thành công.',
-            'data' => $comment
-        ], 201);
     }
 
     public function showBySlug($slug)
@@ -166,7 +137,6 @@ class ProductController extends Controller
             'variants.size',
             'variants.color',
             'variants.images',
-            'comments.user',
             'images',
             'category'
         ])
