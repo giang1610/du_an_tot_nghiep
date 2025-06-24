@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Container, Form, Button, Alert, Card, Spinner, InputGroup } from 'react-bootstrap';
+import {
+  Container,
+  Form,
+  Button,
+  Alert,
+  Card,
+  Spinner,
+  InputGroup,
+} from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
@@ -13,7 +21,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = ({ target: { name, value } }) =>
+    setForm((prev) => ({ ...prev, [name]: value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,26 +30,36 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:8000/api/login', form); // Không cần withCredentials
-      login(res.data.user, res.data.token); // Lưu vào localStorage
+      const { data } = await axios.post('http://localhost:8000/api/login', form);
+      login(data.user, data.token);
       navigate('/');
     } catch (err) {
-      if (err.response) {
-        if (err.response.status === 401) setError('Email hoặc mật khẩu không đúng.');
-        else if (err.response.status === 403) setError('Vui lòng xác nhận email trước khi đăng nhập.');
-        else setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
-      } else setError('Không thể kết nối tới server.');
+      const status = err?.response?.status;
+      const message =
+        status === 401
+          ? 'Email hoặc mật khẩu không đúng.'
+          : status === 403
+          ? 'Vui lòng xác nhận email trước khi đăng nhập.'
+          : status
+          ? 'Đã có lỗi xảy ra. Vui lòng thử lại.'
+          : 'Không thể kết nối tới máy chủ.';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-      <Card style={{ width: '100%', maxWidth: '420px', padding: '20px' }} className="shadow">
-        <Card.Body>
-          <h3 className="mb-4 text-center">Đăng Nhập</h3>
+    <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '100vh' }}>
+      <Card className="shadow-lg w-100" style={{ maxWidth: 420 }}>
+        <Card.Body className="p-4">
+          <h3 className="mb-3 text-center fw-bold">🔐 Đăng Nhập</h3>
+          <p className="text-muted text-center small mb-4">
+            Vui lòng nhập thông tin để truy cập tài khoản của bạn
+          </p>
+
           {error && <Alert variant="danger">{error}</Alert>}
+
           <Form onSubmit={handleSubmit} noValidate>
             <Form.Group className="mb-3" controlId="email">
               <Form.Label>Email</Form.Label>
@@ -66,13 +85,23 @@ const LoginPage = () => {
                   placeholder="Nhập mật khẩu"
                   required
                 />
-                <Button variant="outline-secondary" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  tabIndex={-1}
+                >
                   {showPassword ? <EyeSlash /> : <Eye />}
                 </Button>
               </InputGroup>
             </Form.Group>
 
-            <Button type="submit" variant="success" className="w-100" disabled={loading}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-100 fw-semibold"
+              disabled={loading}
+            >
               {loading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-2" />
@@ -84,7 +113,7 @@ const LoginPage = () => {
             </Button>
           </Form>
 
-          <div className="mt-3 d-flex justify-content-between">
+          <div className="d-flex justify-content-between mt-3 small">
             <Link to="/forgot-password">Quên mật khẩu?</Link>
             <Link to="/register">Chưa có tài khoản? Đăng ký</Link>
           </div>

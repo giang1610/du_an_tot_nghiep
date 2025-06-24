@@ -1,161 +1,151 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
 import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Banner from '../components/Banner';
-import { Link } from 'react-router-dom';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
   const [sizes, setSizes] = useState([]);
-  const sizeFilter = searchParams.get('size') || '';
+  const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Lấy tham số từ URL
   const searchQuery = searchParams.get('search') || '';
   const categoryFilter = searchParams.get('category') || '';
+  const sizeFilter = searchParams.get('size') || '';
   const priceFilter = searchParams.get('price') || '';
 
-  // Lấy danh mục từ API
+  // Lấy dữ liệu filter
   useEffect(() => {
-    axios.get('http://localhost:8000/api/categories')
-      .then(res => setCategories(res.data.data))
-      .catch(err => console.error(err));
-    axios.get('http://localhost:8000/api/sizes')
-      .then(res => setSizes(res.data.data))
-      .catch(err => console.error(err));
+    const fetchFilters = async () => {
+      try {
+        const [catRes, sizeRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URI}/categories`),
+          axios.get(`${process.env.REACT_APP_API_URI}/sizes`)
+        ]);
+        setCategories(catRes.data.data || []);
+        setSizes(sizeRes.data.data || []);
+      } catch (err) {
+        console.error('Lỗi khi load filters:', err);
+      }
+    };
+    fetchFilters();
   }, []);
 
-
-  // Lấy sản phẩm với params lọc
+  // Lấy sản phẩm theo filter
   useEffect(() => {
-    setLoading(true);
-    axios.get('http://localhost:8000/api/products', {
-      params: {
-        search: searchQuery,
-        category: categoryFilter,
-        price: priceFilter,
-        size: sizeFilter
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URI}/products`, {
+          params: { search: searchQuery, category: categoryFilter, price: priceFilter, size: sizeFilter }
+        });
+        setProducts(res.data.data || []);
+      } catch (err) {
+        console.error('Lỗi khi load sản phẩm:', err);
+      } finally {
+        setLoading(false);
       }
-    })
-      .then(res => {
-        setProducts(res.data.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+    };
+    fetchProducts();
   }, [searchQuery, categoryFilter, priceFilter, sizeFilter]);
-  // Xử lý lọc danh mục
-  const handleCategoryChange = (e) => {
-    const value = e.target.value;
+
+  const handleFilterChange = (key, value) => {
     setSearchParams(prev => {
-      if (value) {
-        prev.set('category', value);
-      } else {
-        prev.delete('category');
-      }
+      if (value) prev.set(key, value);
+      else prev.delete(key);
       return prev;
     });
   };
 
-  // Xử lý lọc giá
-  const handlePriceChange = (e) => {
-    const value = e.target.value;
-    setSearchParams(prev => {
-      if (value) {
-        prev.set('price', value);
-      } else {
-        prev.delete('price');
-      }
-      return prev;
-    });
-  };
-  const handleSizeChange = (e) => {
-    const value = e.target.value;
-    setSearchParams(prev => {
-      if (value) {
-        prev.set('size', value);
-      } else {
-        prev.delete('size');
-      }
-      return prev;
-    });
-  };
+  const renderSelect = (label, key, value, options) => (
+    <>
+      <h5>{label}</h5>
+      <Form.Select
+        className="mb-3"
+        value={value}
+        onChange={(e) => handleFilterChange(key, e.target.value)}
+      >
+        <option value="">-- Tất cả {label.toLowerCase()} --</option>
+        {options.map(opt => (
+          <option key={opt.id} value={opt.id}>{opt.name}</option>
+        ))}
+      </Form.Select>
+    </>
+  );
 
   return (
     <>
       <Header />
       <Banner />
       <Container className="my-5">
-        <h2 className="mb-4 text-center">Tất cả sản phẩm</h2>
+        <h2 className="mb-4 text-center">🛍️ Tất cả sản phẩm</h2>
         <Row>
-          {/* Sidebar lọc */}
+          {/* Bộ lọc */}
           <Col md={3}>
-            <h5>Danh mục sản phẩm</h5>
-            <Form className="mb-3">
-              <Form.Select value={categoryFilter} onChange={handleCategoryChange}>
-                <option value="">-- Tất cả danh mục --</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </Form.Select>
-            </Form>
-                 <h5>Kích thước</h5>
-            <Form className="mb-3">
-              <Form.Select value={sizeFilter} onChange={handleSizeChange}>
-                <option value="">-- Tất cả size --</option>
-                {sizes.map(size => (
-                  <option key={size.id} value={size.id}>{size.name}</option>
-                ))}
-              </Form.Select>
-            </Form>
+            {renderSelect('Danh mục', 'category', categoryFilter, categories)}
+            {renderSelect('Kích thước', 'size', sizeFilter, sizes)}
+
             <h5>Khoảng giá</h5>
-            <Form>
-              <Form.Select value={priceFilter} onChange={handlePriceChange}>
-                <option value="">-- Tất cả giá --</option>
-                <option value="0-1000000">Dưới 1,000,000 đ</option>
-                <option value="1000000-3000000">1,000,000 đ - 3,000,000 đ</option>
-                <option value="3000000-1000000000">Trên 3,000,000 đ</option>
-              </Form.Select>
-            </Form>
+            <Form.Select
+              className="mb-3"
+              value={priceFilter}
+              onChange={(e) => handleFilterChange('price', e.target.value)}
+            >
+              <option value="">-- Tất cả giá --</option>
+              <option value="0-1000000">Dưới 1,000,000 đ</option>
+              <option value="1000000-3000000">1,000,000 đ - 3,000,000 đ</option>
+              <option value="3000000-1000000000">Trên 3,000,000 đ</option>
+            </Form.Select>
           </Col>
 
           {/* Danh sách sản phẩm */}
           <Col md={9}>
             {loading ? (
-              <div className="text-center"><Spinner animation="border" /></div>
+              <div className="text-center py-5">
+                <Spinner animation="border" />
+                <div className="mt-2">Đang tải sản phẩm...</div>
+              </div>
             ) : (
               <Row>
                 {products.length > 0 ? (
                   products.map(product => (
                     <Col key={product.id} sm={6} md={4} lg={3} className="mb-4">
-                      <Card className="h-100 shadow-sm">
-                        <Card.Img
-                          variant="top"
-                          src={product.img}
-                          style={{  height: '250px', objectFit: 'contain'  }}
-                          alt={product.name}
-                        />
-                        <Card.Body>
-                          <Card.Title>
-                            <Link to={`/products/${product.slug}`} style={{ textDecoration: 'none' }}>
+                      <Card className="h-100 shadow-sm border-0">
+                        <Link to={`/products/${product.slug}`}>
+                          <Card.Img
+                            variant="top"
+                            src={product.img}
+                            style={{ height: '250px', objectFit: 'contain' }}
+                            alt={product.name}
+                          />
+                        </Link>
+                        <Card.Body className="text-center">
+                          <Card.Title className="text-truncate">
+                            <Link to={`/products/${product.slug}`} className="text-decoration-none text-dark">
                               {product.name}
                             </Link>
                           </Card.Title>
-                          <Card.Text className="text-danger fw-bold">{product.price.toLocaleString()} đ</Card.Text>
-                          <Button variant="primary" size="sm" className="w-100">Mua Ngay</Button>
+                          <Card.Text className="text-danger fw-bold">
+                            {product.price_products?.toLocaleString()} đ
+                          </Card.Text>
+                          <Button
+                            as={Link}
+                            to={`/products/${product.slug}`}
+                            variant="primary"
+                            size="sm"
+                            className="w-100"
+                          >
+                            Xem chi tiết
+                          </Button>
                         </Card.Body>
-
                       </Card>
                     </Col>
                   ))
                 ) : (
-                  <p className="text-center">Không có sản phẩm phù hợp.</p>
+                  <p className="text-center mt-5">Không tìm thấy sản phẩm nào phù hợp.</p>
                 )}
               </Row>
             )}

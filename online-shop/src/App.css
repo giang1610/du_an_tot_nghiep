@@ -18,3 +18,8 @@
   color: white;
   border-color: #007bff;
 }
+.thumbnail-active {
+  border: 2px solid #007bff;
+  transform: scale(1.05);
+}
+

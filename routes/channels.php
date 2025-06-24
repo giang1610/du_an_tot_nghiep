@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Broadcast;
+use App\Models\Order
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +14,15 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+// Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+//     return (int) $user->id === (int) $id;
+// });
+;
+
+Broadcast::channel('order.{orderId}', function ($user, $orderId) {
+    // Chỉ chủ sở hữu đơn hàng mới được theo dõi đơn hàng của mình
+    $order = Order::find($orderId);
+
+    return $order && $order->user_id === $user->id;
 });
+
