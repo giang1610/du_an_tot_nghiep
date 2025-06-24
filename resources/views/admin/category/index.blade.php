@@ -2,19 +2,19 @@
 
 
 @section('content')
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-@if (session('error'))
-    <div class="alert alert-danger">
-        {{ session('error') }}
-    </div>
-@endif
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
 
-      <div class="container">
+    <div class="container">
         <h2>Danh mục</h2>
         <a href="{{route('categories.create')}}" class="btn btn-primary"><i class="bi bi-plus-circle"></i></a>
         <form method="GET" class="mb-4">
@@ -35,7 +35,7 @@
         </form>
         <a href="{{ route('categories.trash') }}" class="btn btn-secondary mb-2">
             <i class="bi bi-trash3-fill"></i> Thùng rác
-         </a>
+        </a>
 
 
         <table class="table table-bordered table-striped">
@@ -57,7 +57,8 @@
                         <td>{{$c->status ? "hành động" : "tạm dừng"}}</td>
 
                         <td>
-                            <a href="{{route('categories.edit', $c->id)}}" class="btn btn-warning"><i class="bi bi-pencil-square"></i></a>
+                            <a href="{{route('categories.edit', $c->id)}}" class="btn btn-warning"><i
+                                    class="bi bi-pencil-square"></i></a>
                             <form action="{{route('categories.destroy', $c->id)}}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')

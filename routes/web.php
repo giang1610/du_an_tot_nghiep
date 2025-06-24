@@ -8,41 +8,95 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\ProfileController;
+
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+
+//use của fotn
+use App\Http\Controllers\Auth\EmailVerifiFotnController;
+use App\Http\Controllers\Auth\NewEmailVerificationController;
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
+// Trang chủ
 Route::get('/', function () {
-    return view('admin.layouts.app');
+    return view('welcome');
 });
 
-Route::resource('categories', CategoryController::class);
-Route::get('trash', [CategoryController::class, 'trash'])->name('categories.trash');
-Route::post('restore/{id}', [CategoryController::class, 'restore'])->name('categories.restore');
-Route::delete('force-delete/{id}', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
-Route::post('categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
-Route::delete('force-delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
+// Đăng ký, đăng nhập, quên mật khẩu
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+    Route::post('/register', [RegisteredUserController::class, 'store']);
 
-Route::resource('products', ProductController::class);
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
+});
+
+// Logout
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+// Email Verification
+Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])
+    ->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+    ->middleware(['auth', 'signed'])->name('verification.verify');
+
+    //xác minh mail client
+Route::get('/verify-email-custom', [EmailVerifiFotnController::class, 'verify'])
+    ->middleware(['signed'])
+    ->name('verification.verify.fotn');
+
+//cập nhật mail client nếu có nhu cầu và xác minh
+Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'])
+    ->name('email.update.verify')
+    ->middleware('signed');
 
 
 
-Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
+// Admin routes
+Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(function () {
+    Route::get('/', function () {
+      return view('admin.dashboard');
+    })->name('admin');
 
-    $request->fulfill(); // Gọi fulfill từ CustomEmailVerificationRequest
+    //cập nhật profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/email-verified-successfully?user_id=' . $request->route('id'));
-
-})->middleware(['signed'])->name('verification.verify');
-
-
+    Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
+    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
+    Route::resource('products', ProductController::class);
 
 
+    Route::resource('orders', OrderController::class);
+    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
+    // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+});
 
+
+
+require __DIR__.'/auth.php';

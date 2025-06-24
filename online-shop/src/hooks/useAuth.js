@@ -1,12 +1,15 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Kiểm tra token trong localStorage lúc khởi tạo state
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return Boolean(localStorage.getItem("token"));
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Chạy một lần khi component mount để kiểm tra token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
 
   const login = (token) => {
     localStorage.setItem("token", token);
@@ -27,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === null) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
