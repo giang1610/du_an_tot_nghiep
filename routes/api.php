@@ -57,5 +57,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show']);
 
     // Đánh giá sản phẩm – chỉ khi đã nhận hàng
-    Route::post('/products/{id}/rate', [CommentController::class, 'rate']);
+    // Route::post('/products/{id}/rate', [CommentController::class, 'rate']);
 });

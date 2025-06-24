@@ -182,10 +182,5 @@ class ProductController extends Controller
     {
         $product = Product::with(['variants'])->find($id);
 
-        if (!$product) {
-            return response()->json(['message' => 'Sản phẩm không tồn tại'], 404);
-        }
-
-        return response()->json(['success' => true, 'data' => $product]);
-    }
+}
 }
