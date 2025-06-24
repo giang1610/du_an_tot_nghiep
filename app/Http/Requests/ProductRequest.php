@@ -26,7 +26,9 @@ class ProductRequest extends FormRequest
         'status' => 'required|in:0,1,2',
         'price_products' => 'required|numeric|min:0.01',
        
-        'variants.*.sku' => ['required','string','max:255', Rule::unique('product_variants', 'sku')->ignore($this->route('product_variants') ?? $this->id),],
+       
+      'variants.*.sku' => ['required','string','max:255', Rule::unique('product_variants', 'sku')->ignore($this->route('product_variants') ?? $this->id),],
+       
         'variants.*.price' => 'required|numeric|min:1',
         'variants.*.sale_price' => 'nullable|numeric|min:1|lt:variants.*.price',
         'variants.*.sale_start_date' => 'required_with:variants.*.sale_price|nullable|date',
@@ -34,6 +36,23 @@ class ProductRequest extends FormRequest
         'variants.*.stock' => 'nullable|integer|min:0',
         'variants.*.image' => $this->isMethod('post')? 'required|image|mimes:jpeg,png,jpg|max:2048': 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
+        // // Xử lý từng biến thể
+        //    if ($this->has('variants')) {
+        //     foreach ($this->variants as $index => $variant) {
+        //         // Lấy ID của biến thể nếu tồn tại (để cập nhật)
+        //         $variantId = $variant['id'] ?? null;
+
+        //         $rules["variants.$index.sku"] = [
+        //             'required',
+        //             'string',
+        //             'max:255',
+        //             // Áp dụng quy tắc unique, bỏ qua ID của biến thể hiện tại nếu nó tồn tại
+        //             Rule::unique('product_variants', 'sku')->ignore($variantId, 'id'),
+        //         ];
+        //     }
+        // }
+
+        // return $rules;
     }
 
     public function messages()
