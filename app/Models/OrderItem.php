@@ -19,43 +19,49 @@ class OrderItem extends Model
         'size_id',
     ];
 
-    /**
-     * Quan hệ đến đơn hàng.
-     */
     public function order()
     {
         return $this->belongsTo(Order::class);
     }
 
-    /**
-     * Quan hệ đến biến thể sản phẩm.
-     */
     public function variant()
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    /**
-     * Lấy sản phẩm gốc thông qua biến thể.
-     */
     public function product()
     {
-        return $this->variant ? $this->variant->product() : null;
+        return $this->hasOneThrough(
+            \App\Models\Product::class,
+            \App\Models\ProductVariant::class,
+            'id',                 // Foreign key on ProductVariant
+            'id',                 // Foreign key on Product
+            'product_variant_id', // Local key on OrderItem
+            'product_id'          // Local key on ProductVariant
+        );
     }
 
-    /**
-     * Lấy màu sắc nếu có, thông qua variant.
-     */
     public function color()
     {
-        return $this->variant ? $this->variant->color() : null;
+        return $this->hasOneThrough(
+            \App\Models\Color::class,
+            \App\Models\ProductVariant::class,
+            'id',
+            'id',
+            'product_variant_id',
+            'color_id'
+        );
     }
 
-    /**
-     * Lấy kích cỡ nếu có, thông qua variant.
-     */
     public function size()
     {
-        return $this->variant ? $this->variant->size() : null;
+        return $this->hasOneThrough(
+            \App\Models\Size::class,
+            \App\Models\ProductVariant::class,
+            'id',
+            'id',
+            'product_variant_id',
+            'size_id'
+        );
     }
 }
