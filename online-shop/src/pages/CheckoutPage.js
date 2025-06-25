@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // nếu dùng auth
 
 const CheckoutPage = () => {
   const { cart, total, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { user } = useAuth(); // dùng để lấy token và email nếu có
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     phone: '',
+    notes: ''
   });
 
   const handleInputChange = (e) => {
@@ -20,7 +24,7 @@ const CheckoutPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.name || !formData.address || !formData.phone) {
@@ -28,10 +32,34 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Bạn có thể gửi API đặt hàng ở đây
-    alert('Đặt hàng thành công!');
-    clearCart();
-    navigate('/');
+    const orderData = {
+      subtotal: total,
+      total: total,
+      shipping_address: formData.address,
+      billing_address: formData.address,
+      customer_email: user?.email || 'guest@example.com',
+      customer_phone: formData.phone,
+      notes: formData.notes,
+      items: cart.map(item => ({
+        product_variant_id: item.variant.id, // bạn phải chắc chắn cart có variant.id
+        quantity: item.quantity
+      }))
+    };
+
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API_URI}/orders`, orderData, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`, // nếu bạn dùng Sanctum hoặc Passport
+        }
+      });
+
+      alert('✅ Đặt hàng thành công!');
+      clearCart();
+      navigate('/orders'); // chuyển sang trang xem đơn hàng
+    } catch (error) {
+      console.error(error);
+      alert('❌ Đặt hàng thất bại!');
+    }
   };
 
   if (cart.length === 0) {
@@ -48,7 +76,7 @@ const CheckoutPage = () => {
   return (
     <Container className="my-5">
       <Row>
-        {/* Danh sách sản phẩm */}
+        {/* Giỏ hàng */}
         <Col md={8}>
           <h4 className="mb-4">Sản phẩm trong giỏ hàng</h4>
           {cart.map((item) => (
@@ -123,6 +151,18 @@ const CheckoutPage = () => {
                 value={formData.address}
                 onChange={handleInputChange}
                 placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Ghi chú</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Ghi chú thêm (nếu có)"
               />
             </Form.Group>
 
