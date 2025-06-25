@@ -96,5 +96,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 // Sizes
 Route::get('/sizes', [SizeController::class, 'index']);
 
+// routes/api.php
+Route::middleware('auth:sanctum')->get('/orders', [OrderController::class, 'index']);
 
 // Route search hoặc các chức năng mở rộng có thể thêm tùy ý

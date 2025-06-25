@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Controller;
 
 class CartController extends Controller
 {
@@ -101,6 +102,7 @@ class CartController extends Controller
     // Xử lý thanh toán
     public function processCheckout(Request $request)
     {
+           /** @var \App\Models\User $user */
         $user = Auth::user();
         $cart = $this->getOrCreateCart();
         $items = $this->getCartItems($cart->where('selected', true));
