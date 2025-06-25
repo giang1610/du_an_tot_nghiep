@@ -22,6 +22,7 @@ class Product extends Model
         'short_description',
         'description',
         'thumbnail',
+        'price_products',
     ];
 
     /**
@@ -32,10 +33,6 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function comments()
-    {
-        return $this->hasMany(Comment::class);
-    }
     /**
      * Quan hệ: 1 sản phẩm có nhiều biến thể
      */

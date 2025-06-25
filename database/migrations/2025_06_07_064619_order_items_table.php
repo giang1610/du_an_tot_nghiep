@@ -20,7 +20,7 @@ return new class extends Migration
     $table->unsignedBigInteger('size_id')->nullable();
     $table->decimal('price', 10, 2);
     $table->decimal('sale_price', 10, 2)->nullable();
-    
+
     $table->timestamps();
 });
     }

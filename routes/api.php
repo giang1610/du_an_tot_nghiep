@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\SizeController;
@@ -60,9 +60,9 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // xác minh mail -- tuấn anh đẹp
 Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
-   
+
     $request->fulfill();
-    return redirect('http://localhost:3000/login?verified=true');
+    return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
 
 
 })->middleware(['signed'])->name('verification.verify.fotn');
@@ -71,16 +71,21 @@ Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 
+// Routes liên quan đến đánh giá sản phẩm
+Route::middleware('auth:sanctum')->post('/reviews', [ReviewController::class, 'store']);
+Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
+
+
 // Các route công khai (bất cứ ai cũng truy cập được)
 Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
-Route::post('/products', [ProductController::class, 'store']); // Tạo sản phẩm (cần phân quyền admin)
-Route::get('/products/slug/{slug}', [ProductController::class, 'getBySlug']);
-Route::get('/products/{slug}', [ProductController::class, 'show']); // Trùng này có thể tách ra
+Route::get('/products/{slug}', [ProductController::class, 'showBySlug']);
+Route::get('/products/id/{id}', [ProductController::class, 'showById']);
+// Route::get('/products/id/{id}', [ProductController::class, 'show']);
+// Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::post('/products', [ProductController::class, 'store']); // Tạo sản phẩm (cần phân quyền admi n)
+// Route::get('/products/slug/{slug}', [ProductController::class, 'showBySlug']);
+// Route::get('/products/{slug}', [ProductController::class, 'showBySlug']); // Trùng này có thể tách ra
 
-// Comment related
-Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
-Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']);
 
 // Các chức năng liên quan đến sản phẩm
 Route::get('/products/related/{category_id}', [ProductController::class, 'related']);

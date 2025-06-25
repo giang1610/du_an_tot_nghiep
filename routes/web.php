@@ -1,14 +1,13 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\CartController;
 
@@ -28,7 +27,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 
 // Trang chủ
 Route::get('/', function () {
-    return view('admin.layouts.app');
+    return view('welcome');
 });
 
 // Đăng ký, đăng nhập, quên mật khẩu
@@ -61,31 +60,28 @@ Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest
 })->middleware(['signed'])->name('custom.verification.verify');
 
 
-// Người dùng đã xác thực
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
 
+// Admin routes
+Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(function () {
+    Route::get('/', function () {
+      return view('admin.dashboard');
+    })->name('admin');
+
+    //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-// Admin routes
-Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
-    Route::get('/', function () {
-        return 'Chào admin!';
-    })->name('admin.dashboard');
 
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
     Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
     Route::resource('products', ProductController::class);
 
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
+    Route::resource('orders', OrderController::class);
+    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/admin/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus']);
+    Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
