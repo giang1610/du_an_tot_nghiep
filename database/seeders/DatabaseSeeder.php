@@ -18,14 +18,14 @@ class DatabaseSeeder extends Seeder
                 $this->call([
                         // CategorySeeder::class,
                         // ProductSeeder::class,
+                        // ColorSeeder::class,
+                        // SizeSeeder::class,
                         // ProductVariantSeeder::class,
                         // ProductImageSeeder::class,
-                        ColorSeeder::class,
-                        SizeSeeder::class,
                         // ProductSeeder::class,
                         // ProductVariantSeeder::class,
                         // ProductImageSeeder::class,
-                        // AdminUserSeeder::class
+                        AdminUserSeeder::class
                 ]);
         }
 }
