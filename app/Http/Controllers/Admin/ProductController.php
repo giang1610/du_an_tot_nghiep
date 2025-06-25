@@ -32,7 +32,7 @@ class ProductController extends Controller
     // dd($products);
     return view('admin.products.index', compact('products'));
     }
-    
+
 
     /**
      * Show the form for creating a new resource.
@@ -50,7 +50,7 @@ class ProductController extends Controller
      */
 public function store(ProductRequest $request)
 {
-   
+
      try {
             // Xử lý ảnh đại diện sản phẩm
             $thumbnailPath = null;
