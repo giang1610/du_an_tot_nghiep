@@ -198,14 +198,21 @@
                             </div>
                             {{-- Trường Kho (Stock) --}}
                             <div class="col-md-6">
-                                <label class="form-label small">Kho</label>
-                                <select name="variants[{{ $i }}][stock]" class="form-select form-select-sm">
-                                    <option value="0" {{ old('variants.'.$i.'.stock', $variant['stock'] ?? '') == '0' ? 'selected' : '' }}>Còn hàng</option>
-                                    <option value="1" {{ old('variants.'.$i.'.stock', $variant['stock'] ?? '') == '1' ? 'selected' : '' }}>Hết hàng</option>
-                                </select>
-                                @error('variants.'.$i.'.stock')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label small">Trạng thái Kho</label>
+                                <select name="variants[{{ $i }}][stock_status]" class="form-select form-select-sm stock-status" data-index="{{ $i }}">
+                                    <option value="" {{ old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '') == '' ? 'selected' : '' }}>-- Chọn trạng thái kho --</option>
+                                    <option value="0" {{ (string)old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '0') == 0 ? 'selected' : '' }}>Hết hàng</option>
+                                    <option value="1" {{ old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '0') == 1 ? 'selected' : '' }}>Còn hàng</option>
+                                  
+
+                                   
+                                </select><br>
+                                <input type="number" name="variants[{{ $i }}][stock_quantity]" class="form-control form-control-sm stock-quantity"
+                                    style="display: {{ old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '0') == 1 ? 'block' : 'none' }};"
+                                    value="{{ old('variants.'.$i.'.stock_quantity', $variant['stock_quantity'] ?? '') }}" min="0" placeholder="Nhập số lượng">
+                                    @error('variants.'.$i.'.stock_quantity')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
                             </div>
                             {{-- Trường Giá --}}
                             <div class="col-md-6">
@@ -282,7 +289,28 @@
         .replace(/\s+/g, '-') // thay khoảng trắng thành dấu -
         .replace(/-+/g, '-'); // loại bỏ dấu - liên tiếp
     }
+    // Khi thay đổi trạng thái kho
+    $(document).ready(function() {
+        // Khi thay đổi trạng thái kho
+        $(document).on('change', '.stock-status', function() {
+            var $qty = $(this).closest('.row').find('.stock-quantity');
+            if ($(this).val() == '1') {
+                $qty.show();
+            } else {
+                $qty.hide().val(0);
+            }
+        });
 
+        // Khi trang vừa load, kiểm tra tất cả select .stock-status
+        $('.stock-status').each(function() {
+            var $qty = $(this).closest('.row').find('.stock-quantity');
+            if ($(this).val() == '1') {
+                $qty.show();
+            } else {
+                $qty.hide().val(0);
+            }
+        });
+    });
     // Tự động tạo slug khi nhập tên sản phẩm
     document.getElementById('name').addEventListener('input', function() {
         const nameValue = this.value;
@@ -335,11 +363,13 @@
                                         <input type="text" name="variants[${currentIndex}][sku]" class="form-control form-control-sm">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label small">Kho</label>
-                                        <select name="variants[${currentIndex}][stock]" class="form-select form-select-sm">
-                                            <option value="0">Còn hàng</option>
-                                            <option value="1">Hết hàng</option>
+                                        <label class="form-label small">Trạng thái Kho</label>
+                                        <select name="variants[${currentIndex}][stock_status]" class="form-select form-select-sm stock-status" data-index="${currentIndex}">
+                                            <option value="" selected>-- Chọn trạng thái kho --</option>
+                                            <option value="0">Hết hàng</option>
+                                            <option value="1">Còn hàng</option>
                                         </select>
+                                        <input type="number" name="variants[${currentIndex}][stock_quantity]" class="form-control form-control-sm stock-quantity" style="display:none;" min="0" placeholder="Nhập số lượng">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small">Giá</label>
