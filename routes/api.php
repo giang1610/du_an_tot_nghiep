@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\SizeController;
 use App\Http\Requests\CustomEmailVerificationRequest;
+use App\Http\Controllers\Api\MomoPaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,11 +44,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/cart/remove/{item_id}', [CartController::class, 'removeFromCart']);
     Route::put('/cart/update/{item_id}', [CartController::class, 'updateQuantity']);
     Route::get('/cart/total', [CartController::class, 'getCartTotal']);
-    Route::post('/cart/checkout', [CartController::class, 'checkout']);
+    // Route::post('/cart/checkout', [CartController::class, 'checkout']);
 
     // Thanh toán
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
+
+    // Momo payment
+    Route::post('/payment/momo', [MomoPaymentController::class, 'payViaMomo']);
+    Route::post('/payment/momo-notify', [MomoPaymentController::class, 'momoNotify']);
+    Route::get('/payment/momo-return', [MomoPaymentController::class, 'momoReturn']);
 });
 
 // Routes liên quan đến xác thực và dự liệu người dùng từ hệ thống

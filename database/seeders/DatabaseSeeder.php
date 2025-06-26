@@ -21,11 +21,11 @@ class DatabaseSeeder extends Seeder
                         // ColorSeeder::class,
                         // SizeSeeder::class,
                         // ProductVariantSeeder::class,
-                        // ProductImageSeeder::class,
+                        ProductImageSeeder::class,
                         // ProductSeeder::class,
                         // ProductVariantSeeder::class,
                         // ProductImageSeeder::class,
-                        AdminUserSeeder::class
+                        // AdminUserSeeder::class
                 ]);
         }
 }
