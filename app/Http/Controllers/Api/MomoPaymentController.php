@@ -20,9 +20,12 @@ class MomoPaymentController extends Controller
     {
         $user = Auth::user();
 
-        $cart = Cart::with('items.variant.product')->where('user_id', $user->id)->first();
+        $cart = Cart::with(['items' => function($q) {
+            $q->where('selected', 1);
+        }, 'items.variant.product'])->where('user_id', $user->id)->first();
+
         if (!$cart || $cart->items->isEmpty()) {
-            return response()->json(['message' => 'Giỏ hàng rỗng'], 400);
+            return response()->json(['message' => 'Giỏ hàng rỗng hoặc chưa chọn sản phẩm để thanh toán'], 400);
         }
 
         foreach ($cart->items as $item) {
@@ -84,10 +87,10 @@ class MomoPaymentController extends Controller
         $amount = (string) $total;
         $orderId = $order->id . '-' . time();
         $requestId = Str::uuid();
-        $requestType = "captureWallet";
+        $requestType = "payWithATM";
         $extraData = "";
 
-        $orderType = "momo_atm";
+        // $orderType = "momo_atm";
 
         $rawHash = "accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$ipnUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=$requestType";
         $signature = hash_hmac("sha256", $rawHash, $secretKey);
@@ -99,7 +102,7 @@ class MomoPaymentController extends Controller
             'amount' => $amount,
             'orderId' => $orderId,
             'orderInfo' => $orderInfo,
-            'orderType' => $orderType,
+            // 'orderType' => $orderType,
             'redirectUrl' => $redirectUrl,
             'ipnUrl' => $ipnUrl,
             'extraData' => $extraData,
@@ -130,10 +133,17 @@ class MomoPaymentController extends Controller
     {
         $data = $request->all();
         $secretKey = env('MOMO_SECRET_KEY');
+        $redirectUrl = env('MOMO_REDIRECT_URL');
 
-        $rawHash = "accessKey={$data['accessKey']}&amount={$data['amount']}&extraData={$data['extraData']}&ipnUrl={$data['ipnUrl']}&orderId={$data['orderId']}&orderInfo={$data['orderInfo']}&orderType={$data['orderType']}&partnerCode={$data['partnerCode']}&requestId={$data['requestId']}&responseTime={$data['responseTime']}&resultCode={$data['resultCode']}&message={$data['message']}&payType={$data['payType']}&requestType={$data['requestType']}";
+        $rawHash = "accessKey={$data['accessKey']}". "&amount={$data['amount']}". "&extraData={$data['extraData']}". "&ipnUrl={$data['ipnUrl']}". "&orderId={$data['orderId']}". "&orderInfo={$data['orderInfo']}". "&partnerCode={$data['partnerCode']}". "&redirectUrl={$redirectUrl}". "&requestId={$data['requestId']}". "&requestType={$data['requestType']}";
         $signature = hash_hmac("sha256", $rawHash, $secretKey);
-
+ 
+        Log::info('MOMO mySignature (server calculated)', [
+            'mySignature' => $signature,
+            'rawHash' => $rawHash,
+            'data_signature' => $data['signature'] ?? null
+        ]);
+        
         if ($signature !== $data['signature']) {
             return response()->json(['message' => 'Sai chữ ký'], 403);
         }
@@ -146,19 +156,29 @@ class MomoPaymentController extends Controller
         }
 
         if ((int)$data['resultCode'] === 0) {
-            $order->update(['status' => 'paid']);
+            $order->update([
+                'status' => 'paid',
+                'payment_status' => 'paid',
+            ]);
+            
 
             foreach ($order->items as $item) {
                 $item->variant->decrement('stock', $item->quantity);
             }
 
             // Clear cart
-            Cart::where('user_id', $order->user_id)->first()?->items()->delete();
+            $cart = Cart::where('user_id', $order->user_id)->first();
+            if ($cart) {
+                $cart->items()->where('selected', 1)->delete();
+            }
 
             // Send email
             Mail::to($order->customer_email)->send(new OrderPlaced($order));
         } else {
-            $order->update(['status' => 'failed']);
+            $order->update([
+                'status' => 'failed',
+                'payment_status' => 'failed',
+            ]);
         }
 
         return response()->json(['message' => 'MOMO thông báo thành công']);
