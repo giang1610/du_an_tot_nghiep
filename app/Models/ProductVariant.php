@@ -36,6 +36,10 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(Size::class);
     }
+    public function stock()
+    {
+        return $this->hasOne(Stock::class);
+    }
 
     public function cartItems()
     {
