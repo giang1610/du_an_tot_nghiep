@@ -7,6 +7,7 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Stock;
 
 use Illuminate\Http\Request;
 use App\Models\Color;
@@ -106,13 +107,17 @@ public function store(ProductRequest $request)
                         'sale_price' => $variantData['sale_price'] ?? null,
                         'sale_start_date' => $variantData['sale_start_date'] ?? null,
                         'sale_end_date' => $variantData['sale_end_date'] ?? null,
-                        'stock' => $variantData['stock'] ?? 0,
+                        // 'stock' => $variantData['stock'] ?? 0,
                         'color_id' => $variantData['color_id'] ?? null,
                         'size_id' => $variantData['size_id'] ?? null,
                         'image' => $variantImagePath, // Lưu đường dẫn ảnh biến thể
                     ]);
+                    
 
                     $product->variants()->save($variant);
+                    // Lưu tồn kho
+                    $quantity = ($variantData['stock_status'] == 1) ? ($variantData['stock_quantity'] ?? 0) : 0;
+                    $variant->stock()->create(['quantity' => $quantity]);
                 }
             }
 
@@ -140,12 +145,38 @@ public function store(ProductRequest $request)
      */
     public function edit(string $id)
     {
-        $product = Product::with('category', 'variants', 'colors', 'sizes')->findOrFail($id);
+        $product = Product::with('category', 'variants.stock', 'colors', 'sizes')->findOrFail($id);
         $categories = Category::where('status', 1)->get();
         $colors = Color::all();
         $sizes = Size::all();
 
-        return view('admin.products.edit', compact('product', 'categories', 'colors', 'sizes'));
+        // Lấy thông tin tồn kho của sản phẩm// Chuẩn bị mảng biến thể để truyền sang view
+        $variantsToDisplay = $product->variants->map(function($variant) {
+            return [
+                'id' => $variant->id,
+                'sku' => $variant->sku,
+                'price' => $variant->price,
+                'sale_price' => $variant->sale_price,
+                'sale_start_date' => $variant->sale_start_date,
+                'sale_end_date' => $variant->sale_end_date,
+                'color_id' => $variant->color_id,
+                'size_id' => $variant->size_id,
+                'image' => $variant->image,
+                'stock_quantity' => $variant->stock ? $variant->stock->quantity : 0,
+                // 'stock_status' => ($variant->stock && $variant->stock->quantity > 0) ? '1' : '0',
+                'stock_status' => isset($variant->stock) && $variant->stock->quantity > 0 ? '1' : '0',
+            ];
+        })->toArray();
+    //         foreach ($product->variants as $variant) {
+    //     dump($variant->id, $variant->stock); // kiểm tra stock có null không
+    // }
+
+        // Nếu có old('variants') (khi validate lỗi), ưu tiên dùng old
+        if (old('variants')) {
+            $variantsToDisplay = old('variants');
+        }
+    // dd($variantsToDisplay);
+        return view('admin.products.edit', compact('product', 'categories', 'colors', 'sizes', 'variantsToDisplay'));
     }
 
     /**
@@ -197,7 +228,7 @@ public function store(ProductRequest $request)
                         $variant->sale_price = $variantData['sale_price'] ?? null;
                         $variant->sale_start_date = $variantData['sale_start_date'] ?? null;
                         $variant->sale_end_date = $variantData['sale_end_date'] ?? null;
-                        $variant->stock = $variantData['stock'] ?? 0;
+                        // $variant->stock = $variantData['stock'] ?? 0;
                         $variant->color_id = $variantData['color_id'] ?? null;
                         $variant->size_id = $variantData['size_id'] ?? null;
 
@@ -234,6 +265,9 @@ public function store(ProductRequest $request)
                     }
 
                     $product->variants()->save($newVariant);
+                    // Lưu tồn kho cho biến thể mới
+                    $quantity = ($variantData['stock_status'] == 1) ? ($variantData['stock_quantity'] ?? 0) : 0;
+                    $newVariant->stock()->create(['quantity' => $quantity]);
                     $existingVariantIds[] = $newVariant->id;
                 }
             }

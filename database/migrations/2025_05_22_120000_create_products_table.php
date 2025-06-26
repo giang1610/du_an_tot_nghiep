@@ -14,6 +14,7 @@ class CreateProductsTable extends Migration
             $table->string('name');
             $table->string('slug');
             $table->tinyInteger('status');
+            $table->decimal('price_products', 15, 2)->nullable();
             $table->text('short_description')->nullable();
             $table->longText('description')->nullable();
             $table->string('thumbnail')->nullable();
