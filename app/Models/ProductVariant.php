@@ -20,7 +20,7 @@ class ProductVariant extends Model
         'sale_start_date',
         'sale_end_date',
         'image',
-        'stock',
+        // 'stock',
         'color_id',
         'size_id'
     ];
