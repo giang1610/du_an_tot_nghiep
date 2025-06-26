@@ -10,23 +10,25 @@ const MyOrdersPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URI}/orders`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setOrders(res.data.data);
-      } catch (err) {
-        console.error('Lỗi khi tải đơn hàng:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URI}/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log(res.data); // debug xem có "orders" không
+      setOrders(Array.isArray(res.data.orders) ? res.data.orders : []);
+    } catch (err) {
+      console.error('Lỗi khi tải đơn hàng:', err);
+      setOrders([]); // fallback tránh undefined
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchOrders();
-  }, [token]);
+  fetchOrders();
+}, [token]);
 
   if (loading) {
     return (

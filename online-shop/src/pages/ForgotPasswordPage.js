@@ -4,32 +4,46 @@ import axios from 'axios';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
+
+  const isValidEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setMessage({ type: '', text: '' });
+
+    if (!isValidEmail(email)) {
+      setMessage({ type: 'danger', text: 'Vui lòng nhập email hợp lệ.' });
+      return;
+    }
+
     setLoading(true);
 
     try {
       await axios.post(`${process.env.REACT_APP_API_URI}/forgot-password`, { email });
-      setSuccess('✅ Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.');
+      setMessage({
+        type: 'success',
+        text: '✅ Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.',
+      });
       setEmail('');
     } catch (err) {
-      const message = axios.isAxiosError(err)
+      const msg = axios.isAxiosError(err)
         ? err.response?.data?.message || 'Lỗi máy chủ. Vui lòng thử lại.'
         : 'Đã xảy ra lỗi.';
-      setError(message);
+
+      setMessage({ type: 'danger', text: msg });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '100vh' }}>
+    <Container
+      className="d-flex justify-content-center align-items-center py-5"
+      style={{ minHeight: '100vh' }}
+    >
       <Card className="p-4 shadow-lg w-100" style={{ maxWidth: '420px' }}>
         <Card.Body>
           <div className="text-center mb-4">
@@ -39,8 +53,9 @@ const ForgotPasswordPage = () => {
             </p>
           </div>
 
-          {error && <Alert variant="danger">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
+          {message.text && (
+            <Alert variant={message.type}>{message.text}</Alert>
+          )}
 
           <Form onSubmit={handleSubmit} noValidate>
             <Form.Group className="mb-3" controlId="email">
@@ -52,6 +67,7 @@ const ForgotPasswordPage = () => {
                 placeholder="Nhập email đăng ký"
                 required
                 autoFocus
+                disabled={loading}
               />
             </Form.Group>
 

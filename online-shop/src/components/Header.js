@@ -4,7 +4,7 @@ import { FaShoppingCart, FaSearch, FaUser } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
-  const { user, logoutUser } = useAuth();
+  const { user, logout} = useAuth();
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
@@ -72,7 +72,7 @@ const Header = () => {
                     </Link>
                   </li>
                   <li>
-                    <button className="dropdown-item" onClick={logoutUser}>
+                    <button className="dropdown-item" onClick={logout}>
                       Đăng xuất
                     </button>
                   </li>

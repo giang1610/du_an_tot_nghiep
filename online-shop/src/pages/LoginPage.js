@@ -8,21 +8,35 @@ import {
   Spinner,
   InputGroup,
 } from 'react-bootstrap';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    remember: true,
+  });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleChange = ({ target: { name, value } }) =>
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleChange = ({ target: { name, value, type, checked } }) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const saveAuthData = (token, user, remember) => {
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem('token', token);
+    storage.setItem('user', JSON.stringify(user));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +44,12 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:8000/api/login', form);
+      const { data } = await axios.post('http://localhost:8000/api/login', {
+        email: form.email,
+        password: form.password,
+      });
+
+      saveAuthData(data.token, data.user, form.remember);
       login(data.user, data.token);
       navigate('/');
     } catch (err) {
@@ -50,7 +69,10 @@ const LoginPage = () => {
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '100vh' }}>
+    <Container
+      className="d-flex justify-content-center align-items-center py-5"
+      style={{ minHeight: '100vh' }}
+    >
       <Card className="shadow-lg w-100" style={{ maxWidth: 420 }}>
         <Card.Body className="p-4">
           <h3 className="mb-3 text-center fw-bold">🔐 Đăng Nhập</h3>
@@ -69,12 +91,13 @@ const LoginPage = () => {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Nhập email"
+                autoComplete="email"
                 required
                 autoFocus
               />
             </Form.Group>
 
-            <Form.Group className="mb-4" controlId="password">
+            <Form.Group className="mb-3" controlId="password">
               <Form.Label>Mật khẩu</Form.Label>
               <InputGroup>
                 <Form.Control
@@ -83,6 +106,7 @@ const LoginPage = () => {
                   value={form.password}
                   onChange={handleChange}
                   placeholder="Nhập mật khẩu"
+                  autoComplete="current-password"
                   required
                 />
                 <Button
@@ -94,6 +118,16 @@ const LoginPage = () => {
                   {showPassword ? <EyeSlash /> : <Eye />}
                 </Button>
               </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-4" controlId="remember">
+              <Form.Check
+                type="checkbox"
+                name="remember"
+                label="Ghi nhớ đăng nhập"
+                checked={form.remember}
+                onChange={handleChange}
+              />
             </Form.Group>
 
             <Button

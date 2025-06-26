@@ -58,7 +58,7 @@ class CartController extends Controller
                 'color_id' => $request->color_id,
                 'size_id' => $request->size_id,
                 'note' => $request->note,
-                'selected' => true, // default chọn
+                'selected' => false, // default chọn
             ]);
         }
 
@@ -160,7 +160,7 @@ class CartController extends Controller
         return response()->json(['total' => $total]);
     }
 
-        public function removeFromCart($item_id)
+    public function removeFromCart($item_id)
     {
         $user = Auth::user();
 
@@ -256,4 +256,3 @@ class CartController extends Controller
         ]);
     }
 }
-
