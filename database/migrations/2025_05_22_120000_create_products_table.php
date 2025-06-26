@@ -12,6 +12,10 @@ class CreateProductsTable extends Migration
             $table->id();
             $table->foreignId('category_id')->constrained('categories');
             $table->string('name');
+<<<<<<< HEAD
+=======
+            $table->decimal('price_products', 10, 2);
+>>>>>>> f955b432123bae9122c42df535d0ced53a466db9
             $table->string('slug');
             $table->tinyInteger('status');
             $table->decimal('price_products', 15, 2)->nullable();
