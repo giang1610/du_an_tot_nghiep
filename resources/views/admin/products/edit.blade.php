@@ -326,7 +326,6 @@ $(document).ready(function() {
         const sizes = $('#sizeSelect option:selected');
         const container = $('#variantContainer');
         let currentIndex = {{ $nextVariantIndex }};
-
         colors.each(function() {
             const color = $(this);
             sizes.each(function() {
