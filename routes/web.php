@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\ProfileController;
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
