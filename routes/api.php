@@ -44,11 +44,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/cart/remove/{item_id}', [CartController::class, 'removeFromCart']);
     Route::put('/cart/update/{item_id}', [CartController::class, 'updateQuantity']);
     Route::get('/cart/total', [CartController::class, 'getCartTotal']);
-    Route::post('/cart/checkout', [CartController::class, 'checkout']);
+
 
     // Thanh toán
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
+    Route::post('/orders/checkout', [OrderController::class, 'checkout']);
 
     // Momo payment
     Route::post('/payment/momo', [MomoPaymentController::class, 'payViaMomo']);
