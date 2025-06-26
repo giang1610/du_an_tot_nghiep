@@ -52,9 +52,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/checkout', [OrderController::class, 'checkout']);
 
     // Momo payment
-    Route::post('/payment/momo', [MomoPaymentController::class, 'payViaMomo']);
-    Route::post('/payment/momo-notify', [MomoPaymentController::class, 'momoNotify']);
-    Route::get('/payment/momo-return', [MomoPaymentController::class, 'momoReturn']);
+    Route::post('/payment/momo', [OrderController::class, 'payViaMomo']);
+    Route::post('/payment/momo-notify', [OrderController::class, 'momoNotify']);
+    Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);
 });
 
 // Routes liên quan đến xác thực và dự liệu người dùng từ hệ thống
