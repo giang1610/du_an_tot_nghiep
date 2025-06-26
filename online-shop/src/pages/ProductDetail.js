@@ -18,6 +18,7 @@ const ProductDetail = () => {
   const [rating, setRating] = useState(5);
   const { addToCart } = useCart();
   const [mainImage, setMainImage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -33,7 +34,6 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
-  
   const sizes = [...new Set(product?.variants?.map(v => v.size?.name).filter(Boolean))];
   const colors = [...new Set(product?.variants?.map(v => v.color?.name).filter(Boolean))];
 
@@ -44,12 +44,12 @@ const ProductDetail = () => {
   };
 
   const selectedVariant = getMatchingVariant();
+
   useEffect(() => {
     if (product) {
       setMainImage(selectedVariant?.img || product.img);
     }
-  }, [product, selectedSize, selectedColor,selectedVariant]);
-
+  }, [product, selectedSize, selectedColor, selectedVariant]);
 
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) return alert('Vui lòng chọn kích cỡ và màu sắc!');
@@ -73,30 +73,51 @@ const ProductDetail = () => {
     navigate('/cart');
   };
 
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!commentText.trim()) return alert('Bình luận không được để trống!');
-    const token = localStorage.getItem('token');
-    if (!token) return alert('Vui lòng đăng nhập để bình luận!');
+ const handleCommentSubmit = async (e) => {
+  e.preventDefault();
 
-    setCommentSubmitting(true);
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URI}/products/${product.id}/comments`,
-        { content: commentText, rating },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProduct(prev => ({
-        ...prev,
-        comments: [response.data.data, ...(prev.comments || [])],
-      }));
-      setCommentText('');
-    } catch (err) {
-      console.error('Lỗi gửi bình luận:', err);
-    } finally {
-      setCommentSubmitting(false);
+  if (!commentText.trim()) {
+    setErrorMessage('Đánh giá không được để trống!');
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setErrorMessage('Vui lòng đăng nhập để đánh giá!');
+    return;
+  }
+
+  setCommentSubmitting(true);
+  setErrorMessage(''); // reset lỗi
+
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URI}/products/${product.id}/rate`,
+      { content: commentText, rating },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setProduct(prev => ({
+      ...prev,
+      comments: [response.data.data, ...(prev.comments || [])],
+    }));
+    setCommentText('');
+  } catch (err) {
+    if (err.response?.status === 403) {
+      // ✅ THÊM THÔNG BÁO RÕ RÀNG KHI KHÔNG CÓ QUYỀN
+      setErrorMessage('❌ Bạn cần mua sản phẩm này trước khi có thể đánh giá.');
+    } else {
+      setErrorMessage('Đã xảy ra lỗi khi gửi đánh giá.');
     }
-  };
+  } finally {
+    setCommentSubmitting(false);
+  }
+};
+
 
   if (loading) {
     return (
@@ -201,13 +222,31 @@ const ProductDetail = () => {
 
         <hr className="my-5" />
 
-        <h4 className="mb-3">Bình luận</h4>
+        {/* Đánh giá sản phẩm */}
+
+        <h4 className="mb-3">Đánh giá sản phẩm</h4>
+            {errorMessage && (
+  <div className="alert alert-danger mt-3" role="alert">
+    {errorMessage}
+  </div>
+)}
+        {product.comments?.length > 0 && (
+          <div className="mb-4 p-3 bg-light rounded">
+            <h5 className="mb-2">
+              ⭐ {(
+                product.comments.reduce((acc, cmt) => acc + cmt.rating, 0) / product.comments.length
+              ).toFixed(1)} / 5
+            </h5>
+            <p className="mb-0 text-muted">{product.comments.length} đánh giá</p>
+          </div>
+        )}
+
         <Form onSubmit={handleCommentSubmit} className="mb-4">
           <Form.Group controlId="comment">
             <Form.Control
               as="textarea"
               rows={3}
-              placeholder="Nhập bình luận..."
+              placeholder="Viết đánh giá của bạn..."
               value={commentText}
               onChange={e => setCommentText(e.target.value)}
               className="mb-3"
@@ -215,12 +254,18 @@ const ProductDetail = () => {
           </Form.Group>
 
           <Form.Group controlId="rating" className="mb-3">
-            <Form.Label>Đánh giá</Form.Label>
-            <Form.Select value={rating} onChange={e => setRating(Number(e.target.value))}>
-              {[5, 4, 3, 2, 1].map(r => (
-                <option key={r} value={r}>{r} sao</option>
+            <Form.Label>Chọn số sao</Form.Label>
+            <div className="d-flex gap-2">
+              {[1, 2, 3, 4, 5].map(star => (
+                <Button
+                  key={star}
+                  variant={rating === star ? 'warning' : 'outline-secondary'}
+                  onClick={() => setRating(star)}
+                >
+                  {'★'.repeat(star)}
+                </Button>
               ))}
-            </Form.Select>
+            </div>
           </Form.Group>
 
           <Button type="submit" disabled={commentSubmitting}>
@@ -229,7 +274,7 @@ const ProductDetail = () => {
                 <Spinner size="sm" animation="border" className="me-2" />
                 Đang gửi...
               </>
-            ) : 'Gửi bình luận'}
+            ) : 'Gửi đánh giá'}
           </Button>
         </Form>
 
@@ -237,8 +282,13 @@ const ProductDetail = () => {
           product.comments.map((cmt, index) => (
             <Card key={index} className="mb-3 shadow-sm border-0">
               <Card.Body>
-                <div className="d-flex justify-content-between align-items-center mb-1">
-                  <strong className="text-primary">{cmt.user?.name || 'Khách'}</strong>
+                <div className="d-flex justify-content-between mb-2">
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+                      {cmt.user?.name?.charAt(0) || 'K'}
+                    </div>
+                    <strong>{cmt.user?.name || 'Khách'}</strong>
+                  </div>
                   <div className="text-warning">
                     {'★'.repeat(cmt.rating)}{'☆'.repeat(5 - cmt.rating)}
                   </div>
@@ -248,7 +298,7 @@ const ProductDetail = () => {
             </Card>
           ))
         ) : (
-          <p className="text-muted">Chưa có bình luận nào.</p>
+          <p className="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
         )}
 
         <hr className="my-5" />

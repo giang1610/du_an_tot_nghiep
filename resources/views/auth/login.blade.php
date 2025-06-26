@@ -26,9 +26,8 @@
             </div>
         @endif
 
-             <form method="POST" action="{{ route('login') }}" class="space-y-4">
-            @csrf 
-            {{-- Add commentMore actions --}}
+        <form method="POST" action="{{ route('login') }}" class="space-y-4">
+            @csrf
 
             {{-- Email --}}
             <div>

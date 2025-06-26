@@ -67,6 +67,11 @@ const Header = () => {
                     </Link>
                   </li>
                   <li>
+                    <Link className="dropdown-item" to="/orders">
+                      Đơn hàng của tôi    
+                    </Link>
+                  </li>
+                  <li>
                     <button className="dropdown-item" onClick={logoutUser}>
                       Đăng xuất
                     </button>

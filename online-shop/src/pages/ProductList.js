@@ -1,26 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getProducts } from '../store/productSlice';
 
 const ProductList = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URI}/products`);
-      setProducts(res.data.data || []);
-    } catch (err) {
-      console.error('Lỗi khi tải sản phẩm:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const dispatch = useDispatch();
+  const { products, loading, error } = useSelector(state => state.products);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    dispatch(getProducts());
+  }, [dispatch]);
 
   const formatPrice = (price) =>
     typeof price === 'number' ? price.toLocaleString() + ' đ' : 'Liên hệ';
@@ -34,6 +24,8 @@ const ProductList = () => {
           <Spinner animation="border" />
           <div className="mt-2">Đang tải sản phẩm...</div>
         </div>
+      ) : error ? (
+        <div className="text-danger text-center">{error}</div>
       ) : (
         <Row>
           {products.map((product) => (
@@ -63,7 +55,7 @@ const ProductList = () => {
                     </Link>
                   </Card.Title>
                   <Card.Text className="text-danger fw-bold">
-                    {formatPrice(product.price_products)}
+                    {formatPrice(product.price_products || product.price_original)}
                   </Card.Text>
                   <Button
                     as={Link}
