@@ -57,6 +57,8 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+    //config fotn_url
+    'fotn_url' => env('FOTN_URL', 'http://localhost:3000'),
 
     'asset_url' => env('ASSET_URL'),
 

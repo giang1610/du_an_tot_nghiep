@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useSearchParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Banner from '../components/Banner';
+import { FaFilter, FaShoppingBag } from 'react-icons/fa';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -81,16 +82,20 @@ const ProductsPage = () => {
       <Header />
       <Banner />
       <Container className="my-5">
-        <h2 className="mb-4 text-center">🛍️ Tất cả sản phẩm</h2>
+        <h2 className="text-center fw-bold fs-3 mb-4">
+          <FaShoppingBag className="me-2" /> Tất cả sản phẩm
+        </h2>
         <Row>
           {/* Bộ lọc */}
           <Col md={3}>
+            <h5 className="fw-bold"><FaFilter className="me-2" />Bộ lọc</h5>
+            <hr />
             {renderSelect('Danh mục', 'category', categoryFilter, categories)}
             {renderSelect('Kích thước', 'size', sizeFilter, sizes)}
 
             <h5>Khoảng giá</h5>
             <Form.Select
-              className="mb-3"
+              className="mb-3 rounded-pill"
               value={priceFilter}
               onChange={(e) => handleFilterChange('price', e.target.value)}
             >
@@ -111,39 +116,43 @@ const ProductsPage = () => {
             ) : (
               <Row>
                 {products.length > 0 ? (
-                  products.map(product => (
-                    <Col key={product.id} sm={6} md={4} lg={3} className="mb-4">
-                      <Card className="h-100 shadow-sm border-0">
-                        <Link to={`/products/${product.slug}`}>
-                          <Card.Img
-                            variant="top"
-                            src={product.img}
-                            style={{ height: '250px', objectFit: 'contain' }}
-                            alt={product.name}
-                          />
-                        </Link>
-                        <Card.Body className="text-center">
-                          <Card.Title className="text-truncate">
-                            <Link to={`/products/${product.slug}`} className="text-decoration-none text-dark">
-                              {product.name}
-                            </Link>
-                          </Card.Title>
-                          <Card.Text className="text-danger fw-bold">
-                            {product.price_products?.toLocaleString()} đ
-                          </Card.Text>
-                          <Button
-                            as={Link}
-                            to={`/products/${product.slug}`}
-                            variant="primary"
-                            size="sm"
-                            className="w-100"
-                          >
-                            Xem chi tiết
-                          </Button>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))
+                  products.map(product => {
+                    console.log('product:', product);
+                    return (
+                      <Col key={product.id} sm={6} md={4} lg={3} className="mb-4">
+                        <Card className="h-100 border-0 shadow-sm rounded-4 position-relative hover-scale">
+                          <Link to={`/products/${product.slug}`}>
+                            <Card.Img
+                              variant="top"
+                              src={product.img || `${process.env.REACT_APP_API_URI.replace('/api', '')}/storage/${product.thumbnail}`}
+                              alt={product.name}
+                              className="p-3"
+                              style={{ height: '250px', objectFit: 'cover' }}
+                            />
+                          </Link>
+                          <Card.Body className="text-center d-flex flex-column justify-content-between">
+                            <Card.Title className="text-truncate fw-semibold">
+                              <Link to={`/products/${product.slug}`} className="text-dark text-decoration-none">
+                                {product.name}
+                              </Link>
+                            </Card.Title>
+                            <div className="text-danger fw-bold mb-2">
+                              {product.price_original?.toLocaleString()} đ
+                            </div>
+                            <Button
+                              as={Link}
+                              to={`/products/${product.slug}`}
+                              variant="outline-dark"
+                              size="sm"
+                              className="rounded-pill"
+                            >
+                              Xem chi tiết
+                            </Button>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    );
+                  })
                 ) : (
                   <p className="text-center mt-5">Không tìm thấy sản phẩm nào phù hợp.</p>
                 )}
