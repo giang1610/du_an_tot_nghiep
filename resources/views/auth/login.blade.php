@@ -27,7 +27,8 @@
         @endif
 
              <form method="POST" action="{{ route('login') }}" class="space-y-4">
-            @csrfAdd commentMore actions
+            @csrf 
+            {{-- Add commentMore actions --}}
 
             {{-- Email --}}
             <div>
