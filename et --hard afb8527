@@ -1,0 +1,15 @@
+[33mafb8527[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mgiang1610[m[33m)[m HEAD@{0}: commit: al
+[33mefb7c69[m HEAD@{1}: commit: bbb
+[33m09d60c4[m HEAD@{2}: commit: aa
+[33mda73067[m[33m ([m[1;31morigin/giang1610[m[33m)[m HEAD@{3}: reset: moving to origin/giang1610
+[33mda73067[m[33m ([m[1;31morigin/giang1610[m[33m)[m HEAD@{4}: commit: crud danh mục cha
+[33m57f85f9[m[33m ([m[1;32mmain[m[33m)[m HEAD@{5}: merge origin/main: Fast-forward
+[33mb1e3039[m HEAD@{6}: checkout: moving from giang1610 to giang1610
+[33mb1e3039[m HEAD@{7}: checkout: moving from main to giang1610
+[33m57f85f9[m[33m ([m[1;32mmain[m[33m)[m HEAD@{8}: pull origin main: Fast-forward
+[33mb1e3039[m HEAD@{9}: checkout: moving from giang1610 to main
+[33mb1e3039[m HEAD@{10}: reset: moving to HEAD
+[33mb1e3039[m HEAD@{11}: pull origin main: Fast-forward
+[33mb8c14e4[m[33m ([m[1;31morigin/npnam171[m[33m, [m[1;31morigin/mingne25[m[33m, [m[1;31morigin/hao[m[33m)[m HEAD@{12}: checkout: moving from main to giang1610
+[33mb1e3039[m HEAD@{13}: commit: tạo db
+[33mb8c14e4[m[33m ([m[1;31morigin/npnam171[m[33m, [m[1;31morigin/mingne25[m[33m, [m[1;31morigin/hao[m[33m)[m HEAD@{14}: commit (initial): lần 1

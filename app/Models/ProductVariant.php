@@ -36,6 +36,10 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(Size::class);
     }
+    public function stock()
+    {
+        return $this->hasOne(Stock::class);
+    }
 
     public function cartItems()
     {
@@ -48,5 +52,18 @@ class ProductVariant extends Model
         }
         return $this->price;
     }
+public function getImgAttribute()
+    {
+        return $this->image
+            ? url('storage/' . ltrim($this->image, '/'))
+            : null;
+    }
+    public function getImagesUrlsAttribute()
+{
+    return $this->images->map(function ($image) {
+        return url('storage/' . ltrim($image->image, '/'));
+    });
+}
 
+    protected $appends = ['img','images_urls'];
 }
