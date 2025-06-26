@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         public function run()
         {
                 $this->call([
+<<<<<<< HEAD
                         // CategorySeeder::class,
                         // ProductSeeder::class,
                         // ColorSeeder::class,
@@ -25,6 +26,14 @@ class DatabaseSeeder extends Seeder
                         // ProductSeeder::class,
                         // ProductVariantSeeder::class,
                         // ProductImageSeeder::class,
+=======
+                        CategorySeeder::class,
+                        ProductSeeder::class,
+                        // ProductVariantSeeder::class,
+                        // ProductImageSeeder::class,
+                        ColorSeeder::class,
+                        SizeSeeder::class,
+>>>>>>> dc51002ee5daa226bdc0f197f1663ce3246aaa0b
                         // AdminUserSeeder::class
                 ]);
         }

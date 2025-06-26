@@ -22,4 +22,8 @@
   border: 2px solid #007bff;
   transform: scale(1.05);
 }
+.hover-scale:hover {
+  transform: scale(1.03);
+  transition: 0.3s ease-in-out;
+}
 

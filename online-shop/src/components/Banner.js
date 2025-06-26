@@ -1,37 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-const images = [
-  "https://thegioidohoa.com/wp-content/uploads/2015/10/thiet-ke-banner-an-tuong-cho-web-thoi-trang.jpeg",
-  "https://hellomida.vn/wp-content/uploads/2023/09/banner-hlmd-1.jpg",
-  "https://img3.thuthuatphanmem.vn/uploads/2019/10/14/banner-thoi-trang-viet-nam_113858319.jpg",
-];
+import { Carousel, Container } from 'react-bootstrap';
 
 const Banner = () => {
-  const [index, setIndex] = useState(0);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 3000);
-
-    return () => clearInterval(intervalRef.current);
-  }, []);
-
   return (
-    <div className="container my-4">
-      <img
-        src={images[index]}
-        alt={`Banner ${index + 1}`}
-        className="img-fluid rounded shadow"
-        style={{
-          width: '100%',
-          height: '400px',
-          objectFit: 'cover',
-          transition: 'opacity 0.5s ease-in-out',
-        }}
-      />
-    </div>
+    <Container className="my-4">
+      <Carousel fade className="shadow rounded-4 overflow-hidden">
+        <Carousel.Item>
+          <img
+            className="d-block w-100"
+            src="https://intphcm.com/data/upload/banner-thoi-trang-nam-dep.jpg"
+            alt="Thời trang Nam"
+          />
+        </Carousel.Item>
+        <Carousel.Item>
+          <img
+            className="d-block w-100"
+            src="https://arena.fpt.edu.vn/wp-content/uploads/2022/10/banner-thoi-trang-la-mot-phan-khong-the-thieu-trong-truyen-thong-1.jpg"
+            alt="Thời trang Nữ"
+          />
+        </Carousel.Item>
+      </Carousel>
+    </Container>
   );
 };
 

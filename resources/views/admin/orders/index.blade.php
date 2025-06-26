@@ -53,7 +53,7 @@
             <tr>
                 <th>Mã đơn</th>
                 <th>Khách hàng</th>
-                <th>Email</th> 
+                <th>Sản phẩm đặt</th> 
                 <th>Số điện thoại</th> 
                 <th>Ngày tạo</th>
                 <th>Tổng tiền</th>
@@ -63,10 +63,20 @@
         </thead>
         <tbody>
             @forelse ($orders as $order)
+              @php
+                    $variant = $order->variant;
+                    $product = $variant->product ?? null;
+                    // $thumbnail = $product?->thumbnail;
+                    $thumbnail = $variant->image ?? ($product?->image ?? null);
+                    $price = $order->price;
+                    $salePrice = $order->sale_price ?? $price;
+                    $totalPrice = $salePrice * $order->quantity;
+                    $hasDiscount = $salePrice < $price;
+                @endphp
             <tr>
                 <td>{{ $order->order_number ?? 'ORD-' . $order->id }}</td>
                 <td>{{ $order->user->name ?? 'N/A' }}</td>
-                <td>{{ $order->customer_email }}</td> 
+                <td>{{ $order->$product }}</td> 
                 <td>{{ $order->customer_phone }}</td> 
                 <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                 <td>{{ number_format($order->total) }}₫</td>
