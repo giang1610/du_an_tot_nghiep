@@ -65,7 +65,7 @@ class CartController extends Controller
         return response()->json(['message' => 'Đã thêm sản phẩm vào giỏ hàng.']);
     }
 
-    public function viewCart()
+    public function viewCart() 
     {
         $user = Auth::user();
         $cart = Cart::where('user_id', $user->id)->first();

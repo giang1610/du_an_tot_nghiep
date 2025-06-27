@@ -69,7 +69,7 @@ class ProductController extends Controller
         }
     }
 
-    // ✅ LỌC THEO SIZE
+    // LỌC THEO SIZE
     if ($request->has('size') && $request->size != '') {
         $sizeId = (int) $request->size;
         $query->whereHas('variants', function ($q) use ($sizeId) {
