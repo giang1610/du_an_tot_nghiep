@@ -76,7 +76,13 @@
             <tr>
                 <td>{{ $order->order_number ?? 'ORD-' . $order->id }}</td>
                 <td>{{ $order->user->name ?? 'N/A' }}</td>
-                <td>{{ $order->$product }}</td> 
+                <td>@foreach($order->items as $item)
+                {{ $item->variant->product->name ?? 'N/A' }} <!-- Hiển thị tên sản phẩm -->
+                @if($item->variant->color || $item->variant->size)
+                    ({{ $item->variant->color->name ?? '' }} {{ $item->variant->size->name ?? '' }})
+                @endif
+                x{{ $item->quantity }}<br>
+            @endforeach</td> 
                 <td>{{ $order->customer_phone }}</td> 
                 <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                 <td>{{ number_format($order->total) }}₫</td>
