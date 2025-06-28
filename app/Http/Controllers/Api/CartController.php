@@ -65,38 +65,41 @@ class CartController extends Controller
         return response()->json(['message' => 'Đã thêm sản phẩm vào giỏ hàng.']);
     }
 
-    public function viewCart() 
-    {
-        $user = Auth::user();
-        $cart = Cart::where('user_id', $user->id)->first();
+   public function viewCart() 
+{
+    $user = Auth::user();
+    $cart = Cart::where('user_id', $user->id)->first();
 
-        if (!$cart) {
-            return response()->json(['cart' => []]);
-        }
-
-        $items = CartItem::with(['productVariant.product', 'productVariant.color', 'productVariant.size'])
-            ->where('cart_id', $cart->id)
-            ->get()
-            ->map(function ($item) {
-                $variant = $item->productVariant;
-
-                return [
-                    'id' => $item->id,
-                    'product_variant_id' => $variant->id,
-                    'product_name' => $variant->product->name,
-                    'image' => $variant->image,
-                    'color' => optional($variant->color)->name,
-                    'size' => optional($variant->size)->name,
-                    'price' => $variant->sale_price ?? $variant->price,
-                    'quantity' => $item->quantity,
-                    'subtotal' => $item->quantity * ($variant->sale_price ?? $variant->price),
-                    'selected' => $item->selected,
-                    'note' => $item->note,
-                ];
-            });
-
-        return response()->json(['cart_items' => $items]);
+    if (!$cart) {
+        return response()->json(['cart_items' => []]);
     }
+
+    $items = CartItem::with(['productVariant.product', 'productVariant.color', 'productVariant.size'])
+        ->where('cart_id', $cart->id)
+        ->get()
+        ->map(function ($item) {
+            $variant = $item->productVariant;
+
+            return [
+                'id' => $item->id,
+                'product_variant_id' => $variant->id,
+                'product_name' => $variant->product->name,
+                'image' => $variant->image,
+                'color' => optional($variant->color)->name,
+                'size' => optional($variant->size)->name,
+                'color_id' => $variant->color_id,   // 👈 Thêm dòng này
+                'size_id' => $variant->size_id,     // 👈 Và dòng này
+                'price' => $variant->sale_price ?? $variant->price,
+                'quantity' => $item->quantity,
+                'subtotal' => $item->quantity * ($variant->sale_price ?? $variant->price),
+                'selected' => $item->selected,
+                'note' => $item->note,
+            ];
+        });
+
+    return response()->json(['cart_items' => $items]);
+}
+
 
     public function updateQuantity(Request $request, $item_id)
     {

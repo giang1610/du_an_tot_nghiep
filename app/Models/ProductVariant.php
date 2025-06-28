@@ -13,22 +13,9 @@ class ProductVariant extends Model
     use HasFactory;
 
     protected $fillable = [
-<<<<<<< HEAD
         'product_variant_id', 'sku', 'price', 'sale_price',
         'sale_start_date', 'sale_end_date', 'image', 'stock',
         'color_id', 'size_id'
-=======
-        'product_id',
-        'sku',
-        'price',
-        'sale_price',
-        'sale_start_date',
-        'sale_end_date',
-        'image',
-        // 'stock',
-        'color_id',
-        'size_id'
->>>>>>> daf87dde3d2e9b0c018d8c535a44843c64c6bc18
     ];
     public function images()
     {
