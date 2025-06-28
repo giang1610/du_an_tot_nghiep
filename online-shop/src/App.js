@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import CheckoutPage from './pages/CheckoutPage';
 import MyOrdersPage from './components/MyOrdersPage';
+import Test from './pages/test';
 
 
 
@@ -26,6 +27,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/orders" element={<MyOrdersPage />} />
          <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/test" element={<Test />} />
 
       </Routes>
     </Router>
