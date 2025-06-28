@@ -13,44 +13,44 @@ class ProductRequest extends FormRequest
         return true; // Cho phép request
     }
 
-    public function rules()
-    {
-        return [
+ public function rules()
+{
+    $rules = [
         'name' => 'required|string|max:255',
         'description' => 'nullable|string|max:255',
         'short_description' => 'nullable|string|max:255',
-        'slug' => ['required','string','max:255', Rule::unique('products', 'slug')->ignore($this->route('product') ?? $this->id),],
-
+        'slug' => ['required','string','max:255', Rule::unique('products', 'slug')->ignore($this->route('product') ?? $this->id)],
         'thumbnail' => $this->isMethod('post') ? 'required|image|mimes:jpg,jpeg,png,webp|max:2048' : 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         'category_id' => 'required|exists:categories,id',
         'status' => 'required|in:0,1,2',
         'price_products' => 'required|numeric|min:0.01',
-       
-        // 'variants.*.sku' => ['required','string','max:255', Rule::unique('product_variants', 'sku')->ignore($this->route('product_variants') ?? $this->id),],
-        'variants.*.price' => 'required|numeric|min:1',
-        'variants.*.sale_price' => 'nullable|numeric|min:1|lt:variants.*.price',
-        'variants.*.sale_start_date' => 'required_with:variants.*.sale_price|nullable|date',
-        'variants.*.sale_end_date' => 'required_with:variants.*.sale_price|nullable|date|after:variants.*.sale_start_date',
-        'variants.*.stock' => 'nullable|integer|min:0',
-        'variants.*.image' => $this->isMethod('post')? 'required|image|mimes:jpeg,png,jpg|max:2048': 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        'variants.*.stock_status' => 'required|in:0,1',
-        'variants.*.stock_quantity' => 'nullable|integer',
-        ];
-         if ($this->has('variants')) {
+    ];
+
+    // Xử lý rules cho variants
+    if ($this->has('variants')) {
         foreach ($this->variants as $index => $variant) {
             $variantId = $variant['id'] ?? null;
+            
             $rules["variants.$index.sku"] = [
                 'required',
                 'string',
                 'max:255',
                 Rule::unique('product_variants', 'sku')->ignore($variantId),
             ];
+            
+            $rules["variants.$index.price"] = 'required|numeric|min:1';
+            $rules["variants.$index.sale_price"] = 'nullable|numeric|min:1|lt:variants.*.price';
+            $rules["variants.$index.sale_start_date"] = 'required_with:variants.*.sale_price|nullable|date';
+            $rules["variants.$index.sale_end_date"] = 'required_with:variants.*.sale_price|nullable|date|after:variants.*.sale_start_date';
+            $rules["variants.$index.stock"] = 'nullable|integer|min:0';
+            $rules["variants.$index.image"] = $this->isMethod('post') ? 'required|image|mimes:jpeg,png,jpg|max:2048' : 'nullable|image|mimes:jpeg,png,jpg|max:2048';
+            $rules["variants.$index.stock_status"] = 'required|in:0,1';
+            $rules["variants.$index.stock_quantity"] = 'nullable|integer';
         }
     }
 
     return $rules;
-    }
-    //validate sku
+}
     
 
     //validate kho
