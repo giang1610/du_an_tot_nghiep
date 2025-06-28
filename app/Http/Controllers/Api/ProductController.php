@@ -94,6 +94,7 @@ class ProductController extends Controller
         $product = Product::with([
             'variants.size',
             'variants.color',
+            'variants.stock',
             'variants.images',
             'images',
             'category'
