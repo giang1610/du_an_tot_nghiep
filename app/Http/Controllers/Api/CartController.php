@@ -12,10 +12,12 @@ use App\Models\CartItem;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPlaced;
 use App\Models\ProductVariant;
+use App\Models\Stock;
+use App\Http\Requests\CartRequest;
 
 class CartController extends Controller
 {
-    public function addToCart(Request $request)
+    public function addToCart(CartRequest  $request)
     {
         $request->validate([
             'product_variant_id' => 'required|integer',
@@ -37,28 +39,41 @@ class CartController extends Controller
             ], 400);
         }
 
+        // Kiểm tra tồn kho
+        $stock = Stock::where('product_variant_id', $variant->id)->value('quantity');
+
+        if ($stock === null) {
+            return response()->json(['message' => 'Không tìm thấy thông tin tồn kho.'], 404);
+        }
+
         $user = Auth::user();
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
         $item = CartItem::where('cart_id', $cart->id)
-            ->where('product_variant_id', $request->product_variant_id)
+            ->where('product_variant_id', $variant->id)
             ->where('color_id', $request->color_id)
             ->where('size_id', $request->size_id)
             ->first();
 
+        $totalQuantity = $request->quantity + ($item->quantity ?? 0);
+
+        if ($totalQuantity > $stock) {
+            return response()->json(['message' => 'Số lượng vượt quá tồn kho'], 400);
+        }
+
         if ($item) {
-            $item->quantity += $request->quantity;
+            $item->quantity = $totalQuantity;
             $item->note = $request->note ?? $item->note;
             $item->save();
         } else {
             CartItem::create([
                 'cart_id' => $cart->id,
-                'product_variant_id' => $request->product_variant_id,
+                'product_variant_id' => $variant->id,
                 'quantity' => $request->quantity,
                 'color_id' => $request->color_id,
                 'size_id' => $request->size_id,
                 'note' => $request->note,
-                'selected' => true, // default chọn
+                'selected' => false,  // Mặc định là chưa chọn
             ]);
         }
 
@@ -80,6 +95,9 @@ class CartController extends Controller
             ->map(function ($item) {
                 $variant = $item->productVariant;
 
+                // Lấy tồn kho từ bảng stocks
+                $stock = $variant->stock->quantity ?? 0;
+
                 return [
                     'id' => $item->id,
                     'product_variant_id' => $variant->id,
@@ -89,6 +107,7 @@ class CartController extends Controller
                     'size' => optional($variant->size)->name,
                     'price' => $variant->sale_price ?? $variant->price,
                     'quantity' => $item->quantity,
+                    'stock' => $stock,
                     'subtotal' => $item->quantity * ($variant->sale_price ?? $variant->price),
                     'selected' => $item->selected,
                     'note' => $item->note,
@@ -98,7 +117,7 @@ class CartController extends Controller
         return response()->json(['cart_items' => $items]);
     }
 
-    public function updateQuantity(Request $request, $item_id)
+    public function updateQuantity(CartRequest  $request, $item_id)
     {
         $request->validate([
             'quantity' => 'sometimes|integer|min:1',
@@ -131,7 +150,14 @@ class CartController extends Controller
             ], 400);
         }
 
-        // Cập nhật
+        $stock = Stock::where('product_variant_id', $item->product_variant_id)->first();
+        if (!$stock || $request->quantity > $stock->quantity) {
+            return response()->json([
+                'message' => "Số lượng vượt quá tồn kho hiện tại (" . ($stock->quantity ?? 0) . ")."
+            ], 422);
+        }
+
+        // Cập nhật thông tin
         $item->update($request->only(['quantity', 'selected', 'note']));
 
         return response()->json(['message' => 'Đã cập nhật sản phẩm trong giỏ.']);
@@ -147,20 +173,52 @@ class CartController extends Controller
             return response()->json(['total' => 0]);
         }
 
-        $items = CartItem::with('productVariant')
+        $items = CartItem::with(['productVariant.stock'])
             ->where('cart_id', $cart->id)
-            ->where('selected', true) // chỉ tính những món đã tick chọn
+            ->where('selected', true)
             ->get();
 
         $total = $items->sum(function ($item) {
-            $price = $item->productVariant->sale_price ?? $item->productVariant->price;
+            $variant = $item->productVariant;
+
+            // Kiểm tra tồn kho
+            $stockQty = $variant->stock->quantity ?? 0;
+            if ($stockQty < $item->quantity) {
+                return 0; // Không tính nếu vượt quá tồn kho
+            }
+
+            $price = $variant->sale_price ?? $variant->price;
             return $price * $item->quantity;
         });
 
         return response()->json(['total' => $total]);
     }
 
-        public function removeFromCart($item_id)
+    public function updateSelected(Request $request, $item_id)
+    {
+        $request->validate([
+            'selected' => 'required|boolean',
+        ]);
+
+        $user = Auth::user();
+
+        $item = CartItem::where('id', $item_id)
+            ->whereHas('cart', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })->first();
+
+        if (!$item) {
+            return response()->json(['message' => 'Không tìm thấy sản phẩm trong giỏ.'], 404);
+        }
+
+        $item->selected = $request->selected;
+        $item->save();
+
+        return response()->json(['message' => 'Đã cập nhật trạng thái chọn sản phẩm.']);
+    }
+
+
+    public function removeFromCart($item_id)
     {
         $user = Auth::user();
 
@@ -175,6 +233,9 @@ class CartController extends Controller
 
         $item->delete();
 
-        return response()->json(['message' => 'Đã xóa sản phẩm khỏi giỏ hàng.']);
+        return response()->json([
+            'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
+            'cart_items' => $user->cart->items // hoặc gọi lại hàm `viewCart()`
+        ]);
     }
 }
