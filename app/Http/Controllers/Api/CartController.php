@@ -15,7 +15,7 @@ use App\Mail\OrderPlaced;
 
 class CartController extends Controller
 {
-    public function addToCart(Request $request)
+    public function addToCart(CartRequest  $request)
     {
         $request->validate([
             'product_variant_id' => 'required|integer',
@@ -34,23 +34,36 @@ class CartController extends Controller
             return response()->json(['message' => 'Biến thể sản phẩm không hợp lệ.'], 400);
         }
 
+        // Kiểm tra tồn kho
+        $stock = Stock::where('product_variant_id', $variant->id)->value('quantity');
+
+        if ($stock === null) {
+            return response()->json(['message' => 'Không tìm thấy thông tin tồn kho.'], 404);
+        }
+
         $user = Auth::user();
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
         $item = CartItem::where('cart_id', $cart->id)
-            ->where('product_variant_id', $request->product_variant_id)
+            ->where('product_variant_id', $variant->id)
             ->where('color_id', $request->color_id)
             ->where('size_id', $request->size_id)
             ->first();
 
+        $totalQuantity = $request->quantity + ($item->quantity ?? 0);
+
+        if ($totalQuantity > $stock) {
+            return response()->json(['message' => 'Số lượng vượt quá tồn kho'], 400);
+        }
+
         if ($item) {
-            $item->quantity += $request->quantity;
+            $item->quantity = $totalQuantity;
             $item->note = $request->note ?? $item->note;
             $item->save();
         } else {
             CartItem::create([
                 'cart_id' => $cart->id,
-                'product_variant_id' => $request->product_variant_id,
+                'product_variant_id' => $variant->id,
                 'quantity' => $request->quantity,
                 'color_id' => $request->color_id,
                 'size_id' => $request->size_id,
@@ -77,6 +90,9 @@ class CartController extends Controller
             ->map(function ($item) {
                 $variant = $item->productVariant;
 
+                // Lấy tồn kho từ bảng stocks
+                $stock = $variant->stock->quantity ?? 0;
+
                 return [
                     'id' => $item->id,
                     'product_variant_id' => $variant->id,
@@ -88,6 +104,7 @@ class CartController extends Controller
                     'size_id' => $variant->size_id,   // ✅ thêm để client update
                     'price' => $variant->sale_price ?? $variant->price,
                     'quantity' => $item->quantity,
+                    'stock' => $stock,
                     'subtotal' => $item->quantity * ($variant->sale_price ?? $variant->price),
                     'selected' => $item->selected,
                     'note' => $item->note,
@@ -97,7 +114,7 @@ class CartController extends Controller
         return response()->json(['cart_items' => $items]);
     }
 
-    public function updateQuantity(Request $request, $item_id)
+    public function updateQuantity(CartRequest  $request, $item_id)
     {
         $request->validate([
             'quantity' => 'sometimes|integer|min:1',
@@ -176,7 +193,7 @@ class CartController extends Controller
             return response()->json(['total' => 0]);
         }
 
-        $items = CartItem::with('productVariant')
+        $items = CartItem::with(['productVariant.stock'])
             ->where('cart_id', $cart->id)
             ->where('selected', true)
             ->get();
