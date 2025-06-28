@@ -88,3 +88,4 @@ Route::prefix('payment')->group(function () {
     Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
     Route::get('/momo-return', [OrderController::class, 'momoReturn']);
 });
+
