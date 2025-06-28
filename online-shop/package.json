@@ -11,6 +11,8 @@
     "bootstrap": "^5.3.6",
     "bootstrap-icons": "^1.13.1",
     "jwt-decode": "^4.0.0",
+    "laravel-echo": "^2.1.6",
+    "pusher-js": "^7.0.6",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-icons": "^1.11.6",
