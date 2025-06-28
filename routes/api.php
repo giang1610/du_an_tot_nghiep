@@ -1,73 +1,88 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\SizeController;
-use App\Http\Controllers\Api\CartController;
-use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProductVariantController;
+use App\Http\Controllers\Api\SizeController;
+use App\Http\Requests\CustomEmailVerificationRequest;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
-# ==== AUTH ====
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
-
-# ==== EMAIL VERIFICATION ====
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();
-        return response()->json(['message' => 'Xác minh email thành công.']);
-    })->middleware(['signed'])->name('verification.verify');
-
-    Route::post('/email/resend', function (Request $request) {
-        $request->user()->sendEmailVerificationNotification();
-        return response()->json(['message' => 'Email xác minh đã được gửi lại.']);
-    });
+// User info
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
 });
 
-# ==== PUBLIC ROUTES ====
+// ========== PUBLIC ROUTES ========== //
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+
+// Email verification
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
+})->middleware(['signed'])->name('verification.verify');
+
+// Public product routes
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/slug/{slug}', [ProductController::class, 'showBySlug']);
+Route::get('/products/id/{id}', [ProductController::class, 'showById']);
+Route::get('/product-variants/{id}', [ProductVariantController::class, 'show']);
 Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
 
+// Categories & Sizes
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/sizes', [SizeController::class, 'index']);
 
-# ==== COMMENT (YÊU CẦU LOGIN) ====
-Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
+// Public reviews (view only)
+Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
 
-# ==== CART (YÊU CẦU LOGIN) ====
+// ========== PROTECTED ROUTES (auth:sanctum) ========== //
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/cart/add', [CartController::class, 'addToCart']);
-    Route::get('/cart', [CartController::class, 'viewCart']);
-    Route::delete('/cart/remove/{item_id}', [CartController::class, 'removeFromCart']);
-    Route::put('/cart/update/{item_id}', [CartController::class, 'updateQuantity']);
-    Route::get('/cart/total', [CartController::class, 'getCartTotal']);
+    // Auth
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', fn (Request $request) => $request->user());
+
+    // Reviews
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
+    // Cart
+   Route::prefix('cart')->group(function () {
+        Route::post('/add', [CartController::class, 'addToCart']);
+        Route::get('/', [CartController::class, 'viewCart']);
+        Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
+        Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
+        Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
+        Route::get('/total', [CartController::class, 'getCartTotal']);
+        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+    });
 });
 
-# ==== ORDER (YÊU CẦU LOGIN + ĐÃ XÁC MINH EMAIL) ====
-Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+    // Orders
+   Route::middleware('auth:sanctum')->group(function () {
 
-    // Lấy user đang đăng nhập
-    Route::get('/user/profile', function (Request $request) {
-        return $request->user();
+    // Orders
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::get('/{order}', [OrderController::class, 'show']);
+        Route::post('/checkout', [OrderController::class, 'checkout']);
     });
 
-    // Đơn hàng
-    Route::get('/orders', [OrderController::class, 'index']);
-    Route::get('/orders/{id}', [OrderController::class, 'show']);
-    Route::post('/orders', [OrderController::class, 'store']);
+    // Các route khác: logout, cart, review...
 });
+
+    // Payment Momo
+    Route::prefix('payment')->group(function () {
+        Route::post('/momo', [OrderController::class, 'payViaMomo']);
+        Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
+        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    });

@@ -3,46 +3,44 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 
 class ProductImageSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $product = Product::first(); // lấy sản phẩm đầu tiên
-        if (!$product) {
-            $this->command->warn('⚠️ Không có sản phẩm nào để thêm ảnh.');
-            return;
-        }
-
-        // Ảnh chính của sản phẩm
         DB::table('product_images')->insert([
+            // Ảnh cho sản phẩm ID = 1
             [
-                'product_id' => $product->id,
+                'url' => 'products/ao-thun-1.jpg',
+                'product_id' => 2,
                 'product_variant_id' => null,
-                'url' => '/images/product-main.jpg',
-                'is_default' => true,
+                'is_default' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
+
+            // Ảnh cho biến thể sản phẩm ID = 1
+            [
+                'url' => 'variants/ao-thun-red-m.jpg',
+
+                'product_id' => 2,
+                'product_variant_id' => 1,
+                'is_default' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            // Ảnh cho biến thể sản phẩm ID = 2
+
+            [
+                'url' => 'variants/ao-thun-blue-l.jpg',
+                'product_id' => 2,
+                'product_variant_id' => 2,
+                'is_default' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
-
-        // Ảnh cho các biến thể (variants)
-        $variants = ProductVariant::where('product_id', $product->id)->get();
-
-        foreach ($variants as $index => $variant) {
-            DB::table('product_images')->insert([
-                'product_id' => $product->id,
-                'product_variant_id' => $variant->id,
-                'url' => "/images/product-variant{$index}.jpg",
-                'is_default' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $this->command->info('✅ Seed hình ảnh sản phẩm thành công.');
     }
 }
