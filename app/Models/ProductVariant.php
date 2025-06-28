@@ -2,37 +2,18 @@
 
 namespace App\Models;
 
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-
 use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model
 {
-
-    use HasFactory;
-
     protected $fillable = [
-        'product_id',
-        'sku',
-        'price',
-        'sale_price',
-        'sale_start_date',
-        'sale_end_date',
-        'image',
-        // 'stock',
-        'color_id',
-        'size_id'
+        'product_id', 'color_id', 'size_id', 'price', 'sale_price', 'image'
     ];
-    public function images()
-    {
-        return $this->hasMany(ProductImage::class);
-    }
+
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
-
 
     public function color()
     {
@@ -49,29 +30,13 @@ class ProductVariant extends Model
         return $this->hasOne(Stock::class, 'product_variant_id');
     }
 
-    public function cartItems()
+    public function orderItems()
     {
-        return $this->hasMany(CartItem::class);
+        return $this->hasMany(OrderItem::class);
     }
-    public function getCurrentPriceAttribute()
+    public function images()
     {
-        if ($this->sale_price && now()->between($this->sale_start_date, $this->sale_end_date)) {
-            return $this->sale_price;
-        }
-        return $this->price;
-    }
-    public function getImgAttribute()
-    {
-        return $this->image
-            ? url('storage/' . ltrim($this->image, '/'))
-            : null;
-    }
-    public function getImagesUrlsAttribute()
-    {
-        return $this->images->map(function ($image) {
-            return url('storage/' . ltrim($image->image, '/'));
-        });
+        return $this->hasMany(ProductImage::class, 'product_variant_id');
     }
 
-    protected $appends = ['img', 'images_urls'];
 }
