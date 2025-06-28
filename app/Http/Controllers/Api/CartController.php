@@ -43,6 +43,13 @@ class CartController extends Controller
             return response()->json(['message' => 'Không tìm thấy thông tin tồn kho.'], 404);
         }
 
+        // Kiểm tra tồn kho
+        $stock = Stock::where('product_variant_id', $variant->id)->value('quantity');
+
+        if ($stock === null) {
+            return response()->json(['message' => 'Không tìm thấy thông tin tồn kho.'], 404);
+        }
+
         $user = Auth::user();
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
