@@ -24,6 +24,10 @@ use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 | Nhóm các routes theo chức năng để dễ quản lý và tránh trùng lặp.
 |
 */
+use App\Http\Controllers\MessageController;
+
+Route::post('/send-message', [MessageController::class, 'sendMessage']);
+
 
 // Route kiểm tra đăng nhập và lấy thông tin user
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
