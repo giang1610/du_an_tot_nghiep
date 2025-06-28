@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\User;
+use App\Models\Order;
+use App\Models\ProductVariant;
 class Review extends Model
 {
     protected $fillable = [

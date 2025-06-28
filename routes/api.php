@@ -1,67 +1,88 @@
 <?php
 
-use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\Auth\ResetPasswordController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CartController;
-use App\Http\Controllers\SizeController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProductVariantController;
+use App\Http\Controllers\Api\SizeController;
+use App\Http\Requests\CustomEmailVerificationRequest;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+// User info
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-//Trang chủ
-Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
-//Hiển thị ảnh 
-Route::post('/products', [ProductController::class, 'store']);
-//Chi tiết
-Route::get('/products/slug/{slug}', [ProductController::class, 'getBySlug']);
-Route::get('/products/{slug}', [ProductController::class, 'show']);
-//Tài khoản
+
+// ========== PUBLIC ROUTES ========== //
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-Route::middleware('auth:sanctum')->group(function () {
-Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-// Các route yêu cầu người dùng phải đăng nhập VÀ đã xác thực email (verified)
-    Route::middleware('verified')->group(function () {
-    });
-});
-//Reset pass
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
-//Hiển thị comment
 
-// Route::middleware('auth:sanctum')->post('/comments', [CommentController::class, 'store']);
+// Email verification
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
+})->middleware(['signed'])->name('verification.verify');
 
-Route::middleware('auth:sanctum')->post('/products/{id}/comments', [ProductController::class, 'storeComment']);
-//Sản phẩm liên quan
-// Route::get('/products/{id}/comments', [CommentController::class, 'getByProduct']);
-
+// Public product routes
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/slug/{slug}', [ProductController::class, 'showBySlug']);
+Route::get('/products/id/{id}', [ProductController::class, 'showById']);
+Route::get('/product-variants/{id}', [ProductVariantController::class, 'show']);
 Route::get('/products/related/{category_id}', [ProductController::class, 'related']);
 
+// Categories & Sizes
 Route::get('/categories', [CategoryController::class, 'index']);
-//Lọc theo size
 Route::get('/sizes', [SizeController::class, 'index']);
+
+// Public reviews (view only)
+Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
+
+// ========== PROTECTED ROUTES (auth:sanctum) ========== //
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/cart/add', [CartController::class, 'addToCart']);
-    Route::get('/cart', [CartController::class, 'viewCart']);
-    Route::delete('/cart/remove/{item_id}', [CartController::class, 'removeFromCart']);
-    Route::put('/cart/update/{item_id}', [CartController::class, 'updateQuantity']);
-    Route::get('/cart/total', [CartController::class, 'getCartTotal']);
+    // Auth
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', fn (Request $request) => $request->user());
+
+    // Reviews
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
+    // Cart
+   Route::prefix('cart')->group(function () {
+        Route::post('/add', [CartController::class, 'addToCart']);
+        Route::get('/', [CartController::class, 'viewCart']);
+        Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
+        Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
+        Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
+        Route::get('/total', [CartController::class, 'getCartTotal']);
+        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+    });
 });
+
+    // Orders
+   Route::middleware('auth:sanctum')->group(function () {
+
+    // Orders
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::get('/{order}', [OrderController::class, 'show']);
+        Route::post('/checkout', [OrderController::class, 'checkout']);
+    });
+
+    // Các route khác: logout, cart, review...
+});
+
+    // Payment Momo
+    Route::prefix('payment')->group(function () {
+        Route::post('/momo', [OrderController::class, 'payViaMomo']);
+        Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
+        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    });

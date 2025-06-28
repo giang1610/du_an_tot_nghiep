@@ -77,7 +77,13 @@
                          {{-- Kho --}}
                         <td>
                             @foreach ($p->variants as $variant)
-                                <div>{{ $variant->stock == 0 ? 'Còn hàng' : 'Hết hàng'  }}</div>
+                                <div>
+                                    @if( $variant->stock->quantity > 0)
+                                       {{$variant->stock->quantity}}
+                                    @else
+                                        Không có hàng
+                                    @endif
+                                </div>
                             @endforeach
                         </td>
 

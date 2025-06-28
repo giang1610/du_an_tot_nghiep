@@ -97,6 +97,8 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
 
-
+Route::get('/thank-you', function () {
+    return view('thank-you');
+});
 
 require __DIR__.'/auth.php';
