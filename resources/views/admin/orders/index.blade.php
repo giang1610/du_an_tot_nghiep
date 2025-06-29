@@ -158,14 +158,17 @@
                             <td>
                                 @switch($order->payment_method)
                                     @case('cod')
-                                        <span class="badge bg-secondary">
-                                            <i class="fas fa-money-bill-wave me-1"></i> COD
-                                        </span>
+                                                                                <span class="badge bg-info">
+    <i class="fas fa-money-bill-wave me-1"></i> COD
+</span>
                                         @break
                                     @case('momo')
-                                        <span class="badge bg-danger">
-                                            <i class="fas fa-mobile-alt me-1"></i> Momo
-                                        </span>
+
+  @case('momo')
+    <span style="background-color: #A50064; color: white" class="badge">
+        <i class="fas fa-mobile-alt me-1"></i> Momo
+    </span>
+    @break
                                         @break
                                     @default
                                         <span class="badge bg-light text-dark">
