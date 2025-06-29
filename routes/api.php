@@ -46,7 +46,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cart/total', [CartController::class, 'getCartTotal']);
     Route::delete('/cart/remove/{item_id}', [CartController::class, 'removeFromCart']);
 
-
     // Thanh toán
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
