@@ -1,6 +1,4 @@
 @extends('admin.layouts.app')
-
-
 @section('content')
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -8,56 +6,48 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-      <div class="container">
-        <h2>Sản phẩm</h2>
-        <a href="{{route('products.create')}}" class="btn btn-primary"><i class="bi bi-plus-circle"></i></a>
-        <form method="GET" class="mb-4">
-            <br>
-            <div class="input-group shadow-sm rounded">
-                <input
-                    type="text"
-                    name="search"
-                    class="form-control border-primary"
-                    placeholder="🔍 Tìm kiếm sản phẩm..."
-                    value="{{ request('search') }}"
-                    style="height: 48px;"
-                >
-                <button type="submit" class="btn btn-primary px-4" style="height: 48px;">
-                    Tìm kiếm
-                </button>
-            </div>
-        </form>
-        <a href="{{ route('products.trash') }}" class="btn btn-secondary mb-2">
-            <i class="bi bi-trash3-fill"></i> Thùng rác
-         </a>
+<a href="/admin/products"><i class="bi bi-arrow-left" style="font-size: 1.5rem; color: red;"></i>
 
+        Quay lại danh sách sản phẩm
 
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Danh mục</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Đường dẫn</th>
-                    <th>Giá sản phẩm</th>
-                    {{-- <th>Giá biến thể</th> --}}
-                    <th>Mã</th>
-                    <th>Kho</th>
-                    <th>Màu</th>
-                    <th>Size</th>
-                    <th>Ảnh sản phẩm</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
+</a><br>
+<form action="{{ route('products.restoreAll') }}" method="POST" style="display: inline-block;">
+    @csrf
+    <button type="submit" class="btn btn-success mb-3" onclick="return confirm('Khôi phục tất cả sản phẩm?')">
+        <i class="bi bi-arrow-clockwise"></i> Khôi phục tất cả
+    </button>
+</form>
 
-                </tr>
-            </thead>
-            <tbody>
+<form action="{{ route('products.deleteAll') }}" method="POST" style="display: inline-block;">
+      @csrf @method('DELETE')
+    <button type="submit" class="btn btn-danger mb-3" onclick="return confirm('Xóa tất cả sản phẩm?')">
+        <i class="bi bi-trash-fill"></i> Xóa tất cả
+    </button>
+</form>
 
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Danh mục</th>
+            <th>Tên sản phẩm</th>
+            <th>Đường dẫn</th>
+            <th>Giá sản phẩm</th>
+            {{-- <th>Giá biến thể</th> --}}
+            <th>Mã</th>
+            <th>Kho</th>
+            <th>Màu</th>
+            <th>Size</th>
+            <th>Ảnh sản phẩm</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
 
-                @foreach ($products as $p)
-
-                    <tr>
-                        <td>{{$p->id}}</td>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach($products as $p)
+        <tr>
+           <td>{{$p->id}}</td>
                         <td>{{$p->category->name}}</td>
                         <td>{{$p->name}}</td>
                         <td>{{$p->slug}}</td>
@@ -119,23 +109,20 @@
                                 Tạm dừng
                             @endif
                         </td>
-                        <td>
-                           <a href="{{route('products.edit', $p->id)}}" class="btn btn-warning"><i class="bi bi-pencil-square"></i></a>
-                             <form action="{{route('products.destroy', $p->id)}}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger"
-                                    onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')"><i class="bi bi-trash3"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
+            <td>
+                <form action="{{ route('products.restore', $p->id) }}" method="POST" style="display:inline-block;">
+                    @csrf
+                    <button class="btn btn-success btn-sm"><i class="bi bi-arrow-clockwise"></i></button>
+                </form>
 
-            </tbody>
-        </table>
-        {{$products->links()}}
-    </div>
-
-
+                <form action="{{ route('products.forceDelete', $p->id) }}" method="POST" style="display:inline-block;">
+                    @csrf @method('DELETE')
+                    <button class="btn btn-danger btn-sm" onclick="return confirm('Xóa vĩnh viễn?')"><i class="bi bi-trash-fill"></i></button>
+                </form>
+            </td>
+        </tr>
+    @endforeach
+    </tbody>
+</table>
 @endsection
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
