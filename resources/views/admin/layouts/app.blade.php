@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
   <style>
     :root{--full:260px;--mini:72px;--radius:10px;--primary:#2563eb;--active-dark:#1e2a48}
@@ -160,11 +161,11 @@
     <div class="d-flex align-items-center gap-3">
       <button id="toggleBtn" class="btn btn-icon"><i class="bi bi-list"></i></button>
 
-      <div class="search-box">
-        <i class="bi bi-search"></i>
-        <input id="globalSearch" class="form-control" placeholder="Search or type command...">
-        <span class="kbd-hint" id="searchTrigger">⌘ K</span>
-      </div>
+        <!-- <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input id="globalSearch" class="form-control" placeholder="Tìm kiếm">
+            <span class="kbd-hint" id="searchTrigger">⌘ K</span>
+        </div> -->
     </div>
 
     <div class="d-flex align-items-center gap-3">

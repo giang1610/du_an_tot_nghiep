@@ -185,7 +185,7 @@
                                 </div>
                             </td>
                             <td class="text-end">
-                                <strong>{{ number_format($order->total) }}₫</strong>
+                                <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">
                                     <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
