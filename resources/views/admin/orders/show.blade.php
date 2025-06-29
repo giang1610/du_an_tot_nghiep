@@ -193,19 +193,19 @@
                             <td class="text-end">
                                 @if($hasDiscount)
                                 <div class="text-decoration-line-through text-muted small">
-                                    {{ number_format($price) }}₫
+                                    {{ number_format($price) }} VNĐ
                                 </div>
                                 <div class="text-danger fw-bold">
-                                    {{ number_format($salePrice) }}₫
+                                    {{ number_format($salePrice) }} VNĐ
                                 </div>
                                 @else
                                 <div class="fw-bold">
-                                    {{ number_format($price) }}₫
+                                    {{ number_format($price) }} VNĐ
                                 </div>
                                 @endif
                             </td>
                             <td class="text-end fw-bold">
-                                {{ number_format($totalPrice) }}₫
+                                {{ number_format($totalPrice) }} VNĐ
                             </td>
                             </tr>
                             @endforeach
@@ -222,25 +222,25 @@
                             <ul class="list-unstyled mb-0">
                                 <li class="d-flex justify-content-between mb-2">
                                     <span>Tạm tính:</span>
-                                    <span>{{ number_format($order->subtotal) }}₫</span>
+                                    <span>{{ number_format($order->subtotal) }} VNĐ</span>
                                 </li>
                                 <li class="d-flex justify-content-between mb-2">
                                     <span>Phí vận chuyển:</span>
-                                    <span>{{ number_format($order->shipping) }}₫</span>
+                                    <span>{{ number_format($order->shipping) }} VNĐ</span>
                                 </li>
                                 <li class="d-flex justify-content-between mb-2">
                                     <span>Thuế (VAT):</span>
-                                    <span>{{ number_format($order->tax) }}₫</span>
+                                    <span>{{ number_format($order->tax) }} VNĐ</span>
                                 </li>
                                 @if($order->discount > 0)
                                 <li class="d-flex justify-content-between mb-2 text-danger">
                                     <span>Giảm giá:</span>
-                                    <span>-{{ number_format($order->discount) }}₫</span>
+                                    <span>-{{ number_format($order->discount) }} VNĐ</span>
                                 </li>
                                 @endif
                                 <li class="d-flex justify-content-between mt-3 pt-2 border-top fw-bold fs-5">
                                     <span>Tổng cộng:</span>
-                                    <span>{{ number_format($order->total) }}₫</span>
+                                    <span>{{ number_format($order->total) }} VNĐ</span>
                                 </li>
                             </ul>
                         </div>

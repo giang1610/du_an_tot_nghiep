@@ -34,7 +34,7 @@
                         </div>
                         <div>
                             <label class="form-label text-muted small mb-1">Tổng tiền</label>
-                            <input type="text" class="form-control bg-light fw-bold" value="{{ number_format($order->total) }}₫" readonly>
+                            <input type="text" class="form-control bg-light fw-bold" value="{{ number_format($order->total) }} VNĐ" readonly>
                         </div>
                     </div>
                 </div>
