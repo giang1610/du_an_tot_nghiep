@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Comment;
+use App\Models\Review;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +14,7 @@ class ProductController extends Controller
     /**
      * Xử lý giá hiển thị cho sản phẩm
      */
+
     private function processProductPricing($product)
     {
         if ($product->variants && $product->variants->isNotEmpty()) {
@@ -48,87 +49,98 @@ class ProductController extends Controller
 
 
     public function index(Request $request)
+{
+    $query = Product::query();
+
+    $query->where('status', 1);
+
+    if ($request->has('category') && $request->category != '') {
+        $query->where('category_id', $request->category);
+    }
+
+    if ($request->has('price') && $request->price != '') {
+        $priceRange = explode('-', $request->price);
+        if (count($priceRange) === 2) {
+            $min = (int) $priceRange[0];
+            $max = (int) $priceRange[1];
+            $query->whereHas('variants', function ($q) use ($min, $max) {
+                $q->whereBetween('price', [$min, $max]);
+            });
+        }
+    }
+
+    // LỌC THEO SIZE
+    if ($request->has('size') && $request->size != '') {
+        $sizeId = (int) $request->size;
+        $query->whereHas('variants', function ($q) use ($sizeId) {
+            $q->where('size_id', $sizeId);
+        });
+    }
+
+    if ($request->has('search') && $request->search != '') {
+        $query->where('name', 'like', '%' . $request->search . '%');
+    }
+
+    $products = $query->with([
+        'variants' => function ($q) {
+            $q->select(
+                'id',
+                'product_id',
+                'price',
+                'sale_price',
+                'sale_start_date',
+                'sale_end_date'
+            );
+        },
+        'images'
+    ])->get();
+
+    foreach ($products as $product) {
+        $this->processProductPricing($product);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => $products,
+    ]);
+}
+
+
+    public function related($category_id, Request $request)
     {
-        $query = Product::query();
-
-        // Thêm điều kiện lọc sản phẩm đang hoạt động
-        $query->where('status', 1);
-
-        // Lọc theo danh mục
-        if ($request->has('category') && $request->category != '') {
-            $query->where('category_id', $request->category);
+        // Lấy tham số 'exclude' từ query string để loại trừ sản phẩm hiện tại (nếu có)
+        $excludeId = $request->query('exclude');
+        // Khởi tạo query lấy các sản phẩm cùng danh mục
+        $query = Product::where('category_id', $category_id);
+        // Nếu có truyền excludeId, loại trừ sản phẩm này khỏi kết quả
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
         }
+        // Lấy danh sách sản phẩm liên quan, kèm theo các quan hệ: variants.color, variants.size, images
+        $relatedProducts = $query->with(['variants.color', 'variants.size', 'images'])->get();
 
-        // Lọc theo khoảng giá (dựa trên giá gốc)
-        if ($request->has('price') && $request->price != '') {
-            $priceRange = explode('-', $request->price);
-            if (count($priceRange) === 2) {
-                $min = (int) $priceRange[0];
-                $max = (int) $priceRange[1];
-                $query->whereHas('variants', function ($q) use ($min, $max) {
-                    $q->whereBetween('price', [$min, $max]);
-                });
-            }
+        // Duyệt qua từng sản phẩm để xử lý giá hiển thị (giá khuyến mãi, giá gốc, ...)
+        foreach ($relatedProducts as $relatedProduct) {
+            $this->processProductPricing($relatedProduct);
         }
-
-        // Tìm kiếm theo tên sản phẩm
-        if ($request->has('search') && $request->search != '') {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-
-        // Lấy dữ liệu sản phẩm cùng biến thể
-        $products = $query->with([
-            'variants' => function ($q) {
-                $q->select(
-                    'id',
-                    'product_id',
-                    'price',
-                    'sale_price',
-                    'sale_start_date',
-                    'sale_end_date'
-                );
-            }
-        ])->get();
-
-        // Xử lý giá hiển thị cho từng sản phẩm
-        foreach ($products as $product) {
-            $this->processProductPricing($product);
-        }
-        // Map thêm đường dẫn ảnh
-
+        // Trả về kết quả dạng JSON
         return response()->json([
-            'success' => true,
-            'data' => $products,
-
+            'success' => true, // Trạng thái thành công
+            'data' => $relatedProducts, // Danh sách sản phẩm liên quan
         ]);
     }
 
-
-    public function show($slug, Request $request)
+    public function showBySlug($slug)
     {
-        $product = Product::where('slug', $slug)
-            ->with([
-                'comments.user' => function ($query) {
-                    $query->select('id', 'name', 'email');
-                },
-                'category' => function ($query) {
-                    $query->select('id', 'name', 'slug');
-                },
-                'variants.color' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'variants.size' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'variants.images' => function ($query) {
-                    $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
-                },
-                'images' => function ($query) {
-                    $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
-                }
-            ])
+        $product = Product::with([
+            'variants.size',
+            'variants.color',
+            'variants.images',
+            'images',
+            'category'
+        ])
+            ->where('slug', $slug)
             ->first();
-
         if (!$product) {
             return response()->json([
                 'success' => false,
@@ -136,166 +148,41 @@ class ProductController extends Controller
             ], 404);
         }
 
-        // Xử lý giá hiển thị cho sản phẩm chính
+        // Xử lý giá hiển thị
         $this->processProductPricing($product);
 
-        // Lấy 5 sản phẩm liên quan
-        // Lấy sản phẩm liên quan cùng danh mục, trừ sản phẩm hiện tại, giới hạn 4 sản phẩm
-        $relatedProducts = Product::where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->with([
-                'variants.color' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'variants.size' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'images' => function ($query) {
-                    $query->select('id', 'url', 'product_id', 'product_variant_id', 'is_default');
-                }
-            ])
-            ->take(5)
+        // Lấy danh sách đánh giá cho sản phẩm (tổng hợp từ các variant)
+        $reviews = Review::with(['user:id,name'])
+            ->whereHas('productVariant', function ($q) use ($product) {
+                $q->where('product_id', $product->id);
+            })
+            ->orderByDesc('created_at')
             ->get();
+
+        // Sản phẩm liên quan cùng danh mục
+        $related = Product::with(['images'])
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->take(4)
+            ->get();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'product' => $product,
-                'related_products' => $relatedProducts
+                'reviews' => $reviews,
+                'related_products' => $related
             ]
-        ], 200);
-    }
-
-    public function related($category_id, Request $request)
-    {
-        $excludeId = $request->query('exclude');
-        $query = Product::where('category_id', $category_id);
-
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
-        }
-
-        $relatedProducts = $query->with(['variants.color', 'variants.size', 'images'])->get();
-
-        // Xử lý giá hiển thị
-        foreach ($relatedProducts as $relatedProduct) {
-            $this->processProductPricing($relatedProduct);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $relatedProducts,
         ]);
     }
-
-    public function comments($id)
+    public function showById($id)
     {
-        $comments = Comment::with([
-            'user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }
-        ])
-            ->where('product_id', $id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $product = Product::with(['variants'])->find($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $comments
-        ], 200);
-    }
-
-    public function storeComment(Request $request, $id)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 401);
-        }
-
-        $request->validate([
-            'content' => 'required|string',
-            'rating' => 'required|integer|min:1|max:5'
-        ]);
-
-        $product = Product::find($id);
         if (!$product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sản phẩm không tồn tại.'
-            ], 404);
+            return response()->json(['message' => 'Sản phẩm không tồn tại'], 404);
         }
 
-        $comment = Comment::create([
-            'user_id' => $user->id,
-            'product_id' => $id,
-            'content' => $request->content,
-            'rating' => $request->rating,
-        ]);
-        $comment->load([
-            'user' => function ($query) {
-                $query->select('id', 'name', 'email');
-            }
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Bình luận thành công.',
-            'data' => $comment
-        ], 201);
+        return response()->json(['success' => true, 'data' => $product]);
     }
-    public function getBySlug($slug)
-{
-    $product = Product::where('slug', $slug)->first();
-
-    if (!$product) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Sản phẩm không tồn tại',
-        ], 404);
-    }
-
-    // Lấy sản phẩm liên quan
-    $related = Product::where('category_id', $product->category_id)
-        ->where('id', '!=', $product->id)
-        ->limit(4)
-        ->get();
-
-    return response()->json([
-        'success' => true,
-        'data' => $product,
-        'related' => $related,
-    ]);
-}
-public function showBySlug($slug)
-{
-    $product = Product::with([
-        'comments.user',
-        'variants.color',
-        'variants.size',
-    ])->where('slug', $slug)->firstOrFail();
-
-    // Lấy danh sách các sản phẩm liên quan
-    $related = Product::where('category_id', $product->category_id)
-                ->where('id', '!=', $product->id)
-                ->take(4)
-                ->get();
-
-    return response()->json([
-        'data' => [
-            'id' => $product->id,
-            'name' => $product->name,
-            'slug' => $product->slug,
-            'price' => $product->price,
-            'description' => $product->description,
-            'img' => $product->img,
-            'variants' => $product->variants, // <--- phần quan trọng
-            'comments' => $product->comments,
-        ],
-        'related' => $related,
-    ]);
-}
-
-
 }

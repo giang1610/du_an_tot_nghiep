@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mail;
+namespace App\Mail; 
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,10 +17,11 @@ class OrderPlaced extends Mailable
     /**
      * Create a new message instance.
      */
-    public $order; // Dữ liệu đơn hàng sẽ truyền vào view
-    public function __construct(Order $order)
+    public $order;//,$items; // Dữ liệu đơn hàng sẽ truyền vào view
+    public function __construct(Order $order)//, $items)
     {
         $this->order = $order;
+        // $this->items = $items;
     }
 
     public function build()
@@ -34,7 +35,7 @@ class OrderPlaced extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Order Placed',
+            subject: 'Đặt hàng thành công',
         );
     }
 
