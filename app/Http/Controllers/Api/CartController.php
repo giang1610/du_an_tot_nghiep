@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CartRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Models\CartItem;
 use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPlaced;
+use App\Models\Stock;
 
 class CartController extends Controller
 {
@@ -32,6 +34,13 @@ class CartController extends Controller
 
         if (!$variant) {
             return response()->json(['message' => 'Biến thể sản phẩm không hợp lệ.'], 400);
+        }
+
+        // Kiểm tra tồn kho
+        $stock = Stock::where('product_variant_id', $variant->id)->value('quantity');
+
+        if ($stock === null) {
+            return response()->json(['message' => 'Không tìm thấy thông tin tồn kho.'], 404);
         }
 
         // Kiểm tra tồn kho
@@ -198,95 +207,87 @@ class CartController extends Controller
             ->where('selected', true)
             ->get();
 
-        $total = $items->sum(fn($item) =>
-            ($item->productVariant->sale_price ?? $item->productVariant->price) * $item->quantity
+        $total = $items->sum(
+            fn($item) => ($item->productVariant->sale_price ?? $item->productVariant->price) * $item->quantity
         );
 
         return response()->json(['total' => $total]);
     }
 
-  public function checkout(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'phone' => 'required|string|max:20',
-        'address' => 'required|string|max:255',
-        'payment_method' => 'required|string|in:cod,banking',
-        'items' => 'required|array|min:1',
-        'items.*.product_variant_id' => 'required|integer|exists:product_variants,id',
-        'items.*.quantity' => 'required|integer|min:1',
-        'items.*.price' => 'required|numeric|min:0',
-    ]);
+    public function checkout(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string|max:255',
+            'payment_method' => 'required|string|in:cod,banking',
+            'items' => 'required|array|min:1',
+            'items.*.product_variant_id' => 'required|integer|exists:product_variants,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+        ]);
 
-    $user = auth()->user();
-    $subtotal = collect($request->items)->sum(fn($item) => $item['price'] * $item['quantity']);
-    $shipping = 15000;
-    $tax = $subtotal * 0.1;
-    $total = $subtotal + $shipping + $tax;
+        $user = auth()->user();
+        $subtotal = collect($request->items)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $shipping = 15000;
+        $tax = $subtotal * 0.1;
+        $total = $subtotal + $shipping + $tax;
 
-    $order = Order::create([
-        'user_id' => $user->id,
-        'order_number' => 'ORD-' . strtoupper(uniqid()),
-        'name' => $request->name,
-        'phone' => $request->phone,
-        'address' => $request->address,
-        'shipping_address' => $request->address,
-        'billing_address' => $request->address,
-        'customer_email' => $user->email,
-        'customer_phone' => $request->phone,
-        'notes' => $request->notes ?? null,
-        'subtotal' => $subtotal,
-        'shipping' => $shipping,
-        'tax' => $tax,
-        'total' => $total,
-        'payment_method' => $request->payment_method,
-    ]);
+        $order = Order::create([
+            'user_id' => $user->id,
+            'order_number' => 'ORD-' . strtoupper(uniqid()),
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'shipping_address' => $request->address,
+            'billing_address' => $request->address,
+            'customer_email' => $user->email,
+            'customer_phone' => $request->phone,
+            'notes' => $request->notes ?? null,
+            'subtotal' => $subtotal,
+            'shipping' => $shipping,
+            'tax' => $tax,
+            'total' => $total,
+            'payment_method' => $request->payment_method,
+        ]);
 
-    foreach ($request->items as $item) {
-        $variant = ProductVariant::findOrFail($item['product_variant_id']);
+        foreach ($request->items as $item) {
+            $variant = ProductVariant::findOrFail($item['product_variant_id']);
 
-        if ($variant->stock < $item['quantity']) {
-            return response()->json([
-                'message' => 'Không đủ hàng cho sản phẩm: ' . $variant->product->name,
-                'available_stock' => $variant->stock
-            ], 400);
+            if (($variant->stock->quantity ?? 0) < $item['quantity']) {
+                return response()->json([
+                    'message' => 'Không đủ hàng cho sản phẩm: ' . $variant->product->name,
+                    'available_stock' => $variant->stock->quantity ?? 0
+                ], 400);
+            }
+
+
+           Stock::where('product_variant_id', $variant->id)->decrement('quantity', $item['quantity']); // ✅ Đúng
+
+
+            $order->items()->create([
+                'product_variant_id' => $item['product_variant_id'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+                'sale_price' => $variant->sale_price ?? null,
+                'color_id' => $variant->color_id,
+                'size_id' => $variant->size_id,
+            ]);
         }
 
-        $variant->decrement('stock', $item['quantity']);
+        $cart = Cart::where('user_id', $user->id)->first();
+        if ($cart) {
+            CartItem::where('cart_id', $cart->id)->where('selected', true)->delete();
+        }
 
-        $order->items()->create([
-            'product_variant_id' => $item['product_variant_id'],
-            'quantity' => $item['quantity'],
-            'price' => $item['price'],
-            'sale_price' => $variant->sale_price ?? null,
-            'color_id' => $variant->color_id,
-            'size_id' => $variant->size_id,
+        // Load quan hệ trước khi gửi mail để tránh lỗi null
+        // Load quan hệ trước khi gửi mail để tránh lỗi null
+        $order->loadMissing('items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size');
+        Mail::to($user->email)->send(new OrderPlaced($order));
+
+        return response()->json([
+            'message' => 'Đặt hàng thành công!',
+            'order' => $order,
         ]);
     }
-
-    $cart = Cart::where('user_id', $user->id)->first();
-    if ($cart) {
-        CartItem::where('cart_id', $cart->id)->where('selected', true)->delete();
-    }
-
-    // Load quan hệ trước khi gửi mail để tránh lỗi null
-    // Load quan hệ trước khi gửi mail để tránh lỗi null
-$order->loadMissing('items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size');
-
-Mail::to($user->email)->send(new OrderPlaced($order));
-
-return response()->json([
-    'message' => 'Đặt hàng thành công!',
-    'order' => $order,
-]);
-
-
-    Mail::to($user->email)->send(new OrderPlaced($order));
-
-    return response()->json([
-        'message' => 'Đặt hàng thành công!',
-        'order' => $order,
-    ]);
-}
-
 }
