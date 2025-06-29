@@ -81,8 +81,8 @@
                                     <strong>Phương thức thanh toán:</strong>
                                     <span class="badge 
                                     @switch($order->payment_method)
-                                        @case('cod') bg-secondary @break
-                                        @case('momo') bg-danger @break
+                                        @case('cod') bg-success @break
+                                        @case('momo') momo-payment @break
                                         @default bg-light text-dark
                                     @endswitch">
                                         {{
@@ -312,6 +312,10 @@
             display: none !important;
         }
     }
+    .momo-payment {
+    background-color: #A50064 !important; /* Màu chính thức của Momo */
+    color: white !important;
+}
 </style>
 
 <script>
