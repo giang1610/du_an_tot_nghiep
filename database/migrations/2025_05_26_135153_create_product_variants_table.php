@@ -17,7 +17,6 @@ class CreateProductVariantsTable extends Migration
             $table->datetime('sale_start_date')->nullable();
             $table->datetime('sale_end_date')->nullable();
             $table->string('image')->nullable();
-            $table->integer('stock')->default(0);
             $table->foreignId('color_id')->constrained('colors');
             $table->foreignId('size_id')->constrained('sizes');
             $table->timestamps();
