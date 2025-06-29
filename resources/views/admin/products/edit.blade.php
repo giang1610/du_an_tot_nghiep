@@ -199,20 +199,27 @@
                             {{-- Trường Kho (Stock) --}}
                             <div class="col-md-6">
                                 <label class="form-label small">Trạng thái Kho</label>
-                                <select name="variants[{{ $i }}][stock_status]" class="form-select form-select-sm stock-status" data-index="{{ $i }}">
-                                    <option value="" {{ old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '') == '' ? 'selected' : '' }}>-- Chọn trạng thái kho --</option>
-                                    <option value="0" {{ (string)old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '0') == 0 ? 'selected' : '' }}>Hết hàng</option>
-                                    <option value="1" {{ old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '0') == 1 ? 'selected' : '' }}>Còn hàng</option>
-                                  
+                                {{-- @php
+                                    $stockStatus = old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '0');
+                                    echo $stockStatus;
+                                    // dd(old('variants'))
+                                @endphp --}}
+                                @foreach($variantsToDisplay as $i => $variant)
+                                    {{ $variant['stock_status'] }}
+                                @endforeach
 
-                                   
-                                </select><br>
-                                <input type="number" name="variants[{{ $i }}][stock_quantity]" class="form-control form-control-sm stock-quantity"
-                                    style="display: {{ old('variants.'.$i.'.stock_status', $variant['stock_status'] ?? '0') == 1 ? 'block' : 'none' }};"
-                                    value="{{ old('variants.'.$i.'.stock_quantity', $variant['stock_quantity'] ?? '') }}" min="0" placeholder="Nhập số lượng">
+                                {{-- @if($stockStatus == 1)
+                                    <div class="mb-2 text-success fw-bold">Còn hàng</div>
+                                    <input type="hidden" name="variants[{{ $i }}][stock_status]" value="1">
+                                    <input type="number" name="variants[{{ $i }}][stock_quantity]" class="form-control form-control-sm"
+                                        value="{{ old('variants.'.$i.'.stock_quantity', $variant['stock_quantity'] ?? '') }}" min="1" placeholder="Nhập số lượng">
                                     @error('variants.'.$i.'.stock_quantity')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
+                                @else
+                                    <div class="mb-2 text-danger fw-bold">Hết hàng</div>
+                                    <input type="hidden" name="variants[{{ $i }}][stock_status]" value="0">
+                                @endif --}}
                             </div>
                             {{-- Trường Giá --}}
                             <div class="col-md-6">
@@ -343,65 +350,65 @@
                            existingSizeIdInput.value === size.value;
                 });
 
-                if (!existingVariant) { // Chỉ tạo nếu biến thể chưa tồn tại trong DOM
-                    const variantId = `variant-${currentIndex}`;
-                    const html = `
-                        <div class="card p-3 mb-3 border shadow-sm" id="${variantId}">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="card-title mb-0">${color.dataset.name} - ${size.dataset.name}</h5>
-                                <div>
-                                    <button type="button" class="btn btn-sm btn-warning me-1 btn-edit" data-bs-target="#details-${variantId}">Sửa</button>
-                                    <button type="button" class="btn btn-sm btn-danger btn-delete" data-bs-target="#${variantId}">Xóa</button>
-                                </div>
-                            </div>
-                            <input type="hidden" name="variants[${currentIndex}][color_id]" value="${color.value}">
-                            <input type="hidden" name="variants[${currentIndex}][size_id]" value="${size.value}">
-                            <div class="variant-details mt-2" id="details-${variantId}" style="display: none;">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small">Mã SP</label>
-                                        <input type="text" name="variants[${currentIndex}][sku]" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small">Trạng thái Kho</label>
-                                        <select name="variants[${currentIndex}][stock_status]" class="form-select form-select-sm stock-status" data-index="${currentIndex}">
-                                            <option value="" selected>-- Chọn trạng thái kho --</option>
-                                            <option value="0">Hết hàng</option>
-                                            <option value="1">Còn hàng</option>
-                                        </select>
-                                        <input type="number" name="variants[${currentIndex}][stock_quantity]" class="form-control form-control-sm stock-quantity" style="display:none;" min="0" placeholder="Nhập số lượng">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small">Giá</label>
-                                        <input type="number" name="variants[${currentIndex}][price]" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small">Giá khuyến mãi</label>
-                                        <input type="number" name="variants[${currentIndex}][sale_price]" class="form-control form-control-sm" id="sale_price_${currentIndex}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small">Ngày bắt đầu khuyến mãi</label>
-                                        <input type="datetime-local" name="variants[${currentIndex}][sale_start_date]" class="form-control form-control-sm" id="sale_start_date_${currentIndex}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small">Ngày kết thúc khuyến mãi</label>
-                                        <input type="datetime-local" name="variants[${currentIndex}][sale_end_date]" class="form-control form-control-sm" id="sale_end_date_${currentIndex}">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label small">Ảnh</label>
-                                        <div class="mb-2">
-                                            <img class="preview-image mb-2 rounded" style="max-width: 100px; display: none;" src="" alt="Preview" id="img-preview-${currentIndex}">
-                                        </div>
-                                        <input type="file" name="variants[${currentIndex}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-${currentIndex}').style.display = 'block'; document.getElementById('img-preview-${currentIndex}').src = window.URL.createObjectURL(this.files[0])">
-                                        {{-- Không cần existing_image cho biến thể mới tạo ở đây vì nó chưa có --}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    container.insertAdjacentHTML('beforeend', html);
-                    currentIndex++;
-                }
+                // if (!existingVariant) { // Chỉ tạo nếu biến thể chưa tồn tại trong DOM
+                //     const variantId = `variant-${currentIndex}`;
+                //     const html = `
+                //         <div class="card p-3 mb-3 border shadow-sm" id="${variantId}">
+                //             <div class="d-flex justify-content-between align-items-center mb-2">
+                //                 <h5 class="card-title mb-0">${color.dataset.name} - ${size.dataset.name}</h5>
+                //                 <div>
+                //                     <button type="button" class="btn btn-sm btn-warning me-1 btn-edit" data-bs-target="#details-${variantId}">Sửa</button>
+                //                     <button type="button" class="btn btn-sm btn-danger btn-delete" data-bs-target="#${variantId}">Xóa</button>
+                //                 </div>
+                //             </div>
+                //             <input type="hidden" name="variants[${currentIndex}][color_id]" value="${color.value}">
+                //             <input type="hidden" name="variants[${currentIndex}][size_id]" value="${size.value}">
+                //             <div class="variant-details mt-2" id="details-${variantId}" style="display: none;">
+                //                 <div class="row g-3">
+                //                     <div class="col-md-6">
+                //                         <label class="form-label small">Mã SP</label>
+                //                         <input type="text" name="variants[${currentIndex}][sku]" class="form-control form-control-sm">
+                //                     </div>
+                //                     <div class="col-md-6">
+                //                         <label class="form-label small">Trạng thái Kho</label>
+                //                         <select name="variants[${currentIndex}][stock_status]" class="form-select form-select-sm stock-status" data-index="${currentIndex}">
+                //                             <option value="" selected>-- Chọn trạng thái kho --</option>
+                //                             <option value="0">Hết hàng</option>
+                //                             <option value="1">Còn hàng</option>
+                //                         </select>
+                //                         <input type="number" name="variants[${currentIndex}][stock_quantity]" class="form-control form-control-sm stock-quantity" style="display:none;" min="0" placeholder="Nhập số lượng">
+                //                     </div>
+                //                     <div class="col-md-6">
+                //                         <label class="form-label small">Giá</label>
+                //                         <input type="number" name="variants[${currentIndex}][price]" class="form-control form-control-sm">
+                //                     </div>
+                //                     <div class="col-md-6">
+                //                         <label class="form-label small">Giá khuyến mãi</label>
+                //                         <input type="number" name="variants[${currentIndex}][sale_price]" class="form-control form-control-sm" id="sale_price_${currentIndex}">
+                //                     </div>
+                //                     <div class="col-md-6">
+                //                         <label class="form-label small">Ngày bắt đầu khuyến mãi</label>
+                //                         <input type="datetime-local" name="variants[${currentIndex}][sale_start_date]" class="form-control form-control-sm" id="sale_start_date_${currentIndex}">
+                //                     </div>
+                //                     <div class="col-md-6">
+                //                         <label class="form-label small">Ngày kết thúc khuyến mãi</label>
+                //                         <input type="datetime-local" name="variants[${currentIndex}][sale_end_date]" class="form-control form-control-sm" id="sale_end_date_${currentIndex}">
+                //                     </div>
+                //                     <div class="col-12">
+                //                         <label class="form-label small">Ảnh</label>
+                //                         <div class="mb-2">
+                //                             <img class="preview-image mb-2 rounded" style="max-width: 100px; display: none;" src="" alt="Preview" id="img-preview-${currentIndex}">
+                //                         </div>
+                //                         <input type="file" name="variants[${currentIndex}][image]" class="form-control form-control-sm" onchange="document.getElementById('img-preview-${currentIndex}').style.display = 'block'; document.getElementById('img-preview-${currentIndex}').src = window.URL.createObjectURL(this.files[0])">
+                //                         {{-- Không cần existing_image cho biến thể mới tạo ở đây vì nó chưa có --}}
+                //                     </div>
+                //                 </div>
+                //             </div>
+                //         </div>
+                //     `;
+                //     container.insertAdjacentHTML('beforeend', html);
+                //     currentIndex++;
+                // }
             });
         });
 
