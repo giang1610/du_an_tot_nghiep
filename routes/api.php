@@ -4,8 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\API\Auth\ForgotPasswordController;
-use App\Http\Controllers\API\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\Auth\ForgotPasswordController;
+use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ProductController;
@@ -50,13 +50,13 @@ Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct'])
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', fn (Request $request) => $request->user());
+    Route::get('/user', fn(Request $request) => $request->user());
 
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
     // Cart
-   Route::prefix('cart')->group(function () {
+    Route::prefix('cart')->group(function () {
         Route::post('/add', [CartController::class, 'addToCart']);
         Route::get('/', [CartController::class, 'viewCart']);
         Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
@@ -67,22 +67,24 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-    // Orders
-   Route::middleware('auth:sanctum')->group(function () {
+// Orders
+Route::middleware('auth:sanctum')->group(function () {
 
     // Orders
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']);
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/checkout', [OrderController::class, 'checkout']);
+       Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
+        Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
     });
 
     // Các route khác: logout, cart, review...
 });
 
-    // Payment Momo
-    Route::prefix('payment')->group(function () {
-        Route::post('/momo', [OrderController::class, 'payViaMomo']);
-        Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
-        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-    });
+// Payment Momo
+Route::prefix('payment')->group(function () {
+    Route::post('/momo', [OrderController::class, 'payViaMomo']);
+    Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
+    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+});
