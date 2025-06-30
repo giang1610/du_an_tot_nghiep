@@ -107,7 +107,7 @@ public function store(ProductRequest $request)
                         'sale_price' => $variantData['sale_price'] ?? null,
                         'sale_start_date' => $variantData['sale_start_date'] ?? null,
                         'sale_end_date' => $variantData['sale_end_date'] ?? null,
-                        // 'stock' => $variantData['stock'] ?? 0,
+                        'stock' => $variantData['stock'] ?? 0,
                         'color_id' => $variantData['color_id'] ?? null,
                         'size_id' => $variantData['size_id'] ?? null,
                         'image' => $variantImagePath, // Lưu đường dẫn ảnh biến thể

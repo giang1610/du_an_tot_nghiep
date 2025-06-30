@@ -45,6 +45,8 @@ Route::get('/sizes', [SizeController::class, 'index']);
 
 // Public reviews (view only)
 Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
+Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders'])->middleware('auth:sanctum');
+
 
 // ========== PROTECTED ROUTES (auth:sanctum) ========== //
 Route::middleware('auth:sanctum')->group(function () {
@@ -53,9 +55,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $request) => $request->user());
 
     // Reviews
-    Route::get('/reviews', [ReviewController::class, 'store']);
-   Route::middleware('auth:sanctum')->get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
-
+    // Gửi đánh giá
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::get('/orders/received-product', [OrderController::class, 'checkReceivedProduct']);
     // Cart
     Route::prefix('cart')->group(function () {
         Route::post('/add', [CartController::class, 'addToCart']);
@@ -72,22 +74,26 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
     // Orders
-    Route::prefix('orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index']);
-        Route::get('/{order}', [OrderController::class, 'show']);
-        Route::post('/checkout', [OrderController::class, 'checkout']);
-       Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
-        Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
-    });
+    Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']);
+    Route::get('/{order}', [OrderController::class, 'show']);
+    Route::post('/checkout', [OrderController::class, 'checkout']);
+    Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
+    Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+});
+
+
 
     // Các route khác: logout, cart, review...
 });
 
 // Payment Momo
 Route::prefix('payment')->group(function () {
-    Route::post('/momo', [OrderController::class, 'payViaMomo']);
+    Route::post('/momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
     Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
-    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-    Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo']);
-
+    // Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    // Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
+     Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+    Route::get('/momo/return', [OrderController::class, 'momoReturn']);
 });
+

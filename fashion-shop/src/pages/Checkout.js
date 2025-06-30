@@ -12,14 +12,16 @@ const ProductSummary = ({ items }) => {
       {items.map(item => (
         <Card key={item.id || item.product_variant_id || item.variant_id} className="mb-3">
           <Card.Body className="d-flex">
+            {console.log(item.image)}
             <Image
-              src={item.image}
+              src={item.image || 'https://via.placeholder.com/80'}
               alt={item.product_name || item.name}
               width={80}
               height={80}
               className="me-3"
-              style={{ objectFit: 'cover' }}
+              style={{ objectFit: 'cover', border: '1px solid #eee' }}
             />
+            
             <div>
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
@@ -97,6 +99,7 @@ export default function Checkout() {
     if (!validate()) return;
 
     const token = localStorage.getItem('token') || user?.token;
+    console.log('Token:', token);
     if (!token) {
       setError('Bạn cần đăng nhập để đặt hàng.');
       return;

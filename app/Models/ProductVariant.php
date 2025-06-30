@@ -63,7 +63,7 @@ class ProductVariant extends Model
     ];
     public function images()
     {
-        return $this->hasMany(ProductImage::class);
+        return $this->hasMany(ProductImage::class,'product_variant_id');
     }
     public function product()
     {
@@ -98,17 +98,31 @@ class ProductVariant extends Model
         return $this->price;
     }
     public function getImgAttribute()
-    {
-        return $this->image
-            ? url('storage/' . ltrim($this->image, '/'))
-            : null;
-    }
+{
+    return $this->image
+        ? url('storage/' . ltrim($this->image, '/'))
+        : null;
+}
+
     public function getImagesUrlsAttribute()
     {
         return $this->images->map(function ($image) {
             return url('storage/' . ltrim($image->image, '/'));
         });
     }
+    public function getThumbnailAttribute()
+{
+    if ($this->image) {
+        return url('storage/' . ltrim($this->image, '/'));
+    }
 
-    protected $appends = ['img', 'images_urls'];
+    if ($this->images && $this->images->count() > 0) {
+        return url('storage/' . ltrim($this->images->first()->image, '/'));
+    }
+
+    return null;
+}
+
+
+    protected $appends = ['img', 'images_urls','thumbnail'];
 }

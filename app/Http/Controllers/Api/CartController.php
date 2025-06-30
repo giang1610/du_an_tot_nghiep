@@ -106,7 +106,7 @@ class CartController extends Controller
                     'id' => $item->id,
                     'product_variant_id' => $variant->id,
                     'product_name' => $variant->product->name,
-                    'image' => $variant->image,
+                    'image' => $variant->thumbnail,
                     'color' => optional($variant->color)->name,
                     'color_id' => $variant->color_id, // ✅ thêm để client update
                     'size' => optional($variant->size)->name,
@@ -262,7 +262,7 @@ class CartController extends Controller
             }
 
 
-           Stock::where('product_variant_id', $variant->id)->decrement('quantity', $item['quantity']); // ✅ Đúng
+            Stock::where('product_variant_id', $variant->id)->decrement('quantity', $item['quantity']); // ✅ Đúng
 
 
             $order->items()->create([

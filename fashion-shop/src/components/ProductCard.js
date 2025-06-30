@@ -29,7 +29,10 @@ export default function ProductCard({ product }) {
           )}
         </Card.Text>
 
-        <Button as={Link} to={`/products/${product.slug}`} variant="outline-dark" size="sm">Xem chi tiết</Button>
+        <Button as={Link} to={`/products/${product.slug}`} variant="outline-dark" size="sm">
+          Xem chi tiết
+        </Button>
+
       </Card.Body>
     </Card>
   );

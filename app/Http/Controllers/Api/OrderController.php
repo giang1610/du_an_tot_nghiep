@@ -375,7 +375,13 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
+
             // Tạo đơn hàng tạm (chưa trừ tồn kho)
+            $user = Auth::user(); // hoặc User::find($id)
+
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized or user not found'], 401);
+            }
             $order = $user->orders()->create([
                 'subtotal' => $totals['subtotal'],
                 'shipping' => $totals['shipping'],

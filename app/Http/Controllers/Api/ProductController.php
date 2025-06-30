@@ -105,6 +105,11 @@ class ProductController extends Controller
         }
 
         $this->processProductPricing($product);
+        foreach ($product->variants as $variant) {
+            $variant->images_urls = $variant->images->map(function ($img) {
+                return asset('storage/' . $img->url);
+            });
+        }
 
         $reviews = Review::with('user:id,name')
             ->whereHas('productVariant', fn($q) => $q->where('product_id', $product->id))
