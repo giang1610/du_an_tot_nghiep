@@ -52,7 +52,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
 });
 
-// Logout
+// Logout 123
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 // Email Verification
 Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])

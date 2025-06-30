@@ -25,7 +25,7 @@ class ProductVariantSeeder extends Seeder
                 'sale_price'       => null, // mặc định chưa giảm giá
                 'sale_start_date'  => null,
                 'sale_end_date'    => null,
-                'stock'            => $faker->numberBetween(0, 100),
+                // 'stock'            => $faker->numberBetween(0, 100),
                 'color_id'         => $faker->randomElement($colorIds),
                 'size_id'          => $faker->randomElement($sizeIds),
                 'created_at'       => now(),
