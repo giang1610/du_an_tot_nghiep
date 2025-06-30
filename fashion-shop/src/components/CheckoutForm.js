@@ -38,7 +38,7 @@ export default function CheckoutForm({
         >
           <option value="cod">Thanh toán khi nhận hàng (COD)</option>
           <option value="momo">Ví MoMo</option>
-          <option value="vnpay">VNPay</option>
+          {/* <option value="vnpay">VNPay</option> */}
         </Form.Select>
       </Form.Group>
       <Button variant="success" onClick={onSubmit}>
