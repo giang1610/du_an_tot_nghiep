@@ -6,12 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Events\OrderStatusUpdated; // Import sự kiện OrderStatusUpdated
-use App\Mail\OrderGiao; // Import mail OrderGiao
-use App\Mail\OrderErrors; // Import mail OrderErrors
-use App\Mail\OrderPicking;
+use App\Mail\OrderGiao; 
+use App\Mail\OrderErrors; 
 use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
-use Illuminate\Support\Facades\Mail; // Import facade Mail
+use Illuminate\Support\Facades\Mail; 
 
 class OrderController extends Controller
 {
@@ -28,7 +27,7 @@ class OrderController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('order_number', 'like', "%{$search}%") // 👈 lọc đúng theo mã đơn
+                $q->where('order_number', 'like', "%{$search}%") 
                     ->orWhereHas('user', function ($q2) use ($search) {
                         $q2->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
