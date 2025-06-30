@@ -128,7 +128,7 @@
                                 </div>
                             </td>
                             <td>
-                                @foreach($order->items as $item)
+                                @foreach($order->items as $item)    
                                 <div class="d-flex align-items-center mb-2">
                                     @if($item->variant->product->image)
                                     <img src="{{ asset($item->variant->product->image) }}"
