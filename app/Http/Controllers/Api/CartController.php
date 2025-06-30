@@ -220,7 +220,7 @@ class CartController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
-            'payment_method' => 'required|string|in:cod,banking',
+            'payment_method' => 'required|string|in:cod,banking,momo',
             'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|integer|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -283,7 +283,7 @@ class CartController extends Controller
         // Load quan hệ trước khi gửi mail để tránh lỗi null
         // Load quan hệ trước khi gửi mail để tránh lỗi null
         $order->loadMissing('items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size');
-        Mail::to($user->email)->send(new OrderPlaced($order));
+        Mail::to($user->email)->send(new OrderPlaced($order, $request->payment_method));
 
         return response()->json([
             'message' => 'Đặt hàng thành công!',

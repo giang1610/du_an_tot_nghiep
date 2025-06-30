@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
       if (res.ok) {
         setSuccess('Cập nhật thành công');
-        login(token, data.user); // Cập nhật user context
+        login(token, data.user); 
       } else {
         setError(data.message || 'Lỗi cập nhật');
       }

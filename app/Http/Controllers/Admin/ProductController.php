@@ -102,7 +102,7 @@ public function store(ProductRequest $request)
                     }
 
                     $variant = new ProductVariant([
-                        'sku' => $variantData['sku'] ?? null,
+                        'sku' => $variantData['sku'] ?? '',
                         'price' => $variantData['price'] ?? null,
                         'sale_price' => $variantData['sale_price'] ?? null,
                         'sale_start_date' => $variantData['sale_start_date'] ?? null,
