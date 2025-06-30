@@ -29,11 +29,18 @@ export default function ProductCard({ product }) {
           )}
         </Card.Text>
 
+<<<<<<< HEAD
         <Button as={Link} to={`/products/slug/${product.slug}`} variant="outline-dark" size="sm">
           Xem chi tiết
         </Button>
 
 
+=======
+        <Button as={Link} to={`/products/${product.slug}`} variant="outline-dark" size="sm">
+          Xem chi tiết
+        </Button>
+
+>>>>>>> 4242ec0 (hoàn thiện)
       </Card.Body>
     </Card>
   );
