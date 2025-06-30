@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\SizeController;
 use App\Http\Requests\CustomEmailVerificationRequest;
-use App\Http\Controllers\Api\MomoPaymentController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -41,9 +41,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Giỏ hàng
     Route::post('/cart/add', [CartController::class, 'addToCart']);
     Route::get('/cart', [CartController::class, 'viewCart']);
-    Route::delete('/cart/remove/{item_id}', [CartController::class, 'removeFromCart']);
+    Route::put('/cart/update-selected/{item_id}', [CartController::class, 'updateSelected']);
     Route::put('/cart/update/{item_id}', [CartController::class, 'updateQuantity']);
     Route::get('/cart/total', [CartController::class, 'getCartTotal']);
+    Route::delete('/cart/remove/{item_id}', [CartController::class, 'removeFromCart']);
 
 
     // Thanh toán
