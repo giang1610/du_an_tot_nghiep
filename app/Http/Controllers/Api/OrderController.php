@@ -105,7 +105,7 @@ class OrderController extends Controller
             }
 
             // Gửi email xác nhận
-            Mail::to($request->customer_email)->queue(new OrderPlaced($order));
+            Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->user));
 
             DB::commit();
 
@@ -280,7 +280,7 @@ class OrderController extends Controller
             $cart->items()->where('selected', true)->delete();
 
             // Gửi email xác nhận
-            Mail::to($user->email)->queue(new OrderPlaced($order));
+            Mail::to($user->email)->queue(new OrderPlaced($order, $user));
 
             DB::commit();
 
@@ -413,7 +413,7 @@ class OrderController extends Controller
                 }
 
                 // Gửi email xác nhận
-                Mail::to($order->customer_email)->queue(new OrderPlaced($order));
+                Mail::to($order->customer_email)->queue(new OrderPlaced($order, $order->user));
 
                 DB::commit();
                 return response()->json(['message' => 'Xử lý thanh toán thành công']);
