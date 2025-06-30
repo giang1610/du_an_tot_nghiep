@@ -2,11 +2,11 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container, Row, Col, Image, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
+  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
 } from 'react-bootstrap';
 import ProductReview from './ProductReview';
 import CheckoutForm from '../components/CheckoutForm';
-
+import ProductImageGallery from '../components/ProductImageGallery'; // ✅ Thêm dòng này
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -16,7 +16,6 @@ export default function ProductDetail() {
   const [reviews, setReviews] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [mainImage, setMainImage] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState(null);
@@ -36,7 +35,6 @@ export default function ProductDetail() {
         setProduct(product);
         setReviews(reviews || []);
         setRelatedProducts(related_products || []);
-        setMainImage(product?.images?.[0]?.url || '');
       })
       .catch(err => {
         console.error(err);
@@ -195,20 +193,7 @@ export default function ProductDetail() {
 
       <Row>
         <Col md={6}>
-          <Image src={mainImage || 'placeholder.jpg'} fluid style={{ border: '1px solid #ccc' }} />
-          <div className="d-flex mt-3 gap-2 flex-wrap">
-            {product.images?.map(img => (
-              <Image
-                key={img.id}
-                src={img.url}
-                width={70}
-                height={70}
-                style={{ objectFit: 'cover', border: '1px solid #ddd', cursor: 'pointer' }}
-                onClick={() => setMainImage(img.url)}
-                alt={product.name}
-              />
-            ))}
-          </div>
+          <ProductImageGallery images={product.images} productName={product.name} />
         </Col>
 
         <Col md={6}>
@@ -319,9 +304,8 @@ export default function ProductDetail() {
           {relatedProducts.map(rp => (
             <Col md={3} key={rp.id} className="mb-3">
               <div className="border p-2 h-100 d-flex flex-column align-items-center">
-                <Image
+                <img
                   src={rp.images?.[0]?.url || 'placeholder.jpg'}
-                  fluid
                   alt={rp.name}
                   style={{ maxHeight: 150, objectFit: 'contain' }}
                 />
