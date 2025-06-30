@@ -68,4 +68,5 @@ class Order extends Model
             $order->order_number = $order->order_number ?? 'ORD-' . strtoupper(Str::random(8));
         });
     }
+    
 }

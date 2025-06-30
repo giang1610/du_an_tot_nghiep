@@ -63,7 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
         Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
         Route::get('/total', [CartController::class, 'getCartTotal']);
-        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout! ????
     });
 });
 
