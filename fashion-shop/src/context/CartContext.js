@@ -16,7 +16,7 @@ export const CartProvider = ({ children }) => {
     if (!token) return;
     try {
       setLoading(true);
-      const res = await axios.get(`${process.env.REACT_APP_API_URI}/cart`, {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const selectedItems = res.data.cart_items.filter(item => item.selected);

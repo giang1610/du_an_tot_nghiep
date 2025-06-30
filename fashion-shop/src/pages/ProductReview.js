@@ -63,11 +63,11 @@ export default function ProductReview({ productId, selectedVariantId }) {
       setLoading(false);
       return;
     }
-    const ordersReq = axios.get(`${process.env.REACT_APP_API_URI}/orders/received-product`, {
+    const ordersReq = axios.get(`${process.env.REACT_APP_API_URL}/orders/received-product`, {
       params: { product_id: productId },
       headers: { Authorization: `Bearer ${token}` },
     });
-    const reviewsReq = axios.get(`${process.env.REACT_APP_API_URI}/reviews`, {
+    const reviewsReq = axios.get(`${process.env.REACT_APP_API_URL}/reviews`, {
       params: { product_id: productId },
     });
     Promise.all([ordersReq, reviewsReq])
@@ -109,7 +109,7 @@ export default function ProductReview({ productId, selectedVariantId }) {
     setSending(true);
     setMessage(null);
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URI}/reviews`, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, {
         order_id: selectedOrderId,
         product_variant_id: selectedVariantId,
         rating,
@@ -122,7 +122,7 @@ export default function ProductReview({ productId, selectedVariantId }) {
       setContent('');
       setSelectedOrderId('');
       // Refresh reviews
-      const refreshed = await axios.get(`${process.env.REACT_APP_API_URI}/reviews`, { params: { product_id: productId } });
+      const refreshed = await axios.get(`${process.env.REACT_APP_API_URL}/reviews`, { params: { product_id: productId } });
       setReviews(refreshed.data.data || []);
     } catch (error) {
       setMessage({ type: 'danger', text: error.response?.data?.error || 'Gửi đánh giá thất bại.' });

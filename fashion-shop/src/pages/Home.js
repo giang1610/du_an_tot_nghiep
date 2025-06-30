@@ -17,7 +17,7 @@ export default function HomePage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URI}/products`);
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/products`);
       const json = await res.json();
       if (!json.success || !Array.isArray(json.data)) {
         throw new Error('Dữ liệu sản phẩm không hợp lệ');

@@ -14,7 +14,7 @@ export default function ResendVerification() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URI}/resend-verification`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/resend-verification`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

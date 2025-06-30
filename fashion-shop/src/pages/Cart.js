@@ -13,12 +13,12 @@ export default function CartPage() {
   const fetchCartData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URI}/cart`, {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCartItems(res.data.cart_items);
 
-      const totalRes = await axios.get(`${process.env.REACT_APP_API_URI}/cart/total`, {
+      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTotal(totalRes.data.total);
@@ -39,7 +39,7 @@ export default function CartPage() {
 
     updateQuantityTimeout.current = setTimeout(async () => {
       try {
-        await axios.put(`${process.env.REACT_APP_API_URI}/cart/update/${item.id}`, {
+        await axios.put(`${process.env.REACT_APP_API_URL}/cart/update/${item.id}`, {
           quantity: Number(quantity),
           color_id: item.color_id,
           size_id: item.size_id
@@ -55,7 +55,7 @@ export default function CartPage() {
         );
 
         // Cập nhật tổng tiền
-        const totalRes = await axios.get(`${process.env.REACT_APP_API_URI}/cart/total`, {
+        const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTotal(totalRes.data.total);
@@ -68,7 +68,7 @@ export default function CartPage() {
   // Chọn/bỏ chọn sản phẩm
   const toggleSelected = async (item) => {
     try {
-      await axios.put(`${process.env.REACT_APP_API_URI}/cart/update-selected/${item.id}`, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/cart/update-selected/${item.id}`, {
         selected: !item.selected
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -79,7 +79,7 @@ export default function CartPage() {
       );
 
       // Cập nhật tổng tiền
-      const totalRes = await axios.get(`${process.env.REACT_APP_API_URI}/cart/total`, {
+      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTotal(totalRes.data.total);
@@ -92,14 +92,14 @@ export default function CartPage() {
   // Xóa sản phẩm
   const removeItem = async (itemId) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URI}/cart/remove/${itemId}`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/cart/remove/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       setCartItems(prev => prev.filter(i => i.id !== itemId));
 
       // Cập nhật tổng tiền
-      const totalRes = await axios.get(`${process.env.REACT_APP_API_URI}/cart/total`, {
+      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTotal(totalRes.data.total);

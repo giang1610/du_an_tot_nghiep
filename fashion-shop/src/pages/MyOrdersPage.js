@@ -32,7 +32,7 @@ export default function MyOrdersPage() {
       try {
         setLoading(true);
         setError('');
-        const res = await axios.get(`${process.env.REACT_APP_API_URI}/orders`, {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setOrders(res.data.data?.data || []);

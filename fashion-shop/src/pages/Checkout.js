@@ -128,7 +128,7 @@ export default function Checkout() {
       setLoading(true);
       if (form.payment_method === 'momo') {
         const { data } = await axios.post(
-          `${process.env.REACT_APP_API_URI}/payment/momo`,
+          `${process.env.REACT_APP_API_URL}/payment/momo`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -142,7 +142,7 @@ export default function Checkout() {
         setError('Không nhận được liên kết thanh toán MoMo');
       } else {
         const { data } = await axios.post(
-          `${process.env.REACT_APP_API_URI}/orders/checkout`,
+          `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );

@@ -59,7 +59,7 @@ export default function ChangePasswordPage() {
     setError('');
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URI}/change-password`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

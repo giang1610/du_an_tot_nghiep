@@ -18,7 +18,7 @@ export default function SearchBar() {
 
   useEffect(() => {
     if (search.length >= 2) {
-      axios.get(`${process.env.REACT_APP_API_URI}/products`, {
+      axios.get(`${process.env.REACT_APP_API_URL}/products`, {
         params: { search }
       }).then(res => {
         setSuggestions(res.data.data.slice(0, 5));

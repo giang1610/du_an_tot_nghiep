@@ -38,11 +38,11 @@ export default function AllProductsPage() {
 
   // Fetch categories & sizes
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URI}/categories`)
+    axios.get(`${process.env.REACT_APP_API_URL}/categories`)
       .then(res => setCategories(res.data.data))
       .catch(err => console.error("Lỗi tải danh mục:", err));
 
-    axios.get(`${process.env.REACT_APP_API_URI}/sizes`)
+    axios.get(`${process.env.REACT_APP_API_URL}/sizes`)
       .then(res => setSizes(res.data.data))
       .catch(err => console.error("Lỗi tải kích cỡ:", err));
   }, []);
@@ -50,7 +50,7 @@ export default function AllProductsPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URI}/products`, {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/products`, {
         params: { ...filters, page, limit: LIMIT }
       });
 
