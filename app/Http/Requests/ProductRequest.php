@@ -38,7 +38,7 @@ class ProductRequest extends FormRequest
                 Rule::unique('product_variants', 'sku')->ignore($variantId),
             ];
 
-            $rules["variants.$index.price"] = 'required|numeric|min:1';
+             $rules["variants.$index.price"] = 'required|numeric|min:1';
             $rules["variants.$index.sale_price"] = "nullable|numeric|min:1|lt:variants.$index.price";
             $rules["variants.$index.sale_start_date"] = "required_with:variants.$index.sale_price|nullable|date";
             $rules["variants.$index.sale_end_date"] = "required_with:variants.$index.sale_price|nullable|date|after:variants.$index.sale_start_date";
