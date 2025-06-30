@@ -172,6 +172,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Order whereTotal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Order whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Order whereUserId($value)
+ * @property-read \App\Models\User $user
  * @mixin \Eloquent
  */
 	class Order extends \Eloquent {}
@@ -193,6 +194,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Color|null $color
  * @property-read \App\Models\Order $order
+ * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\ProductVariant $productVariant
  * @property-read \App\Models\Size|null $size
  * @method static \Illuminate\Database\Eloquent\Builder|OrderItem newModelQuery()
@@ -324,6 +326,12 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|ProductVariant whereSizeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductVariant whereSku($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductVariant whereUpdatedAt($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CartItem> $cartItems
+ * @property-read int|null $cart_items_count
+ * @property-read mixed $current_price
+ * @property-read mixed $images_urls
+ * @property-read mixed $img
+ * @property-read mixed $thumbnail
  * @mixin \Eloquent
  */
 	class ProductVariant extends \Eloquent {}
@@ -355,9 +363,9 @@ namespace App\Models{
  * @property string|null $content
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Order $order
- * @property-read \App\Models\ProductVariant $productVariant
- * @property-read \App\Models\User $user
+ * @property-read Order $order
+ * @property-read ProductVariant $productVariant
+ * @property-read User $user
  * @method static \Illuminate\Database\Eloquent\Builder|Review newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Review newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Review query()
@@ -449,6 +457,7 @@ namespace App\Models{
 /**
  * 
  *
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Models\Order[] $orders
  * @property int $id
  * @property string $name
  * @property string $email

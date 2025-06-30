@@ -1,21 +1,41 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 
-const MomoPayment = ({ shippingAddress, billingAddress, customerPhone, notes }) => {
+const MomoPayment = ({ cartItems, shippingAddress, customerPhone, notes }) => {
   const [loading, setLoading] = useState(false);
+
+  const calculateTotal = () => {
+    let subtotal = 0;
+    cartItems.forEach((item) => {
+      subtotal += item.price * item.quantity;
+    });
+    return subtotal;
+  };
 
   const handleMomoPayment = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
 
+      const subtotal = calculateTotal();
+      const total = subtotal; // nếu chưa tính thêm thuế, phí ship
+
       const response = await axios.post(
-        'http://localhost:8000/api/payment/momo',
+        `${process.env.REACT_APP_API_URL}/payment/momo`,
         {
           shipping_address: shippingAddress,
-          billing_address: billingAddress,
           customer_phone: customerPhone,
-          notes: notes,
+          customer_email: '', // có thể thêm nếu cần
+          payment_method: 'momo',
+          subtotal,
+          total,
+          tax: 0,
+          shipping: 0,
+          notes,
+          items: cartItems.map((item) => ({
+            product_variant_id: item.product_variant_id,
+            quantity: item.quantity,
+          })),
         },
         {
           headers: {
@@ -24,9 +44,10 @@ const MomoPayment = ({ shippingAddress, billingAddress, customerPhone, notes }) 
         }
       );
 
-      const { payment_url } = response.data.data;
-      if (payment_url) {
-        window.location.href = payment_url;
+      const paymentUrl = response.data.data?.payUrl;
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
       } else {
         alert('Không nhận được liên kết thanh toán từ MoMo');
       }

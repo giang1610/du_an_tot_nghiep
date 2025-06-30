@@ -43,6 +43,12 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductVariant whereSizeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductVariant whereSku($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductVariant whereUpdatedAt($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CartItem> $cartItems
+ * @property-read int|null $cart_items_count
+ * @property-read mixed $current_price
+ * @property-read mixed $images_urls
+ * @property-read mixed $img
+ * @property-read mixed $thumbnail
  * @mixin \Eloquent
  */
 class ProductVariant extends Model
