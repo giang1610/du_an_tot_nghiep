@@ -1,10 +1,17 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container-fluid px-4"> <!-- Header với nút quay lại -->
+<div class="container-fluid px-4"> 
+    <nav aria-label="breadcrumb" class="mt-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Chi tiết đơn hàng</li>
+        </ol>
+    </nav>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <a href="/admin/orders" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách </a> <!-- Nút hành động -->
+            <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách </a> 
         <div class="btn-group">
             @if(!in_array($order->status, ['completed', 'cancelled']))
             <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-primary">
@@ -14,7 +21,7 @@
                 <i class="bi bi-printer me-2"></i>In đơn hàng
             </button>
         </div>
-    </div> <!-- Card thông tin chính -->
+    </div> 
     <div class="card mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0"> Đơn hàng #{{ $order->order_number }}
@@ -44,7 +51,6 @@
         </div>
 
         <div class="card-body">
-            <!-- Thông tin khách hàng -->
             <div class="row mb-4">
                 <div class="col-12 col-md-6 mb-3 mb-md-0">
                     <div class="card h-100">
@@ -120,7 +126,6 @@
                 </div>
             </div>
 
-            <!-- Danh sách sản phẩm -->
             <h5 class="border-bottom pb-2 mb-3">
                 <i class="bi bi-cart me-2"></i>Sản phẩm đã đặt
             </h5>
