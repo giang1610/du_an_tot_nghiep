@@ -78,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
         Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
         Route::get('/total', [CartController::class, 'getCartTotal']);
-        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout! ????
     });
 });
 
@@ -95,11 +95,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Các route khác: logout, cart, review...
+    Route::prefix('payment')->group(function () {
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']);
+        Route::post('/momo-notify', [OrderController::class, 'momoWebhook']);
+        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    });
 });
 
 // Payment Momo
-Route::prefix('payment')->group(function () {
-    Route::post('/momo', [OrderController::class, 'payViaMomo']);
-    Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
-    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-});
