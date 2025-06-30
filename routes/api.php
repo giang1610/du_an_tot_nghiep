@@ -15,7 +15,22 @@ use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Requests\CustomEmailVerificationRequest;
 
-// User info
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Đây là nơi đăng ký tất cả route API cho ứng dụng của bạn.
+| Nhóm các routes theo chức năng để dễ quản lý và tránh trùng lặp.
+|
+*/
+use App\Http\Controllers\MessageController;
+
+Route::post('/send-message', [MessageController::class, 'sendMessage']);
+
+
+// Route kiểm tra đăng nhập và lấy thông tin user
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -63,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
         Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
         Route::get('/total', [CartController::class, 'getCartTotal']);
-        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout! ????
     });
 });
 
@@ -80,11 +95,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Các route khác: logout, cart, review...
+    Route::prefix('payment')->group(function () {
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']);
+        Route::post('/momo-notify', [OrderController::class, 'momoWebhook']);
+        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    });
 });
 
 // Payment Momo
-Route::prefix('payment')->group(function () {
-    Route::post('/momo', [OrderController::class, 'payViaMomo']);
-    Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
-    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-});
