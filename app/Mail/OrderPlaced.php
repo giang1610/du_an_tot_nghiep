@@ -17,8 +17,8 @@ class OrderPlaced extends Mailable
     /**
      * Create a new message instance.
      */
-    public $order, $items; // Dữ liệu đơn hàng sẽ truyền vào view
-    public function __construct(Order $order, $items)
+    public $order,$items; // Dữ liệu đơn hàng sẽ truyền vào view
+    public function __construct(Order $order,$items)
     {
         $this->order = $order;
         $this->items = $items;

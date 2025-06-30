@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import {
   Container, Table, Spinner, Alert, Button, Modal, Row, Col, Card, Form
 } from 'react-bootstrap';
@@ -37,7 +37,6 @@ const paymentStatusBadgeVariant = {
 
 export default function OrderDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -48,12 +47,13 @@ export default function OrderDetailPage() {
 
   const token = localStorage.getItem('token');
 
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     if (!token) {
       setError('Bạn chưa đăng nhập');
       setLoading(false);
       return;
     }
+
     setLoading(true);
     setError('');
     try {
@@ -68,7 +68,11 @@ export default function OrderDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, token]);
+
+  useEffect(() => {
+    fetchOrder();
+  }, [fetchOrder]);
 
   const handleCancelOrder = async () => {
     try {
@@ -101,10 +105,6 @@ export default function OrderDetailPage() {
       setUpdatingAddress(false);
     }
   };
-
-  useEffect(() => {
-    fetchOrder();
-  }, [id]);
 
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (error) return <Alert variant="danger" className="py-5 text-center">{error}</Alert>;
