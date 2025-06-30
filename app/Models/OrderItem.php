@@ -2,20 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        
         'order_id',
         'product_variant_id',
         'quantity',
         'price',
-        'size_id',
-        'color_id',
         'sale_price',
-        
+        'color_id',
+        'size_id',
     ];
 
     public function order()
@@ -23,19 +24,44 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 
-    // ✅ Sửa tên để phù hợp với email blade
-    public function productVariant()
+    public function variant()
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    public function size()
+    public function product()
     {
-        return $this->belongsTo(Size::class);
+        return $this->hasOneThrough(
+            \App\Models\Product::class,
+            \App\Models\ProductVariant::class,
+            'id',                 // Foreign key on ProductVariant
+            'id',                 // Foreign key on Product
+            'product_variant_id', // Local key on OrderItem
+            'product_id'          // Local key on ProductVariant
+        );
     }
 
     public function color()
     {
-        return $this->belongsTo(Color::class);
+        return $this->hasOneThrough(
+            \App\Models\Color::class,
+            \App\Models\ProductVariant::class,
+            'id',
+            'id',
+            'product_variant_id',
+            'color_id'
+        );
+    }
+
+    public function size()
+    {
+        return $this->hasOneThrough(
+            \App\Models\Size::class,
+            \App\Models\ProductVariant::class,
+            'id',
+            'id',
+            'product_variant_id',
+            'size_id'
+        );
     }
 }

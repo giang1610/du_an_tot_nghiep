@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -52,20 +53,31 @@ use Illuminate\Support\Str;
  */
 class Order extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id', 'order_number', 'subtotal', 'tax', 'shipping', 'total',
         'status', 'payment_method', 'payment_status', 'shipping_address',
         'billing_address', 'customer_email', 'customer_phone', 'notes'
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
-    protected static function booted()
+
+    protected static function boot()
     {
+        parent::boot();
+
         static::creating(function ($order) {
-            $order->order_number = $order->order_number ?? 'ORD-' . strtoupper(Str::random(8));
+            $order->order_number = 'ORD-' . strtoupper(uniqid());
         });
     }
+
 }
