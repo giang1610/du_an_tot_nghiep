@@ -57,7 +57,7 @@ export default function OrderDetailPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URI}/orders/${id}`, {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrder(res.data.data);
@@ -72,7 +72,7 @@ export default function OrderDetailPage() {
 
   const handleCancelOrder = async () => {
     try {
-      await axios.put(`${process.env.REACT_APP_API_URI}/orders/${id}/cancel`, {}, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/cancel`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShowCancelConfirm(false);
@@ -87,7 +87,7 @@ export default function OrderDetailPage() {
     if (!newAddress.trim()) return;
     setUpdatingAddress(true);
     try {
-      await axios.put(`${process.env.REACT_APP_API_URI}/orders/${id}/update-address`, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/update-address`, {
         shipping_address: newAddress
       }, {
         headers: { Authorization: `Bearer ${token}` }

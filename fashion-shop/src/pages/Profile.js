@@ -21,7 +21,7 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URI}/profile`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
