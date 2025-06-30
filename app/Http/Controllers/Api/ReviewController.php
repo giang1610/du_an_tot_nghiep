@@ -82,4 +82,20 @@ class ReviewController extends Controller
 
         return response()->json(['success' => true, 'data' => $reviews]);
     }
+    public function receivedOrders(Request $request)
+{
+    $user = $request->user();
+    $variantId = $request->query('product_variant_id');
+
+    $order = Order::where('user_id', $user->id)
+        ->where('status', 'shipped')
+        ->whereHas('items', fn($q) => $q->where('product_variant_id', $variantId))
+        ->latest()->first();
+
+    return response()->json([
+        'received' => !!$order,
+        'order_id' => $order?->id
+    ]);
+}
+
 }

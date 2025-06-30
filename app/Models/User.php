@@ -11,6 +11,7 @@ use App\Models\Order;
 /**
  * 
  *
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Models\Order[] $orders
  * @property int $id
  * @property string $name
  * @property string $email

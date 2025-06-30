@@ -11,7 +11,7 @@ use App\Mail\OrderErrors;
 use App\Mail\OrderPicking;
 use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
-use Illuminate\Support\Facades\Mail; 
+use Illuminate\Support\Facades\Mail; // Import facade Mail
 
 class OrderController extends Controller
 {

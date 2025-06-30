@@ -34,11 +34,15 @@ class ProductImage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'url',
+        'image',
         'product_id',
         'product_variant_id',
         'is_default',
     ];
+
+    protected $appends = ['url'];
+
+    /** Relationships */
 
     public function product()
     {
@@ -48,5 +52,14 @@ class ProductImage extends Model
     public function variant()
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /** Accessors */
+
+    public function getUrlAttribute()
+    {
+        return $this->image
+            ? url('storage/' . ltrim($this->image, '/'))
+            : null;
     }
 }
