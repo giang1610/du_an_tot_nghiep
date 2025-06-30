@@ -25,7 +25,9 @@ class Review extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function productVariant() {
-        return $this->belongsTo(ProductVariant::class);
-    }
+    public function productVariant()
+{
+    return $this->belongsTo(ProductVariant::class)->with(['product', 'size', 'color']);
+}
+
 }

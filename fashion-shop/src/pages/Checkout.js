@@ -106,6 +106,11 @@ export default function Checkout() {
       return;
     }
 
+    const subtotal = selectedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const shipping = 20000;
+    const tax = Math.round(subtotal * 0.1);
+    const total = subtotal + shipping + tax;
+
     const itemsPayload = selectedItems.map(item => ({
       product_variant_id: item.product_variant_id || item.variant_id,
       quantity: item.quantity,
@@ -118,17 +123,22 @@ export default function Checkout() {
       shipping_address: form.address,
       billing_address: form.address,
       customer_phone: form.phone,
+      customer_email: user?.email || '', // cần nếu backend validate
       notes: form.notes,
       name: form.name,
       payment_method: form.payment_method,
       items: itemsPayload,
+      subtotal,
+      shipping,
+      tax,
+      total,
     };
 
     try {
       setLoading(true);
       if (form.payment_method === 'momo') {
         const { data } = await axios.post(
-          `${process.env.REACT_APP_API_URI}/payment/momo`,
+          `${process.env.REACT_APP_API_URL}/payment/momo`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -142,7 +152,7 @@ export default function Checkout() {
         setError('Không nhận được liên kết thanh toán MoMo');
       } else {
         const { data } = await axios.post(
-          `${process.env.REACT_APP_API_URI}/orders/checkout`,
+          `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -213,7 +223,6 @@ export default function Checkout() {
                 onChange={e => setField('payment_method', e.target.value)}
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                <option value="banking">Chuyển khoản</option>
                 <option value="momo">Thanh toán MoMo</option>
               </Form.Select>
             </Form.Group>

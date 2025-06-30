@@ -53,8 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $request) => $request->user());
 
     // Reviews
-    Route::post('/reviews', [ReviewController::class, 'store']);
-    Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
+    Route::get('/reviews', [ReviewController::class, 'store']);
+   Route::middleware('auth:sanctum')->get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
+
     // Cart
     Route::prefix('cart')->group(function () {
         Route::post('/add', [CartController::class, 'addToCart']);
@@ -87,4 +88,6 @@ Route::prefix('payment')->group(function () {
     Route::post('/momo', [OrderController::class, 'payViaMomo']);
     Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
     Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo']);
+
 });

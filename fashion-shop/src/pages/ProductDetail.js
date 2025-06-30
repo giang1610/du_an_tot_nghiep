@@ -30,7 +30,7 @@ export default function ProductDetail() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`${process.env.REACT_APP_API_URI}/products/slug/${slug}`)
+    axios.get(`${process.env.REACT_APP_API_URL}/products/slug/${slug}`)
       .then(res => {
         const { product, reviews, related_products } = res.data.data;
         setProduct(product);
@@ -110,7 +110,7 @@ export default function ProductDetail() {
       return;
     }
     try {
-      await axios.post(`${process.env.REACT_APP_API_URI}/cart/add`, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/cart/add`, {
         product_variant_id: selectedVariantId,
         quantity,
         color_id: Number(selectedColor),
@@ -147,7 +147,7 @@ export default function ProductDetail() {
       const shipping = 20000;
       const total = subtotal + tax + shipping;
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URI}/orders/checkout`, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/orders/checkout`, {
         payment_method: paymentMethod,
         shipping_address: shippingAddress,
         customer_phone: customerPhone,
