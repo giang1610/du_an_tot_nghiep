@@ -18,7 +18,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $query = Order::with('user')->orderBy('created_at', 'desc');
-        
+
         // Lọc theo status nếu có
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -28,7 +28,7 @@ class OrderController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('id', 'like', "%{$search}%")
+                $q->where('order_number', 'like', "%{$search}%") // 👈 lọc đúng theo mã đơn
                     ->orWhereHas('user', function ($q2) use ($search) {
                         $q2->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
@@ -51,8 +51,211 @@ class OrderController extends Controller
 
         return view('admin.orders.index', compact('orders'));
     }
+    public function cancelled(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'cancelled')
+            ->orderBy('created_at', 'desc');
 
-    public function show($id)
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString(); 
+
+        return view('admin.orders.cancelled', compact('orders'));
+    }
+
+    public function pending(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString(); 
+
+        return view('admin.orders.pending', compact('orders'));
+    }
+
+    public function processing(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'processing')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString(); 
+
+        return view('admin.orders.processing', compact('orders'));
+    }
+
+    public function picking(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'picking')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString(); 
+
+        return view('admin.orders.picking', compact('orders'));
+    }
+
+    public function shipping(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'shipping')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString(); 
+
+        return view('admin.orders.shipping', compact('orders'));
+    }
+
+    public function shipped(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'shipped')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString(); 
+
+        return view('admin.orders.shipped', compact('orders'));
+    }
+
+    public function show($id) 
     {
         $order = Order::with([
             'items.variant.product',    // tên sản phẩm
@@ -94,26 +297,26 @@ class OrderController extends Controller
     }
     public function update(Request $request, $id)
     {
-       $order = Order::findOrFail($id);
-    $oldStatus = $order->status;
-    $order->update($request->all());
+        $order = Order::findOrFail($id);
+        $oldStatus = $order->status;
+        $order->update($request->all());
 
-    // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
-    if ($order->status !== $oldStatus && $order->status === 'shipping') {
-        Mail::to($order->user->email)->send(new OrderGiao($order));
-    }
-    if ($order->status !== $oldStatus && $order->status === 'cancelled') {
-        Mail::to($order->user->email)->send(new OrderErrors($order));
-    }
-    if ($order->status !== $oldStatus && $order->status === 'picking') {
-        Mail::to($order->user->email)->send(new OrderPicking($order));
-    }
-    if ($order->status !== $oldStatus && $order->status === 'processing') {
-        Mail::to($order->user->email)->send(new OrderProcessing($order));
-    }
-    if ($order->status !== $oldStatus && $order->status === 'shipped') {
-        Mail::to($order->user->email)->send(new OrderShipped($order));
-    }
+        // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
+        if ($order->status !== $oldStatus && $order->status === 'shipping') {
+            Mail::to($order->user->email)->send(new OrderGiao($order));
+        }
+        if ($order->status !== $oldStatus && $order->status === 'cancelled') {
+            Mail::to($order->user->email)->send(new OrderErrors($order));
+        }
+        if ($order->status !== $oldStatus && $order->status === 'picking') {
+            Mail::to($order->user->email)->send(new OrderPicking($order));
+        }
+        if ($order->status !== $oldStatus && $order->status === 'processing') {
+            Mail::to($order->user->email)->send(new OrderProcessing($order));
+        }
+        if ($order->status !== $oldStatus && $order->status === 'shipped') {
+            Mail::to($order->user->email)->send(new OrderShipped($order));
+        }
         return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
 }
