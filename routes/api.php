@@ -79,13 +79,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
     });
 
-    // Các route khác: logout, cart, review...\
-    // Payment Momo
-    Route::prefix('payment')->group(function () {
+    // Các route khác: logout, cart, review...
+});
+
+// Payment Momo
+Route::prefix('payment')->group(function () {
     Route::post('/momo', [OrderController::class, 'payViaMomo']);
     Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
     Route::get('/momo-return', [OrderController::class, 'momoReturn']);
 });
-});
-
-

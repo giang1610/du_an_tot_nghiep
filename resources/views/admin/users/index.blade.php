@@ -55,7 +55,6 @@
                             <th>Tên người dùng</th>
                             <th>Email</th>
                             <th width="180" class="text-center">Ngày tạo</th>
-                            <!-- <th width="120" class="text-center">Hành động</th> -->
                         </tr>
                     </thead>
                     <tbody>
@@ -81,8 +80,8 @@
                                         {{ $user->created_at->format('d/m/Y') }}
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    <!-- <div class="btn-group btn-group-sm">
+                                {{-- <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
                                         <a href="#" class="btn btn-outline-primary" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
@@ -92,8 +91,8 @@
                                         <button class="btn btn-outline-danger" title="Xóa">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
-                                    </div> -->
-                                </td>
+                                    </div>
+                                </td> --}}
                             </tr>
                         @empty
                             <tr>
