@@ -108,7 +108,7 @@
                             <th>Thông tin</th>
                             <th>Thanh toán</th>
                             <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
+                            <th>Trạng thái giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -184,7 +184,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">
