@@ -39,19 +39,19 @@
     @php
     // Tất cả trạng thái
         $statusOptions = [
-            'cancelled' => 'Đã hủy',
-            'pending' => 'Chờ xử lý',
-            'processing' => 'Đang xử lý',
-            'picking' => 'Đang lấy hàng',
-            'shipping' => 'Đang giao hàng',
-            'shipped' => 'Đã giao hàng',
-            'completed' => 'Xác minh nhận hàng',
+            '0' => 'Đã hủy',
+            '1' => 'Chờ xử lý',
+            '2' => 'Đang xử lý',
+            '3' => 'Đang lấy hàng',
+            '4' => 'Đang giao hàng',
+            '5' => 'Đã giao hàng',
+            '6' => 'Xác minh nhận hàng',
         ];
 
         // Flow hợp lệ (không gồm completed vì khách xác nhận)
-        $statusFlow = ['pending', 'processing', 'picking', 'shipping', 'shipped'];
+        $statusFlow = ['1', '2', '3', '4', '5'];
 
-        $currentStatus = old('status', $order->status ?? 'pending');
+        $currentStatus = old('status', $order->status ?? '1');
         $currentIndex = array_search($currentStatus, $statusFlow);
         $nextStatus = $statusFlow[$currentIndex + 1] ?? null; // trạng thái kế tiếp
     @endphp
@@ -60,9 +60,9 @@
         <label class="form-label">Trạng thái</label>
         <select name="status" class="form-select" required>
             {{-- Cho phép huỷ nếu chưa giao hàng --}}
-            @if (!in_array($currentStatus, ['shipped', 'completed', 'cancelled']))
-                <option value="cancelled" {{ $currentStatus == 'cancelled' ? 'selected' : '' }}>
-                    {{ $statusOptions['cancelled'] }}
+            @if (!in_array($currentStatus, ['5', '6', '0']))
+                <option value="0" {{ $currentStatus == '0' ? 'selected' : '' }}>
+                    {{ $statusOptions['0'] }}
                 </option>
             @endif
 

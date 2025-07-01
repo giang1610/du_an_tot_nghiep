@@ -20,13 +20,20 @@
     <div class="col-auto">
         <select name="status" class="form-select">
             <option value="">-- Tất cả trạng thái --</option>
-            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
-            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
-            <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-            <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
-            <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
-            <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
-            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Xác minh nhận hàng</option>
+            <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Đã hủy</option>
+            <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Chờ xử lý</option>
+            <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Đang xử lý</option>
+            <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Đang lấy hàng</option>
+            <option value="4" {{ request('status') == '4' ? 'selected' : '' }}>Đang giao hàng</option>
+            <option value="5" {{ request('status') == '5' ? 'selected' : '' }}>Đã giao hàng</option>
+            <option value="6" {{ request('status') == '6' ? 'selected' : '' }}>Xác minh nhận hàng</option>
+            {{-- <option value="0" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+            <option value="1" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
+            <option value="2" {{ request('status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
+            <option value="3" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
+            <option value="4" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
+            <option value="5" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
+            <option value="6" {{ request('status') == 'completed' ? 'selected' : '' }}>Xác minh nhận hàng</option> --}}
         </select>
     </div>
 
@@ -57,7 +64,8 @@
                 <th>Số điện thoại</th> 
                 <th>Ngày tạo</th>
                 <th>Tổng tiền</th>
-                <th>Trạng thái</th>
+                <th>Trạng thái thanh toán</th>
+                <th>Trạng thái đơn hàng</th>
                 <th>Thao tác</th>
             </tr>
         </thead>
@@ -80,27 +88,28 @@
                 <td>{{ $order->customer_phone }}</td> 
                 <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                 <td>{{ number_format($order->total) }}₫</td>
+                <td>{{ $order->payment_status }}</td> 
                 <td>
                     @switch($order->status)
-                    @case('pending')
+                    @case('1')
                     <span class="badge bg-warning">Chờ xử lý</span>
                     @break
-                    @case('processing')
+                    @case('2')
                     <span class="badge bg-primary">Đang xử lý</span>
                     @break
-                    @case('picking')
+                    @case('3')
                     <span class="badge bg-info">Đang lấy hàng</span>
                     @break
-                    @case('shipping')
+                    @case('4')
                     <span class="badge bg-secondary">Đang giao hàng</span>
                     @break
-                    @case('shipped')
+                    @case('5')
                     <span class="badge bg-success">Đã giao hàng</span>
                     @break
-                    @case('completed')
+                    @case('6')
                     <span class="badge bg-success">Xác minh nhận hàng</span>
                     @break
-                    @case('cancelled')
+                    @case('0')
                     <span class="badge bg-danger">Đã hủy</span>
                     @break
                     @default
@@ -112,7 +121,7 @@
                 <td>
                     <a href="{{ route('orders.show', $order->id) }}" class="btn btn-sm btn-info">Xem</a>
                     {{-- <a href="" class="btn btn-sm btn-toolbar">In đơn</a> --}}
-                    @if (!in_array($order->status, ['completed', 'cancelled']))
+                    @if (!in_array($order->status, ['0', '6']))
                         <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-sm btn-success">Sửa</a>
                     @endif
                 </td>
