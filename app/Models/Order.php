@@ -80,5 +80,4 @@ class Order extends Model
             $order->order_number = 'ORD-' . strtoupper(uniqid());
         });
     }
-
 }
