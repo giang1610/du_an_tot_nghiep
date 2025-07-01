@@ -53,6 +53,7 @@ export default function OrderDetailPage() {
       setLoading(false);
       return;
     }
+
     setLoading(true);
     setError('');
     try {
@@ -208,9 +209,9 @@ export default function OrderDetailPage() {
                     <tr key={item.id}>
                       <td>
                         <img
-                          src={item.product_variant.thumbnail}
-                          alt={item.product_variant.product.name}
-                          width={80}
+                          src={item.product_variant?.product?.image || '/no-image.jpg'}
+                          alt={item.product_variant?.product?.name || 'Ảnh sản phẩm'}
+                          style={{ width: 50, height: 50, objectFit: 'cover' }}
                         />
                       </td>
                       <td>{item.product_variant?.product?.name}</td>

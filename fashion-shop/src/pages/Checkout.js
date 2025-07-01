@@ -12,16 +12,14 @@ const ProductSummary = ({ items }) => {
       {items.map(item => (
         <Card key={item.id || item.product_variant_id || item.variant_id} className="mb-3">
           <Card.Body className="d-flex">
-            {console.log(item.image)}
             <Image
-              src={item.image || 'https://via.placeholder.com/80'}
+              src={item.image}
               alt={item.product_name || item.name}
               width={80}
               height={80}
               className="me-3"
-              style={{ objectFit: 'cover', border: '1px solid #eee' }}
+              style={{ objectFit: 'cover' }}
             />
-            
             <div>
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
@@ -99,7 +97,6 @@ export default function Checkout() {
     if (!validate()) return;
 
     const token = localStorage.getItem('token') || user?.token;
-    console.log('Token:', token);
     if (!token) {
       setError('Bạn cần đăng nhập để đặt hàng.');
       return;
@@ -108,11 +105,6 @@ export default function Checkout() {
       setError('Không có sản phẩm nào để đặt hàng.');
       return;
     }
-
-    const subtotal = selectedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const shipping = 20000;
-    const tax = Math.round(subtotal * 0.1);
-    const total = subtotal + shipping + tax;
 
     const itemsPayload = selectedItems.map(item => ({
       product_variant_id: item.product_variant_id || item.variant_id,
@@ -126,15 +118,10 @@ export default function Checkout() {
       shipping_address: form.address,
       billing_address: form.address,
       customer_phone: form.phone,
-      customer_email: user?.email || '', // cần nếu backend validate
       notes: form.notes,
       name: form.name,
       payment_method: form.payment_method,
       items: itemsPayload,
-      subtotal,
-      shipping,
-      tax,
-      total,
     };
 
     try {
@@ -226,6 +213,7 @@ export default function Checkout() {
                 onChange={e => setField('payment_method', e.target.value)}
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
+                <option value="banking">Chuyển khoản</option>
                 <option value="momo">Thanh toán MoMo</option>
               </Form.Select>
             </Form.Group>
