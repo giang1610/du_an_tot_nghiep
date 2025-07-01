@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Events\OrderStatusUpdated; // Import sự kiện OrderStatusUpdated
-use App\Mail\OrderGiao; // Import mail OrderGiao
-use App\Mail\OrderErrors; // Import mail OrderErrors
+use App\Mail\OrderGiao; 
+use App\Mail\OrderErrors;
 use App\Mail\OrderPicking;
 use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
-use Illuminate\Support\Facades\Mail; // Import facade Mail
+use Illuminate\Support\Facades\Mail; 
 
 class OrderController extends Controller
 {

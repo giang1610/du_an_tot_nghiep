@@ -9,6 +9,7 @@ use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 
@@ -77,6 +78,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::get('/', function () {
       return view('admin.dashboard');
     })->name('admin');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
     //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -89,7 +91,13 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
 
 
     Route::resource('orders', OrderController::class);
-    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    // Route::resource('pending', OrderController::class);
+    Route::get('/cancelled', [OrderController::class, 'cancelled'])->name('orders.cancelled');
+    Route::get('/pending', [OrderController::class, 'pending'])->name('orders.pending');
+    Route::get('/processing', [OrderController::class, 'processing'])->name('orders.processing');
+    Route::get('/picking', [OrderController::class, 'picking'])->name('orders.picking');
+    Route::get('/shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
+    Route::get('/shipped', [OrderController::class, 'shipped'])->name('orders.shipped');
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);

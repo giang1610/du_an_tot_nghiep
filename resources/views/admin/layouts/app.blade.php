@@ -131,15 +131,31 @@
     </li>
 
     <!-- Đơn hàng -->
+     <li class="nav-item menu-parent" data-title="orders">
+      <a class="nav-link" data-bs-toggle="collapse" href="#ordersMenu">
+        <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <div id="ordersMenu" class="collapse ps-3">
+        <a href="{{ route('orders.index') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Danh sách</a>
+        <a href="{{ route('orders.cancelled') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Đơn đã huỷ</a>
+        <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lí</a>
+        <a href="{{ route('orders.processing') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn đang xử lý</a>
+        <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
+        <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
+        <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
+      
+    </li>
+
+    <!-- Đơn hàng
     <li class="nav-item menu-item" data-title="orders">
       <a href="{{ route('orders.index') }}" class="nav-link">
         <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span>
       </a>
-    </li>
+    </li> -->
 
     <!-- 👉 Khách hàng (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="khách hàng customers">
-      <a href="#" class="nav-link">
+      <a href="{{ route('users.index') }}" class="nav-link">
         <i class="bi bi-people"></i><span class="menu-text">Khách hàng</span>
       </a>
     </li>
@@ -194,7 +210,7 @@
   </header>
 
   <!-- MAIN CONTENT -->
-  <main class="p-4" id="mainContent">
+  <main class="pt-1" id="mainContent">
     @yield('content')
   </main>
 </div>
