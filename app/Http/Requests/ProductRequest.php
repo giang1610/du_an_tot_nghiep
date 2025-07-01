@@ -33,7 +33,7 @@ class ProductRequest extends FormRequest
 
             $rules["variants.$index.sku"] = [
                 'required',
-                'string',
+                // 'string',
                 'max:255',
                 Rule::unique('product_variants', 'sku')->ignore($variantId),
             ];
