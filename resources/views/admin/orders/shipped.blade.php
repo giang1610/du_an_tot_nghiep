@@ -2,10 +2,11 @@
 
 @section('content')
 <div class="container-fluid px-0 px-md-3">
-    <nav aria-label="breadcrumb" class="mt-2">
+    <nav aria-label="breadcrumb" class="mt-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
-            <li class="breadcrumb-item active" aria-current="page"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.shipped') }}" style="text-decoration: none">Đơn đã giao hàng</a></li>
         </ol>
     </nav>
 
@@ -31,20 +32,6 @@
                         <input type="text" name="search" id="search" class="form-control" placeholder="Mã đơn, tên KH..."
                             value="{{ request('search') }}">
                     </div>
-                </div>
-
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label for="status" class="form-label">Trạng thái</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">Tất cả</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
-                        <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                        <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
-                        <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
-                        <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                    </select>
                 </div>
 
                 <div class="col-6 col-md-3 col-lg-2">
@@ -128,7 +115,7 @@
                                 </div>
                             </td>
                             <td>
-                                @foreach($order->items as $item)
+                                @foreach($order->items as $item)    
                                 <div class="d-flex align-items-center mb-2">
                                     @if($item->variant->product->image)
                                     <img src="{{ asset($item->variant->product->image) }}"
