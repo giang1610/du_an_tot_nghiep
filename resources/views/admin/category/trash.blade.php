@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 @section('content')
-<a href="/categories"><i class="bi bi-arrow-left" style="font-size: 1.5rem; color: red;"></i>
+<a href="/admin/categories"><i class="bi bi-arrow-left" style="font-size: 1.5rem; color: red;"></i>
 
         Quay lại danh sách danh mục
 
@@ -22,7 +22,9 @@
 <table class="table">
     <thead>
         <tr>
-            <th>ID</th><th>Tên</th><th>Thao tác</th>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Thao tác</th>
         </tr>
     </thead>
     <tbody>

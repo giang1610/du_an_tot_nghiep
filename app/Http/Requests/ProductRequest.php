@@ -30,18 +30,18 @@ class ProductRequest extends FormRequest
     if ($this->has('variants')) {
         foreach ($this->variants as $index => $variant) {
             $variantId = $variant['id'] ?? null;
-            
+
             $rules["variants.$index.sku"] = [
                 'required',
-                'string',
+                // 'string',
                 'max:255',
                 Rule::unique('product_variants', 'sku')->ignore($variantId),
             ];
-            
-            $rules["variants.$index.price"] = 'required|numeric|min:1';
-            $rules["variants.$index.sale_price"] = 'nullable|numeric|min:1|lt:variants.*.price';
-            $rules["variants.$index.sale_start_date"] = 'required_with:variants.*.sale_price|nullable|date';
-            $rules["variants.$index.sale_end_date"] = 'required_with:variants.*.sale_price|nullable|date|after:variants.*.sale_start_date';
+
+             $rules["variants.$index.price"] = 'required|numeric|min:1';
+            $rules["variants.$index.sale_price"] = "nullable|numeric|min:1|lt:variants.$index.price";
+            $rules["variants.$index.sale_start_date"] = "required_with:variants.$index.sale_price|nullable|date";
+            $rules["variants.$index.sale_end_date"] = "required_with:variants.$index.sale_price|nullable|date|after:variants.$index.sale_start_date";
             $rules["variants.$index.stock"] = 'nullable|integer|min:0';
             $rules["variants.$index.image"] = $this->isMethod('post') ? 'required|image|mimes:jpeg,png,jpg|max:2048' : 'nullable|image|mimes:jpeg,png,jpg|max:2048';
             $rules["variants.$index.stock_status"] = 'required|in:0,1';
@@ -51,7 +51,7 @@ class ProductRequest extends FormRequest
 
     return $rules;
 }
-    
+
 
     //validate kho
     public function withValidator($validator)
@@ -104,7 +104,7 @@ class ProductRequest extends FormRequest
         'price_products.required' => 'Giá sản phẩm không được để trống.',
         'price_products.numeric' => 'Giá sản phẩm phải là số.',
         'price_products.min' => 'Giá sản phẩm phải lớn hơn 0.',
-        
+
         'variants.*.sku.required' => 'Mã sản phẩm không được để trống.',
         'variants.*.sku.unique' => 'Mã sản phẩm đã tồn tại.',
         'variants.*.price.required' => 'Giá không được để trống.',
@@ -119,7 +119,7 @@ class ProductRequest extends FormRequest
         'variants.*.stock_quantity.integer' => 'Số lượng kho phải là số nguyên.',
         'variants.*.stock_quantity.min' => 'Số lượng kho phải lớn hơn 0.',
         'variants.*.stock_status.required' => 'Vui lòng chọn trạng thái kho.',
-        
+
         ];
     }
 }

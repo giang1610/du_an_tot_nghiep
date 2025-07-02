@@ -27,9 +27,9 @@
                 </button>
             </div>
         </form>
-        {{-- <a href="{{ route('categories.trash') }}" class="btn btn-secondary mb-2">
+        <a href="{{ route('products.trash') }}" class="btn btn-secondary mb-2">
             <i class="bi bi-trash3-fill"></i> Thùng rác
-         </a> --}}
+         </a>
 
 
         <table class="table table-bordered table-striped">
@@ -125,7 +125,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger"
-                                    onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm này?')"><i class="bi bi-trash3"></i></button>
+                                    onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')"><i class="bi bi-trash3"></i></button>
                             </form>
                         </td>
                     </tr>
