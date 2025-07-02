@@ -60,8 +60,7 @@ return [
         'scheme' => 'http',
         ],
             ],
-
-        'log' => [
+            'log' => [
             'driver' => 'log',
         ],
 
