@@ -32,6 +32,7 @@ Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest
     return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
 })->middleware(['signed'])->name('verification.verify');
 
+
 // Public product routes
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/slug/{slug}', [ProductController::class, 'showBySlug']);
@@ -57,16 +58,24 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reviews
     // Gửi đánh giá
     Route::post('/reviews', [ReviewController::class, 'store']);
-    Route::get('/orders/received-product', [OrderController::class, 'checkReceivedProduct']);
+
+    // Lấy danh sách đánh giá theo product_id (dùng ?product_id=...)
+    Route::get('/reviews', [ReviewController::class, 'getByProductQuery']);
+
+    // Kiểm tra đã nhận hàng
+    Route::middleware('auth:sanctum')->get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
     // Cart
-    Route::prefix('cart')->group(function () {
-        Route::post('/add', [CartController::class, 'addToCart']);
-        Route::get('/', [CartController::class, 'viewCart']);
-        Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
-        Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
-        Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
-        Route::get('/total', [CartController::class, 'getCartTotal']);
-        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::prefix('cart')->group(function () {
+            Route::post('/add', [CartController::class, 'addToCart']);
+            Route::get('/', [CartController::class, 'viewCart']);
+            Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
+            Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
+            Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
+            Route::get('/total', [CartController::class, 'getCartTotal']);
+            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+
+        });
     });
 });
 
@@ -75,12 +84,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Orders
     Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
-    Route::get('/', [OrderController::class, 'index']);
-    Route::get('/{order}', [OrderController::class, 'show']);
-    Route::post('/checkout', [OrderController::class, 'checkout']);
-    Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
-    Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
-});
+        Route::get('/', [OrderController::class, 'index']);
+        Route::get('/{order}', [OrderController::class, 'show']);
+        Route::post('/checkout', [OrderController::class, 'checkout']);
+        Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
+        Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+    });
 
 
 
@@ -93,7 +102,6 @@ Route::prefix('payment')->group(function () {
     Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
     // Route::get('/momo-return', [OrderController::class, 'momoReturn']);
     // Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
-     Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+    Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
     Route::get('/momo/return', [OrderController::class, 'momoReturn']);
 });
-

@@ -97,5 +97,16 @@ class ReviewController extends Controller
         'order_id' => $order?->id
     ]);
 }
+// Lấy review qua query ?product_id=...
+public function getByProductQuery(Request $request)
+{
+    $productId = $request->query('product_id');
+    if (!$productId) {
+        return response()->json(['error' => 'Thiếu product_id'], 400);
+    }
+
+    return $this->listByProduct($productId);
+}
+
 
 }

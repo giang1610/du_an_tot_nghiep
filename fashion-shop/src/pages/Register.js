@@ -45,9 +45,10 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess(data.message || 'Đăng ký thành công');
+        setSuccess('Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản trước khi đăng nhập.');
         setForm({ name: '', email: '', password: '', password_confirmation: '' });
-        setTimeout(() => navigate('/login'), 3000);
+        // Chờ 6 giây rồi chuyển hướng về login
+        setTimeout(() => navigate('/login'), 6000);
       } else if (res.status === 422 && data.errors) {
         const firstError = Object.values(data.errors)[0][0];
         setError(firstError);

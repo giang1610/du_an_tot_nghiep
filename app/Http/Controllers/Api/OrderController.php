@@ -273,7 +273,7 @@ class OrderController extends Controller
                         'data' => [
                             'order_id' => $order->id,
                             'payment_url' => $momoResponse['payUrl'],
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
+                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
                         ]
                     ]);
 
@@ -285,7 +285,7 @@ class OrderController extends Controller
                         'data' => [
                             'order_id' => $order->id,
                             'payment_url' => null,
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
+                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
                         ]
                     ]);
 
@@ -294,7 +294,7 @@ class OrderController extends Controller
                         'message' => 'Đặt hàng thành công',
                         'data' => [
                             'order_id' => $order->id,
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
+                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
                         ]
                     ]);
             }

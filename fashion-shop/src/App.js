@@ -9,7 +9,7 @@ import Login from './pages/Login';
 import AllProductsPage from './pages/AllProductsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ForgotPassword from './pages/ForgotPassword';
-import ResendVerification from './pages/ResendVerification';
+import ResendVerification from './pages/ResendEmailPage';
 import Checkout from './pages/Checkout';
 import Profile from './pages/Profile';
 import OrderDetailPage from './pages/OrderDetailPage';

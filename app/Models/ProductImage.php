@@ -62,8 +62,4 @@ class ProductImage extends Model
             ? url('storage/' . ltrim($this->image, '/'))
             : null;
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 4242ec0 (hoàn thiện)
