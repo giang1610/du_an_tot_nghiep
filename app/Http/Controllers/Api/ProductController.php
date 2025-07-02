@@ -146,7 +146,7 @@ class ProductController extends Controller
             $query->where('id', '!=', $request->exclude);
         }
 
-        $related = $query->with(['variants.color', 'variants.size', 'images'])->get();
+        $related = $query->with(['variants.color', 'variants.size', 'variants.images'])->get();
 
         foreach ($related as $product) {
             $this->processProductPricing($product);

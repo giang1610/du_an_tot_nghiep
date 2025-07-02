@@ -209,10 +209,10 @@ export default function ProductDetail() {
 
       <Row>
         <Col md={6}>
-          <ProductImageGallery 
-          images={imageList} 
-           mainImage={selectedVariant?.img || product.img}
-          productName={product.name} />
+          <ProductImageGallery
+            images={imageList}
+            mainImage={selectedVariant?.img || product.img}
+            productName={product.name} />
         </Col>
 
         <Col md={6}>
@@ -317,23 +317,30 @@ export default function ProductDetail() {
         </Col>
       </Row>
 
-      <div className="mt-5">
-        <h4>Sản phẩm liên quan</h4>
-        <Row>
-          {relatedProducts.map(rp => (
-            <Col md={3} key={rp.id} className="mb-3">
-              <div className="border p-2 h-100 d-flex flex-column align-items-center">
-                <img
-                  src={rp.images?.[0]?.url || 'https://via.placeholder.com/150x150?text=No+Image'}
-                  alt={rp.name}
-                  style={{ maxHeight: 150, objectFit: 'contain' }}
-                />
-                <p className="fw-bold mt-2 text-center">{rp.name}</p>
-              </div>
-            </Col>
-          ))}
-        </Row>
-      </div>
+     <div className="mt-5">
+  <h4>Sản phẩm liên quan</h4>
+  <Row>
+    {relatedProducts.map((rp) => {
+      const imageUrl =
+        rp.variants?.[0]?.thumbnail ||
+        'https://via.placeholder.com/150x150?text=No+Image';
+
+      return (
+        <Col md={3} key={rp.id} className="mb-3">
+          <div className="border p-2 h-100 d-flex flex-column align-items-center">
+            <img
+              src={imageUrl}
+              alt={rp.name}
+              style={{ maxHeight: 150, objectFit: 'contain' }}
+            />
+            <p className="fw-bold mt-2 text-center">{rp.name}</p>
+          </div>
+        </Col>
+      );
+    })}
+  </Row>
+</div>
+
     </Container>
   );
 }
