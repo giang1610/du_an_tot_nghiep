@@ -17,6 +17,8 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import MomoReturn from './pages/MomoReturn';
+// import Test from './pages/test';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -54,6 +56,11 @@ function App() {
         <Route path="/profile" element={<Profile />} />
          <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
+        
+        {/* anhkato */}
+        {/* <Route path="/test" element={<Test />} /> */}
+        {/* route ResetPassword anhkato vieêt */}
+        <Route path="/reset-password" element={<ResetPassword />} />
 
 
       </Routes>

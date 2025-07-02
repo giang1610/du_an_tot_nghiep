@@ -15,8 +15,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:25',
+            'email' => 'required|string|email|max:40|unique:users',
             'password' => 'required|string|confirmed|min:8',
         ]);
 
@@ -27,17 +27,17 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-
-        dispatch(new SendVerificationEmailJob($user));
+        
+       dispatch(new SendVerificationEmailJob($user));
 
 
 
         return response()->json([
             'message' => 'Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản của bạn.',
-            'user' => [
+            'user' => [ 
                 'name' => $user->name,
                 'email' => $user->email,
-                'email_verified_at' => $user->email_verified_at,
+                'email_verified_at' => $user->email_verified_at, 
             ],
 
         ], 200);
@@ -58,13 +58,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // ✅ Kiểm tra nếu user chưa xác minh email
-        if (is_null($user->email_verified_at)) {
-            return response()->json([
-                'message' => 'Vui lòng xác thực email trước khi đăng nhập.',
-            ], 403);
-        }
-
         $token = $user->createToken('api_token')->plainTextToken;
 
         return response()->json([
@@ -78,7 +71,7 @@ class AuthController extends Controller
         ]);
     }
 
-
+   
 
 
     public function logout(Request $request)
