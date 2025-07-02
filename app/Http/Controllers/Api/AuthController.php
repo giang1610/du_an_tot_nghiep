@@ -66,6 +66,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'img_thumbnail' => $user->img_thumbnail ?? null
             ],
             'token' => $token,
         ]);
