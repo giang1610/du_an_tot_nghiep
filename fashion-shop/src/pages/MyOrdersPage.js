@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Container, Table, Spinner, Alert, Button } from 'react-bootstrap';
+import { Container, Table, Spinner, Alert, Button, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const formatDate = (isoDate) => {
   const date = new Date(isoDate);
-  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth()+1)
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
     .toString().padStart(2, '0')}/${date.getFullYear()}`;
 };
 
@@ -14,6 +14,22 @@ const formatCurrency = (amount) =>
 
 const getPaymentMethodLabel = (method) =>
   method === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản';
+
+const STATUS_LABELS = {
+  pending: 'Chờ xử lý',
+  processing: 'Đang xử lý',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy',
+  failed: 'Thất bại',
+};
+
+const STATUS_VARIANTS = {
+  pending: 'warning',
+  processing: 'info',
+  completed: 'success',
+  cancelled: 'secondary',
+  failed: 'danger',
+};
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -70,6 +86,7 @@ export default function MyOrdersPage() {
               <th>Mã đơn</th>
               <th>Ngày đặt</th>
               <th>Phương thức</th>
+              <th>Trạng thái</th>
               <th>Tổng tiền</th>
               <th>Hành động</th>
             </tr>
@@ -80,6 +97,11 @@ export default function MyOrdersPage() {
                 <td>{order.order_number || order.id}</td>
                 <td>{formatDate(order.created_at)}</td>
                 <td>{getPaymentMethodLabel(order.payment_method)}</td>
+                <td>
+                  <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
+                    {STATUS_LABELS[order.status] || 'Không rõ'}
+                  </Badge>
+                </td>
                 <td>{formatCurrency(order.total)}</td>
                 <td>
                   <Link to={`/orders/${order.id}`}>

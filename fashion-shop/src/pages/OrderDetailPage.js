@@ -184,7 +184,15 @@ export default function OrderDetailPage() {
             </p>
           )}
 
-          <Link to="/orders">
+          {order.status === 'pending' && (
+            <div className="mt-3">
+              <Button variant="danger" onClick={() => setShowCancelConfirm(true)}>
+                Hủy đơn hàng
+              </Button>
+            </div>
+          )}
+
+          <Link to="/orders" className="d-inline-block mt-4">
             <Button variant="secondary">&larr; Quay lại danh sách đơn</Button>
           </Link>
         </Col>
@@ -201,7 +209,6 @@ export default function OrderDetailPage() {
                     <th>Phân loại</th>
                     <th>SL</th>
                     <th>Tạm tính</th>
-                    {order.status === 'pending' && <th>Hành động</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -217,23 +224,11 @@ export default function OrderDetailPage() {
                           alt={item.product_variant?.product?.name || 'Ảnh sản phẩm'}
                           style={{ width: 50, height: 50, objectFit: 'cover' }}
                         />
-
                       </td>
                       <td>{item.product_variant?.product?.name}</td>
                       <td>{item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}</td>
                       <td>{item.quantity}</td>
                       <td>{((item.sale_price || item.price) * item.quantity).toLocaleString()}₫</td>
-                      {order.status === 'pending' && (
-                        <td>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => setShowCancelConfirm(true)}
-                          >
-                            Hủy đơn
-                          </Button>
-                        </td>
-                      )}
                     </tr>
                   ))}
                 </tbody>

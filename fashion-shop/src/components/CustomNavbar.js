@@ -52,19 +52,23 @@ export default function CustomNavbar() {
                 user ? (
                   <span className="d-flex align-items-center">
                     <img
-                      src={user.img_thumbnail || '/default-avatar.png'}
+                      src={
+                        user.img_thumbnail
+                          ? `${process.env.REACT_APP_IMAGE_BASE_URL}/storage/${user.img_thumbnail}`
+                          : '/default-avatar.png'
+                      }
                       alt="avatar"
                       width="30"
                       height="30"
                       className="rounded-circle me-2"
                     />
-
                     {user.name}
                   </span>
                 ) : (
                   <FaUser size={20} />
                 )
               }
+
 
             >
               {user ? (
