@@ -1,4 +1,3 @@
-// src/context/AuthContext.js
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
@@ -30,12 +29,33 @@ export function AuthProvider({ children }) {
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-  };
+    const logout = async () => {
+      const storedToken = localStorage.getItem('token');
+
+      if (storedToken) {
+        try {
+          const res = await fetch(`${process.env.REACT_APP_API_URL}/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${storedToken}`
+            }
+          });
+
+          if (!res.ok) {
+            console.error('Lỗi logout:', await res.text());
+          }
+        } catch (error) {
+          console.error('Lỗi khi gọi API logout:', error);
+        }
+      }
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+    };
+
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout }}>
