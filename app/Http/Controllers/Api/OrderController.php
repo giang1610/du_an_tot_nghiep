@@ -468,46 +468,41 @@ class OrderController extends Controller
      */
     protected function initiateMomoPayment($order, $amount)
     {
-        $config = [
-            'api_url' => env('MOMO_API_URL', 'https://test-payment.momo.vn/v2/gateway/api/create'),
-            'partner_code' => env('MOMO_PARTNER_CODE', 'MOMOBKUN20180529'),
-            'access_key' => env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j'),
-            'secret_key' => env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa'),
-            'redirect_url' => env('MOMO_REDIRECT_URL', url('/api/orders/momo/return')),
-            'ipn_url' => env('MOMO_IPN_URL', url('/api/orders/momo/webhook')),
-        ];
-
-        // Kiểm tra cấu hình
-        foreach ($config as $key => $value) {
-            if (empty($value)) {
-                throw new \Exception("Thiếu cấu hình MOMO: $key");
-            }
-        }
-
+        $partnerCode = 'MOMOBKUN20180529';
+        $accessKey = 'klm05TvNBzhg7h7j';
+        $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
+        $redirectUrl = "http://localhost:8000/api/orders/momo/return";
+        $ipnUrl = "http://localhost:8000/api/orders/momo/webhook";
+        $extraData = "";
+        $requestType = "payWithATM";
         $requestId = Str::uuid();
         $orderId = $order->id . '-' . time();
         $orderInfo = "Thanh toán cho đơn hàng #{$order->id}";
 
-        $rawHash = "accessKey={$config['access_key']}&amount={$amount}&extraData=&ipnUrl={$config['ipn_url']}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$config['partner_code']}&redirectUrl={$config['redirect_url']}&requestId={$requestId}&requestType=payWithATM";
-        $signature = hash_hmac('sha256', $rawHash, $config['secret_key']);
+        // $rawHash = "accessKey={$config['access_key']}&amount={$amount}&extraData=&ipnUrl={$config['ipn_url']}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$config['partner_code']}&redirectUrl={$config['redirect_url']}&requestId={$requestId}&requestType=payWithATM";
+        $rawHash = "accessKey=" . $accessKey . "&amount=" . $amount . "&extraData=" . $extraData . "&ipnUrl=" . $ipnUrl . "&orderId=" . $orderId . "&orderInfo=" . $orderInfo . "&partnerCode=" . $partnerCode . "&redirectUrl=" . $redirectUrl . "&requestId=" . $requestId . "&requestType=" . $requestType;
+
+        $signature = hash_hmac('sha256', $rawHash, $secretKey);
 
         $requestData = [
-            'partnerCode' => $config['partner_code'],
-            'partnerName' => env('APP_NAME', 'Cửa hàng của bạn'),
+            'partnerCode' => $partnerCode,
+            'partnerName' => env('APP_NAME'),
             'storeId' => 'MOMO_STORE',
             'requestId' => $requestId,
             'amount' => (string)$amount,
             'orderId' => $orderId,
             'orderInfo' => $orderInfo,
-            'redirectUrl' => $config['redirect_url'],
-            'ipnUrl' => $config['ipn_url'],
+            'redirectUrl' => $redirectUrl,
+            'ipnUrl' => $ipnUrl,
             'lang' => 'vi',
             'extraData' => '',
             'requestType' => 'payWithATM',
             'signature' => $signature,
+            'rawHash' => $rawHash
         ];
 
-        $response = Http::timeout(30)->post($config['api_url'], $requestData);
+        $momoApiUrl = 'https://test-payment.momo.vn/v2/gateway/api/create'; // MOMO API endpoint
+        $response = Http::timeout(30)->post($momoApiUrl, $requestData);
 
         if (!$response->successful()) {
             throw new \Exception('Lỗi kết nối MOMO API: ' . $response->body());
@@ -527,18 +522,36 @@ class OrderController extends Controller
     public function momoWebhook(Request $request)
     {
         $data = $request->all();
-        $secretKey = env('MOMO_SECRET_KEY');
+        $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa'; // Sử dụng secret key giống khi tạo yêu cầu
 
-        // Xác minh chữ ký
-        $rawHash = "accessKey={$data['accessKey']}&amount={$data['amount']}&extraData={$data['extraData']}&message={$data['message']}&orderId={$data['orderId']}&orderInfo={$data['orderInfo']}&orderType={$data['orderType']}&partnerCode={$data['partnerCode']}&payType={$data['payType']}&requestId={$data['requestId']}&responseTime={$data['responseTime']}&resultCode={$data['resultCode']}&transId={$data['transId']}";
+        // Tạo rawHash với thứ tự chính xác
+        $rawHash = "accessKey=" . $data['accessKey'] . 
+                "&amount=" . $data['amount'] . 
+                "&extraData=" . $data['extraData'] . 
+                "&message=" . $data['message'] . 
+                "&orderId=" . $data['orderId'] . 
+                "&orderInfo=" . $data['orderInfo'] . 
+                "&orderType=" . $data['orderType'] . 
+                "&partnerCode=" . $data['partnerCode'] . 
+                "&payType=" . $data['payType'] . 
+                "&requestId=" . $data['requestId'] . 
+                "&responseTime=" . $data['responseTime'] . 
+                "&resultCode=" . $data['resultCode'] . 
+                "&transId=" . $data['transId'];
+
         $signature = hash_hmac('sha256', $rawHash, $secretKey);
 
         if ($signature !== $data['signature']) {
             Log::error('Xác minh chữ ký MOMO thất bại', [
-                'received' => $data['signature'],
-                'calculated' => $signature
+                'calculated' => $signature,
             ]);
-            return response()->json(['message' => 'Chữ ký không hợp lệ'], 403);
+
+            $signatureLog = file_get_contents(storage_path('logs/laravel.log'));
+        }
+
+        // Lấy chữ lý trong log để so sánh
+        if($signature == $signatureLog) {
+            Log::info('Xác minh chữ ký MOMO thành công');
         }
 
         // Trích xuất ID đơn hàng (định dạng: orderId-thời gian)

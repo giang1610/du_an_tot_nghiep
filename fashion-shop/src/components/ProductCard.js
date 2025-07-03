@@ -29,11 +29,15 @@ export default function ProductCard({ product }) {
           )}
         </Card.Text>
 
+<<<<<<< HEAD
         <Button as={Link} to={`/products/slug/${product.slug}`} variant="outline-dark" size="sm">
           Xem chi tiết
         </Button>
 
 
+=======
+        <Button as={Link} to={`/products/${product.slug}`} variant="outline-dark" size="sm">Xem chi tiết</Button>
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
       </Card.Body>
     </Card>
   );

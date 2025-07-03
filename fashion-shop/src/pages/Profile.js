@@ -34,7 +34,11 @@ export default function ProfilePage() {
 
       if (res.ok) {
         setSuccess('Cập nhật thành công');
+<<<<<<< HEAD
         login(token, data.user); 
+=======
+        login(token, data.user); // Cập nhật user context
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
       } else {
         setError(data.message || 'Lỗi cập nhật');
       }

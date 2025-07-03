@@ -2,11 +2,19 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
+<<<<<<< HEAD
   Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
 } from 'react-bootstrap';
 import ProductReview from './ProductReview';
 import CheckoutForm from '../components/CheckoutForm';
 import ProductImageGallery from '../components/ProductImageGallery'; // ✅ Thêm dòng này
+=======
+  Container, Row, Col, Image, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
+} from 'react-bootstrap';
+import ProductReview from './ProductReview';
+import CheckoutForm from '../components/CheckoutForm';
+
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -16,6 +24,10 @@ export default function ProductDetail() {
   const [reviews, setReviews] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
+=======
+  const [mainImage, setMainImage] = useState('');
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState(null);
@@ -35,6 +47,10 @@ export default function ProductDetail() {
         setProduct(product);
         setReviews(reviews || []);
         setRelatedProducts(related_products || []);
+<<<<<<< HEAD
+=======
+        setMainImage(product?.images?.[0]?.url || '');
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
       })
       .catch(err => {
         console.error(err);
@@ -193,7 +209,24 @@ export default function ProductDetail() {
 
       <Row>
         <Col md={6}>
+<<<<<<< HEAD
           <ProductImageGallery images={product.images} productName={product.name} />
+=======
+          <Image src={mainImage || 'placeholder.jpg'} fluid style={{ border: '1px solid #ccc' }} />
+          <div className="d-flex mt-3 gap-2 flex-wrap">
+            {product.images?.map(img => (
+              <Image
+                key={img.id}
+                src={img.url}
+                width={70}
+                height={70}
+                style={{ objectFit: 'cover', border: '1px solid #ddd', cursor: 'pointer' }}
+                onClick={() => setMainImage(img.url)}
+                alt={product.name}
+              />
+            ))}
+          </div>
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
         </Col>
 
         <Col md={6}>
@@ -304,8 +337,14 @@ export default function ProductDetail() {
           {relatedProducts.map(rp => (
             <Col md={3} key={rp.id} className="mb-3">
               <div className="border p-2 h-100 d-flex flex-column align-items-center">
+<<<<<<< HEAD
                 <img
                   src={rp.images?.[0]?.url || 'placeholder.jpg'}
+=======
+                <Image
+                  src={rp.images?.[0]?.url || 'placeholder.jpg'}
+                  fluid
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
                   alt={rp.name}
                   style={{ maxHeight: 150, objectFit: 'contain' }}
                 />

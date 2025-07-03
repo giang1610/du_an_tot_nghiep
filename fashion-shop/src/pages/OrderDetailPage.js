@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+=======
+import { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
 import {
   Container, Table, Spinner, Alert, Button, Modal, Row, Col, Card, Form
 } from 'react-bootstrap';
@@ -37,6 +42,10 @@ const paymentStatusBadgeVariant = {
 
 export default function OrderDetailPage() {
   const { id } = useParams();
+<<<<<<< HEAD
+=======
+  const navigate = useNavigate();
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -47,13 +56,20 @@ export default function OrderDetailPage() {
 
   const token = localStorage.getItem('token');
 
+<<<<<<< HEAD
   const fetchOrder = useCallback(async () => {
+=======
+  const fetchOrder = async () => {
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
     if (!token) {
       setError('Bạn chưa đăng nhập');
       setLoading(false);
       return;
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
     setLoading(true);
     setError('');
     try {
@@ -68,11 +84,15 @@ export default function OrderDetailPage() {
     } finally {
       setLoading(false);
     }
+<<<<<<< HEAD
   }, [id, token]);
 
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+=======
+  };
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
 
   const handleCancelOrder = async () => {
     try {
@@ -106,6 +126,13 @@ export default function OrderDetailPage() {
     }
   };
 
+<<<<<<< HEAD
+=======
+  useEffect(() => {
+    fetchOrder();
+  }, [id]);
+
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (error) return <Alert variant="danger" className="py-5 text-center">{error}</Alert>;
   if (!order) return <Alert variant="danger" className="py-5 text-center">Không tìm thấy đơn hàng.</Alert>;
@@ -255,4 +282,8 @@ export default function OrderDetailPage() {
       </Modal>
     </Container>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
