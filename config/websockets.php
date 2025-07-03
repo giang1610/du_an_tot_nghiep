@@ -22,19 +22,17 @@ return [
      * messages to each other via the webSockets.
      */
     'apps' => [
-        [
-            'id' => env('PUSHER_APP_ID'),
-            // 'name' => env('APP_NAME'),
-            'name' => 'MyApp',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            // 'path' => env('PUSHER_APP_PATH'),
-            'path' => '',
-            'capacity' => null,
-            'enable_client_messages' => false,
-            'enable_statistics' => true,
-        ],
+    [
+        'id' => env('PUSHER_APP_ID', 'local'),
+        'name' => 'MyApp',
+        'key' => env('PUSHER_APP_KEY'),
+        'secret' => env('PUSHER_APP_SECRET'),
+        'path' => '/',
+        'capacity' => null,
+        'enable_client_messages' => true,
+        'enable_statistics' => true,
     ],
+],
 
     /*
      * This class is responsible for finding the apps. The default provider
@@ -72,7 +70,7 @@ return [
      */
     'middleware' => [
         'web',
-        Authorize::class,
+        // Authorize::class,
     ],
 
     'statistics' => [
