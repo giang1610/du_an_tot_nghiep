@@ -52,12 +52,13 @@ export default function CustomNavbar() {
                 user ? (
                   <span className="d-flex align-items-center">
                     <img
-                      src={user.avatar || '/default-avatar.png'}
+                      src={user.img_thumbnail || '/default-avatar.png'}
                       alt="avatar"
                       width="30"
                       height="30"
                       className="rounded-circle me-2"
                     />
+
                     {user.name}
                   </span>
                 ) : (
