@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-function SubmitReviewForm({ productVariantId, orderId }) {
+function SubmitReviewForm({ variantId, orderId }) {
   const [rating, setRating] = useState(5);
   const [content, setContent] = useState('');
   const [message, setMessage] = useState(null);
@@ -16,7 +16,7 @@ function SubmitReviewForm({ productVariantId, orderId }) {
         'http://127.0.0.1:8000/api/reviews',
         {
           order_id: orderId,
-          product_variant_id: productVariantId,
+          product_variant_id: variantId,
           rating,
           content,
         },
