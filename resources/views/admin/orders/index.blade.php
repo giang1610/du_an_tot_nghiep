@@ -2,10 +2,10 @@
 
 @section('content')
 <div class="container-fluid px-0 px-md-3">
-    <nav aria-label="breadcrumb" class="mt-4">
+    <nav aria-label="breadcrumb" class="mt-2">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Quản lý đơn hàng</li>
+            <li class="breadcrumb-item active" aria-current="page"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
         </ol>
     </nav>
 
@@ -108,7 +108,7 @@
                             <th>Thông tin</th>
                             <th>Thanh toán</th>
                             <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
+                            <th>Trạng thái giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -128,7 +128,7 @@
                                 </div>
                             </td>
                             <td>
-                                @foreach($order->items as $item)    
+                                @foreach($order->items as $item)
                                 <div class="d-flex align-items-center mb-2">
                                     @if($item->variant->product->image)
                                     <img src="{{ asset($item->variant->product->image) }}"
@@ -184,7 +184,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">

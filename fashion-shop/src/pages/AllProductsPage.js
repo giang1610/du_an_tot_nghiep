@@ -28,7 +28,6 @@ export default function AllProductsPage() {
 
   const location = useLocation();
 
-  // Parse URL query ?search=
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const search = params.get('search') || '';
@@ -36,7 +35,6 @@ export default function AllProductsPage() {
     setPage(1);
   }, [location.search]);
 
-  // Fetch categories & sizes
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/categories`)
       .then(res => setCategories(res.data.data))
@@ -56,7 +54,7 @@ export default function AllProductsPage() {
 
       let result = res.data.data;
 
-      // Sort client
+   
       switch (filters.sort) {
         case 'latest':
           result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -209,13 +207,13 @@ export default function AllProductsPage() {
 }
 
 // ✅ Component tái sử dụng cho SelectBox
-function SelectBox({ label, value, options, onChange }) {
+function SelectBox({ label, value, options = [], onChange }) {
   return (
     <Form.Group className="mb-3">
       <Form.Label>{label}</Form.Label>
       <Form.Select value={value} onChange={e => onChange(e.target.value)}>
         <option value="">Tất cả</option>
-        {options.map(opt => (
+        {Array.isArray(options) && options.map(opt => (
           <option key={opt.id} value={opt.id}>{opt.name}</option>
         ))}
       </Form.Select>

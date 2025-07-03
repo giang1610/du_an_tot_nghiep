@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Row, Col, Image, Modal, Carousel } from 'react-bootstrap';
 
@@ -6,7 +7,6 @@ export default function ProductImageGallery({ images = [], productName }) {
   const [showModal, setShowModal] = useState(false);
 
   const mainImage = images[mainIndex]?.url || 'https://via.placeholder.com/500x500?text=No+Image';
-
   return (
     <>
       <Row>

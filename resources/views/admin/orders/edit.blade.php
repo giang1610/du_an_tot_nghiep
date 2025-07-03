@@ -1,7 +1,14 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container py-4">
+<div class="container-fluid px-4">
+    <nav aria-label="breadcrumb" class="mt-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Cập nhật trạng thái đơn hàng</li>
+        </ol>
+    </nav>
     <form action="{{ route('orders.update', $order->id) }}" method="POST" class="bg-white rounded-3 shadow p-4">
         @csrf
         @method('PUT')

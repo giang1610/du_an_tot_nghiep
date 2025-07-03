@@ -1,20 +1,117 @@
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Container, Table, Button, Spinner, Form, Alert } from 'react-bootstrap';
-import useCart from '../hooks/useCart';
+import axios from 'axios';
 
 export default function CartPage() {
-  const {
-    cartItems,
-    total,
-    loading,
-    updateQuantity,
-    toggleSelected,
-    removeItem
-  } = useCart();
+  const [cartItems, setCartItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem('token');
+  const updateQuantityTimeout = useRef(null);
+
+  // Gộp fetch giỏ hàng và tổng tiền
+  const fetchCartData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/cart`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCartItems(res.data.cart_items);
+
+      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTotal(totalRes.data.total);
+    } catch (err) {
+      console.error('Fetch cart data failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchCartData();
+  }, [fetchCartData]);
+
+  // Cập nhật số lượng có debounce 500ms để tránh gọi API liên tục
+  const updateQuantity = (item, quantity) => {
+    if (updateQuantityTimeout.current) clearTimeout(updateQuantityTimeout.current);
+
+    updateQuantityTimeout.current = setTimeout(async () => {
+      try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/cart/update/${item.id}`, {
+          quantity: Number(quantity),
+          color_id: item.color_id,
+          size_id: item.size_id
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // Cập nhật local state luôn cho mượt UI
+        setCartItems(prev =>
+          prev.map(i =>
+            i.id === item.id ? { ...i, quantity: Number(quantity) } : i
+          )
+        );
+
+        // Cập nhật tổng tiền
+        const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setTotal(totalRes.data.total);
+      } catch (err) {
+        console.error('Update quantity failed:', err);
+      }
+    }, 500);
+  };
+
+  // Chọn/bỏ chọn sản phẩm
+  const toggleSelected = async (item) => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/cart/update-selected/${item.id}`, {
+        selected: !item.selected
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setCartItems(prev =>
+        prev.map(i => i.id === item.id ? { ...i, selected: !i.selected } : i)
+      );
+
+      // Cập nhật tổng tiền
+      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTotal(totalRes.data.total);
+
+    } catch (err) {
+      console.error('Toggle selected failed:', err);
+    }
+  };
+
+  // Xóa sản phẩm
+  const removeItem = async (itemId) => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/cart/remove/${itemId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setCartItems(prev => prev.filter(i => i.id !== itemId));
+
+      // Cập nhật tổng tiền
+      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTotal(totalRes.data.total);
+
+    } catch (err) {
+      console.error('Remove item failed:', err);
+    }
+  };
 
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
 
   if (!cartItems.length) return <Alert variant="info">Giỏ hàng của bạn đang trống.</Alert>;
-  const selectedItems = cartItems.filter(item => item.selected);
 
   return (
     <Container className="py-5">
@@ -38,7 +135,7 @@ export default function CartPage() {
                 <Form.Check
                   type="checkbox"
                   checked={item.selected}
-                  onChange={() => toggleSelected(item.id, item.selected)}
+                  onChange={() => toggleSelected(item)}
                 />
               </td>
               <td>
@@ -68,11 +165,18 @@ export default function CartPage() {
       </Table>
 
       <h4 className="text-end mt-4">Tổng cộng: {total.toLocaleString()}₫</h4>
-      {selectedItems.length > 0 && (
-        <div className="text-end">
-          <Button variant="success" href="/checkout">Thanh toán</Button>
-        </div>
-      )}
+      <div className="text-end">
+        <Button
+          variant="success"
+          disabled={!cartItems.some(item => item.selected)}
+          onClick={() => {
+            // Gửi danh sách sản phẩm được chọn nếu cần (ví dụ dùng Context / Redux hoặc localStorage)
+            window.location.href = '/checkout';
+          }}
+        >
+          Thanh toán
+        </Button>
+      </div>
 
     </Container>
   );

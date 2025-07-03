@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'MGshop'),
 
     /*
     |--------------------------------------------------------------------------
@@ -58,7 +58,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
     //config fotn_url
-    'fotn_url' => env('FOTN_URL', 'http://localhost:3000'),
+    'fotn_url' => env('FOTN_URL'),
 
     'asset_url' => env('ASSET_URL'),
 

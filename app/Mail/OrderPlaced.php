@@ -17,18 +17,23 @@ class OrderPlaced extends Mailable
     /**
      * Create a new message instance.
      */
-    public $order;//,$items; // Dữ liệu đơn hàng sẽ truyền vào view
-    public function __construct(Order $order)//, $items)
+    public $order,$items; // Dữ liệu đơn hàng sẽ truyền vào view
+    public function __construct(Order $order,$items)
     {
         $this->order = $order;
-        // $this->items = $items;
+        $this->items = $items;
     }
 
     public function build()
-    {
-        return $this->subject('Xác nhận đơn hàng #' . $this->order->order_number)
-            ->markdown(view: 'emails.orders.placed');
-    }
+{
+    return $this->subject('Xác nhận đơn hàng #' . $this->order->order_number)
+        ->markdown('emails.orders.placed')
+        ->with([
+            'order' => $this->order,
+            'items' => $this->items,
+        ]);
+}
+
     /**
      * Get the message envelope.
      */

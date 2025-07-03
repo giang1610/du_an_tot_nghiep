@@ -14,27 +14,47 @@ export default function HomePage() {
   const [error, setError] = useState('');
 
   const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError('');
+  setLoading(true);
+  setError('');
+
+  try {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/products`);
+    const text = await res.text();
+    console.log("Raw response:", text);
+
+    let json;
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/products`);
-      const json = await res.json();
-      if (!json.success || !Array.isArray(json.data)) {
-        throw new Error('Dữ liệu sản phẩm không hợp lệ');
-      }
-      const products = json.data;
-      setSaleProducts(products.filter(p => p.variants.some(v => v.sale_price != null && v.sale_price < v.price)));
-      setLatestProducts(
-        [...products]
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          .slice(0, 10)
-      );
-    } catch (err) {
-      setError(err.message || 'Lỗi khi tải sản phẩm');
-    } finally {
-      setLoading(false);
+      json = JSON.parse(text);
+    } catch (e) {
+      throw new Error("Phản hồi từ server không phải JSON hợp lệ");
     }
-  }, []);
+
+    if (!json.success || !Array.isArray(json.data)) {
+      throw new Error('Dữ liệu sản phẩm không hợp lệ');
+    }
+
+    const products = json.data;
+
+    // lọc sản phẩm khuyến mãi
+    setSaleProducts(
+      products.filter(p =>
+        p.variants?.some(v => v.sale_price != null && v.sale_price < v.price)
+      )
+    );
+
+    // lấy 10 sản phẩm mới nhất
+    setLatestProducts(
+      [...products]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 10)
+    );
+  } catch (err) {
+    setError(err.message || 'Lỗi khi tải sản phẩm');
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
 
   useEffect(() => {
     fetchProducts();

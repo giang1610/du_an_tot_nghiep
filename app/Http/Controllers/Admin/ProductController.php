@@ -14,6 +14,7 @@ use App\Models\Color;
 use App\Models\Size;
 use Illuminate\Support\Facades\DB;
 
+
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -102,7 +103,7 @@ public function store(ProductRequest $request)
                     }
 
                     $variant = new ProductVariant([
-                        'sku' => $variantData['sku'] ?? null,
+                        'sku' => $variantData['sku'] ?? '',
                         'price' => $variantData['price'] ?? null,
                         'sale_price' => $variantData['sale_price'] ?? null,
                         'sale_start_date' => $variantData['sale_start_date'] ?? null,
@@ -409,30 +410,142 @@ public function update(ProductRequest $request, $id)
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    // public function destroy(string $id)
+    // {
+    //     try {
+    //         $product = Product::findOrFail($id);
+
+    //         // Xóa ảnh đại diện nếu có
+    //         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+    //             Storage::disk('public')->delete($product->thumbnail);
+    //         }
+
+    //         // Xóa tất cả biến thể và ảnh của chúng
+    //         foreach ($product->variants as $variant) {
+    //             if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+    //                 Storage::disk('public')->delete($variant->image);
+    //             }
+    //             $variant->delete();
+    //         }
+
+    //         // Xóa sản phẩm
+    //         $product->delete();
+
+    //         return redirect()->route('products.index')->with('success', 'Sản phẩm đã được đưa vào thùng rác!');
+    //     } catch (\Exception $e) {
+    //         return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
+    //     }
+    // }
+    // Xóa sản phẩm (xóa mềm)
+    // public function destroy($id)
+    // {
+    //     try {
+    //         $product = Product::findOrFail($id);
+
+    //         // Xóa ảnh đại diện nếu có
+    //         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+    //             Storage::disk('public')->delete($product->thumbnail);
+    //         }
+
+    //         // Xóa tất cả biến thể và ảnh của chúng
+    //         foreach ($product->variants as $variant) {
+    //             if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+    //                 Storage::disk('public')->delete($variant->image);
+    //             }
+    //             $variant->delete();
+    //         }
+
+    //         // Xóa sản phẩm (xóa mềm)
+    //         $product->delete();
+
+    //         return redirect()->route('products.index')->with('success', 'Sản phẩm đã được đưa vào thùng rác!');
+    //     } catch (\Exception $e) {
+    //         return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
+    //     }
+    // }
+
+   public function destroy($id)
+{
+    try {
+        $product = Product::findOrFail($id);
+        $product->delete(); // XÓA MỀM
+
+        return redirect()->route('products.index')->with('success', 'Sản phẩm đã được đưa vào thùng rác!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
+    }
+}
+    //xóa mềm sản phẩm
+    //thùng rác sản phẩm
+    public function trash()
     {
-        try {
-            $product = Product::findOrFail($id);
+        $products = Product::onlyTrashed()->with('category')->paginate(10);
+        return view('admin.products.trash', compact('products'));
+    }
+    
+    // Khôi phục sản phẩm đã xóa mềm
+    public function restore($id)
+    {
+        Product::withTrashed()->findOrFail($id)->restore();
+        return back()->with('success', 'Khôi phục sản phẩm thành công!');
+    }
+    // Khôi phục tất cả sản phẩm đã xóa mềm
+    public function restoreAll()
+    {
+        Product::onlyTrashed()->restore();
+        return back()->with('success', 'Khôi phục tất cả sản phẩm thành công!');
+    }
 
-            // Xóa ảnh đại diện nếu có
-            if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
-                Storage::disk('public')->delete($product->thumbnail);
+    // Xóa vĩnh viễn sản phẩm
+    public function forceDelete($id)
+    {
+        $product = Product::onlyTrashed()->with('variants')->findOrFail($id);
+
+        // Xóa tất cả biến thể (và stock nếu có)
+        foreach ($product->variants as $variant) {
+            // Xóa stock nếu có
+            if (method_exists($variant, 'stock')) {
+                $variant->stock()->delete();
             }
+            // Xóa ảnh biến thể nếu cần
+            if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+                Storage::disk('public')->delete($variant->image);
+            }
+            $variant->forceDelete();
+        }
 
-            // Xóa tất cả biến thể và ảnh của chúng
+        // Xóa ảnh đại diện nếu cần
+        if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+            Storage::disk('public')->delete($product->thumbnail);
+        }
+
+        $product->forceDelete();
+
+        return redirect()->back()->with('success', 'Xóa vĩnh viễn thành công');
+    }
+
+    // Xóa vĩnh viễn tất cả sản phẩm đã xóa mềm
+
+    public function deleteAll()
+    {
+        $products = Product::onlyTrashed()->with('variants')->get();
+
+        foreach ($products as $product) {
             foreach ($product->variants as $variant) {
+                if (method_exists($variant, 'stock')) {
+                    $variant->stock()->delete();
+                }
                 if ($variant->image && Storage::disk('public')->exists($variant->image)) {
                     Storage::disk('public')->delete($variant->image);
                 }
-                $variant->delete();
+                $variant->forceDelete();
             }
-
-            // Xóa sản phẩm
-            $product->delete();
-
-            return redirect()->route('products.index')->with('success', 'Xóa sản phẩm thành công!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
+            if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $product->forceDelete();
         }
+
+        return back()->with('success', 'Đã xóa vĩnh viễn tất cả sản phẩm!');
     }
 }
