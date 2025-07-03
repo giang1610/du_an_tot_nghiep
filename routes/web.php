@@ -1,13 +1,11 @@
 <?php
 
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use App\Http\Requests\CustomEmailVerificationRequest;
-use Illuminate\Http\Request;
 use App\Models\User;
+
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CartController;
@@ -20,19 +18,10 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 
-//use của fotn
+// Email xác minh cho client
 use App\Http\Controllers\Auth\EmailVerifiFotnController;
 use App\Http\Controllers\Auth\NewEmailVerificationController;
 
-
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// Trang chủ
 Route::get('/', function () {
     return view('welcome');
 });
@@ -52,84 +41,75 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
 });
 
-// Logout 123
+// Đăng xuất
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-// Email Verification
+
+// Xác minh email
 Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])
     ->middleware('auth')->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
     ->middleware(['auth', 'signed'])->name('verification.verify');
 
-    //xác minh mail client
+// Xác minh mail client (fotn)
 Route::get('/verify-email-custom', [EmailVerifiFotnController::class, 'verify'])
-    ->middleware(['signed'])
-    ->name('verification.verify.fotn');
+    ->middleware(['signed'])->name('verification.verify.fotn');
 
-//cập nhật mail client nếu có nhu cầu và xác minh
+// Xác minh mail mới client
 Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'])
-    ->name('email.update.verify')
-    ->middleware('signed');
-
-
+    ->name('email.update.verify')->middleware('signed');
 
 // Admin routes
-    //xóa danh mục
-    //thùng rác 
-    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
-    //xóa vĩnh viễn
-    Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
-    //khôi phục tất cả
-    Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
-
-    //khôi phục từng danh mục
-    Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
-    //xóa vĩnh viễn từng danh mục
-    Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
-
-    //xóa sản phẩm
-    //thùng rác 
-    Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
-    //khôi phục từng sản phẩm
-    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-    //khôi phục tất cả sản phẩm
-    Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
-    //xóa vĩnh viễn từng sản phẩm
-    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
-    //xóa vĩnh viễn tất cả sản phẩm
-    Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
-Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(function () {
     Route::get('/', function () {
-      return view('admin.dashboard');
+        return view('admin.dashboard');
     })->name('admin');
+
+    // 👉 Khách hàng
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
-    //cập nhật profile
+    // 👉 Doanh thu (tạm thời, chưa có controller)
+    Route::get('/revenue', fn() => view('admin.revenue.index'))
+     ->name('revenue.index');
+
+
+    // Cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
+    // Danh mục
+    Route::resource('categories', CategoryController::class);
+    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
+    Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
+    Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
+    Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+    Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
+
+    // Sản phẩm
     Route::resource('products', ProductController::class);
+    Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
+    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+    Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
+    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
+    Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
 
-
+    // Đơn hàng
     Route::resource('orders', OrderController::class);
-    // Route::resource('pending', OrderController::class);
     Route::get('/cancelled', [OrderController::class, 'cancelled'])->name('orders.cancelled');
     Route::get('/pending', [OrderController::class, 'pending'])->name('orders.pending');
     Route::get('/processing', [OrderController::class, 'processing'])->name('orders.processing');
     Route::get('/picking', [OrderController::class, 'picking'])->name('orders.picking');
     Route::get('/shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
     Route::get('/shipped', [OrderController::class, 'shipped'])->name('orders.shipped');
-    // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
-    // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
 
+// Trang cảm ơn
 Route::get('/thank-you', function () {
     return view('thank-you');
 });
 
+// Auth scaffolding
 require __DIR__.'/auth.php';
