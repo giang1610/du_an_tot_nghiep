@@ -17,12 +17,12 @@ class EmailVerifiFotnController extends Controller
         }
 
         if ($user->hasVerifiedEmail()) {
-        abort(404); 
+        abort(403, 'Email đã được xác minh.');
         }
 
         $user->markEmailAsVerified();
 
-         $redirectUrl = config('app.fotn_url') . 'login?message=email_verified&email=' . $user->email;
-         return redirect($redirectUrl);
+        $redirectUrl = config('app.fotn_url') . 'login?message=email_verified&email=' . $user->email;
+        return redirect($redirectUrl);
     }
 }
