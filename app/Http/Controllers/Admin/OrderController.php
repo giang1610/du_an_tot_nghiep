@@ -303,19 +303,19 @@ class OrderController extends Controller
 
         // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
         if ($order->status !== $oldStatus && $order->status === 'shipping') {
-            Mail::to($order->user->email)->send(new OrderGiao($order));
+            Mail::to($order->user->email)->queue(new OrderGiao($order));
         }
         if ($order->status !== $oldStatus && $order->status === 'cancelled') {
-            Mail::to($order->user->email)->send(new OrderErrors($order));
+            Mail::to($order->user->email)->queue(new OrderErrors($order));
         }
         if ($order->status !== $oldStatus && $order->status === 'picking') {
-            Mail::to($order->user->email)->send(new OrderPicking($order));
+            Mail::to($order->user->email)->queue(new OrderPicking($order));
         }
         if ($order->status !== $oldStatus && $order->status === 'processing') {
-            Mail::to($order->user->email)->send(new OrderProcessing($order));
+            Mail::to($order->user->email)->queue(new OrderProcessing($order));
         }
         if ($order->status !== $oldStatus && $order->status === 'shipped') {
-            Mail::to($order->user->email)->send(new OrderShipped($order));
+            Mail::to($order->user->email)->queue(new OrderShipped($order));
         }
         return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
