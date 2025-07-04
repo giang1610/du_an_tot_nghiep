@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Container, Table, Spinner, Alert, Button, Badge } from 'react-bootstrap';
+import { Container, Table, Spinner, Alert, Button, Badge, Image } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -14,6 +14,12 @@ const formatCurrency = (amount) =>
 
 const getPaymentMethodLabel = (method) =>
   method === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản';
+
+const getPaymentStatusLabel = (status) =>
+  status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
+
+const getPaymentStatusVariant = (status) =>
+  status === 'paid' ? 'success' : 'warning';
 
 const STATUS_LABELS = {
   pending: 'Chờ xử lý',
@@ -67,6 +73,29 @@ export default function MyOrdersPage() {
     fetchOrders();
   }, [navigate]);
 
+  const handleConfirmReceipt = async (orderId) => {
+    const token = localStorage.getItem('token');
+    if (!window.confirm('Bạn xác nhận đã nhận được hàng?')) return;
+
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/orders/${orderId}/confirm-receipt`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === orderId ? { ...order, is_received: true } : order
+        )
+      );
+
+      alert('Xác nhận đã nhận hàng thành công!');
+    } catch (error) {
+      alert('Xác nhận thất bại. Vui lòng thử lại.');
+    }
+  };
+
   return (
     <Container className="py-4">
       <h3 className="mb-4">Đơn hàng của tôi</h3>
@@ -83,33 +112,69 @@ export default function MyOrdersPage() {
         <Table striped bordered hover responsive>
           <thead>
             <tr>
-              <th>Mã đơn</th>
+              <th>Ảnh</th>
               <th>Ngày đặt</th>
+              <th>Người đặt</th>
+              <th>Địa chỉ</th>
               <th>Phương thức</th>
+              <th>Thanh toán</th>
               <th>Trạng thái</th>
               <th>Tổng tiền</th>
               <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {orders.map(order => (
-              <tr key={order.id}>
-                <td>{order.order_number || order.id}</td>
-                <td>{formatDate(order.created_at)}</td>
-                <td>{getPaymentMethodLabel(order.payment_method)}</td>
-                <td>
-                  <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
-                    {STATUS_LABELS[order.status] || 'Không rõ'}
-                  </Badge>
-                </td>
-                <td>{formatCurrency(order.total)}</td>
-                <td>
-                  <Link to={`/orders/${order.id}`}>
-                    <Button variant="primary" size="sm">Xem chi tiết</Button>
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {orders.map(order => {
+              const firstItem = order.order_items?.[0];
+              const imageUrl = firstItem?.product?.images?.[0]?.url || '/default.jpg';
+
+              return (
+                <tr key={order.id}>
+                  <td>
+                    <Image
+                      src={`${process.env.REACT_APP_IMAGE_BASE_URL}${imageUrl}`}
+                      width={60}
+                      height={60}
+                      rounded
+                    />
+                  </td>
+                  <td>{formatDate(order.created_at)}</td>
+                  <td>{order.customer_name}</td>
+                  <td>{order.address}</td>
+                  <td>{getPaymentMethodLabel(order.payment_method)}</td>
+                  <td>
+                    <Badge bg={getPaymentStatusVariant(order.payment_status)}>
+                      {getPaymentStatusLabel(order.payment_status)}
+                    </Badge>
+                  </td>
+                  <td>
+                    <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
+                      {STATUS_LABELS[order.status] || 'Không rõ'}
+                    </Badge>
+                  </td>
+                  <td>{formatCurrency(order.total)}</td>
+                  <td>
+                    <Link to={`/orders/${order.id}`}>
+                      <Button variant="primary" size="sm" className="me-2">
+                        Xem chi tiết
+                      </Button>
+                    </Link>
+                    {order.status === 'completed' && !order.is_received && (
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={() => handleConfirmReceipt(order.id)}
+                      >
+                        Đã nhận hàng
+                      </Button>
+                    )}
+                    {order.is_received && (
+                      <Badge bg="success">Đã nhận hàng</Badge>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </Table>
       )}

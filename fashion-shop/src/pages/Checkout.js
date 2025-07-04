@@ -74,8 +74,8 @@ export default function Checkout() {
 
   const totals = useMemo(() => {
     const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
-    const tax = 0; // có thể thay đổi tuỳ chính sách
-    const shipping = 30000; // phí cố định hoặc tuỳ theo địa chỉ
+    const tax = subtotal*0.1; // có thể thay đổi tuỳ chính sách
+    const shipping = 20000; // phí cố định hoặc tuỳ theo địa chỉ
     const total = subtotal + tax + shipping;
     return { subtotal, tax, shipping, total };
   }, [selectedItems]);
