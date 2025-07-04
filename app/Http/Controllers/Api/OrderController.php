@@ -546,7 +546,21 @@ class OrderController extends Controller
                 'calculated' => $signature,
             ]);
 
-            $signatureLog = file_get_contents(storage_path('logs/laravel.log'));
+            // $signatureLog = file_get_contents(storage_path('logs/laravel.log'));
+            $logContent = file(storage_path('logs/laravel.log'));
+            try {
+                $lastCalculatedLine = collect($logContent)
+                    ->reverse()
+                    ->first(fn($line) => str_contains($line, 'calculated'));
+
+                if ($lastCalculatedLine && preg_match('/\{.*"calculated"\s*:\s*"(.+?)"\}/', $lastCalculatedLine, $matches)) {
+                    $signatureLog = $matches[1];
+                } else {
+                    $signatureLog = 'Không tìm thấy chữ ký trong log';
+                }
+            } catch (\Throwable $e) {
+                $signatureLog = 'Đã xảy ra lỗi khi xử lý log: ' . $e->getMessage();
+            }
         }
 
         // Lấy chữ lý trong log để so sánh
