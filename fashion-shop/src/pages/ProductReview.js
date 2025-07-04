@@ -36,45 +36,45 @@ function StarRating({ rating, setRating, disabled }) {
 
 export default function ProductReview({ productId, selectedVariantId }) {
   const navigate = useNavigate();
-  const [userOrders, setUserOrders] = useState([]);
+  const [userOrder, setUserOrder] = useState(null);
   const [canReview, setCanReview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState(null);
 
-  const [selectedOrderId, setSelectedOrderId] = useState('');
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
   const [debouncedContent, setDebouncedContent] = useState('');
   const [reviews, setReviews] = useState([]);
 
-  // Debounce content input
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedContent(content), 300);
     return () => clearTimeout(handler);
   }, [content]);
 
-  // Fetch user orders and reviews once on mount or productId change
   useEffect(() => {
     setLoading(true);
     const token = localStorage.getItem('token');
-    if (!token) {
+    if (!token || !selectedVariantId) {
       setCanReview(false);
       setLoading(false);
       return;
     }
+
     const ordersReq = axios.get(`${process.env.REACT_APP_API_URL}/orders/received-product`, {
-      params: { product_id: productId },
+      params: { product_variant_id: selectedVariantId },
       headers: { Authorization: `Bearer ${token}` },
     });
+
     const reviewsReq = axios.get(`${process.env.REACT_APP_API_URL}/reviews`, {
       params: { product_id: productId },
     });
+
     Promise.all([ordersReq, reviewsReq])
-      .then(([ordersRes, reviewsRes]) => {
-        const orders = ordersRes.data.data || [];
-        setUserOrders(orders);
-        setCanReview(orders.length > 0);
+      .then(([orderRes, reviewsRes]) => {
+        const { received, order_id } = orderRes.data;
+        setCanReview(received);
+        if (received) setUserOrder({ id: order_id });
         setReviews(reviewsRes.data.data || []);
       })
       .catch(() => {
@@ -82,16 +82,15 @@ export default function ProductReview({ productId, selectedVariantId }) {
         setReviews([]);
       })
       .finally(() => setLoading(false));
-  }, [productId]);
+  }, [productId, selectedVariantId]);
 
-  // Validate form fields
   const validationErrors = useMemo(() => {
     const errors = {};
-    if (!selectedOrderId) errors.selectedOrderId = 'Vui lòng chọn đơn hàng đã nhận.';
+    if (!userOrder?.id) errors.order = 'Không tìm thấy đơn hàng hợp lệ.';
     if (rating < 1 || rating > 5) errors.rating = 'Vui lòng chọn đánh giá từ 1 đến 5 sao.';
     if (debouncedContent.length > MAX_CONTENT_LENGTH) errors.content = `Nội dung không vượt quá ${MAX_CONTENT_LENGTH} ký tự.`;
     return errors;
-  }, [selectedOrderId, rating, debouncedContent]);
+  }, [userOrder, rating, debouncedContent]);
 
   const isValid = Object.keys(validationErrors).length === 0;
 
@@ -106,32 +105,36 @@ export default function ProductReview({ productId, selectedVariantId }) {
       navigate('/login');
       return;
     }
+
     setSending(true);
     setMessage(null);
     try {
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, {
-        order_id: selectedOrderId,
+        order_id: userOrder.id,
         product_variant_id: selectedVariantId,
         rating,
         content: debouncedContent,
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setMessage({ type: 'success', text: res.data.message || 'Đánh giá thành công!' });
       setRating(0);
       setContent('');
-      setSelectedOrderId('');
-      // Refresh reviews
-      const refreshed = await axios.get(`${process.env.REACT_APP_API_URL}/reviews`, { params: { product_id: productId } });
+
+      // Làm mới danh sách đánh giá
+      const refreshed = await axios.get(`${process.env.REACT_APP_API_URL}/reviews`, {
+        params: { product_id: productId },
+      });
       setReviews(refreshed.data.data || []);
     } catch (error) {
       setMessage({ type: 'danger', text: error.response?.data?.error || 'Gửi đánh giá thất bại.' });
     } finally {
       setSending(false);
     }
-  }, [isValid, selectedOrderId, rating, debouncedContent, selectedVariantId, productId, navigate]);
+  }, [isValid, userOrder, rating, debouncedContent, selectedVariantId, productId, navigate]);
 
-  if (loading) return <p>Đang tải thông tin đánh giá...</p>;
+  if (loading) return <p>Đang tải đánh giá...</p>;
 
   return (
     <div className="mt-4">
@@ -141,27 +144,13 @@ export default function ProductReview({ productId, selectedVariantId }) {
       {canReview && (
         <>
           <Form.Group className="mb-3">
-            <Form.Label>Chọn đơn hàng đã nhận:</Form.Label>
-            <Form.Select
-              value={selectedOrderId}
-              onChange={e => setSelectedOrderId(e.target.value)}
-              isInvalid={!!validationErrors.selectedOrderId}
-              disabled={sending}
-            >
-              <option value="">-- Chọn đơn hàng --</option>
-              {userOrders.map(o => (
-                <option key={o.id} value={o.id}>
-                  Đơn hàng #{o.id} - Ngày nhận: {new Date(o.delivered_at).toLocaleDateString('vi-VN')}
-                </option>
-              ))}
-            </Form.Select>
-            <Form.Control.Feedback type="invalid">{validationErrors.selectedOrderId}</Form.Control.Feedback>
-          </Form.Group>
-
-          <Form.Group className="mb-3">
             <Form.Label>Đánh giá:</Form.Label>
             <StarRating rating={rating} setRating={setRating} disabled={sending} />
-            {!!validationErrors.rating && <div className="text-danger mt-1" style={{ fontSize: '0.875rem' }}>{validationErrors.rating}</div>}
+            {!!validationErrors.rating && (
+              <div className="text-danger mt-1" style={{ fontSize: '0.875rem' }}>
+                {validationErrors.rating}
+              </div>
+            )}
           </Form.Group>
 
           <Form.Group className="mb-3">
@@ -185,29 +174,26 @@ export default function ProductReview({ productId, selectedVariantId }) {
             </Alert>
           )}
 
-          <Button
-            onClick={handleSubmit}
-            disabled={sending || !isValid}
-          >
+          <Button onClick={handleSubmit} disabled={sending || !isValid}>
             {sending ? <><Spinner animation="border" size="sm" className="me-2" />Đang gửi...</> : 'Gửi đánh giá'}
           </Button>
-
-          <hr className="my-4" />
-          <h5>Đánh giá đã có ({reviews.length})</h5>
-          {!reviews.length && <p>Chưa có đánh giá nào cho sản phẩm này.</p>}
-          {reviews.map(r => (
-            <div key={r.id} className="mb-3 border-bottom pb-2">
-              <strong>{r.user.name}</strong> - <small>{new Date(r.created_at).toLocaleDateString('vi-VN')}</small>
-              <div style={{ color: '#ffc107' }}>
-                {[...Array(STAR_COUNT)].map((_, i) => (
-                  <FaStar key={i} color={i < r.rating ? '#ffc107' : '#e4e5e9'} />
-                ))}
-              </div>
-              <p>{r.comment || <i>(Không có nội dung)</i>}</p>
-            </div>
-          ))}
         </>
       )}
+
+      <hr className="my-4" />
+      <h5>Đánh giá đã có ({reviews.length})</h5>
+      {!reviews.length && <p>Chưa có đánh giá nào cho sản phẩm này.</p>}
+      {reviews.map(r => (
+        <div key={r.id} className="mb-3 border-bottom pb-2">
+          <strong>{r.user.name}</strong> - <small>{new Date(r.created_at).toLocaleDateString('vi-VN')}</small>
+          <div style={{ color: '#ffc107' }}>
+            {[...Array(STAR_COUNT)].map((_, i) => (
+              <FaStar key={i} color={i < r.rating ? '#ffc107' : '#e4e5e9'} />
+            ))}
+          </div>
+          <p>{r.content || <i>(Không có nội dung)</i>}</p>
+        </div>
+      ))}
     </div>
   );
 }

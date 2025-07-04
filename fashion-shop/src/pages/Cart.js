@@ -166,8 +166,18 @@ export default function CartPage() {
 
       <h4 className="text-end mt-4">Tổng cộng: {total.toLocaleString()}₫</h4>
       <div className="text-end">
-        <Button variant="success" href="/checkout">Thanh toán</Button>
+        <Button
+          variant="success"
+          disabled={!cartItems.some(item => item.selected)}
+          onClick={() => {
+            // Gửi danh sách sản phẩm được chọn nếu cần (ví dụ dùng Context / Redux hoặc localStorage)
+            window.location.href = '/checkout';
+          }}
+        >
+          Thanh toán
+        </Button>
       </div>
+
     </Container>
   );
 }
