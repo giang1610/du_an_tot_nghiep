@@ -13,21 +13,12 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SizeController;
-
-use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
-use App\Http\Controllers\Api\ProfileController;
-
+use App\Http\Requests\CustomEmailVerificationRequest;
 
 // User info
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-//route test realtime
-use App\Http\Controllers\MessageController;
-
-Route::post('/send-message', [MessageController::class, 'sendMessage']);
-
-
 
 // ========== PUBLIC ROUTES ========== //
 Route::post('/register', [AuthController::class, 'register']);
@@ -35,14 +26,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
-
-Route::middleware('auth:sanctum')->post('/email/verify-token', [TokenEmailVerificationController::class, 'verify']);
-//route profile
-Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'update']);
-
-
-
-
+// Email verification
+Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
+})->middleware(['signed'])->name('verification.verify');
 
 
 // Public product routes
@@ -95,7 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
     // Orders
-    Route::prefix('orders')->group(function () {
+    Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']);
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/checkout', [OrderController::class, 'checkout']);
@@ -103,15 +91,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
     });
 
-    // Momo payment
-    Route::prefix('payment')->group(function () {
-        // Route::post('/momo', [OrderController::class, 'payViaMomo']);
-        Route::post('/momo-notify', [OrderController::class, 'momoWebhook']);
-        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-    });
+
+
     // Các route khác: logout, cart, review...
-    
 });
 
-
-
+// Payment Momo
+Route::prefix('payment')->group(function () {
+    Route::post('/momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
+    Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
+    // Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    // Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
+    Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+    Route::get('/momo/return', [OrderController::class, 'momoReturn']);
+});
