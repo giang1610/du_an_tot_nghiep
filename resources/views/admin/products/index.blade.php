@@ -48,7 +48,7 @@
                         <tr>
                             <th width="60">ID</th>
                             <th>Sản phẩm</th>
-                            <th class="text-end">Giá</th>
+                            <th class="text-center">Giá</th>
                             <th>Mã</th>
                             <th>Kho</th>
                             <th>Màu</th>

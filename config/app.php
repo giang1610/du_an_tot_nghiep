@@ -56,7 +56,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL',),
     //config fotn_url
     'fotn_url' => env('FOTN_URL'),
 

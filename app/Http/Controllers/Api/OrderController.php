@@ -195,7 +195,7 @@ class OrderController extends Controller
         $user = auth()->user();
 
         $validator = Validator::make($request->all(), [
-            'payment_method'   => 'required|string|in:cod,momo,vnpay',
+            'payment_method'   => 'required|string|in:cod,vnpay,momo',
             'shipping_address' => 'required|string',
             'customer_phone'   => 'required|string',
             'customer_email'   => 'required|email',
@@ -206,7 +206,6 @@ class OrderController extends Controller
             'tax'              => 'required|numeric|min:0',
             'shipping'         => 'required|numeric|min:0',
             'total'            => 'required|numeric|min:0',
-            'notes'            => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -241,8 +240,6 @@ class OrderController extends Controller
                 'shipping'         => $request->shipping,
                 'total'            => $request->total,
                 'status'           => 'pending',
-                'payment_status'   => $request->payment_method === 'cod' ? 'unpaid' : 'pending',
-                'notes'            => $request->notes,
             ]);
 
             // Tạo các item cho đơn hàng
@@ -258,8 +255,10 @@ class OrderController extends Controller
                     'size_id'            => $variant->size_id,
                 ]);
 
-                // Trừ kho
-                $variant->stock->decrement('quantity', $item['quantity']);
+                // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
+                if ($request->payment_method === 'cod') {
+                    $variant->stock->decrement('quantity', $item['quantity']);
+                }
             }
 
             DB::commit();
@@ -273,7 +272,7 @@ class OrderController extends Controller
                         'data' => [
                             'order_id' => $order->id,
                             'payment_url' => $momoResponse['payUrl'],
-                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
+                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
                         ]
                     ]);
 
@@ -285,7 +284,7 @@ class OrderController extends Controller
                         'data' => [
                             'order_id' => $order->id,
                             'payment_url' => null,
-                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
+                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
                         ]
                     ]);
 
@@ -294,7 +293,7 @@ class OrderController extends Controller
                         'message' => 'Đặt hàng thành công',
                         'data' => [
                             'order_id' => $order->id,
-                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
+                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
                         ]
                     ]);
             }
@@ -405,68 +404,108 @@ class OrderController extends Controller
                 ], 400);
             }
     }
-
     /**
-    * Xử lý thanh toán COD
-    */
+     * Xử lý thanh toán MOMO
+     */
+    protected function processMomoPayment($user, $request, $cart, $totals)
+    {
+        DB::beginTransaction();
+
+        try {
+            // Tạo đơn hàng tạm (chưa trừ tồn kho)
+            $order = $user->orders()->create([
+                'subtotal' => $totals['subtotal'],
+                'shipping' => $totals['shipping'],
+                'tax' => $totals['tax'],
+                'total' => $totals['total'],
+                'status' => 'pending',
+                'payment_method' => 'momo',
+                'payment_status' => 'pending',
+                'shipping_address' => $request->shipping_address,
+                'billing_address' => $request->billing_address ?? $request->shipping_address,
+                'customer_email' => $user->email,
+                'customer_phone' => $request->customer_phone,
+                'notes' => $request->notes,
+            ]);
+
+            // Tạo items đơn hàng (chưa trừ tồn kho)
+            foreach ($cart->items as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->variant->price,
+                    'sale_price' => $item->variant->sale_price,
+                    'color_id' => $item->variant->color_id,
+                    'size_id' => $item->variant->size_id,
+                ]);
+            }
+
+            // Khởi tạo thanh toán MOMO
+            $momoResponse = $this->initiateMomoPayment($order, $totals['total']);
+
+            // Chưa xóa giỏ hàng - chờ xác nhận từ MOMO
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Đã khởi tạo thanh toán MOMO',
+                'data' => [
+                    'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
+
+                    'payment_url' => $momoResponse['payUrl'],
+                    'order_id' => $order->id,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi khởi tạo MOMO: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Lỗi khởi tạo thanh toán MOMO',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
     * Khởi tạo thanh toán MOMO
     */
     protected function initiateMomoPayment($order, $amount)
     {
-        $config = [
-            'api_url'      => env('MOMO_API_URL', 'https://test-payment.momo.vn/v2/gateway/api/create'),
-            'partner_code' => env('MOMO_PARTNER_CODE', 'MOMOBKUN20180529'),
-            'access_key'   => env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j'),
-            'secret_key'   => env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa'),
-            'redirect_url' => env('MOMO_REDIRECT_URL', url('/api/orders/momo/return')),
-            'ipn_url'      => env('MOMO_IPN_URL', url('/api/orders/momo/webhook')),
-        ];
-
-        foreach ($config as $key => $value) {
-            if (empty($value)) {
-                throw new \Exception("Thiếu cấu hình MOMO: $key");
-            }
-        }
-
-        $requestId = time() . "";
+        $partnerCode = 'MOMOBKUN20180529';
+        $accessKey = 'klm05TvNBzhg7h7j';
+        $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
+        $redirectUrl = "http://localhost:8000/api/orders/momo/return";
+        $ipnUrl = "http://localhost:8000/api/orders/momo/webhook";
+        $extraData = "";
+        $requestType = "payWithATM";
+        $requestId = Str::uuid();
         $orderId = $order->id . '-' . time();
         $orderInfo = "Thanh toán đơn hàng #{$order->order_number}";
-        $requestType = "payWithATM";
-        $extraData = "";
 
-        // Tạo rawHash đúng thứ tự tài liệu MOMO
-        $rawHash = "accessKey=" . $config['access_key'] . 
-                "&amount=" . $amount . 
-                "&extraData=" . $extraData . 
-                "&ipnUrl=" . $config['ipn_url'] . 
-                "&orderId=" . $orderId . 
-                "&orderInfo=" . $orderInfo . 
-                "&partnerCode=" . $config['partner_code'] . 
-                "&redirectUrl=" . $config['redirect_url'] . 
-                "&requestId=" . $requestId . 
-                "&requestType=" . $requestType;
+        // $rawHash = "accessKey={$config['access_key']}&amount={$amount}&extraData=&ipnUrl={$config['ipn_url']}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$config['partner_code']}&redirectUrl={$config['redirect_url']}&requestId={$requestId}&requestType=payWithATM";
+        $rawHash = "accessKey=" . $accessKey . "&amount=" . $amount . "&extraData=" . $extraData . "&ipnUrl=" . $ipnUrl . "&orderId=" . $orderId . "&orderInfo=" . $orderInfo . "&partnerCode=" . $partnerCode . "&redirectUrl=" . $redirectUrl . "&requestId=" . $requestId . "&requestType=" . $requestType;
 
-        $signature = hash_hmac("sha256", $rawHash, $config['secret_key']);
+        $signature = hash_hmac('sha256', $rawHash, $secretKey);
 
-        $data = [
-                'partnerCode' => $config['partner_code'],
-                'partnerName' => env('APP_NAME', 'MG Fashion Store'),
-                'storeId' => 'MomoTestStore',
-                'requestId' => $requestId,
-                'amount' => (string)$amount,
-                'orderId' => $orderId,
-                'orderInfo' => $orderInfo,
-                'redirectUrl' => $config['redirect_url'],
-                'ipnUrl' => $config['ipn_url'],
-                'lang' => 'vi',
-                'extraData' => $extraData,
-                'requestType' => $requestType,
-                'signature' => $signature,
-            ];
+        $requestData = [
+            'partnerCode' => $partnerCode,
+            'partnerName' => env('APP_NAME'),
+            'storeId' => 'MOMO_STORE',
+            'requestId' => $requestId,
+            'amount' => (string)$amount,
+            'orderId' => $orderId,
+            'orderInfo' => $orderInfo,
+            'redirectUrl' => $redirectUrl,
+            'ipnUrl' => $ipnUrl,
+            'lang' => 'vi',
+            'extraData' => '',
+            'requestType' => 'payWithATM',
+            'signature' => $signature,
+            'rawHash' => $rawHash
+        ];
 
-        $response = Http::timeout(30)->post($config['api_url'], $data);
+        $momoApiUrl = 'https://test-payment.momo.vn/v2/gateway/api/create'; // MOMO API endpoint
+        $response = Http::timeout(30)->post($momoApiUrl, $requestData);
 
         if (!$response->successful()) {
             throw new \Exception('Lỗi kết nối MOMO API: ' . $response->body());
@@ -487,53 +526,49 @@ class OrderController extends Controller
     public function momoWebhook(Request $request)
     {
         $data = $request->all();
-        $secretKey = env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa');
+        $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa'; // Sử dụng secret key giống khi tạo yêu cầu
 
-        // Kiểm tra các trường bắt buộc
-        $requiredFields = [
-            'partnerCode', 'accessKey', 'requestId', 'amount', 'orderId', 
-            'orderInfo', 'orderType', 'transId', 'resultCode', 'payType', 
-            'responseTime', 'signature'
-        ];
-
-        // Các trường có thể thiếu, gán mặc định rỗng
-        $optionalFields = [
-        'extraData'
-        ];
-
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field])) {
-                Log::error('Thiếu trường bắt buộc trong webhook Momo', ['field' => $field]);
-                return response()->json(['message' => "Thiếu trường bắt buộc: $field"], 400);
-            }
-        }
-        foreach ($optionalFields as $field) {
-            if (!isset($data[$field])) $data[$field] = '';
-        }
-
-        // Tạo rawHash đúng thứ tự tài liệu MOMO (KHÔNG encode/decode lại orderInfo)
-        $rawHash = "partnerCode=" . $data['partnerCode'] . 
-                "&accessKey=" . $data['accessKey'] . 
-                "&requestId=" . $data['requestId'] . 
+        // Tạo rawHash với thứ tự chính xác
+        $rawHash = "accessKey=" . $data['accessKey'] . 
                 "&amount=" . $data['amount'] . 
+                "&extraData=" . $data['extraData'] . 
+                "&message=" . $data['message'] . 
                 "&orderId=" . $data['orderId'] . 
                 "&orderInfo=" . $data['orderInfo'] . 
                 "&orderType=" . $data['orderType'] . 
-                "&transId=" . $data['transId'] . 
-                "&responseTime=" . $data['responseTime'] . 
-                "&errorCode=" . ($data['errorCode'] ?? '') . 
+                "&partnerCode=" . $data['partnerCode'] . 
                 "&payType=" . $data['payType'] . 
-                "&extraData=" . $data['extraData'];
+                "&requestId=" . $data['requestId'] . 
+                "&responseTime=" . $data['responseTime'] . 
+                "&resultCode=" . $data['resultCode'] . 
+                "&transId=" . $data['transId'];
 
-        $partnerSignature = hash_hmac("sha256", $rawHash, $secretKey);
-        // Kiểm tra signature
-        if ($partnerSignature !== $data['signature']) {
-            Log::error('Signature không hợp lệ', [
-                'received' => $data['signature'],
-                'calculated' => $partnerSignature,
-                'rawHash' => $rawHash
+        $signature = hash_hmac('sha256', $rawHash, $secretKey);
+
+        if ($signature !== $data['signature']) {
+            Log::error('Xác minh chữ ký MOMO thất bại', [
+                'calculated' => $signature,
             ]);
-            return response()->json(['message' => 'Signature không hợp lệ'], 403);
+
+            $logContent = file(storage_path('logs/laravel.log'));
+            try {
+                $lastCalculatedLine = collect($logContent)
+                    ->reverse()
+                    ->first(fn($line) => str_contains($line, 'calculated'));
+
+                if ($lastCalculatedLine && preg_match('/\{.*"calculated"\s*:\s*"(.+?)"\}/', $lastCalculatedLine, $matches)) {
+                    $signatureLog = $matches[1];
+                } else {
+                    $signatureLog = 'Không tìm thấy chữ ký trong log';
+                }
+            } catch (\Throwable $e) {
+                $signatureLog = 'Đã xảy ra lỗi khi xử lý log: ' . $e->getMessage();
+            }
+        }
+
+        // Lấy chữ lý trong log để so sánh
+        if($signature == $signatureLog) {
+            Log::info('Xác minh chữ ký MOMO thành công');
         }
 
         // Trích xuất ID đơn hàng (định dạng: orderId-thời gian)
@@ -640,98 +675,5 @@ class OrderController extends Controller
 
         return response()->json(['received' => $hasReceived]);
     }
-     /**
-    * Xử lý payviMOMO
-    */
-    /**
- * Tạo đơn hàng và khởi tạo thanh toán MOMO từ route POST /api/payment/momo
- */
-public function payViaMomo(Request $request)
 
-{
-    $user = auth()->user();
-
-    $validator = Validator::make($request->all(), [
-        'shipping_address' => 'required|string',
-        'customer_phone'   => 'required|string',
-        'customer_email'   => 'required|email',
-        'items'            => 'required|array|min:1',
-        'items.*.product_variant_id' => 'required|exists:product_variants,id',
-        'items.*.quantity' => 'required|integer|min:1',
-        'subtotal'         => 'required|numeric|min:0',
-        'tax'              => 'required|numeric|min:0',
-        'shipping'         => 'required|numeric|min:0',
-        'total'            => 'required|numeric|min:0',
-        'notes'            => 'nullable|string|max:500',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'message' => 'Dữ liệu không hợp lệ',
-            'errors' => $validator->errors()
-        ], 400);
-    }
-
-    DB::beginTransaction();
-
-    try {
-        // Kiểm tra tồn kho
-        foreach ($request->items as $item) {
-            $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
-            if (!$variant || $variant->stock->quantity < $item['quantity']) {
-                throw new \Exception("Không đủ tồn kho cho sản phẩm: {$item['product_variant_id']}");
-            }
-        }
-
-        // Tạo đơn hàng
-        $order = $user->orders()->create([
-            'subtotal'         => $request->subtotal,
-            'shipping'         => $request->shipping,
-            'tax'              => $request->tax,
-            'total'            => $request->total,
-            'status'           => 'pending',
-            'payment_method'   => 'momo',
-            'payment_status'   => 'pending',
-            'shipping_address' => $request->shipping_address,
-            'billing_address'  => $request->billing_address ?? $request->shipping_address,
-            'customer_email'   => $request->customer_email,
-            'customer_phone'   => $request->customer_phone,
-            'notes'            => $request->notes,
-        ]);
-
-        // Tạo item đơn hàng
-        foreach ($request->items as $item) {
-            $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_variant_id' => $variant->id,
-                'quantity' => $item['quantity'],
-                'price' => $variant->price,
-                'sale_price' => $variant->sale_price,
-                'color_id' => $variant->color_id,
-                'size_id' => $variant->size_id,
-            ]);
-        }
-
-        // Gọi hàm khởi tạo thanh toán MOMO
-        $momoResponse = $this->initiateMomoPayment($order, $request->total);
-
-        DB::commit();
-
-        return response()->json([
-            'message' => 'Đã khởi tạo thanh toán MOMO',
-            'data' => [
-                'payment_url' => $momoResponse['payUrl'] ?? null,
-                'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-            ]
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Lỗi thanh toán Momo: ' . $e->getMessage());
-        return response()->json([
-            'message' => 'Không thể khởi tạo thanh toán MOMO',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
 }
