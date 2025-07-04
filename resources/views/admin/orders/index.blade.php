@@ -75,83 +75,204 @@
         </div>
     </div>
 
-</form>
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>Mã đơn</th>
-                <th>Khách hàng</th>
-                <th>Sản phẩm đặt</th> 
-                <th>Số điện thoại</th> 
-                <th>Ngày tạo</th>
-                <th>Tổng tiền</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($orders as $order)
-              @php
-                    $variant = $order->variant;
-                    $product = $variant->product ?? null;
-                    // $thumbnail = $product?->thumbnail;
-                    $thumbnail = $variant->image ?? ($product?->image ?? null);
-                    $price = $order->price;
-                    $salePrice = $order->sale_price ?? $price;
-                    $totalPrice = $salePrice * $order->quantity;
-                    $hasDiscount = $salePrice < $price;
-                @endphp
-            <tr>
-                <td>{{ $order->order_number ?? 'ORD-' . $order->id }}</td>
-                <td>{{ $order->user->name ?? 'N/A' }}</td>
-                <td>{{ $order->$product }}</td> 
-                <td>{{ $order->customer_phone }}</td> 
-                <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ number_format($order->total) }}₫</td>
-                <td>
-                    @switch($order->status)
-                    @case('pending')
-                    <span class="badge bg-warning">Chờ xử lý</span>
-                    @break
-                    @case('processing')
-                    <span class="badge bg-primary">Đang xử lý</span>
-                    @break
-                    @case('picking')
-                    <span class="badge bg-info">Đang lấy hàng</span>
-                    @break
-                    @case('shipping')
-                    <span class="badge bg-secondary">Đang giao hàng</span>
-                    @break
-                    @case('shipped')
-                    <span class="badge bg-success">Đã giao hàng</span>
-                    @break
-                    @case('completed')
-                    <span class="badge bg-success">Xác minh nhận hàng</span>
-                    @break
-                    @case('cancelled')
-                    <span class="badge bg-danger">Đã hủy</span>
-                    @break
-                    @default
-                    <span class="badge bg-secondary">Không rõ</span>
-                    @endswitch
-                </td>
+    <div class="card mb-4">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+            <div class="mb-2 mb-md-0">
+                <i class="fas fa-table me-1"></i>
+                Danh sách đơn hàng
+                <span class="badge bg-primary ms-2">{{ $orders->total() }} đơn</span>
+            </div>
+            @if(request()->hasAny(['search', 'status', 'payment_method', 'payment_status', 'from_date', 'to_date']))
+            <div class="text-muted small">
+                <div class="d-flex flex-wrap gap-1">
+                    Đang lọc:
+                    @if(request('search')) <span class="badge bg-info">Tìm: {{ request('search') }}</span> @endif
+                    @if(request('status')) <span class="badge bg-info">Trạng thái: {{ request('status') }}</span> @endif
+                    @if(request('payment_method')) <span class="badge bg-info">PTTT: {{ request('payment_method') }}</span> @endif
+                    @if(request('payment_status')) <span class="badge bg-info">TTTT: {{ request('payment_status') }}</span> @endif
+                    @if(request('from_date')) <span class="badge bg-info">Từ: {{ request('from_date') }}</span> @endif
+                    @if(request('to_date')) <span class="badge bg-info">Đến: {{ request('to_date') }}</span> @endif
+                </div>
+            </div>
+            @endif
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover d-none d-md-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Sản phẩm</th>
+                            <th>Thông tin</th>
+                            <th>Thanh toán</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái giao hàng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($orders as $order)
+                        <tr>
+                            <td>
+                                <strong>{{ $order->order_number ?? 'ORD-' . $order->id }}</strong>
+                                <div class="text-muted small">
+                                    {{ $order->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            </td>
+                            <td>
+                                {{ $order->user->name ?? 'Khách vãng lai' }}
+                                <div class="text-muted small">
+                                    {{ $order->customer_phone }}
+                                </div>
+                            </td>
+                            <td>
+                                @foreach($order->items as $item)
+                                <div class="d-flex align-items-center mb-2">
+                                    @if($item->variant->product->image)
+                                    <img src="{{ asset($item->variant->product->image) }}"
+                                        class="img-thumbnail me-2"
+                                        width="40"
+                                        alt="{{ $item->variant->product->name }}">
+                                    @endif
+                                    <div>
+                                        {{ $item->variant->product->name ?? 'N/A' }}
+                                        @if($item->variant->color || $item->variant->size)
+                                        <div class="text-muted small">
+                                            {{ $item->variant->color->name ?? '' }} |
+                                            {{ $item->variant->size->name ?? '' }}
+                                            x{{ $item->quantity }}
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endforeach
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div><i class="fas fa-truck me-2"></i> {{ $order->shipping_method }}</div>
+                                    <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 15) }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                @switch($order->payment_method)
+                                @case('cod')
+                                <span class="badge bg-info">
+                                    <i class="fas fa-money-bill-wave me-1"></i> COD
+                                </span>
+                                @break
+                                @case('momo')
+                                <span style="background-color: #A50064; color: white" class="badge">
+                                    <i class="fas fa-mobile-alt me-1"></i> Momo
+                                </span>
+                                @break
+                                @default
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-question me-1"></i> Khác
+                                </span>
+                                @endswitch
+                                <div class="small mt-1">
+                                    @if($order->payment_status == 'paid')
+                                    <span class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i> Đã thanh toán
+                                    </span>
+                                    @else
+                                    <span class="text-warning">
+                                        <i class="fas fa-clock me-1"></i> Chưa thanh toán
+                                    </span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <strong>{{ number_format($order->total) }} VNĐ</strong>
+                                @if($order->discount > 0)
+                                <div class="text-danger small">
+                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
+                                </div>
+                                @endif
+                            </td>
+                            <td>
+                                @switch($order->status)
+                                @case('pending')
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock me-1"></i> Chờ xử lý
+                                </span>
+                                @break
+                                @case('processing')
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-cog me-1"></i> Đang xử lý
+                                </span>
+                                @break
+                                @case('picking')
+                                <span class="badge bg-info">
+                                    <i class="fas fa-box-open me-1"></i> Đang lấy hàng
+                                </span>
+                                @break
+                                @case('shipping')
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-truck me-1"></i> Đang giao hàng
+                                </span>
+                                @break
+                                @case('shipped')
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i> Đã giao hàng
+                                </span>
+                                @break
+                                @case('completed')
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-double me-1"></i> Hoàn thành
+                                </span>
+                                @break
+                                @case('cancelled')
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i> Đã hủy
+                                </span>
+                                @break
+                                @default
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-question me-1"></i> Không rõ
+                                </span>
+                                @endswitch
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-2">
+                                    <a href="{{ route('orders.show', $order->id) }}"
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="tooltip"
+                                        title="Xem chi tiết">
+                                        <span class="d-none d-md-inline">Xem chi tiết</span>
+                                        <i class="fas fa-eye"></i>
+                                    </a>
 
-                
-                <td>
-                    <a href="{{ route('orders.show', $order->id) }}" class="btn btn-sm btn-info">Xem</a>
-                    {{-- <a href="" class="btn btn-sm btn-toolbar">In đơn</a> --}}
-                    @if (!in_array($order->status, ['completed', 'cancelled']))
-                        <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-sm btn-success">Sửa</a>
-                    @endif
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="7">Không có đơn hàng nào.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
+                                    @if (!in_array($order->status, ['completed', 'cancelled']))
+                                    <a href="{{ route('orders.edit', $order->id) }}"
+                                        class="btn btn-sm btn-outline-success"
+                                        data-bs-toggle="tooltip"
+                                        title="Cập nhật trạng thái">
+                                        <span class="d-none d-md-inline">Cập nhật</span>
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Không có đơn hàng nào</h5>
+                                    @if(request()->hasAny(['search', 'status', 'from_date', 'to_date']))
+                                    <a href="{{ route('orders.index') }}" class="btn btn-sm btn-outline-primary mt-2">
+                                        <i class="fas fa-sync-alt me-1"></i> Xóa bộ lọc
+                                    </a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
 
                 <!-- Mobile view -->
                 <div class="d-md-none">

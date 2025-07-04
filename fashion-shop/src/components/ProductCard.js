@@ -29,7 +29,7 @@ export default function ProductCard({ product }) {
           )}
         </Card.Text>
 
-        <Button as={Link} to={`/products/slug/${product.slug}`} variant="outline-dark" size="sm">
+        <Button as={Link} to={`/products/${product.slug}`} variant="outline-dark" size="sm">
           Xem chi tiết
         </Button>
 

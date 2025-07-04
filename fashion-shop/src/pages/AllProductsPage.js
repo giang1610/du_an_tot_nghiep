@@ -207,13 +207,13 @@ export default function AllProductsPage() {
 }
 
 // ✅ Component tái sử dụng cho SelectBox
-function SelectBox({ label, value, options, onChange }) {
+function SelectBox({ label, value, options = [], onChange }) {
   return (
     <Form.Group className="mb-3">
       <Form.Label>{label}</Form.Label>
       <Form.Select value={value} onChange={e => onChange(e.target.value)}>
         <option value="">Tất cả</option>
-        {options.map(opt => (
+        {Array.isArray(options) && options.map(opt => (
           <option key={opt.id} value={opt.id}>{opt.name}</option>
         ))}
       </Form.Select>

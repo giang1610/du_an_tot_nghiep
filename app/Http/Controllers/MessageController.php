@@ -9,7 +9,7 @@ class MessageController extends Controller
 {
     public function sendMessage(Request $request)
     {
-        // Gửi sự kiện MessageSent chứa message từ request
+       
       broadcast(new MessageSent($request->message))->toOthers();
 
 
