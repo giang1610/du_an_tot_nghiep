@@ -466,64 +466,6 @@ class OrderController extends Controller
         }
     }
 
-        /**
-     * Khởi tạo thanh toán MOMO
-     */
-    protected function initiateMomoPayment($order, $amount)
-    {
-        $config = [
-            'api_url' => env('MOMO_API_URL', 'https://test-payment.momo.vn/v2/gateway/api/create'),
-            'partner_code' => env('MOMO_PARTNER_CODE', 'MOMOBKUN20180529'),
-            'access_key' => env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j'),
-            'secret_key' => env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa'),
-            'redirect_url' => env('MOMO_REDIRECT_URL', url('/api/orders/momo/return')),
-            'ipn_url' => env('MOMO_IPN_URL', url('/api/orders/momo/webhook')),
-        ];
-
-        // Kiểm tra cấu hình
-        foreach ($config as $key => $value) {
-            if (empty($value)) {
-                throw new \Exception("Thiếu cấu hình MOMO: $key");
-            }
-        }
-
-        $requestId = Str::uuid();
-        $orderId = $order->id . '-' . time();
-        $orderInfo = "Thanh toán cho đơn hàng #{$order->id}";
-
-        $rawHash = "accessKey={$config['access_key']}&amount={$amount}&extraData=&ipnUrl={$config['ipn_url']}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$config['partner_code']}&redirectUrl={$config['redirect_url']}&requestId={$requestId}&requestType=payWithATM";
-        $signature = hash_hmac('sha256', $rawHash, $config['secret_key']);
-
-        $requestData = [
-            'partnerCode' => $config['partner_code'],
-            'partnerName' => env('APP_NAME', 'Cửa hàng của bạn'),
-            'storeId' => 'MOMO_STORE',
-            'requestId' => $requestId,
-            'amount' => (string)$amount,
-            'orderId' => $orderId,
-            'orderInfo' => $orderInfo,
-            'redirectUrl' => $config['redirect_url'],
-            'ipnUrl' => $config['ipn_url'],
-            'lang' => 'vi',
-            'extraData' => '',
-            'requestType' => 'payWithATM',
-            'signature' => $signature,
-        ];
-
-        $response = Http::timeout(30)->post($config['api_url'], $requestData);
-
-        if (!$response->successful()) {
-            throw new \Exception('Lỗi kết nối MOMO API: ' . $response->body());
-        }
-
-        $responseData = $response->json();
-
-        if (!isset($responseData['payUrl'])) {
-            throw new \Exception($responseData['message'] ?? 'Khởi tạo thanh toán MOMO thất bại');
-        }
-
-        return $responseData;
-    }
     /**
     * Khởi tạo thanh toán MOMO
     */
