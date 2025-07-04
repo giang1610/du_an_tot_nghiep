@@ -43,7 +43,8 @@ return [
         ],
         
             ],
-            'log' => [
+            
+        'log' => [
             'driver' => 'log',
         ],
 
