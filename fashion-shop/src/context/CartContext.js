@@ -2,40 +2,53 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import axios from 'axios';
 
 const CartContext = createContext();
-
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const token = localStorage.getItem('token');
 
-  // ✅ Dùng useCallback để tránh warning ESLint
+  const calculateTotal = useCallback((items) => {
+    const selectedItems = items.filter(i => i.selected);
+    const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    setTotal(totalAmount);
+  }, []);
+
   const fetchCart = useCallback(async () => {
     if (!token) return;
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const selectedItems = res.data.cart_items.filter(item => item.selected);
-      setCart(selectedItems);
+      const items = res.data.cart_items || [];
+      setCart(items);
+      calculateTotal(items);
     } catch (err) {
-      console.error('Lỗi fetch giỏ hàng:', err);
+      console.error('Lỗi fetch cart:', err);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, calculateTotal]);
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    setTotal(0);
+  };
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
+  useEffect(() => {
+    calculateTotal(cart);
+  }, [cart, calculateTotal]);
+
   return (
-    <CartContext.Provider value={{ cart, setCart, fetchCart, clearCart, loading }}>
+    <CartContext.Provider value={{ cart, setCart, total, fetchCart, clearCart, loading }}>
       {children}
     </CartContext.Provider>
   );
