@@ -61,7 +61,7 @@
                         <td>{{$p->category->name}}</td>
                         <td>{{$p->name}}</td>
                         <td>{{$p->slug}}</td>
-                        <td>{{$p->price_products}}</td>
+                        <td>{{ number_format($p->price_products, 0, ',', '.') }}đ</></td>
                          {{-- giá --}}
                         {{-- <td>
                             @foreach ($p->variants as $variant)
