@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Form, Button, Container, Alert, InputGroup } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
@@ -7,10 +7,28 @@ import { Eye, EyeSlash } from 'react-bootstrap-icons';
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [verifiedMsg, setVerifiedMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const [searchParams] = useSearchParams();
+
+  // ✅ Lấy email & message từ URL khi lần đầu vào trang
+  useEffect(() => {
+    const email = searchParams.get('email');
+    const message = searchParams.get('message');
+
+    if (email) {
+      setForm(prev => ({ ...prev, email }));
+    }
+    if (message === 'email_verified') {
+      setVerifiedMsg('✅ Xác minh email thành công. Bạn có thể đăng nhập.');
+    } else if (message === 'already_verified') {
+      setVerifiedMsg('ℹ️ Email đã được xác minh trước đó.');
+    }
+  }, [searchParams]);
 
   const validateEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -61,6 +79,8 @@ export default function Login() {
   return (
     <Container className="py-5" style={{ maxWidth: 400 }}>
       <h3 className="mb-4">Đăng nhập</h3>
+
+      {verifiedMsg && <Alert variant="success">{verifiedMsg}</Alert>}
       {error && <Alert variant="danger">{error}</Alert>}
 
       <Form onSubmit={handleSubmit} noValidate>

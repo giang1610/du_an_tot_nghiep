@@ -72,6 +72,14 @@ export default function Checkout() {
     return cart.filter(item => item.selected);
   }, [isBuyNow, buyNowItem, cart]);
 
+  const totals = useMemo(() => {
+    const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    const tax = 0; // có thể thay đổi tuỳ chính sách
+    const shipping = 30000; // phí cố định hoặc tuỳ theo địa chỉ
+    const total = subtotal + tax + shipping;
+    return { subtotal, tax, shipping, total };
+  }, [selectedItems]);
+
   const setField = (name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
     if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }));
@@ -118,10 +126,15 @@ export default function Checkout() {
       shipping_address: form.address,
       billing_address: form.address,
       customer_phone: form.phone,
+      customer_email: user?.email,
       notes: form.notes,
       name: form.name,
       payment_method: form.payment_method,
       items: itemsPayload,
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      shipping: totals.shipping,
+      total: totals.total,
     };
 
     try {
@@ -152,15 +165,9 @@ export default function Checkout() {
         localStorage.removeItem('buy_now');
         setTimeout(() => navigate('/orders'), 3000);
       }
-    } catch (err) {
-      const resp = err.response?.data;
-      if (resp) {
-        if (resp.errors) setFormErrors(resp.errors);
-        if (resp.message) setError(resp.message);
-      } else {
-        setError('Lỗi đặt hàng.');
-      }
-      console.error(err);
+    } catch (error) {
+      console.error('❌ Lỗi:', error);
+      setError('Đặt hàng thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -213,7 +220,7 @@ export default function Checkout() {
                 onChange={e => setField('payment_method', e.target.value)}
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                <option value="banking">Chuyển khoản</option>
+                {/* <option value="banking">Chuyển khoản</option> */}
                 <option value="momo">Thanh toán MoMo</option>
               </Form.Select>
             </Form.Group>
@@ -232,6 +239,15 @@ export default function Checkout() {
         <Col md={6}>
           <h5>Sản phẩm trong giỏ</h5>
           <ProductSummary items={selectedItems} />
+          {selectedItems.length > 0 && (
+            <>
+              <hr />
+              <p>Tạm tính: {totals.subtotal.toLocaleString()} đ</p>
+              <p>Phí vận chuyển: {totals.shipping.toLocaleString()} đ</p>
+              <p>Thuế: {totals.tax.toLocaleString()} đ</p>
+              <h5 className="fw-bold">Tổng cộng: {totals.total.toLocaleString()} đ</h5>
+            </>
+          )}
         </Col>
       </Row>
     </Container>
