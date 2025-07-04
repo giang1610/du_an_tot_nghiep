@@ -25,10 +25,15 @@ class OrderPlaced extends Mailable
     }
 
     public function build()
-    {
-        return $this->subject('Xác nhận đơn hàng #' . $this->order->order_number)
-            ->markdown(view: 'emails.orders.placed');
-    }
+{
+    return $this->subject('Xác nhận đơn hàng #' . $this->order->order_number)
+        ->markdown('emails.orders.placed')
+        ->with([
+            'order' => $this->order,
+            'items' => $this->items,
+        ]);
+}
+
     /**
      * Get the message envelope.
      */

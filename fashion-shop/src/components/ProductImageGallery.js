@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Row, Col, Image, Modal, Carousel } from 'react-bootstrap';
 
-export default function ProductImageGallery({ images = [], productName }) {
+export default function ProductImageGallery({ images = [], productName, mainImage }) {
   const [mainIndex, setMainIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
-  const mainImage = images[mainIndex]?.url || 'https://via.placeholder.com/500x500?text=No+Image';
+  // 🔁 Tự động chọn ảnh chính mới khi prop mainImage thay đổi
+  useEffect(() => {
+    if (!mainImage) return;
+    const index = images.findIndex(img => img.url === mainImage);
+    if (index >= 0) {
+      setMainIndex(index);
+    }
+  }, [mainImage, images]);
+
+  const currentImage = images[mainIndex]?.url || 'https://via.placeholder.com/500x500?text=No+Image';
 
   return (
     <>
@@ -33,7 +42,7 @@ export default function ProductImageGallery({ images = [], productName }) {
         {/* Ảnh chính */}
         <Col xs={10}>
           <Image
-            src={mainImage}
+            src={currentImage}
             fluid
             onClick={() => setShowModal(true)}
             style={{

@@ -1,0 +1,8 @@
+.thumbnail-img {
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border 0.2s;
+}
+.thumbnail-img.active {
+  border: 2px solid #007bff;
+}

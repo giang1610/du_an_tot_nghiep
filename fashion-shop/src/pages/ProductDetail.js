@@ -6,7 +6,7 @@ import {
 } from 'react-bootstrap';
 import ProductReview from './ProductReview';
 import CheckoutForm from '../components/CheckoutForm';
-import ProductImageGallery from '../components/ProductImageGallery'; // ✅ Thêm dòng này
+import ProductImageGallery from '../components/ProductImageGallery';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -21,7 +21,6 @@ export default function ProductDetail() {
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [alertMsg, setAlertMsg] = useState('');
-
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -42,6 +41,24 @@ export default function ProductDetail() {
       })
       .finally(() => setLoading(false));
   }, [slug]);
+
+  const imageList = useMemo(() => {
+    if (!product) return [];
+
+    const mainImage = product.img ? [{ url: product.img }] : [];
+
+    const variantImages = product.variants
+      ?.map(v => v.img)
+      .filter(Boolean)
+      .map(url => ({ url })) || [];
+
+    const uniqueUrls = Array.from(new Set([...mainImage, ...variantImages].map(i => i.url)))
+      .map(url => ({ url }));
+
+    return uniqueUrls.length > 0
+      ? uniqueUrls
+      : [{ url: 'https://via.placeholder.com/500x500?text=No+Image' }];
+  }, [product]);
 
   const sizes = useMemo(() => {
     if (!product) return [];
@@ -130,7 +147,6 @@ export default function ProductDetail() {
       setAlertMsg(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
-
     if (!shippingAddress || !customerPhone) {
       setAlertMsg('Vui lòng nhập địa chỉ và số điện thoại.');
       return;
@@ -193,7 +209,10 @@ export default function ProductDetail() {
 
       <Row>
         <Col md={6}>
-          <ProductImageGallery images={product.images} productName={product.name} />
+          <ProductImageGallery
+            images={imageList}
+            mainImage={selectedVariant?.img || product.img}
+            productName={product.name} />
         </Col>
 
         <Col md={6}>
@@ -298,23 +317,30 @@ export default function ProductDetail() {
         </Col>
       </Row>
 
-      <div className="mt-5">
-        <h4>Sản phẩm liên quan</h4>
-        <Row>
-          {relatedProducts.map(rp => (
-            <Col md={3} key={rp.id} className="mb-3">
-              <div className="border p-2 h-100 d-flex flex-column align-items-center">
-                <img
-                  src={rp.images?.[0]?.url || 'placeholder.jpg'}
-                  alt={rp.name}
-                  style={{ maxHeight: 150, objectFit: 'contain' }}
-                />
-                <p className="fw-bold mt-2 text-center">{rp.name}</p>
-              </div>
-            </Col>
-          ))}
-        </Row>
-      </div>
+     <div className="mt-5">
+  <h4>Sản phẩm liên quan</h4>
+  <Row>
+    {relatedProducts.map((rp) => {
+      const imageUrl =
+        rp.variants?.[0]?.thumbnail ||
+        'https://via.placeholder.com/150x150?text=No+Image';
+
+      return (
+        <Col md={3} key={rp.id} className="mb-3">
+          <div className="border p-2 h-100 d-flex flex-column align-items-center">
+            <img
+              src={imageUrl}
+              alt={rp.name}
+              style={{ maxHeight: 150, objectFit: 'contain' }}
+            />
+            <p className="fw-bold mt-2 text-center">{rp.name}</p>
+          </div>
+        </Col>
+      );
+    })}
+  </Row>
+</div>
+
     </Container>
   );
 }
