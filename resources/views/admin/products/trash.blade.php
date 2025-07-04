@@ -1,80 +1,84 @@
 @extends('admin.layouts.app')
-
 @section('content')
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<div class="container-fluid">
+    <!-- Notification Alert -->
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-<div class="container-fluid px-3 px-md-4 px-lg-5">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-        <h2 class="mb-3 mb-md-0">
-            <i class="bi bi-box-seam me-2"></i> Quản lý sản phẩm
-        </h2>
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/admin/products" class="btn btn-outline-danger">
+                <i class="bi bi-arrow-left me-2"></i>
+                Quay lại danh sách sản phẩm
+            </a>
+        </div>
+        <div class="d-flex">
+            <form action="{{ route('products.restoreAll') }}" method="POST" class="me-2">
+                @csrf
+                <button type="submit" class="btn btn-success" onclick="return confirm('Khôi phục tất cả sản phẩm?')">
+                    <i class="bi bi-arrow-clockwise me-2"></i> Khôi phục tất cả
+                </button>
+            </form>
 
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('products.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Thêm mới
-            </a>
-            <a href="{{ route('products.trash') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-trash3-fill me-1"></i> Thùng rác
-            </a>
+            <form action="{{ route('products.deleteAll') }}" method="POST">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Xóa tất cả sản phẩm?')">
+                    <i class="bi bi-trash-fill me-2"></i> Xóa tất cả
+                </button>
+            </form>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body p-3 p-md-4">
-            <form method="GET" class="mb-3 mb-md-4">
-                <div class="input-group">
-                    <input
-                        type="text"
-                        name="search"
-                        class="form-control border-primary"
-                        placeholder="Tìm kiếm sản phẩm..."
-                        value="{{ request('search') }}"
-                        aria-label="Search products"
-                    >
-                    <button type="submit" class="btn btn-primary px-3 px-md-4">
-                        <i class="bi bi-search me-1 d-none d-md-inline"></i> Tìm
-                    </button>
-                </div>
-            </form>
-
+    <!-- Product Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-trash me-2"></i> Sản phẩm đã xóa</h5>
+        </div>
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th width="60">ID</th>
-                            <th>Sản phẩm</th>
-                            <th class="text-center">Giá</th>
+                            <th width="50">ID</th>
+                            <th>Tên sản phẩm</th>
                             <th>Mã</th>
+                            <th>Giá</th>
                             <th>Kho</th>
-                            <th>Màu</th>
-                            <th>Size</th>
-                            <th width="120">Ảnh</th>
-                            <th width="120">Trạng thái</th>
+                            <th>Ảnh</th>
+                            <th>Trạng thái</th>
                             <th width="120">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($products as $p)
+                        @forelse($products as $p)
                         <tr>
-                            <td class="fw-semibold">{{ $p->id }}</td>
+                            <td>{{$p->id}}</td>
                             <td>
-                                <div class="d-flex flex-column">
-                                    <span class="fw-medium">{{ $p->name }}</span>
-                                    <small class="text-muted">{{ $p->category->name ?? 'Không có danh mục' }}</small>
+                                <strong>{{$p->name}}</strong>
+                                <div class="text-muted small">
+                                    {{$p->category->name}}
                                 </div>
-                            </td>
-                            <td class="text-end fw-medium text-nowrap">
-                                {{ number_format($p->price_products, 0, ',', '.') }}₫
+                                <div class="mt-1">
+                                    @foreach ($p->variants as $variant)
+                                        <span class="badge bg-light text-dark me-1 mb-1">
+                                            {{ $variant->color->name ?? '' }} / {{ $variant->size->name ?? '' }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
                                     <span class="badge bg-light text-dark mb-1">{{ $variant->sku ?? 'N/A' }}</span>
                                 @endforeach
+                            </td>
+                            <td>
+                                {{ number_format($p->price_products) }}đ
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
@@ -86,118 +90,56 @@
                                 @endforeach
                             </td>
                             <td>
-                                @foreach ($p->variants as $variant)
-                                    @if($variant->color)
-                                        <span class="badge bg-light text-dark mb-1" >
-                                            {{ $variant->color->name }}
-                                        </span>
-                                    @else
-                                        <span class="badge bg-light text-dark mb-1">N/A</span>
-                                    @endif
-                                @endforeach
-                            </td>
-                            <td>
-                                @foreach ($p->variants as $variant)
-                                    <span class="badge bg-light text-dark mb-1">{{ $variant->size->name ?? 'N/A' }}</span>
-                                @endforeach
-                            </td>
-                            <td>
                                 @if ($p->thumbnail)
-                                    <img src="{{ asset('storage/' . $p->thumbnail) }}"
-                                         alt="{{ $p->name }}"
-                                         class="img-thumbnail"
-                                         style="width: 60px; height: 60px; object-fit: cover;">
+                                    <img src="{{ asset('storage/' . $p->thumbnail) }}" alt="Product Image"
+                                         class="img-thumbnail" style="width: 80px; height: auto;">
                                 @else
-                                    <span class="badge bg-light text-dark">N/A</span>
+                                    <span class="text-muted">Không có ảnh</span>
                                 @endif
                             </td>
                             <td>
-                                @if ($p->status === 1)
-                                    <span class="badge bg-success">Hoạt động</span>
-                                @elseif ($p->status === 0)
-                                    <span class="badge bg-warning text-dark">Chưa xuất bản</span>
-                                @else
-                                    <span class="badge bg-secondary">Tạm dừng</span>
-                                @endif
+                                <span class="badge
+                                    {{ $p->status === 1 ? 'bg-success' : '' }}
+                                    {{ $p->status === 0 ? 'bg-secondary' : '' }}
+                                    {{ $p->status === 2 ? 'bg-warning' : '' }}">
+                                    @if ($p->status === 1)
+                                        Hoạt động
+                                    @elseif ($p->status === 0)
+                                        Chưa xuất bản
+                                    @else
+                                        Tạm dừng
+                                    @endif
+                                </span>
                             </td>
                             <td>
-                                <div class="d-flex gap-1">
-                                    <a href="{{ route('products.edit', $p->id) }}"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="Chỉnh sửa">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <form action="{{ route('products.destroy', $p->id) }}" method="POST" class="d-inline">
+                                <div class="d-flex">
+                                    <form action="{{ route('products.restore', $p->id) }}" method="POST" class="me-1">
                                         @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                class="btn btn-sm btn-outline-danger"
-                                                title="Xóa"
-                                                onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')">
-                                            <i class="bi bi-trash3"></i>
+                                        <button class="btn btn-sm btn-outline-success" title="Khôi phục">
+                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('products.forceDelete', $p->id) }}" method="POST">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Xóa vĩnh viễn sản phẩm này?')"
+                                                title="Xóa vĩnh viễn">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4">Không có sản phẩm nào trong thùng rác</td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
-            </div>
-
-            <div class="d-flex justify-content-center mt-3">
-                {{ $products->links() }}
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .table th {
-        white-space: nowrap;
-        font-size: 0.875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .table td {
-        vertical-align: middle;
-        padding: 0.75rem;
-    }
-    .badge {
-        font-weight: 500;
-        font-size: 0.75rem;
-        display: inline-block;
-    }
-    .img-thumbnail {
-        border-radius: 4px;
-    }
-    @media (max-width: 768px) {
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .table th, .table td {
-            min-width: 120px;
-        }
-    }
-</style>
-
 @endsection
-
-@php
-function getContrastColor($hexColor) {
-    // Remove # if present
-    $hexColor = ltrim($hexColor, '#');
-
-    // Convert to RGB
-    $r = hexdec(substr($hexColor, 0, 2));
-    $g = hexdec(substr($hexColor, 2, 2));
-    $b = hexdec(substr($hexColor, 4, 2));
-
-    // Calculate luminance
-    $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
-
-    // Return black or white depending on luminance
-    return ($luminance > 0.5) ? '#000000' : '#ffffff';
-}
-@endphp
