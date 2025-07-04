@@ -13,7 +13,11 @@
         <h2 class="mb-3 mb-md-0">
             <i class="bi bi-box-seam me-2"></i> Quản lý sản phẩm
         </h2>
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> d286576332558281d98dac8291b1b860eceb0c1a
         <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('products.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Thêm mới
@@ -103,9 +107,15 @@
                             </td>
                             <td>
                                 @if ($p->thumbnail)
+<<<<<<< HEAD
                                     <img src="{{ asset('storage/' . $p->thumbnail) }}"
                                          alt="{{ $p->name }}"
                                          class="img-thumbnail"
+=======
+                                    <img src="{{ asset('storage/' . $p->thumbnail) }}" 
+                                         alt="{{ $p->name }}" 
+                                         class="img-thumbnail" 
+>>>>>>> d286576332558281d98dac8291b1b860eceb0c1a
                                          style="width: 60px; height: 60px; object-fit: cover;">
                                 @else
                                     <span class="badge bg-light text-dark">N/A</span>
@@ -122,16 +132,26 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
+<<<<<<< HEAD
                                     <a href="{{ route('products.edit', $p->id) }}"
                                        class="btn btn-sm btn-outline-primary"
+=======
+                                    <a href="{{ route('products.edit', $p->id) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+>>>>>>> d286576332558281d98dac8291b1b860eceb0c1a
                                        title="Chỉnh sửa">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form action="{{ route('products.destroy', $p->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
+<<<<<<< HEAD
                                         <button type="submit"
                                                 class="btn btn-sm btn-outline-danger"
+=======
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-outline-danger" 
+>>>>>>> d286576332558281d98dac8291b1b860eceb0c1a
                                                 title="Xóa"
                                                 onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')">
                                             <i class="bi bi-trash3"></i>
