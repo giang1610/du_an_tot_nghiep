@@ -72,7 +72,7 @@ export default function ProfilePage() {
       });
 
       setSuccess('✅ Cập nhật thành công');
-      login(token, res.data.user); // Cập nhật lại AuthContext
+      login(token, res.data.user); 
     } catch (err) {
       setError(
         err.response?.data?.message || '❌ Lỗi kết nối máy chủ'

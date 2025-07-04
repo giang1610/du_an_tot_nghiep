@@ -57,7 +57,12 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function productVariant()
+    public function productVariant() // dùng cho fontend
+{
+    return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+}
+
+    public function variant() // dùng cho backend
 {
     return $this->belongsTo(ProductVariant::class, 'product_variant_id');
 }

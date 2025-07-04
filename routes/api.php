@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\SizeController;
 
 use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\Auth\ChangePasswordController;
+
 
 
 // User info
@@ -39,6 +41,9 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::middleware('auth:sanctum')->post('/email/verify-token', [TokenEmailVerificationController::class, 'verify']);
 //route profile
 Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'update']);
+//route updatepass
+Route::middleware('auth:sanctum')->put('/change-password', [ChangePasswordController::class, 'change']);
+
 
 
 
