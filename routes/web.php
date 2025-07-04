@@ -74,6 +74,30 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
 
 
 // Admin routes
+    //xóa danh mục
+    //thùng rác 
+    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
+    //xóa vĩnh viễn
+    Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
+    //khôi phục tất cả
+    Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
+
+    //khôi phục từng danh mục
+    Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+    //xóa vĩnh viễn từng danh mục
+    Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
+
+    //xóa sản phẩm
+    //thùng rác 
+    Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
+    //khôi phục từng sản phẩm
+    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+    //khôi phục tất cả sản phẩm
+    Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
+    //xóa vĩnh viễn từng sản phẩm
+    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
+    //xóa vĩnh viễn tất cả sản phẩm
+    Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
 Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(function () {
     Route::get('/', function () {
       return view('admin.dashboard');
@@ -86,7 +110,6 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
-    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
     Route::resource('products', ProductController::class);
 
 

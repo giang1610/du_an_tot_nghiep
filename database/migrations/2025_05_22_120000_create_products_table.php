@@ -19,6 +19,7 @@ class CreateProductsTable extends Migration
             $table->text('short_description')->nullable();
             $table->longText('description')->nullable();
             $table->string('thumbnail')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

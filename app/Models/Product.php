@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ProductVariant;
 use App\Models\ProductImage;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 /**
@@ -51,6 +52,7 @@ use App\Models\ProductImage;
 class Product extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
 
