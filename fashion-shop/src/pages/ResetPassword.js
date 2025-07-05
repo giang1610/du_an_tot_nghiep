@@ -143,6 +143,7 @@ function ResetPassword() {
 
       if (res.ok) {
         setMessage({ text: '✅ Mật khẩu đã được đặt lại thành công! Đang chuyển hướng...', type: 'success' });
+        localStorage.clear();
         setTimeout(() => {
           navigate('/login');
         }, 2000);

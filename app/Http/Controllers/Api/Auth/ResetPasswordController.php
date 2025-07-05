@@ -60,6 +60,8 @@ class ResetPasswordController extends Controller
             
             $user->password = Hash::make($request->password);
             $user->save();
+            $user->tokens()->delete();
+
 
            //xóa token
             DB::table('password_reset_tokens')->where('email', $record->email)->delete();
