@@ -13,7 +13,12 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SizeController;
-use App\Http\Requests\CustomEmailVerificationRequest;
+
+use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\Auth\ChangePasswordController;
+
+
 
 // User info
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -26,11 +31,17 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
-// Email verification
-Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
-    $request->fulfill();
-    return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
-})->middleware(['signed'])->name('verification.verify');
+
+Route::middleware('auth:sanctum')->post('/email/verify-token', [TokenEmailVerificationController::class, 'verify']);
+//route profile
+Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'update']);
+//route updatepass
+Route::middleware('auth:sanctum')->put('/change-password', [ChangePasswordController::class, 'change']);
+
+
+
+
+
 
 
 // Public product routes
