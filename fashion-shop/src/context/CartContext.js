@@ -34,9 +34,19 @@ export const CartProvider = ({ children }) => {
     }
   }, [token, calculateTotal]);
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCart([]);
     setTotal(0);
+
+    if (!token) return;
+
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/cart/clear`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error('❌ Lỗi khi xóa giỏ hàng trên server:', err);
+    }
   };
 
   useEffect(() => {
