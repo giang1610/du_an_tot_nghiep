@@ -12,7 +12,7 @@ const Test = () => {
   });
 
  echo.channel('chat')
-  .listen('.MessageSent', (e) => {
+  .listen('.product.changed', (e) => {
     console.log('📥 Nhận tin nhắn:', e.message);
   });
 
