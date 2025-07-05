@@ -5,21 +5,22 @@ export default function ProductImageGallery({ images = [], productName, mainImag
   const [mainIndex, setMainIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
-  // 🔁 Tự động chọn ảnh chính mới khi prop mainImage thay đổi
+  // Cập nhật ảnh chính theo mainImage nếu nó tồn tại trong images
   useEffect(() => {
-    if (!mainImage) return;
     const index = images.findIndex(img => img.url === mainImage);
-    if (index >= 0) {
+    if (index !== -1) {
       setMainIndex(index);
+    } else {
+      setMainIndex(0); // fallback nếu không tìm thấy
     }
   }, [mainImage, images]);
 
-  const currentImage = images[mainIndex]?.url || 'https://via.placeholder.com/500x500?text=No+Image';
+  const displayImage = images[mainIndex]?.url || 'https://via.placeholder.com/500x500?text=No+Image';
 
   return (
     <>
       <Row>
-        {/* Thumbnails bên trái */}
+        {/* Thumbnail bên trái */}
         <Col xs={2} className="d-flex flex-column gap-2">
           {images.map((img, index) => (
             <Image
@@ -42,7 +43,7 @@ export default function ProductImageGallery({ images = [], productName, mainImag
         {/* Ảnh chính */}
         <Col xs={10}>
           <Image
-            src={currentImage}
+            src={displayImage}
             fluid
             onClick={() => setShowModal(true)}
             style={{

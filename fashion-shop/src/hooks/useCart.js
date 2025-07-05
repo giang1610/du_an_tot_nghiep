@@ -1,34 +1,19 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useRef } from 'react';
 import axios from 'axios';
+import { useCart } from '../context/CartContext';
 
-export default function useCart() {
-  const [cartItems, setCartItems] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const updateTimeout = useRef(null);
+export default function useCartActions() {
+  const {
+    cart,
+    setCart,
+    total,
+    fetchCart,
+    clearCart,
+    loading
+  } = useCart();
+
   const token = localStorage.getItem('token');
-
-  const fetchCart = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCartItems(res.data.cart_items || []);
-      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTotal(totalRes.data.total);
-    } catch (err) {
-      console.error('Lỗi khi tải giỏ hàng:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+  const updateTimeout = useRef(null);
 
   const updateQuantity = (item, quantity) => {
     if (updateTimeout.current) clearTimeout(updateTimeout.current);
@@ -43,33 +28,30 @@ export default function useCart() {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        setCartItems(prev => prev.map(i => i.id === item.id ? { ...i, quantity: Number(quantity) } : i));
-        const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setTotal(totalRes.data.total);
+        const updatedCart = cart.map(i =>
+          i.id === item.id ? { ...i, quantity: Number(quantity) } : i
+        );
+
+        setCart(updatedCart);
       } catch (err) {
         console.error('Lỗi cập nhật số lượng:', err);
       }
     }, 500);
   };
 
-  const toggleSelected = async (itemId, currentSelected) => {
+  const toggleSelected = async (item) => {
     try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/cart/update-selected/${itemId}`, {
-        selected: !currentSelected
+      await axios.put(`${process.env.REACT_APP_API_URL}/cart/update-selected/${item.id}`, {
+        selected: !item.selected
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setCartItems(prev =>
-        prev.map(i => i.id === itemId ? { ...i, selected: !i.selected } : i)
+      const updatedCart = cart.map(i =>
+        i.id === item.id ? { ...i, selected: !i.selected } : i
       );
 
-      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTotal(totalRes.data.total);
+      setCart(updatedCart);
     } catch (err) {
       console.error('Lỗi chọn sản phẩm:', err);
     }
@@ -80,26 +62,16 @@ export default function useCart() {
       await axios.delete(`${process.env.REACT_APP_API_URL}/cart/remove/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCartItems(prev => prev.filter(i => i.id !== itemId));
-      const totalRes = await axios.get(`${process.env.REACT_APP_API_URL}/cart/total`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTotal(totalRes.data.total);
+
+      const updatedCart = cart.filter(i => i.id !== itemId);
+      setCart(updatedCart);
     } catch (err) {
       console.error('Lỗi xóa sản phẩm:', err);
     }
   };
-  const clearCart = async () => {
-  try {
-    await fetchCart(); // Cập nhật lại từ server (sau khi backend đã xoá)
-  } catch (err) {
-    console.error('Lỗi khi làm mới giỏ hàng:', err);
-  }
-};
-
 
   return {
-    cartItems,
+    cartItems: cart,
     total,
     loading,
     updateQuantity,
@@ -109,3 +81,4 @@ export default function useCart() {
     clearCart
   };
 }
+  
