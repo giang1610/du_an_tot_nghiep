@@ -16,9 +16,15 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:25',
-            'email' => 'required|string|email|max:40|unique:users',
+            'email' => 'required|string|email|max:40',
             'password' => 'required|string|confirmed|min:8',
         ]);
+
+        if (User::where('email', $request->email)->exists()) {
+         return response()->json([
+        'message' => 'Email đã được đăng ký.',
+        ], 401); // 409 Conflict
+        }
 
         // Tạo người dùng mới
         $user = User::create([
@@ -26,7 +32,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-
+      
         
        dispatch(new SendVerificationEmailJob($user));
 
