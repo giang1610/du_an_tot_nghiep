@@ -384,7 +384,7 @@ class OrderController extends Controller
                                 'order_id' => $order->id,
                                 'payment_url' => null,
                                 'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                            ]    
+                            ]
                     ]);
                 default:
                     return response()->json([
@@ -529,18 +529,18 @@ class OrderController extends Controller
         $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa'; // Sử dụng secret key giống khi tạo yêu cầu
 
         // Tạo rawHash với thứ tự chính xác
-        $rawHash = "accessKey=" . $data['accessKey'] . 
-                "&amount=" . $data['amount'] . 
-                "&extraData=" . $data['extraData'] . 
-                "&message=" . $data['message'] . 
-                "&orderId=" . $data['orderId'] . 
-                "&orderInfo=" . $data['orderInfo'] . 
-                "&orderType=" . $data['orderType'] . 
-                "&partnerCode=" . $data['partnerCode'] . 
-                "&payType=" . $data['payType'] . 
-                "&requestId=" . $data['requestId'] . 
-                "&responseTime=" . $data['responseTime'] . 
-                "&resultCode=" . $data['resultCode'] . 
+        $rawHash = "accessKey=" . $data['accessKey'] .
+                "&amount=" . $data['amount'] .
+                "&extraData=" . $data['extraData'] .
+                "&message=" . $data['message'] .
+                "&orderId=" . $data['orderId'] .
+                "&orderInfo=" . $data['orderInfo'] .
+                "&orderType=" . $data['orderType'] .
+                "&partnerCode=" . $data['partnerCode'] .
+                "&payType=" . $data['payType'] .
+                "&requestId=" . $data['requestId'] .
+                "&responseTime=" . $data['responseTime'] .
+                "&resultCode=" . $data['resultCode'] .
                 "&transId=" . $data['transId'];
 
         $signature = hash_hmac('sha256', $rawHash, $secretKey);
