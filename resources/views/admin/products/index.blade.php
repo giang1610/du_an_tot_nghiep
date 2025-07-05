@@ -13,11 +13,6 @@
         <h2 class="mb-3 mb-md-0">
             <i class="bi bi-box-seam me-2"></i> Quản lý sản phẩm
         </h2>
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> d286576332558281d98dac8291b1b860eceb0c1a
         <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('products.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Thêm mới
