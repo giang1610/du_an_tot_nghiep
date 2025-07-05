@@ -48,7 +48,7 @@
                         <tr>
                             <th width="60">ID</th>
                             <th>Sản phẩm</th>
-                            <th class="text-center">Giá</th>
+                            <th>Giá</th>
                             <th>Mã</th>
                             <th>Kho</th>
                             <th>Màu</th>
@@ -68,18 +68,20 @@
                                     <small class="text-muted">{{ $p->category->name ?? 'Không có danh mục' }}</small>
                                 </div>
                             </td>
-                            <td class="text-end fw-medium text-nowrap">
+                            <td class="fw-medium text-nowrap">
                                 {{ number_format($p->price_products, 0, ',', '.') }}₫
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
                                     <span class="badge bg-light text-dark mb-1">{{ $variant->sku ?? 'N/A' }}</span>
+                                    <br>
                                 @endforeach
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
                                     @if($variant->stock->quantity > 0)
                                         <span class="badge bg-success mb-1">{{ $variant->stock->quantity }}</span>
+                                        <br>
                                     @else
                                         <span class="badge bg-danger mb-1">Hết</span>
                                     @endif
@@ -91,6 +93,7 @@
                                         <span class="badge bg-light text-dark mb-1" >
                                             {{ $variant->color->name }}
                                         </span>
+                                        <br>
                                     @else
                                         <span class="badge bg-light text-dark mb-1">N/A</span>
                                     @endif
@@ -99,6 +102,7 @@
                             <td>
                                 @foreach ($p->variants as $variant)
                                     <span class="badge bg-light text-dark mb-1">{{ $variant->size->name ?? 'N/A' }}</span>
+                                    <br>
                                 @endforeach
                             </td>
                             <td>
