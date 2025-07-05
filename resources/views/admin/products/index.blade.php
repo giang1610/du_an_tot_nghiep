@@ -13,7 +13,6 @@
         <h2 class="mb-3 mb-md-0">
             <i class="bi bi-box-seam me-2"></i> Quản lý sản phẩm
         </h2>
-        
         <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('products.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Thêm mới
@@ -48,7 +47,7 @@
                         <tr>
                             <th width="60">ID</th>
                             <th>Sản phẩm</th>
-                            <th class="text-center">Giá</th>
+                            <th>Giá</th>
                             <th>Mã</th>
                             <th>Kho</th>
                             <th>Màu</th>
@@ -68,18 +67,20 @@
                                     <small class="text-muted">{{ $p->category->name ?? 'Không có danh mục' }}</small>
                                 </div>
                             </td>
-                            <td class="text-end fw-medium text-nowrap">
+                            <td class="fw-medium text-nowrap">
                                 {{ number_format($p->price_products, 0, ',', '.') }}₫
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
                                     <span class="badge bg-light text-dark mb-1">{{ $variant->sku ?? 'N/A' }}</span>
+                                    <br>
                                 @endforeach
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
                                     @if($variant->stock->quantity > 0)
                                         <span class="badge bg-success mb-1">{{ $variant->stock->quantity }}</span>
+                                        <br>
                                     @else
                                         <span class="badge bg-danger mb-1">Hết</span>
                                     @endif
@@ -91,6 +92,7 @@
                                         <span class="badge bg-light text-dark mb-1" >
                                             {{ $variant->color->name }}
                                         </span>
+                                        <br>
                                     @else
                                         <span class="badge bg-light text-dark mb-1">N/A</span>
                                     @endif
@@ -99,13 +101,14 @@
                             <td>
                                 @foreach ($p->variants as $variant)
                                     <span class="badge bg-light text-dark mb-1">{{ $variant->size->name ?? 'N/A' }}</span>
+                                    <br>
                                 @endforeach
                             </td>
                             <td>
                                 @if ($p->thumbnail)
-                                    <img src="{{ asset('storage/' . $p->thumbnail) }}" 
-                                         alt="{{ $p->name }}" 
-                                         class="img-thumbnail" 
+                                    <img src="{{ asset('storage/' . $p->thumbnail) }}"
+                                         alt="{{ $p->name }}"
+                                         class="img-thumbnail"
                                          style="width: 60px; height: 60px; object-fit: cover;">
                                 @else
                                     <span class="badge bg-light text-dark">N/A</span>
@@ -122,16 +125,16 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
-                                    <a href="{{ route('products.edit', $p->id) }}" 
-                                       class="btn btn-sm btn-outline-primary" 
+                                    <a href="{{ route('products.edit', $p->id) }}"
+                                       class="btn btn-sm btn-outline-primary"
                                        title="Chỉnh sửa">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form action="{{ route('products.destroy', $p->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" 
-                                                class="btn btn-sm btn-outline-danger" 
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
                                                 title="Xóa"
                                                 onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')">
                                             <i class="bi bi-trash3"></i>
