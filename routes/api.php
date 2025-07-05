@@ -101,6 +101,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+        Route::post('/{order}/confirm-received', [OrderController::class, 'confirmReceived']);
+        Route::post('/{order}/request-return', [OrderController::class, 'requestReturn']);
     });
 
     // Momo payment

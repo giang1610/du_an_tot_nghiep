@@ -43,6 +43,11 @@
                         <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
                         <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
                         <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
+                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Đã nhận hàng</option>
+                        <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Đã thất bại</option>
+                        <option value="returning" {{ request('status') == 'returning' ? 'selected' : '' }}>Đang trả hàng</option>
+                        <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Yêu cầu trả hàng</option>
+                        <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
                         <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
                     </select>
                 </div>
@@ -222,6 +227,26 @@
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành
+                                </span>
+                                @break
+                                @case('failed')
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i> Đã thất bại
+                                </span>
+                                @break
+                                @case('returning')
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-undo me-1"></i> Đang trả hàng
+                                </span>
+                                @break
+                                @case('return_requested')
+                                <span class="badge bg-info">
+                                    <i class="fas fa-exchange-alt me-1"></i> Yêu cầu trả hàng
+                                </span>
+                                @break
+                                @case('returned')
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-undo-alt me-1"></i> Đã trả hàng
                                 </span>
                                 @break
                                 @case('cancelled')
