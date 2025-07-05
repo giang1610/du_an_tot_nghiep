@@ -26,11 +26,14 @@ use App\Http\Controllers\Auth\NewEmailVerificationController;
 
 
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
+
 
 // Trang chủ
 Route::get('/', function () {
@@ -70,6 +73,7 @@ Route::get('/verify-email-custom', [EmailVerifiFotnController::class, 'verify'])
 Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'])
     ->name('email.update.verify')
     ->middleware('signed');
+
 
 
 
