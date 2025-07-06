@@ -58,7 +58,6 @@ Route::get('/sizes', [SizeController::class, 'index']);
 
 // Public reviews (view only)
 Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
-Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders'])->middleware('auth:sanctum');
 
 
 // ========== PROTECTED ROUTES (auth:sanctum) ========== //
@@ -70,12 +69,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reviews
     // Gửi đánh giá
     Route::post('/reviews', [ReviewController::class, 'store']);
-
     // Lấy danh sách đánh giá theo product_id (dùng ?product_id=...)
     Route::get('/reviews', [ReviewController::class, 'getByProductQuery']);
-
     // Kiểm tra đã nhận hàng
     Route::middleware('auth:sanctum')->get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
+    
     // Cart
     Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('cart')->group(function () {
@@ -85,7 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
             Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
             Route::get('/total', [CartController::class, 'getCartTotal']);
-            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+            // Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
 
         });
     });
@@ -101,6 +99,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+        Route::post('/{order}/confirm-received', [OrderController::class, 'confirmReceived']);
+        Route::post('/{order}/request-return', [OrderController::class, 'requestReturn']);
     });
 
 
