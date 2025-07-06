@@ -27,6 +27,9 @@ return new class extends Migration
             $table->string('customer_email');
             $table->string('customer_phone');
             $table->text('notes')->nullable();
+            $table->timestamp('delivered_at')->nullable();
+            $table->timestamp('return_requested_at')->nullable();
+            $table->string('return_reason', 500)->nullable();
             $table->timestamps();
         });
     }

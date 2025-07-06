@@ -91,14 +91,14 @@
                             </td>
                             <td>
                                 @if ($p->thumbnail)
-                                    <img src="{{ asset('storage/' . $p->thumbnail) }}" alt="Product Image" 
+                                    <img src="{{ asset('storage/' . $p->thumbnail) }}" alt="Product Image"
                                          class="img-thumbnail" style="width: 80px; height: auto;">
                                 @else
                                     <span class="text-muted">Không có ảnh</span>
                                 @endif
                             </td>
                             <td>
-                                <span class="badge 
+                                <span class="badge
                                     {{ $p->status === 1 ? 'bg-success' : '' }}
                                     {{ $p->status === 0 ? 'bg-secondary' : '' }}
                                     {{ $p->status === 2 ? 'bg-warning' : '' }}">
@@ -122,7 +122,7 @@
 
                                     <form action="{{ route('products.forceDelete', $p->id) }}" method="POST">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" 
+                                        <button class="btn btn-sm btn-outline-danger"
                                                 onclick="return confirm('Xóa vĩnh viễn sản phẩm này?')"
                                                 title="Xóa vĩnh viễn">
                                             <i class="bi bi-trash"></i>

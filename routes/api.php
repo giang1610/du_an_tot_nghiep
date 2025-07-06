@@ -77,17 +77,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Kiểm tra đã nhận hàng
     Route::middleware('auth:sanctum')->get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
     // Cart
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::prefix('cart')->group(function () {
-            Route::post('/add', [CartController::class, 'addToCart']);
-            Route::get('/', [CartController::class, 'viewCart']);
-            Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
-            Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
-            Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
-            Route::get('/total', [CartController::class, 'getCartTotal']);
-            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
-
-        });
+    Route::prefix('cart')->group(function () {
+        Route::post('/add', [CartController::class, 'addToCart']);
+        Route::get('/', [CartController::class, 'viewCart']);
+        Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
+        Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
+        Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
+        Route::get('/total', [CartController::class, 'getCartTotal']);
+        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
     });
 });
 
@@ -103,15 +100,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
     });
 
-    // Momo payment
-    Route::prefix('payment')->group(function () {
-        // Route::post('/momo', [OrderController::class, 'payViaMomo']);
-        Route::post('/momo-notify', [OrderController::class, 'momoWebhook']);
-        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-    });
     // Các route khác: logout, cart, review...
-    
 });
 
-
-
+// Payment Momo
+Route::prefix('payment')->group(function () {
+    Route::post('/momo', [OrderController::class, 'payViaMomo']);
+    Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
+    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+});

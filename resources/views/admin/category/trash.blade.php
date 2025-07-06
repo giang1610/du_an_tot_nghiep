@@ -7,7 +7,6 @@
         <a href="/admin/categories" class="btn btn-outline-danger">
             <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách danh mục
         </a>
-        
         <div class="d-flex">
             <form action="{{ route('categories.restoreAll') }}" method="POST" class="me-2">
                 @csrf
@@ -30,7 +29,7 @@
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-trash3 me-2"></i>Danh mục đã xóa</h5>
         </div>
-        
+
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -64,7 +63,7 @@
 
                                     <form action="{{ route('categories.forceDelete', $category->id) }}" method="POST">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" 
+                                        <button class="btn btn-sm btn-outline-danger"
                                                 onclick="return confirm('Xóa vĩnh viễn danh mục này?')"
                                                 title="Xóa vĩnh viễn">
                                             <i class="bi bi-trash"></i>
