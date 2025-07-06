@@ -147,23 +147,22 @@ export default function MyOrdersPage() {
             </tr>
           </thead>
           <tbody>
-            {orders.map(order => {
-              const firstItem = order.order_items?.[0];
-              const imageUrl =
-                firstItem?.product_variant?.product?.images?.[0]?.url ||
-                firstItem?.product_variant?.product?.img ||
-                'https://placehold.co/60x60?text=No+Image';
+            {orders.map((order) => {
+              const firstItem = order.items?.[0];
 
               return (
                 <tr key={order.id}>
                   <td>
                     <Image
-                      src={imageUrl}
-                      alt="Ảnh sản phẩm"
-                      style={{ width: 60, height: 60, objectFit: 'cover' }}
-                      onError={(e) => (e.target.src = '/images/no-image.jpg')}
+                      src={
+                        firstItem?.product_variant?.img ||
+                        firstItem?.product_variant?.product?.img ||
+                        'https://via.placeholder.com/50x50?text=No+Image'
+                      }
+                      alt={firstItem?.product_variant?.product?.name || 'Ảnh sản phẩm'}
+                      rounded
+                      style={{ width: 50, height: 50, objectFit: 'cover' }}
                     />
-
                   </td>
                   <td>{formatDate(order.created_at)}</td>
                   <td>{order.shipping_address}</td>
