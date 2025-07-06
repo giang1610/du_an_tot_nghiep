@@ -224,6 +224,11 @@
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
                                 </span>
                                 @break
+                                @case('delivered')
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i> Đã nhận hàng
+                                </span>
+                                @break
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành

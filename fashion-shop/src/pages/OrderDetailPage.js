@@ -51,16 +51,22 @@ export default function OrderDetailPage() {
     const [newAddress, setNewAddress] = useState('');
     const [updatingAddress, setUpdatingAddress] = useState(false);
     const [error, setError] = useState('');
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewItem, setReviewItem] = useState(null);
+    const [reviewContent, setReviewContent] = useState('');
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewLoading, setReviewLoading] = useState(false);
+    const [productReviews, setProductReviews] = useState({});
 
     const token = localStorage.getItem('token');
 
+    // Lấy chi tiết đơn hàng
     const fetchOrder = useCallback(async () => {
         if (!token) {
             setError('Bạn chưa đăng nhập');
             setLoading(false);
             return;
         }
-
         setLoading(true);
         setError('');
         try {
@@ -77,10 +83,38 @@ export default function OrderDetailPage() {
         }
     }, [id, token]);
 
+    // Lấy đánh giá cho từng sản phẩm trong đơn hàng
+    const fetchProductReviews = useCallback(async (items, orderId) => {
+        if (!items || items.length === 0) return;
+        const reviewsObj = {};
+        await Promise.all(items.map(async (item) => {
+            try {
+                const res = await axios.get(
+                    `${process.env.REACT_APP_API_URL}/products/${item.product_variant.product_id}/reviews`
+                );
+                reviewsObj[item.product_variant_id] = res.data.data.filter(
+                    r => r.product_variant_id === item.product_variant_id && r.order_id === orderId
+                );
+            } catch (err) {
+                reviewsObj[item.product_variant_id] = [];
+            }
+        }));
+        setProductReviews(reviewsObj);
+    }, []);
+
+    // Gọi khi order thay đổi
+    useEffect(() => {
+        if (order && order.items) {
+            fetchProductReviews(order.items, order.id);
+        }
+    }, [order, fetchProductReviews]);
+
+    // Gọi khi vào trang
     useEffect(() => {
         fetchOrder();
     }, [fetchOrder]);
 
+    // Hủy đơn hàng
     const handleCancelOrder = async () => {
         try {
             await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/cancel`, {}, {
@@ -94,6 +128,7 @@ export default function OrderDetailPage() {
         }
     };
 
+    // Cập nhật địa chỉ
     const handleUpdateAddress = async () => {
         if (!newAddress.trim()) return;
         setUpdatingAddress(true);
@@ -113,6 +148,7 @@ export default function OrderDetailPage() {
         }
     };
 
+    // Yêu cầu hoàn đơn
     const handleRequestReturn = async () => {
         try {
             await axios.post(
@@ -125,6 +161,45 @@ export default function OrderDetailPage() {
         } catch (err) {
             alert('Yêu cầu hoàn đơn thất bại!');
             console.error(err);
+        }
+    };
+
+    // Hiện modal đánh giá
+    const handleShowReviewModal = (item) => {
+        setReviewItem(item);
+        setReviewContent('');
+        setReviewRating(5);
+        setShowReviewModal(true);
+    };
+
+    // Gửi đánh giá
+    const handleSubmitReview = async () => {
+        if (!reviewItem) return;
+        setReviewLoading(true);
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API_URL}/reviews`,
+                {
+                    order_id: order.id,
+                    product_variant_id: reviewItem.product_variant_id,
+                    rating: reviewRating,
+                    content: reviewContent
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setShowReviewModal(false);
+            alert('Đánh giá thành công!');
+            // Cập nhật lại đánh giá cho sản phẩm vừa đánh giá
+            fetchProductReviews(order.items, order.id);
+        } catch (err) {
+            if (err.response && err.response.data && err.response.data.error) {
+                alert(err.response.data.error);
+            } else {
+                alert('Gửi đánh giá thất bại!');
+            }
+            console.error(err);
+        } finally {
+            setReviewLoading(false);
         }
     };
 
@@ -268,6 +343,7 @@ export default function OrderDetailPage() {
                                         <th>SL</th>
                                         <th>Tạm tính</th>
                                         {order.status === 'pending' && <th>Hành động</th>}
+                                        {order.status === 'delivered' && <th>Đánh giá</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -283,7 +359,6 @@ export default function OrderDetailPage() {
                                                     alt={item.product_variant?.product?.name || 'Ảnh sản phẩm'}
                                                     style={{ width: 50, height: 50, objectFit: 'cover' }}
                                                 />
-
                                             </td>
                                             <td>{item.product_variant?.product?.name}</td>
                                             <td>{item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}</td>
@@ -298,6 +373,34 @@ export default function OrderDetailPage() {
                                                     >
                                                         Hủy đơn
                                                     </Button>
+                                                </td>
+                                            )}
+                                            {order.status === 'delivered' && (
+                                                <td>
+                                                    <Button
+                                                        variant="outline-primary"
+                                                        size="sm"
+                                                        onClick={() => handleShowReviewModal(item)}
+                                                    >
+                                                        Đánh giá
+                                                    </Button>
+                                                    {/* Hiển thị đánh giá nếu có */}
+                                                    {productReviews[item.product_variant_id] && productReviews[item.product_variant_id].length > 0 && (
+                                                        <div className="mt-2 text-start">
+                                                            {productReviews[item.product_variant_id].map((review, idx) => (
+                                                                <div key={review.id || idx} style={{ borderTop: '1px solid #eee', paddingTop: 4 }}>
+                                                                    <span className="text-warning">
+                                                                        {'★'.repeat(review.rating)}
+                                                                        {'☆'.repeat(5 - review.rating)}
+                                                                    </span>
+                                                                    <span className="ms-2">{review.content}</span>
+                                                                    <div className="small text-muted">
+                                                                        {review.user?.name} - {new Date(review.created_at).toLocaleDateString()}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </td>
                                             )}
                                         </tr>
@@ -322,6 +425,50 @@ export default function OrderDetailPage() {
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowCancelConfirm(false)}>Đóng</Button>
                     <Button variant="danger" onClick={handleCancelOrder}>Hủy đơn</Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal đánh giá */}
+            <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Đánh giá sản phẩm</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div>
+                        <strong>{reviewItem?.product_variant?.product?.name}</strong>
+                    </div>
+                    <Form.Group className="mt-3">
+                        <Form.Label>Số sao</Form.Label>
+                        <Form.Select
+                            value={reviewRating}
+                            onChange={e => setReviewRating(Number(e.target.value))}
+                        >
+                            {[5, 4, 3, 2, 1].map(star => (
+                                <option key={star} value={star}>{star} sao</option>
+                            ))}
+                        </Form.Select>
+                    </Form.Group>
+                    <Form.Group className="mt-3">
+                        <Form.Label>Nội dung đánh giá</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            rows={3}
+                            value={reviewContent}
+                            onChange={e => setReviewContent(e.target.value)}
+                        />
+                    </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowReviewModal(false)}>
+                        Đóng
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={handleSubmitReview}
+                        disabled={reviewLoading}
+                    >
+                        {reviewLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
+                    </Button>
                 </Modal.Footer>
             </Modal>
         </Container>

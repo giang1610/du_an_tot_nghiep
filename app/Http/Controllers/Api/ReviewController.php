@@ -29,8 +29,8 @@ class ReviewController extends Controller
         }
 
         // Kiểm tra trạng thái đơn hàng
-        if ($order->status !== 'shipped') {
-            return response()->json(['error' => 'Chỉ có thể đánh giá khi đơn đã được giao.'], 400);
+        if ($order->status !== 'delivered') {
+            return response()->json(['error' => 'Chỉ có thể đánh giá khi đơn đã được nhận.'], 400);
         }
 
         // Kiểm tra số lần đánh giá
@@ -88,7 +88,7 @@ class ReviewController extends Controller
     $variantId = $request->query('product_variant_id');
 
     $order = Order::where('user_id', $user->id)
-        ->where('status', 'shipped')
+        ->where('status', 'delivered')
         ->whereHas('items', fn($q) => $q->where('product_variant_id', $variantId))
         ->latest()->first();
 
