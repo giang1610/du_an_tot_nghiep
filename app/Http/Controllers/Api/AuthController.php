@@ -23,7 +23,7 @@ class AuthController extends Controller
         if (User::where('email', $request->email)->exists()) {
          return response()->json([
         'message' => 'Email đã được đăng ký.',
-        ], 401); // 409 Conflict
+        ], 401); 
         }
 
         // Tạo người dùng mới

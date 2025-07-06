@@ -35,6 +35,8 @@ use App\Http\Controllers\Auth\NewEmailVerificationController;
 
 
 
+
+
 // Trang chủ
 Route::get('/', function () {
     return view('welcome');

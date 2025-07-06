@@ -7,6 +7,9 @@ import {
 import ProductReview from './ProductReview';
 import CheckoutForm from '../components/CheckoutForm';
 import ProductImageGallery from '../components/ProductImageGallery';
+import { listenToStockUpdates } from '../realtime/stockRealtime';
+
+
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -41,6 +44,30 @@ export default function ProductDetail() {
       })
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    const unsubscribe = listenToStockUpdates(({ variantId, stock }) => {
+      setProduct((prev) => {
+        if (!prev) return prev;
+        const updatedVariants = prev.variants.map((v) => {
+          if (v.id === variantId && v.stock) {
+            return {
+              ...v,
+              stock: { ...v.stock, quantity: stock },
+            };
+          }
+          return v;
+        });
+        return { ...prev, variants: updatedVariants };
+      });
+    });
+
+    return unsubscribe; 
+  }, [product]);
+
+
 
   const imageList = useMemo(() => {
     if (!product) return [];
