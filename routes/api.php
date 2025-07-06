@@ -83,7 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
             Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
             Route::get('/total', [CartController::class, 'getCartTotal']);
-            // Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
 
         });
     });
@@ -99,8 +99,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
-        Route::post('/{order}/confirm-received', [OrderController::class, 'confirmReceived']);
-        Route::post('/{order}/request-return', [OrderController::class, 'requestReturn']);
     });
 
 

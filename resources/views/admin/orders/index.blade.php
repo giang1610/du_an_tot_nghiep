@@ -37,7 +37,7 @@
                     <label for="status" class="form-label">Trạng thái</label>
                     <select name="status" id="status" class="form-select">
                         <option value="">Tất cả</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+                         <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                         <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
                         <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
                         <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
@@ -110,10 +110,11 @@
                             <th>Mã đơn</th>
                             <th>Khách hàng</th>
                             <th>Sản phẩm</th>
-                            <th>Thông tin</th>
-                            <th>Thanh toán</th>
+                            <th>Địa chỉ</th>
+                            <th>PT thanh toán</th>
+                            <th>TT thanh toán</th>
                             <th>Tổng tiền</th>
-                            <th>Trạng thái giao hàng</th>
+                            <th>TT giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -177,6 +178,8 @@
                                     <i class="fas fa-question me-1"></i> Khác
                                 </span>
                                 @endswitch
+                            </td>
+                            <td>
                                 <div class="small mt-1">
                                     @if($order->payment_status == 'paid')
                                     <span class="text-success">
@@ -189,7 +192,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td>
+                            <td class="text-end">
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">
