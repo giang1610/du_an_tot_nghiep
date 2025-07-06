@@ -265,31 +265,50 @@ class OrderController extends Controller
 
         return view('admin.orders.show', compact('order'));
     }
+    // public function updateStatus(Request $request, $id)
+    // {
+    //     // $order = Order::findOrFail($id);
+    //     // $this->authorize('update', $order); // Kiểm tra quyền cập nhật
+
+    //     // $request->validate([
+    //     //     'status' => 'required|in:pending,processing,completed,cancelled',
+    //     // ]);
+
+    //     // $order->status = $request->status;
+    //     // $order->save();
+
+    //     // // Phát sự kiện cập nhật trạng thái đơn hàng
+    //     // broadcast(new \App\Events\OrderStatusUpdated($order->id, $order->status))->toOthers();
+
+    //     // return redirect()->route('admin.orders.show', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+    //     $order = Order::findOrFail($id);
+    //     $order->status = $request->input('status');
+    //     $order->save();
+
+    //     // Gửi sự kiện WebSocket tới client
+    //     broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
+
+    //     return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
+    // }
     public function updateStatus(Request $request, $id)
-    {
-        // $order = Order::findOrFail($id);
-        // $this->authorize('update', $order); // Kiểm tra quyền cập nhật
+{
+    $order = Order::findOrFail($id);
+    $newStatus = $request->input('status');
 
-        // $request->validate([
-        //     'status' => 'required|in:pending,processing,completed,cancelled',
-        // ]);
+    $order->status = $newStatus;
 
-        // $order->status = $request->status;
-        // $order->save();
-
-        // // Phát sự kiện cập nhật trạng thái đơn hàng
-        // broadcast(new \App\Events\OrderStatusUpdated($order->id, $order->status))->toOthers();
-
-        // return redirect()->route('admin.orders.show', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
-        $order = Order::findOrFail($id);
-        $order->status = $request->input('status');
-        $order->save();
-
-        // Gửi sự kiện WebSocket tới client
-        broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
-
-        return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
+    // ✅ Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
+    if (in_array($newStatus, ['shipped', 'delivered', 'completed']) && $order->payment_status !== 'paid') {
+        $order->payment_status = 'paid';
     }
+
+    $order->save();
+
+    broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
+
+    return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
+}
+
     public function edit(Request $request, $id)
     {
         $order = Order::findOrFail($id);

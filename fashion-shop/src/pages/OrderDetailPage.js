@@ -1,329 +1,273 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-    Container, Table, Spinner, Alert, Button, Modal, Row, Col, Card, Form
+  Container, Card, Table, Spinner, Alert,
+  Button, Form, Badge, Modal
 } from 'react-bootstrap';
 import axios from 'axios';
+import '../css/OrderDetail.css';
 
 const STATUS_LABELS = {
-    pending: 'Chờ xử lý',
-    processing: 'Đang xử lý',
-    picking: 'Đang lấy hàng',
-    shipping: 'Đang giao hàng',
-    shipped: 'Đã giao hàng',
-    delivered: 'Đã nhận hàng',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy',
-    failed: 'Thất bại',
-    return_requested: 'Đã yêu cầu hoàn đơn',
-    returning: 'Đang hoàn đơn',
-    returned: 'Đã hoàn đơn',
+  pending: 'Chờ xác nhận',
+  processing: 'Đang xử lý',
+  picking: 'Đang lấy hàng',
+  shipping: 'Đang giao hàng',
+  shipped: 'Đã giao hàng',
+  delivered: 'Đã nhận hàng',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy',
+  failed: 'Thất bại',
 };
 
 const PAYMENT_STATUS_LABELS = {
-    paid: 'Đã thanh toán',
-    unpaid: 'Chưa thanh toán',
-    pending: 'Đang xử lý',
-    failed: 'Thất bại',
+  paid: 'Đã thanh toán',
+  unpaid: 'Chưa thanh toán',
+  pending: 'Đang xử lý',
+  failed: 'Thất bại',
 };
 
 const statusBadgeVariant = {
-    completed: 'success',
-    pending: 'warning',
-    cancelled: 'secondary',
-    failed: 'danger',
-    processing: 'info',
+  completed: 'success',
+  pending: 'warning',
+  cancelled: 'secondary',
+  failed: 'danger',
+  processing: 'info',
+  delivered: 'primary',
+  shipping: 'info',
+  shipped: 'success',
 };
 
 const paymentStatusBadgeVariant = {
-    paid: 'success',
-    pending: 'warning',
-    unpaid: 'danger',
-    failed: 'danger',
+  paid: 'success',
+  pending: 'warning',
+  unpaid: 'danger',
+  failed: 'danger',
 };
 
 export default function OrderDetailPage() {
-    const { id } = useParams();
-    const [order, setOrder] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-    const [editingAddress, setEditingAddress] = useState(false);
-    const [newAddress, setNewAddress] = useState('');
-    const [updatingAddress, setUpdatingAddress] = useState(false);
-    const [error, setError] = useState('');
+  const { id } = useParams();
+  const token = localStorage.getItem('token');
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [newAddress, setNewAddress] = useState('');
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [updatingAddress, setUpdatingAddress] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-    const token = localStorage.getItem('token');
+  const fetchOrder = useCallback(async () => {
+    if (!token) return setError('Bạn chưa đăng nhập');
+    setLoading(true);
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOrder(res.data.data);
+      setNewAddress(res.data.data.shipping_address);
+    } catch (err) {
+      setError('Không thể tải đơn hàng.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id, token]);
 
-    const fetchOrder = useCallback(async () => {
-        if (!token) {
-            setError('Bạn chưa đăng nhập');
-            setLoading(false);
-            return;
-        }
+  useEffect(() => {
+    fetchOrder();
+  }, [fetchOrder]);
 
-        setLoading(true);
-        setError('');
-        try {
-            const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setOrder(res.data.data);
-            setNewAddress(res.data.data.shipping_address);
-        } catch (err) {
-            setError('Lỗi khi tải đơn hàng.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    }, [id, token]);
+  const handleUpdateAddress = async () => {
+    if (!newAddress.trim()) return;
+    setUpdatingAddress(true);
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/update-address`, {
+        shipping_address: newAddress
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEditingAddress(false);
+      fetchOrder();
+    } catch {
+      alert('Cập nhật địa chỉ thất bại!');
+    } finally {
+      setUpdatingAddress(false);
+    }
+  };
 
-    useEffect(() => {
-        fetchOrder();
-    }, [fetchOrder]);
+  const handleConfirmReceived = async () => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/confirm-received`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchOrder();
+    } catch {
+      alert('Xác nhận nhận hàng thất bại!');
+    }
+  };
 
-    const handleCancelOrder = async () => {
-        try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/cancel`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setShowCancelConfirm(false);
-            fetchOrder();
-        } catch (err) {
-            alert('Hủy đơn hàng thất bại. Vui lòng thử lại.');
-            console.error(err);
-        }
-    };
+  const handleRequestReturn = async () => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Đã gửi yêu cầu hoàn đơn!');
+      fetchOrder();
+    } catch {
+      alert('Yêu cầu hoàn đơn thất bại!');
+    }
+  };
 
-    const handleUpdateAddress = async () => {
-        if (!newAddress.trim()) return;
-        setUpdatingAddress(true);
-        try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/update-address`, {
-                shipping_address: newAddress
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setEditingAddress(false);
-            fetchOrder();
-        } catch (err) {
-            alert('Cập nhật địa chỉ thất bại. Vui lòng thử lại.');
-            console.error(err);
-        } finally {
-            setUpdatingAddress(false);
-        }
-    };
+  const handleCancelOrder = async () => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/cancel`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShowCancelConfirm(false);
+      fetchOrder();
+    } catch {
+      alert('Hủy đơn thất bại.');
+    }
+  };
 
-    const handleRequestReturn = async () => {
-        try {
-            await axios.post(
-                `${process.env.REACT_APP_API_URL}/orders/${order.id}/request-return`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            fetchOrder();
-            alert('Yêu cầu hoàn đơn đã được gửi!');
-        } catch (err) {
-            alert('Yêu cầu hoàn đơn thất bại!');
-            console.error(err);
-        }
-    };
+  if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
+  if (error) return <Alert variant="danger" className="py-5 text-center">{error}</Alert>;
+  if (!order) return <Alert variant="danger">Không tìm thấy đơn hàng.</Alert>;
 
-    if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
-    if (error) return <Alert variant="danger" className="py-5 text-center">{error}</Alert>;
-    if (!order) return <Alert variant="danger" className="py-5 text-center">Không tìm thấy đơn hàng.</Alert>;
+  return (
+    <Container className="py-4">
+      <Card className="mb-3">
+        <Card.Header className="bg-white d-flex justify-content-between align-items-center">
+          <div>
+            <strong>Đơn hàng:</strong> #{order.order_number || order.id} <br />
+            <small className="text-muted">Ngày đặt: {new Date(order.created_at).toLocaleDateString()}</small>
+          </div>
+          <Badge bg={statusBadgeVariant[order.status] || 'secondary'}>
+            {STATUS_LABELS[order.status] || 'Không rõ'}
+          </Badge>
+        </Card.Header>
+      </Card>
 
-    return (
-        <Container className="py-4">
-            <Row>
-                <Col md={6}>
-                    <h3>Chi tiết đơn hàng #{order.order_number || order.id}</h3>
-                    <p><strong>Email:</strong> {order.customer_email}</p>
-                    <p><strong>SĐT:</strong> {order.customer_phone}</p>
+      <Card className="mb-3">
+        <Card.Header className="fw-bold">Thông tin giao hàng</Card.Header>
+        <Card.Body>
+          <p><strong>Email:</strong> {order.customer_email}</p>
+          <p><strong>SĐT:</strong> {order.customer_phone}</p>
+          <div>
+            <strong>Địa chỉ:</strong>{' '}
+            {editingAddress ? (
+              <>
+                <Form.Control
+                  size="sm"
+                  value={newAddress}
+                  onChange={(e) => setNewAddress(e.target.value)}
+                  disabled={updatingAddress}
+                />
+                <div className="mt-2">
+                  <Button size="sm" variant="success" onClick={handleUpdateAddress} disabled={updatingAddress}>Lưu</Button>{' '}
+                  <Button size="sm" variant="secondary" onClick={() => {
+                    setNewAddress(order.shipping_address);
+                    setEditingAddress(false);
+                  }}>Hủy</Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {order.shipping_address}{' '}
+                {order.status === 'pending' && (
+                  <Button size="sm" variant="link" onClick={() => setEditingAddress(true)}>[Sửa]</Button>
+                )}
+              </>
+            )}
+          </div>
+        </Card.Body>
+      </Card>
 
-                    <div>
-                        <strong>Địa chỉ:</strong>{' '}
-                        {editingAddress ? (
-                            <>
-                                <Form.Control
-                                    value={newAddress}
-                                    onChange={e => setNewAddress(e.target.value)}
-                                    size="sm"
-                                    disabled={updatingAddress}
-                                />
-                                <div className="mt-2">
-                                    <Button
-                                        size="sm"
-                                        variant="success"
-                                        disabled={updatingAddress || !newAddress.trim()}
-                                        onClick={handleUpdateAddress}
-                                    >
-                                        {updatingAddress ? 'Đang lưu...' : 'Lưu'}
-                                    </Button>{' '}
-                                    <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setNewAddress(order.shipping_address);
-                                            setEditingAddress(false);
-                                        }}
-                                        disabled={updatingAddress}
-                                    >
-                                        Hủy
-                                    </Button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                {order.shipping_address}{' '}
-                                {order.status === 'pending' && (
-                                    <Button
-                                        size="sm"
-                                        variant="link"
-                                        onClick={() => setEditingAddress(true)}
-                                    >
-                                        [Sửa]
-                                    </Button>
-                                )}
-                            </>
-                        )}
-                    </div>
+      <Card className="mb-3">
+        <Card.Header className="fw-bold">Sản phẩm</Card.Header>
+        <Card.Body className="p-0">
+          <Table responsive borderless hover className="mb-0 text-center align-middle">
+            <thead className="table-light">
+              <tr>
+                <th>Ảnh</th>
+                <th>Sản phẩm</th>
+                <th>Phân loại</th>
+                <th>SL</th>
+                <th>Giá</th>
+                <th>Tạm tính</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.items.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <img
+                      src={item.product_variant?.img || item.product_variant?.product?.img || 'https://via.placeholder.com/60'}
+                      alt="Ảnh"
+                      style={{ width: 60, height: 60, objectFit: 'cover' }}
+                      className="rounded"
+                    />
+                  </td>
+                  <td>{item.product_variant?.product?.name}</td>
+                  <td>{item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}</td>
+                  <td>{item.quantity}</td>
+                  <td>{Number(item.sale_price || item.price).toLocaleString()}₫</td>
+                  <td>{(item.quantity * (item.sale_price || item.price)).toLocaleString()}₫</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Card.Body>
+        <Card.Footer className="text-end fw-bold">
+          Tổng cộng: <span className="text-danger">{Number(order.total).toLocaleString()}₫</span>
+        </Card.Footer>
+      </Card>
 
-                    <p><strong>Ngày đặt:</strong> {new Date(order.created_at).toLocaleDateString()}</p>
+      <Card>
+        <Card.Body className="d-flex justify-content-between align-items-center">
+          <div>
+            <p>
+              <strong>Thanh toán:</strong>{' '}
+              <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
+                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+              </Badge>
+            </p>
 
-                    <p>
-                        <strong>Trạng thái đơn hàng:</strong>{' '}
-                        <span className={`badge bg-${statusBadgeVariant[order.status] || 'secondary'}`}>
-                            {STATUS_LABELS[order.status] || 'Không rõ'}
-                        </span>
-                    </p>
+            {order.status === 'shipped' && (
+              <Button variant="success" size="sm" onClick={handleConfirmReceived}>Xác nhận đã nhận hàng</Button>
+            )}
 
-                    {/* Hiển thị nút theo trạng thái */}
-                    {order.status === 'shipped' && (
-                        <Button
-                            variant="success"
-                            className="mb-2"
-                            onClick={async () => {
-                                try {
-                                    await axios.post(
-                                        `${process.env.REACT_APP_API_URL}/orders/${order.id}/confirm-received`,
-                                        {},
-                                        { headers: { Authorization: `Bearer ${token}` } }
-                                    );
-                                    fetchOrder();
-                                } catch (err) {
-                                    alert('Xác nhận nhận hàng thất bại!');
-                                }
-                            }}
-                        >
-                            Xác nhận đã nhận hàng
-                        </Button>
-                    )}
+            {order.status === 'delivered' && (
+              <>
+                <Button variant="warning" size="sm" onClick={handleRequestReturn} className="me-2">Hoàn đơn</Button>
+                <Link to={`/review/${order.id}`}>
+                  <Button variant="primary" size="sm">Đánh giá</Button>
+                </Link>
+              </>
+            )}
 
-                    {order.status === 'delivered' && (
-                        <>
-                            <Button
-                                variant="warning"
-                                className="mb-2"
-                                onClick={handleRequestReturn}
-                            >
-                                Hoàn đơn
-                            </Button>
-                            <div className="text-muted mb-2">
-                                Đơn hàng sẽ tự động hoàn thành sau 3 ngày kể từ khi bạn xác nhận đã nhận hàng.<br />
-                                Sau thời gian này, bạn sẽ không thể yêu cầu trả hàng nữa.
-                            </div>
-                        </>
-                    )}
+            {order.status === 'pending' && (
+              <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)}>
+                Hủy đơn
+              </Button>
+            )}
+          </div>
+          <Link to="/orders">
+            <Button variant="secondary" size="sm">← Trở lại</Button>
+          </Link>
+        </Card.Body>
+      </Card>
 
-                    {order.status === 'completed' && (
-                        <div className="text-success mb-2">
-                            Đơn hàng đã hoàn thành.
-                        </div>
-                    )}
-
-                    {order.status !== 'cancelled' && (
-                        <p>
-                            <strong>Thanh toán:</strong>{' '}
-                            <span className={`badge bg-${paymentStatusBadgeVariant[order.payment_status] || 'secondary'}`}>
-                                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
-                            </span>
-                        </p>
-                    )}
-
-                    <Link to="/orders">
-                        <Button variant="secondary">&larr; Quay lại danh sách đơn</Button>
-                    </Link>
-                </Col>
-
-                <Col md={6}>
-                    <Card>
-                        <Card.Header className="bg-primary text-white">Sản phẩm trong đơn</Card.Header>
-                        <Card.Body className="p-0">
-                            <Table bordered responsive className="mb-0 text-center align-middle">
-                                <thead className="table-light">
-                                    <tr>
-                                        <th>Ảnh</th>
-                                        <th>Sản phẩm</th>
-                                        <th>Phân loại</th>
-                                        <th>SL</th>
-                                        <th>Tạm tính</th>
-                                        {order.status === 'pending' && <th>Hành động</th>}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {order.items.map(item => (
-                                        <tr key={item.id}>
-                                            <td>
-                                                <img
-                                                    src={
-                                                        item.product_variant?.img ||
-                                                        item.product_variant?.product?.img ||
-                                                        'https://via.placeholder.com/50x50?text=No+Image'
-                                                    }
-                                                    alt={item.product_variant?.product?.name || 'Ảnh sản phẩm'}
-                                                    style={{ width: 50, height: 50, objectFit: 'cover' }}
-                                                />
-
-                                            </td>
-                                            <td>{item.product_variant?.product?.name}</td>
-                                            <td>{item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}</td>
-                                            <td>{item.quantity}</td>
-                                            <td>{((item.sale_price || item.price) * item.quantity).toLocaleString()}₫</td>
-                                            {order.status === 'pending' && (
-                                                <td>
-                                                    <Button
-                                                        variant="danger"
-                                                        size="sm"
-                                                        onClick={() => setShowCancelConfirm(true)}
-                                                    >
-                                                        Hủy đơn
-                                                    </Button>
-                                                </td>
-                                            )}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </Card.Body>
-                        <Card.Footer className="text-end fw-bold">
-                            Tổng cộng: {Number(order.total).toLocaleString()}₫
-                        </Card.Footer>
-                    </Card>
-                </Col>
-            </Row>
-
-            <Modal show={showCancelConfirm} onHide={() => setShowCancelConfirm(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Xác nhận hủy đơn hàng</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    Bạn có chắc chắn muốn hủy đơn hàng #{order.order_number || order.id} không?
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowCancelConfirm(false)}>Đóng</Button>
-                    <Button variant="danger" onClick={handleCancelOrder}>Hủy đơn</Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
-    );
+      <Modal show={showCancelConfirm} onHide={() => setShowCancelConfirm(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận hủy đơn hàng</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Bạn có chắc chắn muốn hủy đơn hàng #{order.order_number || order.id} không?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCancelConfirm(false)}>Đóng</Button>
+          <Button variant="danger" onClick={handleCancelOrder}>Hủy đơn</Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
+  );
 }

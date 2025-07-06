@@ -1,50 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Container, Table, Spinner, Alert, Button, Badge, Image } from 'react-bootstrap';
+import {
+  Container, Card, Row, Col, Button, Badge, Spinner, Alert, Image
+} from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const formatDate = (isoDate) => {
-  const date = new Date(isoDate);
-  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+const formatDate = (iso) => {
+  const d = new Date(iso);
+  return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
 };
 
 const formatCurrency = (amount) => Number(amount).toLocaleString('vi-VN') + '₫';
-
-const getPaymentMethodLabel = (method) => {
-  switch (method) {
-    case 'cod': return 'Thanh toán khi nhận hàng';
-    case 'momo': return 'Momo';
-    case 'banking': return 'Chuyển khoản';
-    default: return 'Không rõ';
-  }
-};
-
-const getPaymentStatusLabel = (status) => {
-  switch (status) {
-    case 'paid': return 'Đã thanh toán';
-    case 'unpaid': return 'Chưa thanh toán';
-    case 'pending': return 'Đang xử lý';
-    case 'failed': return 'Thất bại';
-    default: return 'Không rõ';
-  }
-};
-
-const getPaymentStatusVariant = (status) => {
-  switch (status) {
-    case 'paid': return 'success';
-    case 'unpaid': return 'danger';
-    case 'pending': return 'warning';
-    case 'failed': return 'danger';
-    default: return 'secondary';
-  }
-};
 
 const STATUS_LABELS = {
   pending: 'Chờ xác nhận',
   processing: 'Đang xử lý',
   picking: 'Đang lấy hàng',
   shipping: 'Đang giao hàng',
-  shipped: 'Đã giao',
+  shipped: 'Đã giao hàng',
+  delivered: 'Đã nhận hàng',
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   failed: 'Thất bại',
@@ -56,8 +30,23 @@ const STATUS_VARIANTS = {
   picking: 'primary',
   shipping: 'primary',
   shipped: 'info',
+  delivered: 'success',
   completed: 'success',
   cancelled: 'secondary',
+  failed: 'danger',
+};
+
+const PAYMENT_STATUS_LABELS = {
+  paid: 'Đã thanh toán',
+  unpaid: 'Chưa thanh toán',
+  pending: 'Đang xử lý',
+  failed: 'Thất bại',
+};
+
+const PAYMENT_STATUS_VARIANTS = {
+  paid: 'success',
+  unpaid: 'danger',
+  pending: 'warning',
   failed: 'danger',
 };
 
@@ -70,24 +59,19 @@ export default function MyOrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+      if (!token) return navigate('/login');
 
       try {
         setLoading(true);
-        setError('');
         const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setOrders(res.data.data?.data || []);
       } catch (err) {
+        setError('Không thể tải đơn hàng. Vui lòng thử lại.');
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
           navigate('/login');
-        } else {
-          setError('Lỗi khi tải đơn hàng. Vui lòng thử lại sau.');
         }
       } finally {
         setLoading(false);
@@ -97,26 +81,22 @@ export default function MyOrdersPage() {
     fetchOrders();
   }, [navigate]);
 
-  const handleConfirmReceipt = async (orderId) => {
+  const handleConfirmReceived = async (orderId) => {
     const token = localStorage.getItem('token');
-    if (!window.confirm('Bạn xác nhận đã nhận được hàng?')) return;
+    if (!window.confirm('Bạn xác nhận đã nhận hàng?')) return;
 
     try {
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/orders/${orderId}/confirm-receipt`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/confirm-received`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setOrders(prev =>
         prev.map(order =>
-          order.id === orderId ? { ...order, is_received: true } : order
+          order.id === orderId ? { ...order, status: 'delivered' } : order
         )
       );
-
-      alert('Xác nhận đã nhận hàng thành công!');
-    } catch (error) {
-      alert('Xác nhận thất bại. Vui lòng thử lại.');
+      alert('Xác nhận thành công!');
+    } catch {
+      alert('Thất bại. Vui lòng thử lại.');
     }
   };
 
@@ -125,83 +105,84 @@ export default function MyOrdersPage() {
       <h3 className="mb-4">Đơn hàng của tôi</h3>
 
       {loading ? (
-        <div className="text-center py-4">
-          <Spinner animation="border" />
-        </div>
+        <div className="text-center"><Spinner animation="border" /></div>
       ) : error ? (
         <Alert variant="danger">{error}</Alert>
       ) : orders.length === 0 ? (
         <Alert variant="info">Bạn chưa có đơn hàng nào.</Alert>
       ) : (
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th>Ảnh</th>
-              <th>Ngày đặt</th>
-              <th>Địa chỉ</th>
-              <th>Phương thức</th>
-              <th>Thanh toán</th>
-              <th>Trạng thái</th>
-              <th>Tổng tiền</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => {
-              const firstItem = order.items?.[0];
+        orders.map(order => (
+          <Card className="mb-4 shadow-sm" key={order.id}>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>Mã đơn:</strong> #{order.order_number || order.id} &nbsp;|&nbsp;
+                <strong>Ngày đặt:</strong> {formatDate(order.created_at)}
+              </div>
+              <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
+                {STATUS_LABELS[order.status] || 'Không rõ'}
+              </Badge>
+            </Card.Header>
 
-              return (
-                <tr key={order.id}>
-                  <td>
+            <Card.Body>
+              {order.items.map(item => (
+                <Row key={item.id} className="align-items-center mb-3">
+                  <Col xs={2}>
                     <Image
                       src={
-                        firstItem?.product_variant?.img ||
-                        firstItem?.product_variant?.product?.img ||
-                        'https://via.placeholder.com/50x50?text=No+Image'
+                        item.product_variant?.img ||
+                        item.product_variant?.product?.img ||
+                        'https://via.placeholder.com/60x60?text=No+Image'
                       }
-                      alt={firstItem?.product_variant?.product?.name || 'Ảnh sản phẩm'}
                       rounded
-                      style={{ width: 50, height: 50, objectFit: 'cover' }}
+                      style={{ width: 60, height: 60, objectFit: 'cover' }}
                     />
-                  </td>
-                  <td>{formatDate(order.created_at)}</td>
-                  <td>{order.shipping_address}</td>
-                  <td>{getPaymentMethodLabel(order.payment_method)}</td>
-                  <td>
-                    <Badge bg={getPaymentStatusVariant(order.payment_status)}>
-                      {getPaymentStatusLabel(order.payment_status)}
-                    </Badge>
-                  </td>
-                  <td>
-                    <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
-                      {STATUS_LABELS[order.status] || 'Không rõ'}
-                    </Badge>
-                  </td>
-                  <td>{formatCurrency(order.total ?? order.total_amount ?? 0)}</td>
-                  <td>
-                    <Link to={`/orders/${order.id}`}>
-                      <Button variant="primary" size="sm" className="me-2">
-                        Xem chi tiết
-                      </Button>
-                    </Link>
-                    {order.status === 'completed' && !order.is_received && (
-                      <Button
-                        variant="success"
-                        size="sm"
-                        onClick={() => handleConfirmReceipt(order.id)}
-                      >
-                        Đã nhận hàng
-                      </Button>
-                    )}
-                    {order.is_received && (
-                      <Badge bg="success">Đã nhận hàng</Badge>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
+                  </Col>
+                  <Col xs={7}>
+                    <div>{item.product_variant?.product?.name}</div>
+                    <small className="text-muted">
+                      Phân loại: {item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}
+                    </small>
+                  </Col>
+                  <Col xs={3} className="text-end">
+                    <div>{formatCurrency(item.sale_price || item.price)}</div>
+                    <small>Số lượng: {item.quantity}</small>
+                  </Col>
+                </Row>
+              ))}
+            </Card.Body>
+
+            <Card.Footer className="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>Thanh toán:</strong>{' '}
+                <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
+                  {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                </Badge>{' '}
+                <span className="ms-2 text-danger fw-bold">
+                  {formatCurrency(order.total ?? order.total_amount ?? 0)}
+                </span>
+              </div>
+              <div>
+                <Link to={`/orders/${order.id}`}>
+                  <Button variant="outline-primary" size="sm" className="me-2">
+                    Chi tiết
+                  </Button>
+                </Link>
+
+                {order.status === 'shipped' && (
+                  <Button variant="success" size="sm" onClick={() => handleConfirmReceived(order.id)}>
+                    Xác nhận nhận hàng
+                  </Button>
+                )}
+
+                {order.status === 'delivered' && (
+                  <Link to={`/review/${order.id}`}>
+                    <Button variant="warning" size="sm">Đánh giá</Button>
+                  </Link>
+                )}
+              </div>
+            </Card.Footer>
+          </Card>
+        ))
       )}
     </Container>
   );
