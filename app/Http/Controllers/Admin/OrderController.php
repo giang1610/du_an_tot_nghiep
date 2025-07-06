@@ -12,6 +12,8 @@ use App\Mail\OrderPicking;
 use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
 use Illuminate\Support\Facades\Mail; 
+use App\Jobs\UpdateOrderStatus;
+
 
 class OrderController extends Controller
 {
@@ -283,7 +285,13 @@ class OrderController extends Controller
         // return redirect()->route('admin.orders.show', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
         $order = Order::findOrFail($id);
         $order->status = $request->input('status');
+        
+        // Nếu trạng thái giao hàng là "shipped" và chưa thanh toán thì tự động chuyển sang "paid"
+        if ($order->status === 'shipped' && $order->payment_status !== 'paid') {
+            $order->payment_status = 'paid';
+        }
         $order->save();
+        UpdateOrderStatus::dispatch($order);
 
         // Gửi sự kiện WebSocket tới client
         broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
@@ -300,23 +308,33 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
         $oldStatus = $order->status;
         $order->update($request->all());
+         UpdateOrderStatus::dispatch($order);
+       // Nếu trạng thái giao hàng là "shipped" và chưa thanh toán thì tự động chuyển sang "paid"
+        if ($order->status === 'shipped' && $order->payment_status !== 'paid') {
+            $order->payment_status = 'paid';
+            $order->save();
+            
+        }
+        if ($order->status !== $oldStatus) {
+        \App\Jobs\UpdateOrderStatus::dispatch($order->id);
+    }
 
-        // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
-        if ($order->status !== $oldStatus && $order->status === 'shipping') {
-            Mail::to($order->user->email)->queue(new OrderGiao($order));
-        }
-        if ($order->status !== $oldStatus && $order->status === 'cancelled') {
-            Mail::to($order->user->email)->queue(new OrderErrors($order));
-        }
-        if ($order->status !== $oldStatus && $order->status === 'picking') {
-            Mail::to($order->user->email)->queue(new OrderPicking($order));
-        }
-        if ($order->status !== $oldStatus && $order->status === 'processing') {
-            Mail::to($order->user->email)->queue(new OrderProcessing($order));
-        }
-        if ($order->status !== $oldStatus && $order->status === 'shipped') {
-            Mail::to($order->user->email)->queue(new OrderShipped($order));
-        }
+    // // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
+    // if ($order->status !== $oldStatus && $order->status === 'shipping') {
+    //     Mail::to($order->user->email)->queue(new OrderGiao($order));
+    // }
+    // if ($order->status !== $oldStatus && $order->status === 'cancelled') {
+    //     Mail::to($order->user->email)->queue(new OrderErrors($order));
+    // }
+    // if ($order->status !== $oldStatus && $order->status === 'picking') {
+    //     Mail::to($order->user->email)->queue(new OrderPicking($order));
+    // }
+    // if ($order->status !== $oldStatus && $order->status === 'processing') {
+    //     Mail::to($order->user->email)->queue(new OrderProcessing($order));
+    // }
+    // if ($order->status !== $oldStatus && $order->status === 'shipped') {
+    //     Mail::to($order->user->email)->queue(new OrderShipped($order));
+    // }
         return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
 }
