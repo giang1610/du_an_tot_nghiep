@@ -6,8 +6,11 @@ import {
 import axios from 'axios';
 
 const STATUS_LABELS = {
-  pending: 'Chờ xử lý',
+  pending: 'Chờ xác nhận',
   processing: 'Đang xử lý',
+  picking: 'Đang lấy hàng',
+  shipping: 'Đang giao hàng',
+  shipped: 'Đã giao',
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   failed: 'Thất bại',
@@ -21,11 +24,14 @@ const PAYMENT_STATUS_LABELS = {
 };
 
 const statusBadgeVariant = {
-  completed: 'success',
   pending: 'warning',
+  processing: 'info',
+  picking: 'primary',
+  shipping: 'info',
+  shipped: 'success',
+  completed: 'success',
   cancelled: 'secondary',
   failed: 'danger',
-  processing: 'info',
 };
 
 const paymentStatusBadgeVariant = {
@@ -109,6 +115,16 @@ export default function OrderDetailPage() {
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (error) return <Alert variant="danger" className="py-5 text-center">{error}</Alert>;
   if (!order) return <Alert variant="danger" className="py-5 text-center">Không tìm thấy đơn hàng.</Alert>;
+
+  // ✅ Tính toán giá trị đơn hàng
+  const subtotal = order.items.reduce((sum, item) => {
+    const price = item.sale_price || item.price || 0;
+    return sum + price * item.quantity;
+  }, 0);
+
+  const shippingFee = order.shipping_fee || 20000;
+  const discount = order.discount || 0;
+  const grandTotal = subtotal + shippingFee - discount;
 
   return (
     <Container className="py-4">
@@ -219,7 +235,7 @@ export default function OrderDetailPage() {
                           src={
                             item.product_variant?.img ||
                             item.product_variant?.product?.img ||
-                            'https://via.placeholder.com/50x50?text=No+Image'
+                            'https://placehold.co/50x50?text=No+Image'
                           }
                           alt={item.product_variant?.product?.name || 'Ảnh sản phẩm'}
                           style={{ width: 50, height: 50, objectFit: 'cover' }}
@@ -234,8 +250,15 @@ export default function OrderDetailPage() {
                 </tbody>
               </Table>
             </Card.Body>
-            <Card.Footer className="text-end fw-bold">
-              Tổng cộng: {Number(order.total).toLocaleString()}₫
+            <Card.Footer className="text-end">
+              <div className="fw-normal">Tạm tính: {subtotal.toLocaleString()}₫</div>
+              <div className="fw-normal">Phí giao hàng: {shippingFee.toLocaleString()}₫</div>
+              {discount > 0 && (
+                <div className="fw-normal">Giảm giá: {discount.toLocaleString()}₫</div>
+              )}
+              <div className="fw-bold mt-2">
+                Tổng cộng: {grandTotal.toLocaleString()}₫
+              </div>
             </Card.Footer>
           </Card>
         </Col>

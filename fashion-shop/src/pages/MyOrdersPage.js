@@ -5,25 +5,46 @@ import axios from 'axios';
 
 const formatDate = (isoDate) => {
   const date = new Date(isoDate);
-  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
-    .toString().padStart(2, '0')}/${date.getFullYear()}`;
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
 };
 
-const formatCurrency = (amount) =>
-  Number(amount).toLocaleString('vi-VN') + '₫';
+const formatCurrency = (amount) => Number(amount).toLocaleString('vi-VN') + '₫';
 
-const getPaymentMethodLabel = (method) =>
-  method === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản';
+const getPaymentMethodLabel = (method) => {
+  switch (method) {
+    case 'cod': return 'Thanh toán khi nhận hàng';
+    case 'momo': return 'Momo';
+    case 'banking': return 'Chuyển khoản';
+    default: return 'Không rõ';
+  }
+};
 
-const getPaymentStatusLabel = (status) =>
-  status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
+const getPaymentStatusLabel = (status) => {
+  switch (status) {
+    case 'paid': return 'Đã thanh toán';
+    case 'unpaid': return 'Chưa thanh toán';
+    case 'pending': return 'Đang xử lý';
+    case 'failed': return 'Thất bại';
+    default: return 'Không rõ';
+  }
+};
 
-const getPaymentStatusVariant = (status) =>
-  status === 'paid' ? 'success' : 'warning';
+const getPaymentStatusVariant = (status) => {
+  switch (status) {
+    case 'paid': return 'success';
+    case 'unpaid': return 'danger';
+    case 'pending': return 'warning';
+    case 'failed': return 'danger';
+    default: return 'secondary';
+  }
+};
 
 const STATUS_LABELS = {
-  pending: 'Chờ xử lý',
+  pending: 'Chờ xác nhận',
   processing: 'Đang xử lý',
+  picking: 'Đang lấy hàng',
+  shipping: 'Đang giao hàng',
+  shipped: 'Đã giao',
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   failed: 'Thất bại',
@@ -32,6 +53,9 @@ const STATUS_LABELS = {
 const STATUS_VARIANTS = {
   pending: 'warning',
   processing: 'info',
+  picking: 'primary',
+  shipping: 'primary',
+  shipped: 'info',
   completed: 'success',
   cancelled: 'secondary',
   failed: 'danger',
@@ -114,7 +138,6 @@ export default function MyOrdersPage() {
             <tr>
               <th>Ảnh</th>
               <th>Ngày đặt</th>
-              <th>Người đặt</th>
               <th>Địa chỉ</th>
               <th>Phương thức</th>
               <th>Thanh toán</th>
@@ -126,21 +149,24 @@ export default function MyOrdersPage() {
           <tbody>
             {orders.map(order => {
               const firstItem = order.order_items?.[0];
-              const imageUrl = firstItem?.product?.images?.[0]?.url || '/default.jpg';
+              const imageUrl =
+                firstItem?.product_variant?.product?.images?.[0]?.url ||
+                firstItem?.product_variant?.product?.img ||
+                'https://placehold.co/60x60?text=No+Image';
 
               return (
                 <tr key={order.id}>
                   <td>
                     <Image
-                      src={`${process.env.REACT_APP_IMAGE_BASE_URL}${imageUrl}`}
-                      width={60}
-                      height={60}
-                      rounded
+                      src={imageUrl}
+                      alt="Ảnh sản phẩm"
+                      style={{ width: 60, height: 60, objectFit: 'cover' }}
+                      onError={(e) => (e.target.src = '/images/no-image.jpg')}
                     />
+
                   </td>
                   <td>{formatDate(order.created_at)}</td>
-                  <td>{order.customer_name}</td>
-                  <td>{order.address}</td>
+                  <td>{order.shipping_address}</td>
                   <td>{getPaymentMethodLabel(order.payment_method)}</td>
                   <td>
                     <Badge bg={getPaymentStatusVariant(order.payment_status)}>
@@ -152,7 +178,7 @@ export default function MyOrdersPage() {
                       {STATUS_LABELS[order.status] || 'Không rõ'}
                     </Badge>
                   </td>
-                  <td>{formatCurrency(order.total)}</td>
+                  <td>{formatCurrency(order.total ?? order.total_amount ?? 0)}</td>
                   <td>
                     <Link to={`/orders/${order.id}`}>
                       <Button variant="primary" size="sm" className="me-2">
