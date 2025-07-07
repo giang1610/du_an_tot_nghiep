@@ -38,6 +38,7 @@ class UpdateOrderStatus implements ShouldQueue
         switch ($order->status) {
             case 'shipping':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderGiao($order));
+
                 break;
             case 'errors':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
@@ -55,6 +56,9 @@ class UpdateOrderStatus implements ShouldQueue
                 // Nếu muốn, có thể gửi mail mặc định hoặc không gửi gì
                 break;
         }
+        // tạo sự kiện realTime trạng thái
+        broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
+
     }
 }
 }

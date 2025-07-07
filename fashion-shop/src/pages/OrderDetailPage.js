@@ -6,6 +6,8 @@ import {
 } from 'react-bootstrap';
 import axios from 'axios';
 import '../css/OrderDetail.css';
+import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
+
 
 const STATUS_LABELS = {
   pending: 'Chờ xác nhận',
@@ -74,6 +76,30 @@ export default function OrderDetailPage() {
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  //realTime Status
+  useEffect(() => {
+  const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
+    if (Number(orderIdFromSocket) === Number(id)) {
+      console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
+      setOrder(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          status: newStatus
+        };
+      });
+    }
+  });
+
+    return () => {
+      console.log('[Realtime] Hủy lắng nghe kênh order-status');
+      channel.stopListening('.order.updated');
+    };
+  }, [id]);
+
+
+
 
   const handleUpdateAddress = async () => {
     if (!newAddress.trim()) return;
