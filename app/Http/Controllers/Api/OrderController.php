@@ -266,7 +266,7 @@ class OrderController extends Controller
                 // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
-                   broadcast(new ProductStockUpdated(
+                    broadcast(new ProductStockUpdated(
                     $variant->id,
                     $variant->fresh()->stock->quantity
                 ));
