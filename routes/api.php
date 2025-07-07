@@ -99,6 +99,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+        Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
+
     });
 
 

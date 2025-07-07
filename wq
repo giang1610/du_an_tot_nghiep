@@ -1,0 +1,32 @@
+[33mcommit d234e807f6d86f00ef3f99e7397b31da959fd87a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mvantu1221[m[33m, [m[1;31morigin/demo[m[33m, [m[1;32mdemo[m[33m)[m
+Author: KatoAnh <trantuananh11b1@gmail.com>
+Date:   Mon Jul 7 12:41:11 2025 +0700
+
+    đẩy realTime stock admin và chỉnh lại dùng pusher.com
+
+[33mcommit efda39d48e4e0b736da1964a87a7a225b588513c[m
+Merge: 10ee9e6 cd86dcc
+Author: KatoAnh <trantuananh11b1@gmail.com>
+Date:   Mon Jul 7 10:38:35 2025 +0700
+
+    đẩy code có realTime kho bên client
+
+[33mcommit 10ee9e636015b7e2c29aae62ced1c98cea2b33a0[m[33m ([m[1;31morigin/vantu1221[m[33m)[m
+Author: vantu1221 <tunvph49703@gmail.com>
+Date:   Mon Jul 7 03:24:29 2025 +0700
+
+    giao diện chi tiết đơn hàng,đơn hàng của tôi,check thanh toán
+
+[33mcommit be0712c090f7ca3f1b3da0ae938a2b6a55a0ff92[m
+Merge: a7cf6a3 f9cd4d5
+Author: vantu1221 <tunvph49703@gmail.com>
+Date:   Mon Jul 7 03:21:26 2025 +0700
+
+    giao diện chi tiết đơn hàng,dơn hàng của tôi,check thanh toán
+
+[33mcommit f9cd4d5f36568b1053e5dbadc19e7410da13fc49[m
+Merge: 9ca6626 9d2455b
+Author: giang1610 <giangmxph48806@gmail.com>
+Date:   Sun Jul 6 23:06:04 2025 +0700
+
+    fix trạng thái
