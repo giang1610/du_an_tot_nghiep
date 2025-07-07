@@ -26,9 +26,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // ========== PUBLIC ROUTES ========== //
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1'); 
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1'); 
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1');
 
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:5,1');
 
@@ -72,8 +72,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Lấy danh sách đánh giá theo product_id (dùng ?product_id=...)
     Route::get('/reviews', [ReviewController::class, 'getByProductQuery']);
     // Kiểm tra đã nhận hàng
-    Route::middleware('auth:sanctum')->get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
-    
+    Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
+
     // Cart
     Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('cart')->group(function () {
@@ -99,6 +99,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+        Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
     });
 
 
