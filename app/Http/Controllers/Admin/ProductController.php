@@ -126,7 +126,7 @@ public function store(ProductRequest $request)
                 }
             }
            
-           broadcast(new ProductChanged);
+  
 
 
             DB::commit(); // Hoàn tất transaction nếu mọi thứ thành công

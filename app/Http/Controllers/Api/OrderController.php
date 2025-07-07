@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+//
+use App\Events\ProductStockUpdated;
+
 
 class OrderController extends Controller
 {
@@ -95,11 +98,16 @@ class OrderController extends Controller
                 ]);
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
+
+                //realTime stock
+
             }
 
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
 
             DB::commit();
+
+
 
             return response()->json([
                 'message' => 'Tạo đơn hàng thành công',
@@ -258,6 +266,10 @@ class OrderController extends Controller
                 // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
+                   broadcast(new ProductStockUpdated(
+                    $variant->id,
+                    $variant->fresh()->stock->quantity
+                ));
                 }
             }
 
@@ -377,6 +389,8 @@ class OrderController extends Controller
 
                 case 'cod':
                     // Gửi email xác nhận cho COD
+
+
                     Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
                     return response()->json([
                         'message' => 'Đặt hàng COD thành công',
@@ -467,8 +481,8 @@ class OrderController extends Controller
     }
 
     /**
-     * Khởi tạo thanh toán MOMO
-     */
+    * Khởi tạo thanh toán MOMO
+    */
     protected function initiateMomoPayment($order, $amount)
     {
         $partnerCode = 'MOMOBKUN20180529';

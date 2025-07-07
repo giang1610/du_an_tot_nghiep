@@ -30,11 +30,14 @@ class UpdateOrderStatus implements ShouldQueue
     /**
      * Execute the job.
      */
-   public function handle(): void
+
+public function handle(): void
 {
-     \Log::info('Job chạy với orderId: ' . $this->orderId);
-    $order = Order::find($this->orderId);
-    if ($order && $order->user && $order->user->email) {
+    \Log::info('Job chạy với orderId: ' . $this->orderId);
+     $order = \App\Models\Order::with('user')->find($this->orderId);
+
+    // Kiểm tra user là object và có email
+    if ($order && is_object($order->user) && !is_null($order->user->email)) {
         switch ($order->status) {
             case 'shipping':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderGiao($order));
@@ -52,7 +55,6 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderShipped($order));
                 break;
             default:
-                // Nếu muốn, có thể gửi mail mặc định hoặc không gửi gì
                 break;
         }
     }
