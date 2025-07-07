@@ -21,6 +21,7 @@ export default function Register() {
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setError('');
   }, []);
 
   const handleSubmit = async (e) => {
@@ -47,13 +48,16 @@ export default function Register() {
       if (res.ok) {
         setSuccess('Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản trước khi đăng nhập.');
         setForm({ name: '', email: '', password: '', password_confirmation: '' });
-        // Chờ 6 giây rồi chuyển hướng về login
         setTimeout(() => navigate('/login'), 6000);
-      } else if (res.status === 422 && data.errors) {
-        const firstError = Object.values(data.errors)[0][0];
-        setError(firstError);
       } else {
-        setError(data.message || 'Đăng ký thất bại');
+        let message = 'Đăng ký thất bại';
+        if (data?.errors) {
+          const firstError = Object.values(data.errors)[0][0];
+          message = firstError;
+        } else if (data?.message) {
+          message = data.message;
+        }
+        setError(message);
       }
     } catch {
       setError('Không thể kết nối đến máy chủ');

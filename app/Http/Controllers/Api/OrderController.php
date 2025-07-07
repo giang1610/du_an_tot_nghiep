@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+//
+use App\Events\ProductStockUpdated;
+
 
 class OrderController extends Controller
 {
@@ -95,11 +98,16 @@ class OrderController extends Controller
                 ]);
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
+                
+                //realTime stock
+                
             }
 
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
 
             DB::commit();
+           
+
 
             return response()->json([
                 'message' => 'Tạo đơn hàng thành công',
@@ -258,6 +266,10 @@ class OrderController extends Controller
                 // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
+                   broadcast(new ProductStockUpdated(
+                    $variant->id,
+                    $variant->fresh()->stock->quantity
+                ));
                 }
             }
 
@@ -377,6 +389,8 @@ class OrderController extends Controller
 
                 case 'cod':
                     // Gửi email xác nhận cho COD
+                   
+
                     Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
                     return response()->json([
                         'message' => 'Đặt hàng COD thành công',
@@ -467,8 +481,8 @@ class OrderController extends Controller
     }
 
     /**
-     * Khởi tạo thanh toán MOMO
-     */
+    * Khởi tạo thanh toán MOMO
+    */
     protected function initiateMomoPayment($order, $amount)
     {
         $partnerCode = 'MOMOBKUN20180529';
@@ -676,65 +690,4 @@ class OrderController extends Controller
         return response()->json(['received' => $hasReceived]);
     }
 
-    // Xác nhận đã nhận hàng
-    // public function confirmReceived($orderId)
-    // {
-    //     $order = Order::where('id', $orderId)->where('user_id', auth()->id())->firstOrFail();
-    //     if ($order->status !== 'shipped') {
-    //         return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
-    //     }
-
-    //     $order->status = 'delivered';
-    //     $order->delivered_at = now();
-    //     $order->save();
-
-    //     return response()->json(['message' => 'Đã xác nhận nhận hàng thành công']);
-    // }
-   public function confirmReceived($orderId)
-{
-    $order = Order::where('id', $orderId)
-        ->where('user_id', auth()->id())
-        ->firstOrFail();
-
-    if ($order->status !== 'shipped') {
-        return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
-    }
-
-    $order->status = 'delivered';
-    $order->delivered_at = now();
-
-    // ✅ Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
-    if ($order->payment_method === 'cod') {
-        $order->payment_status = 'paid';
- }
-
-    $order->save();
-
-    return response()->json(['message' => 'Đã xác nhận nhận hàng thành công']);
-}
-
-    // Yêu cầu trả hàng
-
-    public function requestReturn(Request $request, $orderId)
-    {
-        $order = Order::where('id', $orderId)->where('user_id', auth()->id())->firstOrFail();
-        if ($order->status !== 'delivered') {
-            return response()->json(['message' => 'Không thể yêu cầu trả hàng cho đơn hàng này'], 400);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'reason' => 'nullable|string|max:500',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['message' => 'Lỗi xác thực', 'errors' => $validator->errors()], 422);
-        }
-
-        $order->status = 'return_requested'; // Đặt trạng thái hoàn đơn
-        $order->return_requested_at = now();
-        $order->return_reason = $request->reason;
-        $order->save();
-
-        return response()->json(['message' => 'Yêu cầu trả hàng đã được gửi']);
-    }
 }
