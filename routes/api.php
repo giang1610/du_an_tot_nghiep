@@ -82,6 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
             Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
             Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
+            Route::delete('/remove-selected', [CartController::class, 'removeSelectedItems']);
+            Route::delete('/clear', [CartController::class, 'clearCart']);
             Route::get('/total', [CartController::class, 'getCartTotal']);
             Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
 
