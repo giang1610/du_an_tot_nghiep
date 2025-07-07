@@ -15,6 +15,9 @@ use App\Models\CartItem;
 use App\Models\ProductVariant;
 use App\Models\Stock;
 
+//realTime đặt hàng 
+use App\Events\ProductStockUpdated;
+
 class CartController extends Controller
 {
     public function addToCart(CartRequest $request)
@@ -279,7 +282,8 @@ class CartController extends Controller
 
         $order->loadMissing('items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size');
         Mail::to($user->email)->send(new OrderPlaced($order, $request->payment_method));
-
+         
+       
         return response()->json([
             'message' => 'Đặt hàng thành công!',
             'order' => $order,

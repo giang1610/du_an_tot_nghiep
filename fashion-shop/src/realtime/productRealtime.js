@@ -1,4 +1,3 @@
-// src/realtime/productRealtime.js
 import echo from '../echo';
 
 export function listenToProductChanged(onChanged) {

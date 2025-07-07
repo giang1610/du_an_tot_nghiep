@@ -217,6 +217,13 @@
 
 <!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- realTime --}}
+<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
+<script src="{{ asset('js/echo-setup.js') }}"></script>
+{{-- relTime --}}
+
 <script>
   const sidebar = document.getElementById('sidebar'),
         toggleBtn = document.getElementById('toggleBtn');
@@ -262,5 +269,12 @@
   searchTrigger.onclick = doSearch;
   globalSearch.onkeydown = e => { if(e.key === 'Enter') doSearch(); };
 </script>
+
+
+
+
+
+
+
 </body>
 </html>
