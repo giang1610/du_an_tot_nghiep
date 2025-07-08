@@ -28,8 +28,9 @@ return new class extends Migration
             $table->string('customer_phone');
             $table->text('notes')->nullable();
             $table->timestamp('delivered_at')->nullable();
-            $table->timestamp('return_requested_at')->nullable();
-            $table->string('return_reason', 500)->nullable();
+            $table->text('return_reason')->nullable();
+            $table->text('note_admin')->nullable();
+            $table->enum('return_status', ['pending', 'accepted', 'rejected'])->nullable();
             $table->timestamps();
         });
     }

@@ -16,6 +16,7 @@ const STATUS_LABELS = {
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
     delivered: 'Đã nhận hàng',
+    returning: 'Đang hoàn trả',
     completed: 'Hoàn thành',
     cancelled: 'Đã hủy',
     failed: 'Thất bại',
@@ -37,6 +38,7 @@ const statusBadgeVariant = {
     delivered: 'primary',
     shipping: 'info',
     shipped: 'success',
+    returning: 'warning', 
 };
 
 const paymentStatusBadgeVariant = {
@@ -62,6 +64,9 @@ export default function OrderDetailPage() {
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewLoading, setReviewLoading] = useState(false);
     const [productReviews, setProductReviews] = useState({});
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [returnReason, setReturnReason] = useState('');
+    const [requestingReturn, setRequestingReturn] = useState(false);
 
     const fetchOrder = useCallback(async () => {
         if (!token) return setError('Bạn chưa đăng nhập');
@@ -133,18 +138,6 @@ export default function OrderDetailPage() {
             fetchOrder();
         } catch {
             alert('Xác nhận nhận hàng thất bại!');
-        }
-    };
-
-    const handleRequestReturn = async () => {
-        try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert('Đã gửi yêu cầu hoàn đơn!');
-            fetchOrder();
-        } catch {
-            alert('Yêu cầu hoàn đơn thất bại!');
         }
     };
 
@@ -227,6 +220,25 @@ export default function OrderDetailPage() {
     useEffect(() => {
         fetchOrder();
     }, [fetchOrder]);
+
+    const handleRequestReturn = async () => {
+        setRequestingReturn(true);
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, {
+                reason: returnReason
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setShowReturnModal(false);
+            setReturnReason('');
+            alert('Đã gửi yêu cầu hoàn hàng!');
+            fetchOrder();
+        } catch {
+            alert('Gửi yêu cầu thất bại!');
+        } finally {
+            setRequestingReturn(false);
+        }
+    };
 
     if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
     if (error) return <Alert variant="danger" className="py-5 text-center">{error}</Alert>;
@@ -362,6 +374,46 @@ export default function OrderDetailPage() {
 
                         {order.status === 'shipped' && (
                             <Button variant="success" size="sm" onClick={handleConfirmReceived}>Xác nhận đã nhận hàng</Button>
+                        )}
+
+                        {order.status === 'delivered' && (
+                            <>
+                                <Button
+                                    variant="warning"
+                                    size="sm"
+                                    className="ms-2"
+                                    onClick={() => setShowReturnModal(true)}
+                                >
+                                    Hoàn hàng
+                                </Button>
+                                <Modal show={showReturnModal} onHide={() => setShowReturnModal(false)} centered>
+                                    <Modal.Header closeButton>
+                                        <Modal.Title>Yêu cầu hoàn hàng</Modal.Title>
+                                    </Modal.Header>
+                                    <Modal.Body>
+                                        <Form.Group>
+                                            <Form.Label>Lý do hoàn hàng</Form.Label>
+                                            <Form.Control
+                                                as="textarea"
+                                                rows={3}
+                                                value={returnReason}
+                                                onChange={e => setReturnReason(e.target.value)}
+                                                placeholder="Nhập lý do hoàn hàng"
+                                            />
+                                        </Form.Group>
+                                    </Modal.Body>
+                                    <Modal.Footer>
+                                        <Button variant="secondary" onClick={() => setShowReturnModal(false)}>Đóng</Button>
+                                        <Button
+                                            variant="warning"
+                                            onClick={handleRequestReturn}
+                                            disabled={!returnReason.trim() || requestingReturn}
+                                        >
+                                            {requestingReturn ? 'Đang gửi...' : 'Gửi yêu cầu'}
+                                        </Button>
+                                    </Modal.Footer>
+                                </Modal>
+                            </>
                         )}
 
                         {order.status === 'pending' && (

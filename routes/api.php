@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
         Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
+        Route::post('/{id}/request-return', [OrderController::class, 'requestReturn']);
     });
 
 

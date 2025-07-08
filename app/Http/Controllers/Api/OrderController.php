@@ -710,4 +710,23 @@ class OrderController extends Controller
 
         return response()->json(['message' => 'Đã xác nhận đã nhận hàng thành công']);
     }
+    public function requestReturn(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
+    if ($order->user_id !== auth()->id()) {
+        return response()->json(['message' => 'Không có quyền'], 403);
+    }
+    if ($order->status !== 'delivered') {
+        return response()->json(['message' => 'Chỉ hoàn hàng khi đã nhận hàng'], 400);
+    }
+
+    $order->return_reason = $request->input('reason');
+    $order->return_status = 'pending';
+    $order->save();
+
+    // Gửi mail/thông báo cho admin (ví dụ gửi tới 1 email admin)
+    \Mail::to('admin@example.com')->queue(new \App\Mail\RequestReturnOrder($order));
+
+    return response()->json(['message' => 'Đã gửi yêu cầu hoàn hàng']);
+}
 }

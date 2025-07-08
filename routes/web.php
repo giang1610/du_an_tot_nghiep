@@ -49,7 +49,7 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-    
+
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
@@ -83,7 +83,7 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
 
 // Admin routes
     //xóa danh mục
-    //thùng rác 
+    //thùng rác
     Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
     //xóa vĩnh viễn
     Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
@@ -96,7 +96,7 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
     Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
 
     //xóa sản phẩm
-    //thùng rác 
+    //thùng rác
     Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
     //khôi phục từng sản phẩm
     Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
@@ -110,7 +110,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::get('/', function () {
       return view('admin.dashboard');
     })->name('admin');
-     
+
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
     //cập nhật profile
@@ -135,6 +135,8 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
 });
 
 Route::get('/thank-you', function () {

@@ -19,6 +19,7 @@ const STATUS_LABELS = {
   shipping: 'Đang giao hàng',
   shipped: 'Đã giao hàng',
   delivered: 'Đã nhận hàng',
+    returning: 'Đang hoàn trả',
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   failed: 'Thất bại',
@@ -34,6 +35,7 @@ const STATUS_VARIANTS = {
   completed: 'success',
   cancelled: 'secondary',
   failed: 'danger',
+  returning: 'warning',
 };
 
 const PAYMENT_STATUS_LABELS = {
