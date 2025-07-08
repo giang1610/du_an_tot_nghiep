@@ -157,7 +157,23 @@ export default function CartPage() {
               <td>{Number(item.price).toLocaleString()}₫</td>
               <td>{Number(item.subtotal).toLocaleString()}₫</td>
               <td>
-                <Button variant="danger" size="sm" onClick={() => removeItem(item.id)}>Xóa</Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => {
+                    if (!item.selected) {
+                      alert('Vui lòng chọn sản phẩm trước khi xóa.');
+                      return;
+                    }
+                    if (window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                      removeItem(item.id);
+                    }
+                  }}
+                >
+                  Xóa
+                </Button>
+
+
               </td>
             </tr>
           ))}

@@ -111,9 +111,8 @@
                             <th>Khách hàng</th>
                             <th>Sản phẩm</th>
                             <th>Địa chỉ</th>
-                            <th>PT thanh toán</th>
-                            <th>TT thanh toán</th>
                             <th>Tổng tiền</th>
+                            <th>Phương thức & Trạng thái</th>
                             <th>TT giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
@@ -158,8 +157,16 @@
                             <td>
                                 <div class="small">
                                     <div><i class="fas fa-truck me-2"></i> {{ $order->shipping_method }}</div>
-                                    <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 15) }}</div>
+                                    <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 3) }}</div>
                                 </div>
+                            </td>
+                              <td class="text-end">
+                                <strong>{{ number_format($order->total) }} VNĐ</strong>
+                                @if($order->discount > 0)
+                                <div class="text-danger small">
+                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
+                                </div>
+                                @endif
                             </td>
                             <td>
                                 @switch($order->payment_method)
@@ -178,8 +185,6 @@
                                     <i class="fas fa-question me-1"></i> Khác
                                 </span>
                                 @endswitch
-                            </td>
-                            <td>
                                 <div class="small mt-1">
                                     @if($order->payment_status == 'paid')
                                     <span class="text-success">

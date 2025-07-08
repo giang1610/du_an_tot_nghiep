@@ -38,7 +38,7 @@ const ProductSummary = ({ items }) => {
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, removeSelectedItems } = useCart(); // ✅ thêm removeSelectedItems
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -74,8 +74,8 @@ export default function Checkout() {
 
   const totals = useMemo(() => {
     const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
-    const tax = subtotal*0.1; // có thể thay đổi tuỳ chính sách
-    const shipping = 20000; // phí cố định hoặc tuỳ theo địa chỉ
+    const tax = subtotal * 0.1;
+    const shipping = 20000;
     const total = subtotal + tax + shipping;
     return { subtotal, tax, shipping, total };
   }, [selectedItems]);
@@ -148,7 +148,6 @@ export default function Checkout() {
 
         if (data?.data?.payment_url) {
           localStorage.removeItem('buy_now');
-          clearCart();
           window.location.href = data.data.payment_url;
           return;
         }
@@ -161,8 +160,8 @@ export default function Checkout() {
         );
 
         setSuccess(data.message || 'Đặt hàng thành công!');
-        clearCart();
         localStorage.removeItem('buy_now');
+        await removeSelectedItems(); // ✅ với COD: chỉ xóa sản phẩm đã chọn
         setTimeout(() => navigate('/orders'), 3000);
       }
     } catch (error) {
@@ -220,7 +219,6 @@ export default function Checkout() {
                 onChange={e => setField('payment_method', e.target.value)}
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                {/* <option value="banking">Chuyển khoản</option> */}
                 <option value="momo">Thanh toán MoMo</option>
               </Form.Select>
             </Form.Group>

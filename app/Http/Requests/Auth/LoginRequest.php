@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Password;
+
+use function Laravel\Prompts\confirm;
 
 class LoginRequest extends FormRequest
 {
@@ -28,7 +31,20 @@ class LoginRequest extends FormRequest
     {
         return [
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'password' => ['required', 'string', 'max:255',Password::defaults()],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Vui lòng nhập địa chỉ email.',
+            'email.email' => 'Địa chỉ email không hợp lệ.',
+            'password.required' => 'Vui lòng nhập mật khẩu.',
+            'password.max' => 'Mật khẩu không được vượt quá :max ký tự.',
+            'password' => 'Mật khẩu không đúng.',
+   
+
         ];
     }
 
@@ -37,20 +53,46 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
+    // public function authenticate(): void
+    // {
+    //     $this->ensureIsNotRateLimited();
+
+    //     if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+    //         RateLimiter::hit($this->throttleKey());
+
+    //         throw ValidationException::withMessages([
+    //             'email' => trans('auth.failed'),
+    //         ]);
+    //     }
+
+    //     RateLimiter::clear($this->throttleKey());
+    // }
+
     public function authenticate(): void
-    {
-        $this->ensureIsNotRateLimited();
+{
+    $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+    if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        RateLimiter::hit($this->throttleKey());
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
-        }
-
-        RateLimiter::clear($this->throttleKey());
+        throw ValidationException::withMessages([
+            'email' => trans('auth.failed'),
+        ]);
     }
+
+    // ✅ Chỉ cho phép user có ID = 1
+    if (Auth::id() !== 1) {
+        Auth::logout();
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => 'Bạn không có quyền đăng nhập vào hệ thống.',
+        ]);
+    }
+
+    RateLimiter::clear($this->throttleKey());
+}
+
 
     /**
      * Ensure the login request is not rate limited.

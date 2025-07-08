@@ -19,6 +19,8 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 import MomoReturn from './pages/MomoReturn';
 // import Test from './pages/test';
 import ResetPassword from './pages/ResetPassword';
+import ProductReview from './components/ProductReview';
+
 
 function App() {
   return (
@@ -61,6 +63,9 @@ function App() {
         {/* <Route path="/test" element={<Test />} /> */}
         {/* route ResetPassword anhkato vieêt */}
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route path="/review/:orderId" element={<ProductReview />} />
+
 
 
       </Routes>

@@ -15,6 +15,9 @@ use App\Models\CartItem;
 use App\Models\ProductVariant;
 use App\Models\Stock;
 
+//realTime đặt hàng 
+use App\Events\ProductStockUpdated;
+
 class CartController extends Controller
 {
     public function addToCart(CartRequest $request)
@@ -187,6 +190,35 @@ class CartController extends Controller
 
         return response()->json(['message' => 'Đã xóa sản phẩm khỏi giỏ hàng.']);
     }
+    public function removeSelectedItems()
+    {
+        $user = Auth::user();
+
+        $cart = Cart::where('user_id', $user->id)->first();
+
+        if (!$cart) {
+            return response()->json(['message' => 'Không tìm thấy giỏ hàng.'], 404);
+        }
+
+        CartItem::where('cart_id', $cart->id)
+            ->where('selected', true)
+            ->delete();
+
+        return response()->json(['message' => 'Đã xoá các sản phẩm đã chọn khỏi giỏ hàng.']);
+    }
+    public function clearCart()
+    {
+        $user = Auth::user();
+
+        $cart = Cart::where('user_id', $user->id)->first();
+
+        if ($cart) {
+            CartItem::where('cart_id', $cart->id)->delete();
+        }
+
+        return response()->json(['message' => 'Đã xóa toàn bộ giỏ hàng.']);
+    }
+
 
     public function getCartTotal()
     {
@@ -279,6 +311,7 @@ class CartController extends Controller
 
         $order->loadMissing('items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size');
         Mail::to($user->email)->send(new OrderPlaced($order, $request->payment_method));
+
 
         return response()->json([
             'message' => 'Đặt hàng thành công!',

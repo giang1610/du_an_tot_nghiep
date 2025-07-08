@@ -11,12 +11,14 @@ export const CartProvider = ({ children }) => {
 
   const token = localStorage.getItem('token');
 
+  // Tính tổng tiền của sản phẩm đã chọn
   const calculateTotal = useCallback((items) => {
     const selectedItems = items.filter(i => i.selected);
     const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
     setTotal(totalAmount);
   }, []);
 
+  // Lấy giỏ hàng từ server
   const fetchCart = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -34,10 +36,10 @@ export const CartProvider = ({ children }) => {
     }
   }, [token, calculateTotal]);
 
+  // Xoá toàn bộ giỏ hàng (nếu cần dùng)
   const clearCart = async () => {
     setCart([]);
     setTotal(0);
-
     if (!token) return;
 
     try {
@@ -45,7 +47,21 @@ export const CartProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {
-      console.error('❌ Lỗi khi xóa giỏ hàng trên server:', err);
+      console.error('❌ Lỗi khi xóa toàn bộ giỏ hàng:', err);
+    }
+  };
+
+  // ✅ Xoá các sản phẩm đã chọn
+  const removeSelectedItems = async () => {
+    if (!token) return;
+
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/cart/remove-selected`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchCart(); // cập nhật lại giỏ hàng sau khi xoá
+    } catch (err) {
+      console.error('❌ Lỗi khi xoá sản phẩm đã chọn:', err);
     }
   };
 
@@ -58,7 +74,17 @@ export const CartProvider = ({ children }) => {
   }, [cart, calculateTotal]);
 
   return (
-    <CartContext.Provider value={{ cart, setCart, total, fetchCart, clearCart, loading }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        setCart,
+        total,
+        loading,
+        fetchCart,
+        clearCart,
+        removeSelectedItems, // ✅ expose hàm này ra context
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

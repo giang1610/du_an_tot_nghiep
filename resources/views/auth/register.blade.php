@@ -12,11 +12,11 @@
 
         @if ($errors->any())
             <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
-                <ul class="list-disc pl-5">
+                <div class="list-disc pl-5">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <span>{{ $error }}</span>
                     @endforeach
-                </ul>
+                </div>
             </div>
         @endif
 
@@ -26,14 +26,14 @@
             {{-- Tên --}}
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Tên:</label>
-                <input type="text" name="name" id="name" value="{{ old('name') }}" required autofocus
+                <input type="text" name="name" id="name" value="{{ old('name') }}"  autofocus
                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             {{-- Email --}}
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
-                <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                <input type="email" name="email" id="email" value="{{ old('email') }}" 
                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
@@ -41,7 +41,7 @@
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu:</label>
                 <div class="relative">
-                    <input type="password" name="password" id="password" required
+                    <input type="password" name="password" id="password" 
                            class="mt-1 w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <button type="button" id="togglePassword"
                             class="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-800 focus:outline-none"
@@ -55,7 +55,7 @@
             <div>
                 <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Xác nhận mật khẩu:</label>
                 <div class="relative">
-                    <input type="password" name="password_confirmation" id="password_confirmation" required
+                    <input type="password" name="password_confirmation" id="password_confirmation" 
                            class="mt-1 w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <button type="button" id="togglePasswordConfirm"
                             class="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-800 focus:outline-none"
