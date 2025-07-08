@@ -15,18 +15,18 @@
 
     @if ($errors->any())
         <div style="color: red;">
-            <ul>
+            <div>
                 @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
+                    <span>{{ $error }}</span>
                 @endforeach
-            </ul>
+            </div>
         </div>
     @endif
 
     <form method="POST" action="{{ route('password.email') }}">
         @csrf
         <label>Email:</label><br>
-        <input type="email" name="email" value="{{ old('email') }}" required autofocus><br><br>
+        <input type="email" name="email" value="{{ old('email') }}"  autofocus><br><br>
         <button type="submit">Gửi link đặt lại mật khẩu</button>
     </form>
 

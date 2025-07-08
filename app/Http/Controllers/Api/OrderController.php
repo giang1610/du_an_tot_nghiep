@@ -30,7 +30,7 @@ class OrderController extends Controller
         'notes' => 'nullable|string|max:500',
     ];
 
-    public function store(Request $request)
+    public function store(Request $request) 
     {
         $validator = Validator::make($request->all(), [
             'subtotal' => 'required|numeric|min:0',
