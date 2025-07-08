@@ -627,9 +627,9 @@ class OrderController extends Controller
         $orderId = $request->query('orderId');
         $resultCode = $request->query('resultCode');
 
-        if (!$orderId || !$resultCode) {
-            return response()->json(['message' => 'Tham số không hợp lệ'], 400);
-        }
+if (is_null($orderId) || is_null($resultCode)) {
+    return response()->json(['message' => 'Tham số không hợp lệ'], 400);
+}
 
         // Trích xuất ID đơn hàng (định dạng: orderId-thời gian)
         $orderParts = explode('-', $orderId);

@@ -192,7 +192,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="text-end">
+                            <td>
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">

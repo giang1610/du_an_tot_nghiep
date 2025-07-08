@@ -8,7 +8,7 @@ import axios from 'axios';
 import '../css/OrderDetail.css';
 
 const STATUS_LABELS = {
-  pending: 'Chờ xác nhận',
+  pending: 'Chờ xử lý',
   processing: 'Đang xử lý',
   picking: 'Đang lấy hàng',
   shipping: 'Đang giao hàng',
@@ -17,6 +17,9 @@ const STATUS_LABELS = {
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   failed: 'Thất bại',
+  return_requested: 'Đã yêu cầu hoàn đơn',
+  returning: 'Đang hoàn đơn',
+  returned: 'Đã hoàn đơn',
 };
 
 const PAYMENT_STATUS_LABELS = {
