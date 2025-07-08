@@ -10,7 +10,7 @@
 
         <div>
             <label>Mật khẩu</label>
-            <input type="password" name="password" required>
+            <input type="password" name="password" >
             @error('password') <div>{{ $message }}</div> @enderror
         </div>
 

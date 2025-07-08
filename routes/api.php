@@ -104,17 +104,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
     });
 
-
-
-    // Các route khác: logout, cart, review...
 });
 
 // Payment Momo
 Route::prefix('payment')->group(function () {
     Route::post('/momo', [OrderController::class, 'processMomoPayment'])->middleware('auth:sanctum');
     Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
-    // Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-    // Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
+    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+    Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
     Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
     Route::get('/momo/return', [OrderController::class, 'momoReturn']);
 });

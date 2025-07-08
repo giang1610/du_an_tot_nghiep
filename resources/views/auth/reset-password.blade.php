@@ -9,11 +9,11 @@
 
     @if ($errors->any())
         <div style="color: red;">
-            <ul>
+            <div>
                 @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
+                    <span>{{ $error }}</span>
                 @endforeach
-            </ul>
+            </div>
         </div>
     @endif
 
@@ -22,13 +22,13 @@
         <input type="hidden" name="token" value="{{ request()->route('token') }}">
 
         <label>Email:</label><br>
-        <input type="email" name="email" value="{{ old('email') }}" required autofocus><br><br>
+        <input type="email" name="email" value="{{ old('email') }}"  autofocus><br><br>
 
         <label>Mật khẩu mới:</label><br>
-        <input type="password" name="password" required><br><br>
+        <input type="password" name="password" ><br><br>
 
         <label>Xác nhận mật khẩu:</label><br>
-        <input type="password" name="password_confirmation" required><br><br>
+        <input type="password" name="password_confirmation" ><br><br>
 
         <button type="submit">Đặt lại mật khẩu</button>
     </form>
