@@ -116,12 +116,14 @@ export default function MyOrdersPage() {
             <Card.Header className="d-flex justify-content-between align-items-center">
               <div>
                 <strong>Mã đơn:</strong> #{order.order_number || order.id} &nbsp;|&nbsp;
-                <strong>Ngày đặt:</strong> {formatDate(order.created_at)}
+                <strong>Ngày đặt:</strong> {formatDate(order.created_at)} <br />
+                <strong>Khách hàng:</strong> {order.user?.name || 'Không rõ'}
               </div>
               <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
                 {STATUS_LABELS[order.status] || 'Không rõ'}
               </Badge>
             </Card.Header>
+
 
             <Card.Body>
               {order.items.map(item => (

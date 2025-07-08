@@ -64,7 +64,7 @@ export default function ProductDetail() {
       });
     });
 
-    return unsubscribe; 
+    return unsubscribe;
   }, [product]);
 
 
@@ -181,7 +181,8 @@ export default function ProductDetail() {
 
     try {
       const token = localStorage.getItem('token');
-      const userEmail = localStorage.getItem('user_email') || 'user@example.com';
+      const user = JSON.parse(localStorage.getItem('user'));
+      const userEmail = user?.email || 'user@example.com';
       const price = selectedVariant.sale_price ?? selectedVariant.price;
       const subtotal = price * quantity;
       const tax = Math.round(subtotal * 0.1);
@@ -344,29 +345,29 @@ export default function ProductDetail() {
         </Col>
       </Row>
 
-     <div className="mt-5">
-  <h4>Sản phẩm liên quan</h4>
-  <Row>
-    {relatedProducts.map((rp) => {
-      const imageUrl =
-        rp.variants?.[0]?.thumbnail ||
-        'https://via.placeholder.com/150x150?text=No+Image';
+      <div className="mt-5">
+        <h4>Sản phẩm liên quan</h4>
+        <Row>
+          {relatedProducts.map((rp) => {
+            const imageUrl =
+              rp.variants?.[0]?.thumbnail ||
+              'https://via.placeholder.com/150x150?text=No+Image';
 
-      return (
-        <Col md={3} key={rp.id} className="mb-3">
-          <div className="border p-2 h-100 d-flex flex-column align-items-center">
-            <img
-              src={imageUrl}
-              alt={rp.name}
-              style={{ maxHeight: 150, objectFit: 'contain' }}
-            />
-            <p className="fw-bold mt-2 text-center">{rp.name}</p>
-          </div>
-        </Col>
-      );
-    })}
-  </Row>
-</div>
+            return (
+              <Col md={3} key={rp.id} className="mb-3">
+                <div className="border p-2 h-100 d-flex flex-column align-items-center">
+                  <img
+                    src={imageUrl}
+                    alt={rp.name}
+                    style={{ maxHeight: 150, objectFit: 'contain' }}
+                  />
+                  <p className="fw-bold mt-2 text-center">{rp.name}</p>
+                </div>
+              </Col>
+            );
+          })}
+        </Row>
+      </div>
 
     </Container>
   );

@@ -130,7 +130,7 @@ class OrderController extends Controller
         $status = $request->query('status');
 
         $query = Auth::user()->orders()
-            ->with(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
+            ->with(['user','items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
             ->latest();
 
         if ($status) {
@@ -151,7 +151,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không có quyền truy cập'], 403);
         }
 
-        $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
+        $order->load(['user','items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
 
         return response()->json([
             'message' => 'Lấy thông tin đơn hàng thành công',

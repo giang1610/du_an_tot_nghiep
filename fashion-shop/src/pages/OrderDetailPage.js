@@ -175,6 +175,7 @@ export default function OrderDetailPage() {
       <Card className="mb-3">
         <Card.Header className="fw-bold">Thông tin giao hàng</Card.Header>
         <Card.Body>
+          <p><strong>Name:</strong> {order.user?.name || 'Không rõ'}</p>
           <p><strong>Email:</strong> {order.customer_email}</p>
           <p><strong>SĐT:</strong> {order.customer_phone}</p>
           <div>
