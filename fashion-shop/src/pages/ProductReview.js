@@ -154,72 +154,7 @@ export default function ProductReview({ productId, selectedVariantId }) {
 
   return (
     <div className="mt-4">
-      <h5>Đánh giá sản phẩm</h5>
-      {!canReview && <Alert variant="info">Bạn chỉ có thể đánh giá sản phẩm sau khi mua và nhận hàng.</Alert>}
-
-      {canReview && (
-        <>
-          <Form.Group className="mb-3">
-            <Form.Label>Đánh giá:</Form.Label>
-            <StarRating rating={rating} setRating={setRating} disabled={sending} />
-            {!!validationErrors.rating && (
-              <div className="text-danger mt-1" style={{ fontSize: '0.875rem' }}>
-                {validationErrors.rating}
-              </div>
-            )}
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Nội dung đánh giá (không bắt buộc):</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              maxLength={MAX_CONTENT_LENGTH}
-              placeholder="Viết cảm nhận của bạn về sản phẩm..."
-              disabled={sending}
-              isInvalid={!!validationErrors.content}
-            />
-            <Form.Control.Feedback type="invalid">
-              {validationErrors.content}
-            </Form.Control.Feedback>
-          </Form.Group>
-
-          {message && (
-            <Alert variant={message.type} onClose={() => setMessage(null)} dismissible>
-              {message.text}
-            </Alert>
-          )}
-
-          <Button onClick={handleSubmit} disabled={sending || !isValid}>
-            {sending ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Đang gửi...
-              </>
-            ) : (
-              'Gửi đánh giá'
-            )}
-          </Button>
-        </>
-      )}
-
-      <hr className="my-4" />
-      <h5>Đánh giá đã có ({reviews.length})</h5>
-      {!reviews.length && <p>Chưa có đánh giá nào cho sản phẩm này.</p>}
-      {reviews.map((r) => (
-        <div key={r.id} className="mb-3 border-bottom pb-2">
-          <strong>{r.user.name}</strong> -{' '}
-          <small>{new Date(r.created_at).toLocaleDateString('vi-VN')}</small>
-          <div style={{ color: '#ffc107' }}>
-            {[...Array(STAR_COUNT)].map((_, i) => (
-              <FaStar key={i} color={i < r.rating ? '#ffc107' : '#e4e5e9'} />
-            ))}
-          </div>
-          <p>{r.content || <i>(Không có nội dung)</i>}</p>
-        </div>
-      ))}
+      
     </div>
   );
 }

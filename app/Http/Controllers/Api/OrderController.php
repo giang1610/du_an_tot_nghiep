@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -98,11 +99,16 @@ class OrderController extends Controller
                 ]);
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
+
+                //realTime stock
+
             }
 
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
 
             DB::commit();
+
+
 
             return response()->json([
                 'message' => 'Tạo đơn hàng thành công',
@@ -261,10 +267,10 @@ class OrderController extends Controller
                 // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
-                   broadcast(new ProductStockUpdated(
-                    $variant->id,
-                    $variant->fresh()->stock->quantity
-                ));
+                    broadcast(new ProductStockUpdated(
+                        $variant->id,
+                        $variant->fresh()->stock->quantity
+                    ));
                 }
             }
 
@@ -304,7 +310,6 @@ class OrderController extends Controller
                         ]
                     ]);
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
@@ -376,40 +381,42 @@ class OrderController extends Controller
                     return response()->json([
                         'message' => 'Đã khởi tạo thanh toán MOMO',
                         'data' => [
-                                'order_id' => $order->id,
-                                'payment_url' => $momoResponse['payUrl'],
-                                'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                            ]
-                        ]);
+                            'order_id' => $order->id,
+                            'payment_url' => $momoResponse['payUrl'],
+                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
+                        ]
+                    ]);
 
                 case 'cod':
                     // Gửi email xác nhận cho COD
+
+
                     Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
                     return response()->json([
                         'message' => 'Đặt hàng COD thành công',
-                            'data' => [
-                                'order_id' => $order->id,
-                                'payment_url' => null,
-                                'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                            ]
+                        'data' => [
+                            'order_id' => $order->id,
+                            'payment_url' => null,
+                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
+                        ]
                     ]);
                 default:
                     return response()->json([
                         'message' => 'Đặt hàng thành công',
-                            'data' => [
-                                'order_id' => $order->id,
-                                'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                            ]
+                        'data' => [
+                            'order_id' => $order->id,
+                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
+                        ]
                     ]);
             }
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
-                return response()->json([
-                    'message' => 'Không thể tạo đơn hàng',
-                    'error'   => $e->getMessage(),
-                ], 400);
-            }
+            return response()->json([
+                'message' => 'Không thể tạo đơn hàng',
+                'error'   => $e->getMessage(),
+            ], 400);
+        }
     }
     /**
      * Xử lý thanh toán MOMO
@@ -528,8 +535,8 @@ class OrderController extends Controller
     }
 
     /**
-    * Xử lý webhook thông báo từ MOMO
-    */
+     * Xử lý webhook thông báo từ MOMO
+     */
     public function momoWebhook(Request $request)
     {
         $data = $request->all();
@@ -537,18 +544,18 @@ class OrderController extends Controller
 
         // Tạo rawHash với thứ tự chính xác
         $rawHash = "accessKey=" . $data['accessKey'] .
-                "&amount=" . $data['amount'] .
-                "&extraData=" . $data['extraData'] .
-                "&message=" . $data['message'] .
-                "&orderId=" . $data['orderId'] .
-                "&orderInfo=" . $data['orderInfo'] .
-                "&orderType=" . $data['orderType'] .
-                "&partnerCode=" . $data['partnerCode'] .
-                "&payType=" . $data['payType'] .
-                "&requestId=" . $data['requestId'] .
-                "&responseTime=" . $data['responseTime'] .
-                "&resultCode=" . $data['resultCode'] .
-                "&transId=" . $data['transId'];
+            "&amount=" . $data['amount'] .
+            "&extraData=" . $data['extraData'] .
+            "&message=" . $data['message'] .
+            "&orderId=" . $data['orderId'] .
+            "&orderInfo=" . $data['orderInfo'] .
+            "&orderType=" . $data['orderType'] .
+            "&partnerCode=" . $data['partnerCode'] .
+            "&payType=" . $data['payType'] .
+            "&requestId=" . $data['requestId'] .
+            "&responseTime=" . $data['responseTime'] .
+            "&resultCode=" . $data['resultCode'] .
+            "&transId=" . $data['transId'];
 
         $signature = hash_hmac('sha256', $rawHash, $secretKey);
 
@@ -574,7 +581,7 @@ class OrderController extends Controller
         }
 
         // Lấy chữ lý trong log để so sánh
-        if($signature == $signatureLog) {
+        if ($signature == $signatureLog) {
             Log::info('Xác minh chữ ký MOMO thành công');
         }
 
@@ -627,8 +634,8 @@ class OrderController extends Controller
     }
 
     /**
-    * Xử lý URL trả về từ MOMO
-    */
+     * Xử lý URL trả về từ MOMO
+     */
     public function momoReturn(Request $request)
     {
         $orderId = $request->query('orderId');
@@ -676,11 +683,31 @@ class OrderController extends Controller
         $user = auth()->user();
 
         $hasReceived = OrderItem::where('product_variant_id', $productId)
-        ->whereHas('order', function ($q) use ($user) {
-        $q->where('user_id', $user->id)->where('status', 'delivered');
-        })->exists();
+            ->whereHas('order', function ($q) use ($user) {
+                $q->where('user_id', $user->id)->where('status', 'delivered');
+            })->exists();
 
         return response()->json(['received' => $hasReceived]);
     }
+    public function confirmReceived($id)
+    {
+        $user = auth()->user();
 
+        $order = Order::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['message' => 'Không tìm thấy đơn hàng hoặc không có quyền'], 404);
+        }
+
+        if (!in_array($order->status, ['processing', 'shipped'])) {
+            return response()->json(['message' => 'Chỉ có thể xác nhận đơn hàng đã được giao'], 400);
+        }
+
+        $order->status = 'delivered';
+        $order->save();
+
+        return response()->json(['message' => 'Đã xác nhận đã nhận hàng thành công']);
+    }
 }

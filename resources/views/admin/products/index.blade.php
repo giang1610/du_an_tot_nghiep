@@ -77,26 +77,26 @@
                                 @endforeach
                             </td>
                             <td>
-                                @foreach ($p->variants as $variant)
-                                    @if($variant->stock->quantity > 0)
-                                        <span class="badge bg-success mb-1">{{ $variant->stock->quantity }}</span>
-                                        <br>
-                                    @else
-                                        <span class="badge bg-danger mb-1">Hết</span>
-                                    @endif
-                                @endforeach
+                            @foreach ($p->variants as $variant)
+                                <span
+                                id="stock-badge-{{ $variant->id }}"
+                                class="badge {{ $variant->stock->quantity > 0 ? 'bg-success' : 'bg-danger' }} mb-1"
+                                >
+                                {{ $variant->stock->quantity > 0 ? $variant->stock->quantity : 'Hết' }}
+                                </span>
+                                <br>
+                            @endforeach
                             </td>
                             <td>
-                                @foreach ($p->variants as $variant)
-                                    @if($variant->color)
-                                        <span class="badge bg-light text-dark mb-1" >
-                                            {{ $variant->color->name }}
-                                        </span>
-                                        <br>
-                                    @else
-                                        <span class="badge bg-light text-dark mb-1">N/A</span>
-                                    @endif
-                                @endforeach
+                            @foreach ($p->variants as $variant)
+                                <span
+                                id="stock-badge-{{ $variant->id }}"
+                                class="badge {{ $variant->stock->quantity > 0 ? 'bg-success' : 'bg-danger' }} mb-1"
+                                >
+                                {{ $variant->stock->quantity > 0 ? $variant->stock->quantity : 'Hết' }}
+                                </span>
+                                <br>
+                            @endforeach
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
@@ -204,3 +204,4 @@ function getContrastColor($hexColor) {
     return ($luminance > 0.5) ? '#000000' : '#ffffff';
 }
 @endphp
+
