@@ -49,6 +49,15 @@ const PAYMENT_STATUS_VARIANTS = {
   pending: 'warning',
   failed: 'danger',
 };
+const PAYMENT_METHOD_LABELS = {
+  cod: 'Thanh toán khi nhận hàng',
+  momo: 'Ví Momo',
+  // vnpay: 'VNPay',
+  // zalopay: 'ZaloPay',
+  // bank: 'Chuyển khoản ngân hàng',
+  // other: 'Khác'
+};
+
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -155,13 +164,23 @@ export default function MyOrdersPage() {
 
             <Card.Footer className="d-flex justify-content-between align-items-center">
               <div>
-                <strong>Thanh toán:</strong>{' '}
-                <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
-                  {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
-                </Badge>{' '}
-                <span className="ms-2 text-danger fw-bold">
-                  {formatCurrency(order.total ?? order.total_amount ?? 0)}
-                </span>
+                {order.status !== 'cancelled' && (
+                  <>
+                    <strong>Thanh toán:</strong>{' '}
+                    <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
+                      {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                    </Badge>{' '}
+                    {order.payment_method && (
+                      <span className="ms-2">
+                        ({PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method})
+                      </span>
+                    )}
+                    <span className="ms-2 text-danger fw-bold">
+                      {formatCurrency(order.total ?? order.total_amount ?? 0)}
+                    </span>
+
+                  </>
+                )}
               </div>
               <div>
                 <Link to={`/orders/${order.id}`}>
@@ -183,6 +202,7 @@ export default function MyOrdersPage() {
                 )}
               </div>
             </Card.Footer>
+
           </Card>
         ))
       )}

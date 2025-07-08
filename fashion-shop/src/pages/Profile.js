@@ -6,7 +6,13 @@ import axios from '../api/axios';
 export default function ProfilePage() {
   const { user, token, login } = useAuth();
 
-  const [form, setForm] = useState({ name: '', email: '', avatar: null });
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    avatar: null,
+  });
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +25,13 @@ export default function ProfilePage() {
   // Load thông tin user ban đầu
   useEffect(() => {
     if (user) {
-      setForm({ name: user.name, email: user.email, avatar: null });
+      setForm({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        avatar: null,
+      });
       const existingAvatar = user.img_thumbnail
         ? `${process.env.REACT_APP_IMAGE_BASE_URL}/storage/${user.img_thumbnail}`
         : defaultAvatar;
@@ -42,7 +54,7 @@ export default function ProfilePage() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setForm((prev) => ({ ...prev, avatar: reader.result })); // Base64
+      setForm((prev) => ({ ...prev, avatar: reader.result }));
       setPreview(reader.result);
     };
     reader.readAsDataURL(file);
@@ -58,9 +70,10 @@ export default function ProfilePage() {
       const payload = {
         name: form.name,
         email: form.email,
+        phone: form.phone,
+        address: form.address,
       };
 
-      // Chỉ gửi avatar nếu người dùng đã chọn ảnh mới
       if (form.avatar) {
         payload.avatar = form.avatar;
       }
@@ -72,11 +85,9 @@ export default function ProfilePage() {
       });
 
       setSuccess('✅ Cập nhật thành công');
-      login(token, res.data.user); 
+      login(token, res.data.user);
     } catch (err) {
-      setError(
-        err.response?.data?.message || '❌ Lỗi kết nối máy chủ'
-      );
+      setError(err.response?.data?.message || '❌ Lỗi kết nối máy chủ');
     } finally {
       setLoading(false);
     }
@@ -144,6 +155,26 @@ export default function ProfilePage() {
             onChange={handleChange}
             required
             placeholder="Nhập email"
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Số điện thoại</Form.Label>
+          <Form.Control
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            placeholder="Nhập số điện thoại"
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Địa chỉ</Form.Label>
+          <Form.Control
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="Nhập địa chỉ giao hàng"
           />
         </Form.Group>
 

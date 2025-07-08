@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Form, Button, Alert, Row, Col, Card, Image, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
@@ -38,7 +38,7 @@ const ProductSummary = ({ items }) => {
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { cart, clearCart, removeSelectedItems } = useCart(); // ✅ thêm removeSelectedItems
+  const { cart, removeSelectedItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -58,6 +58,7 @@ export default function Checkout() {
     name: '',
     phone: '',
     address: '',
+    email: '',
     notes: '',
     payment_method: 'cod',
   });
@@ -109,6 +110,7 @@ export default function Checkout() {
       setError('Bạn cần đăng nhập để đặt hàng.');
       return;
     }
+
     if (selectedItems.length === 0) {
       setError('Không có sản phẩm nào để đặt hàng.');
       return;
@@ -126,7 +128,7 @@ export default function Checkout() {
       shipping_address: form.address,
       billing_address: form.address,
       customer_phone: form.phone,
-      customer_email: user?.email,
+      customer_email: form.email, // ✅ lấy từ form
       notes: form.notes,
       name: form.name,
       payment_method: form.payment_method,
@@ -161,7 +163,7 @@ export default function Checkout() {
 
         setSuccess(data.message || 'Đặt hàng thành công!');
         localStorage.removeItem('buy_now');
-        await removeSelectedItems(); // ✅ với COD: chỉ xóa sản phẩm đã chọn
+        await removeSelectedItems();
         setTimeout(() => navigate('/orders'), 3000);
       }
     } catch (error) {
@@ -171,6 +173,32 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+
+  // ✅ Lấy thông tin người dùng khi component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token') || user?.token;
+    if (!token || !user) return;
+
+    const fetchUserInfo = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/user`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const userData = res.data;
+        setForm(prev => ({
+          ...prev,
+          name: userData.name || '',
+          phone: userData.phone || '',
+          address: userData.address || '',
+          email: userData.email || '',
+        }));
+      } catch (err) {
+        console.error('❌ Không lấy được thông tin user:', err);
+      }
+    };
+
+    fetchUserInfo();
+  }, [user]);
 
   return (
     <Container className="py-5">
@@ -199,6 +227,18 @@ export default function Checkout() {
                 <Form.Control.Feedback type="invalid">{formErrors[field]}</Form.Control.Feedback>
               </Form.Group>
             ))}
+
+            {/* ✅ Email hiển thị, không sửa */}
+            <Form.Group className="mb-3">
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={e => setField('email', e.target.value)}
+                disabled
+              />
+            </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label>Ghi chú</Form.Label>
