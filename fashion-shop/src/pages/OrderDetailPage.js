@@ -8,7 +8,6 @@ import axios from 'axios';
 import '../css/OrderDetail.css';
 import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
 
-
 const STATUS_LABELS = {
     pending: 'Chờ xác nhận',
     processing: 'Đang xử lý',
@@ -38,7 +37,11 @@ const statusBadgeVariant = {
     delivered: 'primary',
     shipping: 'info',
     shipped: 'success',
-    returning: 'warning', 
+    returning: 'warning',
+};
+const PAYMENT_METHOD_LABELS = {
+    cod: 'Thanh toán khi nhận hàng',
+    momo: 'Ví Momo',
 };
 
 const paymentStatusBadgeVariant = {
@@ -75,8 +78,7 @@ export default function OrderDetailPage() {
             const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setOrder(res.data.data);
-            setNewAddress(res.data.data.shipping_address);
+            setOrder(res.data.data); // Đảm bảo dữ liệu chứa status
         } catch (err) {
             setError('Không thể tải đơn hàng.');
         } finally {
@@ -88,29 +90,16 @@ export default function OrderDetailPage() {
         fetchOrder();
     }, [fetchOrder]);
 
-    //realTime Status
     useEffect(() => {
         const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
             if (Number(orderIdFromSocket) === Number(id)) {
-                console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
-                setOrder(prev => {
-                    if (!prev) return prev;
-                    return {
-                        ...prev,
-                        status: newStatus
-                    };
-                });
+                setOrder(prev => prev ? { ...prev, status: newStatus } : prev);
             }
         });
-
         return () => {
-            console.log('[Realtime] Hủy lắng nghe kênh order-status');
             channel.stopListening('.order.updated');
         };
     }, [id]);
-
-
-
 
     const handleUpdateAddress = async () => {
         if (!newAddress.trim()) return;
@@ -127,17 +116,6 @@ export default function OrderDetailPage() {
             alert('Cập nhật địa chỉ thất bại!');
         } finally {
             setUpdatingAddress(false);
-        }
-    };
-
-    const handleConfirmReceived = async () => {
-        try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/confirm-received`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchOrder();
-        } catch {
-            alert('Xác nhận nhận hàng thất bại!');
         }
     };
 
@@ -178,7 +156,6 @@ export default function OrderDetailPage() {
             );
             setShowReviewModal(false);
             alert('Đánh giá thành công!');
-            // Cập nhật lại đánh giá cho sản phẩm vừa đánh giá
             fetchProductReviews(order.items, order.id);
         } catch (err) {
             if (err.response && err.response.data && err.response.data.error) {
@@ -186,7 +163,6 @@ export default function OrderDetailPage() {
             } else {
                 alert('Gửi đánh giá thất bại!');
             }
-            console.error(err);
         } finally {
             setReviewLoading(false);
         }
@@ -211,15 +187,11 @@ export default function OrderDetailPage() {
         setProductReviews(reviewsObj);
     }, []);
 
-    // Gọi khi order thay đổi
     useEffect(() => {
         if (order && order.items) {
             fetchProductReviews(order.items, order.id);
         }
     }, [order, fetchProductReviews]);
-    useEffect(() => {
-        fetchOrder();
-    }, [fetchOrder]);
 
     const handleRequestReturn = async () => {
         setRequestingReturn(true);
@@ -237,6 +209,18 @@ export default function OrderDetailPage() {
             alert('Gửi yêu cầu thất bại!');
         } finally {
             setRequestingReturn(false);
+        }
+    };
+
+    const handleConfirmReceived = async () => {
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/confirm-received`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchOrder();
+            alert('Xác nhận thành công!');
+        } catch {
+            alert('Thất bại. Vui lòng thử lại.');
         }
     };
 
@@ -365,12 +349,19 @@ export default function OrderDetailPage() {
             <Card>
                 <Card.Body className="d-flex justify-content-between align-items-center">
                     <div>
-                        <p>
-                            <strong>Thanh toán:</strong>{' '}
-                            <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
-                                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
-                            </Badge>
-                        </p>
+                        {order.status !== 'cancelled' && (
+                            <p>
+                                <strong>Thanh toán:</strong>{' '}
+                                <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
+                                    {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                                </Badge>{' '}
+                                {order.payment_method && (
+                                    <span className="ms-2">
+                                        ({PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method})
+                                    </span>
+                                )}
+                            </p>
+                        )}
 
                         {order.status === 'shipped' && (
                             <Button variant="success" size="sm" onClick={handleConfirmReceived}>Xác nhận đã nhận hàng</Button>

@@ -219,47 +219,47 @@
             </div>
 
             @if($order->return_status === 'pending')
-                <div class="row justify-content-center my-4">
-                    <div class="col-12 col-md-10 col-lg-8">
-                        <div class="card border-warning shadow-sm">
-                            <div class="card-header bg-warning text-dark fw-bold">
-                                <i class="bi bi-arrow-repeat me-2"></i>Yêu cầu hoàn hàng từ khách
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold"><i class="bi bi-person-circle me-2"></i>Lý do khách hoàn:</label>
-                                    <div class="border rounded bg-light p-2">{{ $order->return_reason }}</div>
+    <div class="row justify-content-center my-4">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card border-warning shadow-sm">
+                <div class="card-header bg-warning text-dark fw-bold">
+                    <i class="bi bi-arrow-repeat me-2"></i>Yêu cầu hoàn hàng từ khách
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="bi bi-person-circle me-2"></i>Lý do khách hoàn:</label>
+                        <div class="border rounded bg-light p-2">{{ $order->return_reason }}</div>
+                    </div>
+                    <form method="POST" action="{{ route('orders.handleReturn', $order->id) }}">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="bi bi-pencil-square me-2"></i>Ghi chú admin:</label>
+                            <textarea name="note_admin" class="form-control" rows="2" placeholder="Nhập ghi chú...">{{ old('note_admin', $order->note_admin) }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="bi bi-check2-square me-2"></i>Phê duyệt hoàn hàng:</label>
+                            <div class="row">
+                                <div class="col-md-6 mb-2 mb-md-0">
+                                    <select name="action" class="form-select" required>
+                                        <option value="">-- Chọn hành động --</option>
+                                        <option value="accept">Đồng ý hoàn hàng</option>
+                                        <option value="reject">Từ chối hoàn hàng</option>
+                                    </select>
                                 </div>
-                                <form method="POST" action="{{ route('orders.handleReturn', $order->id) }}">
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold"><i class="bi bi-pencil-square me-2"></i>Ghi chú admin:</label>
-                                        <textarea name="note_admin" class="form-control" rows="2" placeholder="Nhập ghi chú...">{{ old('note_admin', $order->note_admin) }}</textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold"><i class="bi bi-check2-square me-2"></i>Phê duyệt hoàn hàng:</label>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-2 mb-md-0">
-                                                <select name="action" class="form-select" required>
-                                                    <option value="">-- Chọn hành động --</option>
-                                                    <option value="accept">Đồng ý hoàn hàng</option>
-                                                    <option value="reject">Từ chối hoàn hàng</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6 text-md-end">
-                                                <button class="btn btn-success px-4" type="submit">
-                                                    <i class="bi bi-send-check me-1"></i>Xác nhận
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
+                                <div class="col-md-6 text-md-end">
+                                    <button class="btn btn-success px-4" type="submit">
+                                        <i class="bi bi-send-check me-1"></i>Xác nhận
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
-            @endif
-            
+            </div>
+        </div>
+    </div>
+@endif
+
             <!-- Tổng kết đơn hàng -->
             <div class="row justify-content-end mt-4">
                 <div class="col-12 col-md-8 col-lg-6 col-xl-5">

@@ -3,6 +3,7 @@ import {
   Container, Card, Row, Col, Button, Badge, Spinner, Alert, Image
 } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
+import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
 import axios from 'axios';
 
 const formatDate = (iso) => {
@@ -19,7 +20,7 @@ const STATUS_LABELS = {
   shipping: 'Đang giao hàng',
   shipped: 'Đã giao hàng',
   delivered: 'Đã nhận hàng',
-    returning: 'Đang hoàn trả',
+  returning: 'Đang hoàn trả',
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   failed: 'Thất bại',
@@ -51,6 +52,15 @@ const PAYMENT_STATUS_VARIANTS = {
   pending: 'warning',
   failed: 'danger',
 };
+const PAYMENT_METHOD_LABELS = {
+  cod: 'Thanh toán khi nhận hàng',
+  momo: 'Ví Momo',
+  // vnpay: 'VNPay',
+  // zalopay: 'ZaloPay',
+  // bank: 'Chuyển khoản ngân hàng',
+  // other: 'Khác'
+};
+
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -59,29 +69,42 @@ export default function MyOrdersPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return navigate('/login');
+  const fetchOrders = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return navigate('/login');
 
-      try {
-        setLoading(true);
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setOrders(res.data.data?.data || []);
-      } catch (err) {
-        setError('Không thể tải đơn hàng. Vui lòng thử lại.');
-        if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
-        }
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOrders(res.data.data?.data || []); // Đảm bảo cấu trúc dữ liệu khớp với phản hồi API
+    } catch (err) {
+      setError('Không thể tải đơn hàng. Vui lòng thử lại.');
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/login');
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchOrders();
-  }, [navigate]);
+  fetchOrders();
+}, [navigate]);
+
+useEffect(() => {
+  const channel = listenToOrderStatusRealtime((orderId, newStatus) => {
+    setOrders(prev =>
+      prev.map(order =>
+        order.id === Number(orderId) ? { ...order, status: newStatus } : order
+      )
+    );
+  });
+  return () => {
+    channel.stopListening('.order.updated');
+  };
+}, []);
 
   const handleConfirmReceived = async (orderId) => {
     const token = localStorage.getItem('token');
@@ -118,12 +141,14 @@ export default function MyOrdersPage() {
             <Card.Header className="d-flex justify-content-between align-items-center">
               <div>
                 <strong>Mã đơn:</strong> #{order.order_number || order.id} &nbsp;|&nbsp;
-                <strong>Ngày đặt:</strong> {formatDate(order.created_at)}
+                <strong>Ngày đặt:</strong> {formatDate(order.created_at)} <br />
+                <strong>Khách hàng:</strong> {order.user?.name || 'Không rõ'}
               </div>
               <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
                 {STATUS_LABELS[order.status] || 'Không rõ'}
               </Badge>
             </Card.Header>
+
 
             <Card.Body>
               {order.items.map(item => (
@@ -155,13 +180,23 @@ export default function MyOrdersPage() {
 
             <Card.Footer className="d-flex justify-content-between align-items-center">
               <div>
-                <strong>Thanh toán:</strong>{' '}
-                <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
-                  {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
-                </Badge>{' '}
-                <span className="ms-2 text-danger fw-bold">
-                  {formatCurrency(order.total ?? order.total_amount ?? 0)}
-                </span>
+                {order.status !== 'cancelled' && (
+                  <>
+                    <strong>Thanh toán:</strong>{' '}
+                    <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
+                      {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                    </Badge>{' '}
+                    {order.payment_method && (
+                      <span className="ms-2">
+                        ({PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method})
+                      </span>
+                    )}
+                    <span className="ms-2 text-danger fw-bold">
+                      {formatCurrency(order.total ?? order.total_amount ?? 0)}
+                    </span>
+
+                  </>
+                )}
               </div>
               <div>
                 <Link to={`/orders/${order.id}`}>
@@ -183,6 +218,7 @@ export default function MyOrdersPage() {
                 )}
               </div>
             </Card.Footer>
+
           </Card>
         ))
       )}

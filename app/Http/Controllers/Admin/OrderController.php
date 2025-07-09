@@ -316,47 +316,45 @@ class OrderController extends Controller
 
         }
         if ($order->status !== $oldStatus) {
-        \App\Jobs\UpdateOrderStatus::dispatch($order->id);
-    }
+            \App\Jobs\UpdateOrderStatus::dispatch($order->id);
+        }
 
 
-    // // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
-    // if ($order->status !== $oldStatus && $order->status === 'shipping') {
-    //     Mail::to($order->user->email)->queue(new OrderGiao($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'cancelled') {
-    //     Mail::to($order->user->email)->queue(new OrderErrors($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'picking') {
-    //     Mail::to($order->user->email)->queue(new OrderPicking($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'processing') {
-    //     Mail::to($order->user->email)->queue(new OrderProcessing($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'shipped') {
-    //     Mail::to($order->user->email)->queue(new OrderShipped($order));
-    // }
+        // // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
+        // if ($order->status !== $oldStatus && $order->status === 'shipping') {
+        //     Mail::to($order->user->email)->queue(new OrderGiao($order));
+        // }
+        // if ($order->status !== $oldStatus && $order->status === 'cancelled') {
+        //     Mail::to($order->user->email)->queue(new OrderErrors($order));
+        // }
+        // if ($order->status !== $oldStatus && $order->status === 'picking') {
+        //     Mail::to($order->user->email)->queue(new OrderPicking($order));
+        // }
+        // if ($order->status !== $oldStatus && $order->status === 'processing') {
+        //     Mail::to($order->user->email)->queue(new OrderProcessing($order));
+        // }
+        // if ($order->status !== $oldStatus && $order->status === 'shipped') {
+        //     Mail::to($order->user->email)->queue(new OrderShipped($order));
+        // }
         return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
 
 
     public function handleReturn(\Illuminate\Http\Request $request, $id)
-{
-    $order = \App\Models\Order::findOrFail($id);
-    $order->note_admin = $request->input('note_admin');
-    if ($request->input('action') === 'accept') {
-        $order->status = 'returning';
-        $order->return_status = 'accepted';
-        $order->save();
-        // Gửi mail cho khách về việc đồng ý hoàn hàng
-        \Mail::to($order->customer_email)->send(new \App\Mail\ReturnAccepted($order));
-    } else {
-        $order->status = 'delivered';
-        $order->return_status = 'rejected';
-        $order->save();
-        // Gửi mail cho khách về việc từ chối hoàn hàng
-        \Mail::to($order->customer_email)->send(new \App\Mail\ReturnRejected($order));
+    {
+        $order = \App\Models\Order::findOrFail($id);
+        $order->note_admin = $request->input('note_admin');
+        if ($request->input('action') === 'accept') {
+            $order->status = 'returning';
+            $order->return_status = 'accepted';
+            $order->save();
+            \Mail::to($order->customer_email)->send(new \App\Mail\ReturnAccepted($order));
+        } else {
+            $order->status = 'delivered';
+            $order->return_status = 'rejected';
+            $order->save();
+            \Mail::to($order->customer_email)->send(new \App\Mail\ReturnRejected($order));
+        }
+        return back()->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
     }
-    return back()->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
-}
 }

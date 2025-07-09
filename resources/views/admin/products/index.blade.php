@@ -2,10 +2,10 @@
 
 @section('content')
 @if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 @endif
 
 <div class="container-fluid px-3 px-md-4 px-lg-5">
@@ -33,8 +33,7 @@
                         class="form-control border-primary"
                         placeholder="Tìm kiếm sản phẩm..."
                         value="{{ request('search') }}"
-                        aria-label="Search products"
-                    >
+                        aria-label="Search products">
                     <button type="submit" class="btn btn-primary px-3 px-md-4">
                         <i class="bi bi-search me-1 d-none d-md-inline"></i> Tìm
                     </button>
@@ -72,71 +71,71 @@
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
-                                    <span class="badge bg-light text-dark mb-1">{{ $variant->sku ?? 'N/A' }}</span>
-                                    <br>
+                                <span class="badge bg-light text-dark mb-1">{{ $variant->sku ?? 'N/A' }}</span>
+                                <br>
                                 @endforeach
                             </td>
                             <td>
-                            @foreach ($p->variants as $variant)
+                                @foreach ($p->variants as $variant)
                                 <span
-                                id="stock-badge-{{ $variant->id }}"
-                                class="badge {{ $variant->stock->quantity > 0 ? 'bg-success' : 'bg-danger' }} mb-1"
-                                >
-                                {{ $variant->stock->quantity > 0 ? $variant->stock->quantity : 'Hết' }}
+                                    id="stock-badge-{{ $variant->id }}"
+                                    class="badge {{ $variant->stock->quantity > 0 ? 'bg-success' : 'bg-danger' }} mb-1">
+                                    {{ $variant->stock->quantity > 0 ? $variant->stock->quantity : 'Hết' }}
                                 </span>
                                 <br>
-                            @endforeach
-                            </td>
-                            <td>
-                            @foreach ($p->variants as $variant)
-                                <span
-                                id="stock-badge-{{ $variant->id }}"
-                                class="badge {{ $variant->stock->quantity > 0 ? 'bg-success' : 'bg-danger' }} mb-1"
-                                >
-                                {{ $variant->stock->quantity > 0 ? $variant->stock->quantity : 'Hết' }}
-                                </span>
-                                <br>
-                            @endforeach
+                                @endforeach
                             </td>
                             <td>
                                 @foreach ($p->variants as $variant)
-                                    <span class="badge bg-light text-dark mb-1">{{ $variant->size->name ?? 'N/A' }}</span>
-                                    <br>
+                                @if($variant->color)
+                                <span class="badge bg-light text-dark mb-1">
+                                    {{ $variant->color->name }}
+                                </span>
+                                <br>
+                                @else
+                                <span class="badge bg-light text-dark mb-1">N/A</span>
+                                @endif
+                                @endforeach
+                            </td>
+                            <td>
+                                @foreach ($p->variants as $variant)
+                                <span class="badge bg-light text-dark mb-1">{{ $variant->size->name ?? 'N/A' }}</span>
+                                <br>
                                 @endforeach
                             </td>
                             <td>
                                 @if ($p->thumbnail)
-                                    <img src="{{ asset('storage/' . $p->thumbnail) }}"
-                                         alt="{{ $p->name }}"
-                                         class="img-thumbnail"
-                                         style="width: 60px; height: 60px; object-fit: cover;">
+                                <img src="{{ asset('storage/' . $p->thumbnail) }}"
+                                    alt="{{ $p->name }}"
+                                    class="img-thumbnail"
+                                    style="width: 60px; height: 60px; object-fit: cover;">
                                 @else
-                                    <span class="badge bg-light text-dark">N/A</span>
+                                <span class="badge bg-light text-dark">N/A</span>
                                 @endif
                             </td>
                             <td>
                                 @if ($p->status === 1)
-                                    <span class="badge bg-success">Hoạt động</span>
+                                <span class="badge bg-success">Hoạt động</span>
                                 @elseif ($p->status === 0)
-                                    <span class="badge bg-warning text-dark">Chưa xuất bản</span>
+                                <span class="badge bg-warning text-dark">Chưa xuất bản</span>
                                 @else
-                                    <span class="badge bg-secondary">Tạm dừng</span>
+                                <span class="badge bg-secondary">Tạm dừng</span>
                                 @endif
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
                                     <a href="{{ route('products.edit', $p->id) }}"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="Chỉnh sửa">
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="Chỉnh sửa">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form action="{{ route('products.destroy', $p->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="btn btn-sm btn-outline-danger"
-                                                title="Xóa"
-                                                onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')">
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Xóa"
+                                            onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>
@@ -162,24 +161,30 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
+
     .table td {
         vertical-align: middle;
         padding: 0.75rem;
     }
+
     .badge {
         font-weight: 500;
         font-size: 0.75rem;
         display: inline-block;
     }
+
     .img-thumbnail {
         border-radius: 4px;
     }
+
     @media (max-width: 768px) {
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .table th, .table td {
+
+        .table th,
+        .table td {
             min-width: 120px;
         }
     }
@@ -189,19 +194,19 @@
 
 @php
 function getContrastColor($hexColor) {
-    // Remove # if present
-    $hexColor = ltrim($hexColor, '#');
+// Remove # if present
+$hexColor = ltrim($hexColor, '#');
 
-    // Convert to RGB
-    $r = hexdec(substr($hexColor, 0, 2));
-    $g = hexdec(substr($hexColor, 2, 2));
-    $b = hexdec(substr($hexColor, 4, 2));
+// Convert to RGB
+$r = hexdec(substr($hexColor, 0, 2));
+$g = hexdec(substr($hexColor, 2, 2));
+$b = hexdec(substr($hexColor, 4, 2));
 
-    // Calculate luminance
-    $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+// Calculate luminance
+$luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
 
-    // Return black or white depending on luminance
-    return ($luminance > 0.5) ? '#000000' : '#ffffff';
+// Return black or white depending on luminance
+return ($luminance > 0.5) ? '#000000' : '#ffffff';
 }
 @endphp
 
