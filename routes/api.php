@@ -102,19 +102,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
         Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
-        Route::post('/{id}/request-return', [OrderController::class, 'requestReturn']);
-        Route::post('/orders/{order}/process-return', [OrderController::class, 'processReturn']);
-
     });
 
-});
+    // Payment Momo
+    Route::prefix('payment')->group(function () {
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']);
+        Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+        Route::get('/momo/return', [OrderController::class, 'momoReturn']);
+    });
 
-// Payment Momo
-Route::prefix('payment')->group(function () {
-    Route::post('/momo', [OrderController::class, 'processMomoPayment'])->middleware('auth:sanctum');
-    Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
-    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-    Route::post('/orders/pay-momo', [OrderController::class, 'payViaMomo'])->middleware('auth:sanctum');
-    Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-    Route::get('/momo/return', [OrderController::class, 'momoReturn']);
+    // Các route khác: logout, cart, review...
 });

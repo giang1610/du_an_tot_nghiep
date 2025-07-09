@@ -8,17 +8,20 @@ import axios from 'axios';
 import '../css/OrderDetail.css';
 import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
 
+
 const STATUS_LABELS = {
-    pending: 'Chờ xác nhận',
-    processing: 'Đang xử lý',
-    picking: 'Đang lấy hàng',
-    shipping: 'Đang giao hàng',
-    shipped: 'Đã giao hàng',
-    delivered: 'Đã nhận hàng',
-    returning: 'Đang hoàn trả',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy',
-    failed: 'Thất bại',
+  pending: 'Chờ xử lý',
+  processing: 'Đang xử lý',
+  picking: 'Đang lấy hàng',
+  shipping: 'Đang giao hàng',
+  shipped: 'Đã giao hàng',
+  delivered: 'Đã nhận hàng',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy',
+  failed: 'Thất bại',
+  return_requested: 'Đã yêu cầu hoàn đơn',
+  returning: 'Đang hoàn đơn',
+  returned: 'Đã hoàn đơn',
 };
 
 const PAYMENT_STATUS_LABELS = {
@@ -42,6 +45,14 @@ const statusBadgeVariant = {
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
     momo: 'Ví Momo',
+};
+const PAYMENT_METHOD_LABELS = {
+  cod: 'Thanh toán khi nhận hàng',
+  momo: 'Ví Momo',
+  // vnpay: 'VNPay',
+  // zalopay: 'ZaloPay',
+  // bank: 'Chuyển khoản ngân hàng',
+  // other: 'Khác'
 };
 
 const paymentStatusBadgeVariant = {
@@ -90,16 +101,47 @@ export default function OrderDetailPage() {
         fetchOrder();
     }, [fetchOrder]);
 
-    useEffect(() => {
-        const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
-            if (Number(orderIdFromSocket) === Number(id)) {
-                setOrder(prev => prev ? { ...prev, status: newStatus } : prev);
-            }
+  //realTime Status
+  useEffect(() => {
+    const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
+      if (Number(orderIdFromSocket) === Number(id)) {
+        console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
+        setOrder(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            status: newStatus
+          };
         });
-        return () => {
-            channel.stopListening('.order.updated');
-        };
-    }, [id]);
+      }
+    });
+
+    return () => {
+      console.log('[Realtime] Hủy lắng nghe kênh order-status');
+      channel.stopListening('.order.updated');
+    };
+  }, [id]);
+
+
+
+
+  const handleUpdateAddress = async () => {
+    if (!newAddress.trim()) return;
+    setUpdatingAddress(true);
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/update-address`, {
+        shipping_address: newAddress
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEditingAddress(false);
+      fetchOrder();
+    } catch {
+      alert('Cập nhật địa chỉ thất bại!');
+    } finally {
+      setUpdatingAddress(false);
+    }
+  };
 
     const handleUpdateAddress = async () => {
         if (!newAddress.trim()) return;
@@ -187,11 +229,41 @@ export default function OrderDetailPage() {
         setProductReviews(reviewsObj);
     }, []);
 
-    useEffect(() => {
-        if (order && order.items) {
-            fetchProductReviews(order.items, order.id);
-        }
-    }, [order, fetchProductReviews]);
+      <Card className="mb-3">
+        <Card.Header className="fw-bold">Thông tin giao hàng</Card.Header>
+        <Card.Body>
+          <p><strong>Name:</strong> {order.user?.name || 'Không rõ'}</p>
+          <p><strong>Email:</strong> {order.customer_email}</p>
+          <p><strong>SĐT:</strong> {order.customer_phone}</p>
+          <div>
+            <strong>Địa chỉ:</strong>{' '}
+            {editingAddress ? (
+              <>
+                <Form.Control
+                  size="sm"
+                  value={newAddress}
+                  onChange={(e) => setNewAddress(e.target.value)}
+                  disabled={updatingAddress}
+                />
+                <div className="mt-2">
+                  <Button size="sm" variant="success" onClick={handleUpdateAddress} disabled={updatingAddress}>Lưu</Button>{' '}
+                  <Button size="sm" variant="secondary" onClick={() => {
+                    setNewAddress(order.shipping_address);
+                    setEditingAddress(false);
+                  }}>Hủy</Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {order.shipping_address}{' '}
+                {order.status === 'pending' && (
+                  <Button size="sm" variant="link" onClick={() => setEditingAddress(true)}>[Sửa]</Button>
+                )}
+              </>
+            )}
+          </div>
+        </Card.Body>
+      </Card>
 
     const handleRequestReturn = async () => {
         setRequestingReturn(true);
@@ -212,17 +284,24 @@ export default function OrderDetailPage() {
         }
     };
 
-    const handleConfirmReceived = async () => {
-        try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/confirm-received`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchOrder();
-            alert('Xác nhận thành công!');
-        } catch {
-            alert('Thất bại. Vui lòng thử lại.');
-        }
-    };
+      <Card>
+        <Card.Body className="d-flex justify-content-between align-items-center">
+          <div>
+            {order.status !== 'cancelled' && (
+              <p>
+                <strong>Thanh toán:</strong>{' '}
+                <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
+                  {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                </Badge>{' '}
+                {order.payment_method && (
+                  <span className="ms-2">
+                    ({PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method})
+                  </span>
+                )}
+              </p>
+            )}
+
+
 
     if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
     if (error) return <Alert variant="danger" className="py-5 text-center">{error}</Alert>;

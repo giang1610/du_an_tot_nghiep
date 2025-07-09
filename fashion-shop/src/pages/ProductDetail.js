@@ -301,23 +301,15 @@ export default function ProductDetail() {
             />
           )}
 
-           <div className="mt-5">
-                        <h4>Đánh giá sản phẩm</h4> <br/>
-                        <div>
-                            <h5>Đánh giá đã có ({reviews.length})</h5>
-                            {reviews.length === 0 && <div>Chưa có đánh giá nào cho sản phẩm này.</div>}
-                            {reviews.map(r => (
-                                <div key={r.id} className="mb-3 border-bottom pb-2">
-                                    <strong>{r.user?.name || 'Khách hàng'}</strong>
-                                    <span className="ms-2 text-warning">
-                                        {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
-                                    </span>
-                                    <div>{r.content}</div>
-                                    <div className="small text-muted">{new Date(r.created_at).toLocaleDateString()}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+          <div className="mt-5">
+            {reviews.map(r => (
+              <div key={r.id} className="mb-3 border-bottom pb-2">
+                <strong>{r.user?.name || 'Khách hàng'}</strong>
+                <p>{r.comment}</p>
+              </div>
+            ))}
+            <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />
+          </div>
         </Col>
       </Row>
 
