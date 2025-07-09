@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Models;
+
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Order; 
+use App\Models\Order;
 
 /**
  * 
@@ -58,13 +59,13 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array<int, string>
      */
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    // cần thêm dòng dưới nếu chưa có:
-    'img_thumbnail',
-    'role',
-];
+        'name',
+        'email',
+        'password',
+        // cần thêm dòng dưới nếu chưa có:
+        'img_thumbnail',
+        'role',
+    ];
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -94,5 +95,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Order::class, 'user_id');
     }
-
+    // Trong app/Models/User.php
+    public function getIsAdminAttribute()
+    {
+        return $this->role == 1; // Giả sử role 1 là admin
+    }
 }

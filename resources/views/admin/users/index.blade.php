@@ -121,6 +121,7 @@
                                             <span class="avatar-title rounded-circle bg-primary text-white">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </span>
+                                            <!-- <small class="text-muted">@if($user->role == 1) Quản trị @else Người dùng @endif</small> -->
                                         </div>
                                         <div>
                                             <h6 class="mb-0">{{ $user->name }}</h6>
