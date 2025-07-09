@@ -106,10 +106,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payment Momo
     Route::prefix('payment')->group(function () {
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']);
         Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
         Route::get('/momo/return', [OrderController::class, 'momoReturn']);
     });
 
     // Các route khác: logout, cart, review...
 });
-
