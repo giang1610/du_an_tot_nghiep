@@ -154,7 +154,7 @@ export default function ProductReview({ productId, selectedVariantId }) {
 
   return (
     <div className="mt-4">
-      
+
     </div>
   );
 }

@@ -48,8 +48,8 @@ class LoginRequest extends FormRequest
     }
 
     public function authenticate(): void
-{
-    $this->ensureIsNotRateLimited();
+    {
+        $this->ensureIsNotRateLimited();
 
         $email = $this->input('email');
         $password = $this->input('password');
@@ -100,20 +100,6 @@ class LoginRequest extends FormRequest
 
         RateLimiter::clear($this->throttleKey());
     }
-
-    // ✅ Chỉ cho phép user có ID = 1
-    if (Auth::id() !== 1) {
-        Auth::logout();
-        RateLimiter::hit($this->throttleKey());
-
-        throw ValidationException::withMessages([
-            'email' => 'Bạn không có quyền đăng nhập vào hệ thống.',
-        ]);
-    }
-
-    RateLimiter::clear($this->throttleKey());
-}
-
 
     /**
      * Ensure the login request is not rate limited.

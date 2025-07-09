@@ -20,7 +20,9 @@ const STATUS_LABELS = {
   shipping: 'Đang giao hàng',
   shipped: 'Đã giao hàng',
   delivered: 'Đã nhận hàng',
-  returning: 'Đang hoàn trả',
+  return_requested: 'Đã yêu cầu hoàn đơn',
+  returning: 'Đang hoàn đơn',
+  returned: 'Đã hoàn đơn',
   completed: 'Hoàn thành',
   cancelled: 'Đã hủy',
   failed: 'Thất bại',
@@ -37,6 +39,7 @@ const STATUS_VARIANTS = {
   cancelled: 'secondary',
   failed: 'danger',
   returning: 'warning',
+  returned: 'success',
 };
 
 const PAYMENT_STATUS_LABELS = {
@@ -55,12 +58,7 @@ const PAYMENT_STATUS_VARIANTS = {
 const PAYMENT_METHOD_LABELS = {
   cod: 'Thanh toán khi nhận hàng',
   momo: 'Ví Momo',
-  // vnpay: 'VNPay',
-  // zalopay: 'ZaloPay',
-  // bank: 'Chuyển khoản ngân hàng',
-  // other: 'Khác'
 };
-
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -69,42 +67,42 @@ export default function MyOrdersPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-  const fetchOrders = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return navigate('/login');
+    const fetchOrders = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return navigate('/login');
 
-    try {
-      setLoading(true);
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setOrders(res.data.data?.data || []); // Đảm bảo cấu trúc dữ liệu khớp với phản hồi API
-    } catch (err) {
-      setError('Không thể tải đơn hàng. Vui lòng thử lại.');
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        navigate('/login');
+      try {
+        setLoading(true);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setOrders(res.data.data?.data || []);
+      } catch (err) {
+        setError('Không thể tải đơn hàng. Vui lòng thử lại.');
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchOrders();
-}, [navigate]);
+    fetchOrders();
+  }, [navigate]);
 
-useEffect(() => {
-  const channel = listenToOrderStatusRealtime((orderId, newStatus) => {
-    setOrders(prev =>
-      prev.map(order =>
-        order.id === Number(orderId) ? { ...order, status: newStatus } : order
-      )
-    );
-  });
-  return () => {
-    channel.stopListening('.order.updated');
-  };
-}, []);
+  useEffect(() => {
+    const channel = listenToOrderStatusRealtime((orderId, newStatus) => {
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === Number(orderId) ? { ...order, status: newStatus } : order
+        )
+      );
+    });
+    return () => {
+      channel.stopListening('.order.updated');
+    };
+  }, []);
 
   const handleConfirmReceived = async (orderId) => {
     const token = localStorage.getItem('token');
@@ -149,33 +147,57 @@ useEffect(() => {
               </Badge>
             </Card.Header>
 
-
             <Card.Body>
-              {order.items.map(item => (
-                <Row key={item.id} className="align-items-center mb-3">
-                  <Col xs={2}>
-                    <Image
-                      src={
-                        item.product_variant?.img ||
-                        item.product_variant?.product?.img ||
-                        'https://via.placeholder.com/60x60?text=No+Image'
-                      }
-                      rounded
-                      style={{ width: 60, height: 60, objectFit: 'cover' }}
-                    />
-                  </Col>
-                  <Col xs={7}>
-                    <div>{item.product_variant?.product?.name}</div>
-                    <small className="text-muted">
-                      Phân loại: {item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}
-                    </small>
-                  </Col>
-                  <Col xs={3} className="text-end">
-                    <div>{formatCurrency(item.sale_price || item.price)}</div>
-                    <small>Số lượng: {item.quantity}</small>
-                  </Col>
-                </Row>
-              ))}
+              {order.items.map(item => {
+                const reviews = item.reviews || [];
+                const count = reviews.length;
+                const deliveredAt = new Date(order.delivered_at);
+                const now = new Date();
+                const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                let canReview = false;
+                if (count === 0) canReview = true;
+                else if (count === 1 && diffDays >= 7) canReview = true;
+
+                return (
+                  <Row key={item.id} className="align-items-center mb-3">
+                    <Col xs={2}>
+                      <Image
+                        src={item.product_variant?.img || item.product_variant?.product?.img || 'https://via.placeholder.com/60'}
+                        rounded
+                        style={{ width: 60, height: 60, objectFit: 'cover' }}
+                      />
+                    </Col>
+                    <Col xs={7}>
+                      <div>{item.product_variant?.product?.name}</div>
+                      <small className="text-muted">
+                        Phân loại: {item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}
+                      </small>
+                      <div>
+                        {reviews.map(r => (
+                          <div key={r.id} className="border p-1 my-1 rounded">
+                            {'★'.repeat(r.rating)} - {r.content}
+                          </div>
+                        ))}
+                        {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
+                        {canReview && count < 2 && (
+                          <Link to={`/orders/${order.id}`}>
+                            <Button size="sm" variant="outline-primary" className="mt-1">
+                              Đánh giá
+                            </Button>
+                          </Link>
+                        )}
+                        {!canReview && count === 1 && (
+                          <span className="text-muted">Chờ đủ 7 ngày để đánh giá tiếp</span>
+                        )}
+                      </div>
+                    </Col>
+                    <Col xs={3} className="text-end">
+                      <div>{formatCurrency(item.sale_price || item.price)}</div>
+                      <small>Số lượng: {item.quantity}</small>
+                    </Col>
+                  </Row>
+                );
+              })}
             </Card.Body>
 
             <Card.Footer className="d-flex justify-content-between align-items-center">
@@ -194,7 +216,6 @@ useEffect(() => {
                     <span className="ms-2 text-danger fw-bold">
                       {formatCurrency(order.total ?? order.total_amount ?? 0)}
                     </span>
-
                   </>
                 )}
               </div>
@@ -210,15 +231,8 @@ useEffect(() => {
                     Xác nhận nhận hàng
                   </Button>
                 )}
-
-                {order.status === 'delivered' && (
-                  <Link to={`/review/${order.id}`}>
-                    <Button variant="warning" size="sm">Đánh giá</Button>
-                  </Link>
-                )}
               </div>
             </Card.Footer>
-
           </Card>
         ))
       )}

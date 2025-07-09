@@ -109,6 +109,8 @@ class OrderController extends Controller
 
 
 
+
+
             return response()->json([
                 'message' => 'Tạo đơn hàng thành công',
                 'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
@@ -412,7 +414,6 @@ class OrderController extends Controller
 
                 case 'cod':
                     // Gửi email xác nhận cho COD
-
 
                     Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
                     return response()->json([

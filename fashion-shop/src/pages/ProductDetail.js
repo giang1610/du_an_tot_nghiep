@@ -9,8 +9,6 @@ import CheckoutForm from '../components/CheckoutForm';
 import ProductImageGallery from '../components/ProductImageGallery';
 import { listenToStockUpdates } from '../realtime/stockRealtime';
 
-
-
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -29,6 +27,7 @@ export default function ProductDetail() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cod');
 
+  // Lấy data sản phẩm + reviews
   useEffect(() => {
     setLoading(true);
     axios.get(`${process.env.REACT_APP_API_URL}/products/slug/${slug}`)
@@ -45,9 +44,9 @@ export default function ProductDetail() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  // Lắng nghe realtime stock update
   useEffect(() => {
     if (!product) return;
-
     const unsubscribe = listenToStockUpdates(({ variantId, stock }) => {
       setProduct((prev) => {
         if (!prev) return prev;
@@ -63,25 +62,19 @@ export default function ProductDetail() {
         return { ...prev, variants: updatedVariants };
       });
     });
-
     return unsubscribe;
   }, [product]);
 
-
-
+  // Danh sách ảnh
   const imageList = useMemo(() => {
     if (!product) return [];
-
     const mainImage = product.img ? [{ url: product.img }] : [];
-
     const variantImages = product.variants
       ?.map(v => v.img)
       .filter(Boolean)
       .map(url => ({ url })) || [];
-
     const uniqueUrls = Array.from(new Set([...mainImage, ...variantImages].map(i => i.url)))
       .map(url => ({ url }));
-
     return uniqueUrls.length > 0
       ? uniqueUrls
       : [{ url: 'https://via.placeholder.com/500x500?text=No+Image' }];
@@ -192,7 +185,6 @@ export default function ProductDetail() {
     navigate('/checkout?buy_now=1');
   };
 
-
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (!product) return <Alert variant="danger">{alertMsg || 'Sản phẩm không tồn tại'}</Alert>;
 
@@ -285,8 +277,6 @@ export default function ProductDetail() {
             >
               ⚡ Mua ngay
             </Button>
-
-
           </div>
 
           {showCheckoutForm && (
@@ -302,13 +292,23 @@ export default function ProductDetail() {
           )}
 
           <div className="mt-5">
+            <h5>Đánh giá sản phẩm:</h5>
             {reviews.map(r => (
               <div key={r.id} className="mb-3 border-bottom pb-2">
+                <div>
+                  {[...Array(r.rating)].map((_, i) => (
+                    <span key={i} style={{ color: '#ffc107' }}>★</span>
+                  ))}
+                </div>
                 <strong>{r.user?.name || 'Khách hàng'}</strong>
-                <p>{r.comment}</p>
+                <p>{r.content}</p>
               </div>
             ))}
-            <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />
+            <ProductReview
+              productId={product.id}
+              selectedVariantId={selectedVariantId}
+              onReviewSubmitted={(newReview) => setReviews(prev => [newReview, ...prev])}
+            />
           </div>
         </Col>
       </Row>
@@ -336,7 +336,6 @@ export default function ProductDetail() {
           })}
         </Row>
       </div>
-
     </Container>
   );
 }
