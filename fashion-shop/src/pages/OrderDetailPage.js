@@ -41,6 +41,14 @@ const statusBadgeVariant = {
   shipping: 'info',
   shipped: 'success',
 };
+const PAYMENT_METHOD_LABELS = {
+  cod: 'Thanh toán khi nhận hàng',
+  momo: 'Ví Momo',
+  // vnpay: 'VNPay',
+  // zalopay: 'ZaloPay',
+  // bank: 'Chuyển khoản ngân hàng',
+  // other: 'Khác'
+};
 
 const paymentStatusBadgeVariant = {
   paid: 'success',
@@ -82,18 +90,18 @@ export default function OrderDetailPage() {
 
   //realTime Status
   useEffect(() => {
-  const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
-    if (Number(orderIdFromSocket) === Number(id)) {
-      console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
-      setOrder(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          status: newStatus
-        };
-      });
-    }
-  });
+    const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
+      if (Number(orderIdFromSocket) === Number(id)) {
+        console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
+        setOrder(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            status: newStatus
+          };
+        });
+      }
+    });
 
     return () => {
       console.log('[Realtime] Hủy lắng nghe kênh order-status');
@@ -254,12 +262,21 @@ export default function OrderDetailPage() {
       <Card>
         <Card.Body className="d-flex justify-content-between align-items-center">
           <div>
-            <p>
-              <strong>Thanh toán:</strong>{' '}
-              <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
-                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
-              </Badge>
-            </p>
+            {order.status !== 'cancelled' && (
+              <p>
+                <strong>Thanh toán:</strong>{' '}
+                <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
+                  {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                </Badge>{' '}
+                {order.payment_method && (
+                  <span className="ms-2">
+                    ({PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method})
+                  </span>
+                )}
+              </p>
+            )}
+
+
 
             {order.status === 'shipped' && (
               <Button variant="success" size="sm" onClick={handleConfirmReceived}>Xác nhận đã nhận hàng</Button>
