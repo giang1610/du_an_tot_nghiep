@@ -85,6 +85,8 @@
                 'returning' => 'Đang trả hàng',
                 'returned' => 'Đã trả hàng',
                 'completed' => 'Đơn hàng hoàn thành',
+                'failed_1' => 'Giao hàng thất bại lần 1',
+                'failed_2' => 'Giao hàng thất bại lần 2',
                 'failed' => 'Giao hàng thất bại',
             ];
 
@@ -131,10 +133,22 @@
                             </option>
 
                             {{-- Trạng thái kế tiếp nếu có --}}
-                            @if ($nextStatus)
+                            {{-- @if ($nextStatus)
                                 <option value="{{ $nextStatus }}">
                                     {{ $statusOptions[$nextStatus] }}
                                 </option>
+                            @endif --}}
+                            @if ($currentStatus === 'shipping')
+                                <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                <option value="failed_1">Giao hàng thất bại lần 1</option>
+                            @elseif ($currentStatus === 'failed_1')
+                                <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                <option value="failed_2">Giao hàng thất bại lần 2</option>
+                            @elseif ($currentStatus === 'failed_2')
+                                <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                <option value="failed">{{ $statusOptions['failed'] }}</option>
+                            @elseif ($nextStatus)
+                                <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
                             @endif
                         </select>
                     </div>

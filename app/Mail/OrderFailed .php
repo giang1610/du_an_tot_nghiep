@@ -6,7 +6,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
 
-class OrderPicking extends Mailable
+class OrderFailed extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -19,7 +19,7 @@ class OrderPicking extends Mailable
 
     public function build()
     {
-        return $this->subject('Đơn hàng của bạn đang được lấy hàng')
-                    ->markdown('emails.orders.picking');
+        return $this->subject('Đơn hàng của bạn đã giao thất bại sau 3 lần')
+                    ->markdown('emails.orders.failed');
     }
 }
