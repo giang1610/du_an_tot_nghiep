@@ -42,7 +42,6 @@ class UpdateOrderStatus implements ShouldQueue
 
                 break;
             case 'errors':
-                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
