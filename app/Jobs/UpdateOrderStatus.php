@@ -40,7 +40,7 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderGiao($order));
 
                 break;
-            case 'errors':
+            case 'cancelled':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
