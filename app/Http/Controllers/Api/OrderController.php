@@ -4,10 +4,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Cart;
-use App\Models\CartItem;
 use App\Models\ProductVariant;
-use App\Models\Stock;
 use App\Mail\OrderPlaced;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -846,4 +843,6 @@ class OrderController extends Controller
             return response()->json(['message' => 'Lỗi khi xử lý hoàn trả'], 500);
         }
     }
+
+    
 }

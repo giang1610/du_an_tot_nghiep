@@ -13,7 +13,7 @@ use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
 use Illuminate\Support\Facades\Mail; 
 use App\Jobs\UpdateOrderStatus;
-
+use App\Mail\OrderCancelledMail;
 
 class OrderController extends Controller
 {
@@ -350,4 +350,22 @@ class OrderController extends Controller
     // }
         return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
+    /**
+     * Huỷ đơn hàng và gửi email thông báo
+     *
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function cancel($id)
+{
+    $order = Order::findOrFail($id);
+    $order->status = 'cancelled';
+    $order->save();
+
+    // Gửi email
+    Mail::to($order->customer_email)->send(new OrderCancelledMail($order));
+
+    return redirect()->back()->with('success', 'Đã huỷ đơn hàng và gửi email thông báo.');
+}
+
 }
