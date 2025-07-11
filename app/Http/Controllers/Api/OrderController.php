@@ -755,29 +755,128 @@ if (is_null($orderId) || is_null($resultCode)) {
         return response()->json(['received' => $hasReceived]);
     }
 
-    public function confirmReceived($id)  // Xác nhận đã nhận hàng
+    /**
+     * Xử lý hoàn trả đơn hàng
+     */
+    public function returnOrder(Request $request, Order $order)
     {
-        $user = auth()->user();
+        $validator = Validator::make($request->all(), [
+            'reason' => 'required|string|max:255',
+            'return_items' => 'required|array|min:1',
+            'return_items.*.order_item_id' => 'required|exists:order_items,id',
+            'return_items.*.quantity' => 'required|integer|min:1',
+            'refund_amount' => 'nullable|numeric|min:0',
+        ]);
 
-        $order = Order::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if (!$order) {
-            return response()->json(['message' => 'Không tìm thấy đơn hàng hoặc không có quyền'], 404);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        if (!in_array($order->status, ['processing', 'shipped'])) {
-            return response()->json(['message' => 'Chỉ có thể xác nhận đơn hàng đã được giao'], 400);
+        // Kiểm tra quyền (chỉ admin hoặc user sở hữu đơn hàng)
+        if ($order->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+            return response()->json(['message' => 'Không có quyền truy cập'], 403);
+        }
+
+        // Chỉ cho phép hoàn trả đơn hàng đã giao
+        if ($order->status !== 'completed') {
+            return response()->json(['message' => 'Chỉ có thể hoàn trả đơn hàng đã giao'], 400);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Cập nhật số lượng hoàn trả và lý do
+            foreach ($request->return_items as $returnItem) {
+                $orderItem = OrderItem::find($returnItem['order_item_id']);
+
+                // Kiểm tra số lượng hợp lệ
+                if ($returnItem['quantity'] > $orderItem->quantity) {
+                    throw new \Exception("Số lượng hoàn trả vượt quá số lượng đã mua");
+                }
+
+                // Hoàn lại tồn kho
+                $orderItem->productVariant->stock()->increment('quantity', $returnItem['quantity']);
+
+                // Đánh dấu sản phẩm đã hoàn trả
+                $orderItem->update([
+                    'returned_quantity' => $returnItem['quantity'],
+                    'return_reason' => $request->reason,
+                ]);
+            }
+
+            // Cập nhật trạng thái đơn hàng
+            $order->update([
+                'status' => 'returned',
+                'refund_amount' => $request->refund_amount ?? $order->total,
+            ]);
+
+            // Nếu cần hoàn tiền (MOMO/VNPay)
+            if ($order->payment_method !== 'cod' && $order->payment_status === 'paid') {
+                $refundResponse = $this->refundPayment($order, $request->refund_amount);
+                if (!$refundResponse['success']) {
+                    throw new \Exception('Hoàn tiền thất bại: ' . $refundResponse['message']);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json(['message' => 'Yêu cầu hoàn trả thành công']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi hoàn trả đơn hàng: ' . $e->getMessage());
+            return response()->json(['message' => 'Lỗi khi xử lý hoàn trả'], 500);
+        }
+
+    }
+
+   public function confirmReceived($orderId)
+    {
+        $order = Order::where('id', $orderId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        if ($order->status !== 'shipped') {
+            return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
         $order->status = 'delivered';
-        $order->delivered_at = now(); 
+        $order->delivered_at = now();
+
+        // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
+        if ($order->payment_method === 'cod') {
+            $order->payment_status = 'paid';
+        }
+
         $order->save();
 
-        return response()->json(['message' => 'Đã xác nhận đã nhận hàng thành công']);
+        return response()->json(['message' => 'Đã xác nhận nhận hàng thành công']);
     }
 
+    // Yêu cầu trả hàng
+
+        public function requestReturn(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        if ($order->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Không có quyền truy cập'], 403);
+        }
+
+        $request->validate([
+            'reason' => 'required|string|max:255',
+        ]);
+
+        // Chỉ cho phép yêu cầu hoàn hàng khi trạng thái là delivered
+        if ($order->status !== 'delivered') {
+            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã nhận hàng'], 400);
+        }
+
+        $order->status = 'return_requested';
+        $order->return_reason = $request->input('reason');
+        $order->save();
+
+        return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+    }
     /**
      * Xử lý hoàn trả đơn hàng
      */

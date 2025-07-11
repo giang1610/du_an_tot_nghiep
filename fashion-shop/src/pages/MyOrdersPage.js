@@ -24,7 +24,9 @@ const STATUS_LABELS = {
     returned: 'Hoàn hàng',
     completed: 'Hoàn thành',
     cancelled: 'Đã hủy',
-    failed: 'Thất bại',
+    failed: 'Giao hàng thất bại',
+    failed_1: 'Giao hàng thất bại lần 1',
+    failed_2: 'Giao hàng thất bại lần 2',
 };
 
 const STATUS_VARIANTS = {

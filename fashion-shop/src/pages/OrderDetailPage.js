@@ -17,9 +17,11 @@ const STATUS_LABELS = {
     delivered: 'Đã nhận hàng',
     completed: 'Hoàn thành',
     cancelled: 'Đã hủy',
-    failed: 'Thất bại',
+    failed: 'Giao hàng thất bại',
     return_requested: 'Đã yêu cầu hoàn hàng',
     returned: 'Hoàn hàng',
+    failed_1: 'Giao hàng thất bại lần 1',
+    failed_2: 'Giao hàng thất bại lần 2',
 };
 
 const PAYMENT_STATUS_LABELS = {
@@ -38,7 +40,10 @@ const statusBadgeVariant = {
     delivered: 'primary',
     shipping: 'info',
     shipped: 'success',
+    return_requested: 'warning',
+    returned: 'secondary',
 };
+
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
     momo: 'Ví Momo',
@@ -78,6 +83,26 @@ export default function OrderDetailPage() {
     // Modal XÁC NHẬN ĐÃ NHẬN HÀNG
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
+
+  //realTime Status
+  useEffect(() => {
+  const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
+    if (Number(orderIdFromSocket) === Number(id)) {
+      console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
+      setOrder(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          status: newStatus
+        };
+      });
+    }
+  });
+
+        return () => {
+            channel.stopListening('.order.updated');
+        };
+    }, [id]);
 
     const fetchOrder = useCallback(async () => {
         if (!token) return setError('Bạn chưa đăng nhập');
@@ -329,6 +354,7 @@ export default function OrderDetailPage() {
             <Card>
                 <Card.Body className="d-flex justify-content-between align-items-center">
                     <div>
+                        {/* Chỉ hiển thị các nút thao tác khi trạng thái cho phép */}
                         {order.status === 'shipped' && (
                             <Button variant="success" size="sm" onClick={() => setShowConfirmReceived(true)}>
                                 Xác nhận đã nhận hàng
@@ -346,6 +372,12 @@ export default function OrderDetailPage() {
                                 Hủy đơn
                             </Button>
                         )}
+                        <p className="mt-3 mb-0">
+                            <strong>Thanh toán:</strong>{' '}
+                            <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
+                                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                            </Badge>
+                        </p>
                     </div>
                     <Link to="/orders">
                         <Button variant="secondary" size="sm">← Trở lại</Button>
@@ -405,7 +437,7 @@ export default function OrderDetailPage() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowReviewModal(false)}>Đóng</Button>
-                    <Button variant="primary" onClick={handleSubmitReview} disabled={reviewLoading}>
+<Button variant="primary" onClick={handleSubmitReview} disabled={reviewLoading}>
                         {reviewLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
                     </Button>
                 </Modal.Footer>
