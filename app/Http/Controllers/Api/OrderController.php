@@ -128,7 +128,7 @@ class OrderController extends Controller
         $status = $request->query('status');
 
         $query = Auth::user()->orders()
-            ->with(['user','items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
+            ->with(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
             ->latest();
 
         if ($status) {
@@ -149,7 +149,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không có quyền truy cập'], 403);
         }
 
-        $order->load(['user','items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
+        $order->load(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
 
         return response()->json([
             'message' => 'Lấy thông tin đơn hàng thành công',
@@ -289,9 +289,9 @@ class OrderController extends Controller
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
                     broadcast(new ProductStockUpdated(
-                    $variant->id,
-                    $variant->fresh()->stock->quantity
-                ));
+                        $variant->id,
+                        $variant->fresh()->stock->quantity
+                    ));
                 }
             }
 
@@ -501,8 +501,8 @@ class OrderController extends Controller
     }
 
     /**
-    * Khởi tạo thanh toán MOMO
-    */
+     * Khởi tạo thanh toán MOMO
+     */
     protected function initiateMomoPayment($order, $amount)
     {
         $partnerCode = 'MOMOBKUN20180529';
@@ -661,9 +661,9 @@ class OrderController extends Controller
         $orderId = $request->query('orderId');
         $resultCode = $request->query('resultCode');
 
-if (is_null($orderId) || is_null($resultCode)) {
-    return response()->json(['message' => 'Tham số không hợp lệ'], 400);
-}
+        if (is_null($orderId) || is_null($resultCode)) {
+            return response()->json(['message' => 'Tham số không hợp lệ'], 400);
+        }
 
         // Trích xuất ID đơn hàng (định dạng: orderId-thời gian)
         $orderParts = explode('-', $orderId);
@@ -823,71 +823,47 @@ if (is_null($orderId) || is_null($resultCode)) {
 
     }
 
-   public function confirmReceived($orderId)
-{
-    $order = Order::where('id', $orderId)
-        ->where('user_id', auth()->id())
-        ->firstOrFail();
+    public function confirmReceived($orderId)
+    {
+        $order = Order::where('id', $orderId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
 
-    if ($order->status !== 'shipped') {
-        return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
+        if ($order->status !== 'shipped') {
+            return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
+        }
+
+        $order->status = 'delivered';
+        $order->delivered_at = now();
+
+        // ✅ Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
+        if ($order->payment_method === 'cod') {
+            $order->payment_status = 'paid';
+        }
+
+        $order->save();
+
+        return response()->json(['message' => 'Đã xác nhận nhận hàng thành công']);
     }
-
-    $order->status = 'delivered';
-    $order->delivered_at = now();
-
-    // ✅ Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
-    if ($order->payment_method === 'cod') {
-        $order->payment_status = 'paid';
- }
-
-    $order->save();
-
-    return response()->json(['message' => 'Đã xác nhận nhận hàng thành công']);
-}
 
     // Yêu cầu trả hàng
 
-    public function requestReturn(Request $request, $orderId)
+    public function requestReturn(Request $request, $id)
     {
-        $order = Order::where('id', $orderId)->where('user_id', auth()->id())->firstOrFail();
-        if ($order->status !== 'delivered') {
-            return response()->json(['message' => 'Không thể yêu cầu trả hàng cho đơn hàng này'], 400);
+        $order = Order::findOrFail($id);
+
+        if ($order->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Không có quyền truy cập'], 403);
         }
 
-        $validator = Validator::make($request->all(), [
-            'reason' => 'nullable|string|max:500',
+        $request->validate([
+            'reason' => 'required|string|max:255',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['message' => 'Lỗi xác thực', 'errors' => $validator->errors()], 422);
-        }
-
-        $order->status = 'return_requested'; // Đặt trạng thái hoàn đơn
-        $order->return_requested_at = now();
-        $order->return_reason = $request->reason;
+        $order->status = 'return_requested';
+        $order->return_reason = $request->input('reason');
         $order->save();
 
-        return response()->json(['message' => 'Yêu cầu trả hàng đã được gửi']);
+        return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
     }
-
-   public function requestReturn(Request $request, $id)
-{
-    $order = Order::findOrFail($id);
-
-    if ($order->user_id !== auth()->id()) {
-        return response()->json(['message' => 'Không có quyền truy cập'], 403);
-    }
-
-    $request->validate([
-        'reason' => 'required|string|max:255',
-    ]);
-
-    $order->status = 'return_requested';
-    $order->return_reason = $request->input('reason');
-    $order->save();
-
-    return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
-}
-
 }
