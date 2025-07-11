@@ -58,7 +58,7 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderShipped($order));
                 break;
             case 'failed':
-                \Log::info('Gửi mail failed 3 lần tới: ' . $this->orderId->user->email);
+                \Log::info('Gửi mail failed 3 lần tới: ' . $order->user->email);
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed($order));
                 break;
             case 'failed_1':

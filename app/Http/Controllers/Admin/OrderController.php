@@ -299,7 +299,7 @@ class OrderController extends Controller
 
     $order->status = $newStatus;
 
-    // ✅ Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
+    // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
     if (in_array($newStatus, ['shipped', 'delivered', 'completed']) && $order->payment_status !== 'paid') {
         $order->payment_status = 'paid';
     }
