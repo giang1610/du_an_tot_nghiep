@@ -1,12 +1,11 @@
 <?php
-namespace App\Mail;
 
+namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
-
-class OrderPicking extends Mailable
+class ReturnRejected extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -19,7 +18,7 @@ class OrderPicking extends Mailable
 
     public function build()
     {
-        return $this->subject('Đơn hàng của bạn đang được lấy hàng')
-                    ->markdown('emails.orders.picking');
+        return $this->subject('Yêu cầu hoàn hàng bị từ chối')
+            ->markdown('emails.orders.return-rejected');
     }
 }

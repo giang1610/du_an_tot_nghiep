@@ -1,4 +1,4 @@
-import Echo from '../echo'; 
+import Echo from '../echo';
 
 export function listenToOrderStatusRealtime(callback) {
   console.log('[Realtime] Lắng nghe kênh: order-status');
@@ -11,5 +11,5 @@ export function listenToOrderStatusRealtime(callback) {
       }
     });
 
-  return channel; 
+  return channel;
 }

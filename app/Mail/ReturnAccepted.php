@@ -6,10 +6,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
 
-class OrderPicking extends Mailable
+class ReturnAccepted extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public $order;
 
     public function __construct(Order $order)
@@ -19,7 +17,8 @@ class OrderPicking extends Mailable
 
     public function build()
     {
-        return $this->subject('Đơn hàng của bạn đang được lấy hàng')
-                    ->markdown('emails.orders.picking');
+        return $this->subject('Xác nhận hoàn hàng')
+            ->markdown('emails.orders.return-accepted')
+            ->with(['order' => $this->order]);
     }
 }

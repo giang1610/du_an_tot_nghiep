@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Mail;
 
 
 
+
 class UpdateOrderStatus implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -37,27 +38,41 @@ class UpdateOrderStatus implements ShouldQueue
     if ($order && $order->user && $order->user->email) {
         switch ($order->status) {
             case 'shipping':
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderGiao($order));
 
                 break;
-            case 'errors':
+            case 'cancelled':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderPicking($order));
                 break;
             case 'processing':
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderProcessing($order));
                 break;
             case 'shipped':
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderShipped($order));
+                break;
+            case 'failed':
+                \Log::info('Gửi mail failed 3 lần tới: ' . $order->user->email);
+                Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed($order));
+                break;
+            case 'failed_1':
+                Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed_1($order));
+                break;
+            case 'failed_2':
+                Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed_2($order));
                 break;
             default:
                 // Nếu muốn, có thể gửi mail mặc định hoặc không gửi gì
                 break;
         }
         // tạo sự kiện realTime trạng thái
-        broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
+        // broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
 
     }
 }
