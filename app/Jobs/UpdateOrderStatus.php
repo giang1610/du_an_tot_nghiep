@@ -42,7 +42,7 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderGiao($order));
 
                 break;
-            case 'errors':
+            case 'cancelled':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
@@ -58,7 +58,7 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderShipped($order));
                 break;
             case 'failed':
-                \Log::info('Gửi mail failed 3 lần tới: ' . $this->orderId->user->email);
+                \Log::info('Gửi mail failed 3 lần tới: ' . $order->user->email);
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed($order));
                 break;
             case 'failed_1':
@@ -67,7 +67,6 @@ class UpdateOrderStatus implements ShouldQueue
             case 'failed_2':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed_2($order));
                 break;
-            
             default:
                 // Nếu muốn, có thể gửi mail mặc định hoặc không gửi gì
                 break;
