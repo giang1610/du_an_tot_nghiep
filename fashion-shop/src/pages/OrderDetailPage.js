@@ -356,6 +356,12 @@ export default function OrderDetailPage() {
                                 Hủy đơn
                             </Button>
                         )}
+                        <p className="mt-3 mb-0">
+                            <strong>Thanh toán:</strong>{' '}
+                            <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
+                                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                            </Badge>
+                        </p>
                     </div>
                     <Link to="/orders">
                         <Button variant="secondary" size="sm">← Trở lại</Button>
@@ -415,7 +421,7 @@ export default function OrderDetailPage() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowReviewModal(false)}>Đóng</Button>
-                    <Button variant="primary" onClick={handleSubmitReview} disabled={reviewLoading}>
+<Button variant="primary" onClick={handleSubmitReview} disabled={reviewLoading}>
                         {reviewLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
                     </Button>
                 </Modal.Footer>
@@ -428,7 +434,7 @@ export default function OrderDetailPage() {
                 </Modal.Header>
                 <Modal.Body>
                     Bạn có chắc chắn muốn xác nhận đã nhận được hàng?
-                    </Modal.Body>
+                </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowConfirmReceived(false)}>Hủy</Button>
                     <Button variant="success" onClick={handleConfirmReceived} disabled={confirmReceivedLoading}>

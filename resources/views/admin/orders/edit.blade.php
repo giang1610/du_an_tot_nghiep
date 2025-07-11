@@ -157,6 +157,13 @@
                             <option value="{{ $currentStatus }}" selected disabled>
                                 {{ $statusOptions[$currentStatus] }} (hiện tại)
                             </option>
+
+                            {{-- Trạng thái kế tiếp nếu có --}}
+                            {{-- @if ($nextStatus)
+                                <option value="{{ $nextStatus }}">
+                                    {{ $statusOptions[$nextStatus] }}
+                                </option>
+                            @endif --}}
                             @if ($currentStatus === 'shipping')
                                 <option value="shipped">{{ $statusOptions['shipped'] }}</option>
                                 <option value="failed_1">Giao hàng thất bại lần 1</option>

@@ -251,12 +251,12 @@
                                     <i class="fas fa-times-circle me-1"></i> Giao hàng thất bại
                                 </span>
                                 @break
-                                @case('failed_1')
+                                 @case('failed_1')
                                 <span class="badge bg-danger">
                                     <i class="fas fa-times-circle me-1"></i> Giao hàng thất bại lần 1
                                 </span>
                                 @break
-                                @case('failed_2')
+                                 @case('failed_2')
                                 <span class="badge bg-danger">
                                     <i class="fas fa-times-circle me-1"></i> Giao hàng thất bại lần 2
                                 </span>
