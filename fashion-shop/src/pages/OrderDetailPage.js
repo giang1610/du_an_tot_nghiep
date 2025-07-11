@@ -84,16 +84,20 @@ export default function OrderDetailPage() {
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
-    // Realtime status
-    useEffect(() => {
-        const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
-            if (Number(orderIdFromSocket) === Number(id)) {
-                setOrder(prev => {
-                    if (!prev) return prev;
-                    return { ...prev, status: newStatus };
-                });
-            }
-        });
+  //realTime Status
+  useEffect(() => {
+  const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
+    if (Number(orderIdFromSocket) === Number(id)) {
+      console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
+      setOrder(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          status: newStatus
+        };
+      });
+    }
+  });
 
         return () => {
             channel.stopListening('.order.updated');
