@@ -136,6 +136,10 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
+    // Admin xử lý yêu cầu hoàn đơn
+    Route::post('/admin/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])
+        ->middleware(['auth:sanctum', 'is_admin']);
+
     Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
 });
 

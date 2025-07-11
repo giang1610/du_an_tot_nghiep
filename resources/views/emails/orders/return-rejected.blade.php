@@ -2,7 +2,7 @@
 @component('mail::message')
 # Yêu cầu hoàn hàng của bạn đã bị từ chối
 
-Xin chào {{ $order->customer_name ?? 'Quý khách' }},
+Xin chào {{ $order->user->name ?? 'Quý khách' }},
 
 Yêu cầu hoàn hàng cho đơn hàng **#{{ $order->order_number }}** đã bị từ chối.
 

@@ -111,6 +111,8 @@ class OrderController extends Controller
 
 
 
+
+
             return response()->json([
                 'message' => 'Tạo đơn hàng thành công',
                 'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
@@ -770,6 +772,7 @@ if (is_null($orderId) || is_null($resultCode)) {
         }
 
         $order->status = 'delivered';
+        $order->delivered_at = now(); 
         $order->save();
 
         return response()->json(['message' => 'Đã xác nhận đã nhận hàng thành công']);
@@ -847,4 +850,24 @@ if (is_null($orderId) || is_null($resultCode)) {
             return response()->json(['message' => 'Lỗi khi xử lý hoàn trả'], 500);
         }
     }
+
+   public function requestReturn(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
+
+    if ($order->user_id !== auth()->id()) {
+        return response()->json(['message' => 'Không có quyền truy cập'], 403);
+    }
+
+    $request->validate([
+        'reason' => 'required|string|max:255',
+    ]);
+
+    $order->status = 'return_requested';
+    $order->return_reason = $request->input('reason');
+    $order->save();
+
+    return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+}
+
 }

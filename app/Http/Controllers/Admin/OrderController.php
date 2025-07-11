@@ -340,21 +340,31 @@ class OrderController extends Controller
     }
 
 
-    public function handleReturn(\Illuminate\Http\Request $request, $id)
-    {
-        $order = \App\Models\Order::findOrFail($id);
-        $order->note_admin = $request->input('note_admin');
-        if ($request->input('action') === 'accept') {
-            $order->status = 'returning';
-            $order->return_status = 'accepted';
-            $order->save();
-            \Mail::to($order->customer_email)->send(new \App\Mail\ReturnAccepted($order));
-        } else {
-            $order->status = 'delivered';
-            $order->return_status = 'rejected';
-            $order->save();
-            \Mail::to($order->customer_email)->send(new \App\Mail\ReturnRejected($order));
-        }
-        return back()->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
+   public function handleReturn(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
+
+    $request->validate([
+        'action' => 'required|in:accept,reject',
+        'note_admin' => 'nullable|string',
+    ]);
+
+    $order->note_admin = $request->input('note_admin');
+
+    if ($request->action === 'accept') {
+        $order->status = 'returned';
+        $order->returned_at = now();
+        $order->save();
+        Mail::to($order->customer_email)->queue(new \App\Mail\ReturnAccepted($order));
+    } else {
+        $order->status = 'delivered';
+        $order->delivered_at = now();
+        $order->save();
+        Mail::to($order->customer_email)->queue(new \App\Mail\ReturnRejected($order));
     }
+
+    return redirect()->route('orders.edit', $order->id)
+        ->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
+}
+
 }

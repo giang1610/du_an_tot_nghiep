@@ -4,21 +4,21 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Order;
 
 class ReturnAccepted extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public $order;
 
-    public function __construct($order)
+    public function __construct(Order $order)
     {
         $this->order = $order;
     }
 
     public function build()
     {
-        return $this->subject('Yêu cầu hoàn hàng được chấp nhận')
-            ->markdown('emails.orders.return-accepted');
+        return $this->subject('Xác nhận hoàn hàng')
+            ->markdown('emails.orders.return-accepted')
+            ->with(['order' => $this->order]);
     }
 }

@@ -37,7 +37,7 @@
                     <label for="status" class="form-label">Trạng thái</label>
                     <select name="status" id="status" class="form-select">
                         <option value="">Tất cả</option>
-                         <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                         <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
                         <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
                         <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
@@ -45,9 +45,10 @@
                         <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
                         <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Đã nhận hàng</option>
                         <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Đã thất bại</option>
-                        <option value="returning" {{ request('status') == 'returning' ? 'selected' : '' }}>Đang trả hàng</option>
-                        <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Yêu cầu trả hàng</option>
-                        <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
+                        <option value="returning" {{ request('status') == 'returning' ? 'selected' : '' }}>Đang hoàn hàng</option>
+                        <option value="returnedreturn_requested" {{ request('status') == 'returnedreturn_requested' ? 'selected' : '' }}>Hoàn hàng</option>
+                        <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Yêu cầu hoàn hàng</option>
+                        <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đồng ý hoàn hàng</option>
                         <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
                     </select>
                 </div>
@@ -160,7 +161,7 @@
                                     <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 3) }}</div>
                                 </div>
                             </td>
-                              <td class="text-end">
+                            <td class="text">
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">
@@ -176,7 +177,7 @@
                                 </span>
                                 @break
                                 @case('momo')
-                                <span style="background-color: #A50064; color: white" class="badge">
+                                <span style="background-color: #A50064; color: white" class="badge ">
                                     <i class="fas fa-mobile-alt me-1"></i> Momo
                                 </span>
                                 @break
@@ -196,14 +197,6 @@
                                     </span>
                                     @endif
                                 </div>
-                            </td>
-                            <td>
-                                <strong>{{ number_format($order->total) }} VNĐ</strong>
-                                @if($order->discount > 0)
-                                <div class="text-danger small">
-                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
-                                </div>
-                                @endif
                             </td>
                             <td>
                                 @switch($order->status)
@@ -249,17 +242,17 @@
                                 @break
                                 @case('returning')
                                 <span class="badge bg-warning text-dark">
-                                    <i class="fas fa-undo me-1"></i> Đang trả hàng
+                                    <i class="fas fa-undo me-1"></i> Đang hoàn hàng
                                 </span>
                                 @break
                                 @case('return_requested')
                                 <span class="badge bg-info">
-                                    <i class="fas fa-exchange-alt me-1"></i> Yêu cầu trả hàng
+                                    <i class="fas fa-exchange-alt me-1"></i> Yêu cầu hoàn hàng
                                 </span>
                                 @break
                                 @case('returned')
                                 <span class="badge bg-secondary">
-                                    <i class="fas fa-undo-alt me-1"></i> Đã trả hàng
+                                    <i class="fas fa-undo-alt me-1"></i> Hoàn hàng
                                 </span>
                                 @break
                                 @case('cancelled')
