@@ -9,6 +9,8 @@ use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\RevenueController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 
@@ -25,11 +27,16 @@ use App\Http\Controllers\Auth\NewEmailVerificationController;
 
 
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
+
+
+
 
 // Trang chủ
 Route::get('/', function () {
@@ -43,6 +50,8 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
@@ -51,7 +60,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
 });
 
-// Logout
+// Logout 123
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 // Email Verification
 Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])
@@ -72,11 +81,39 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
 
 
 
+
 // Admin routes
+    //xóa danh mục
+    //thùng rác 
+    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
+    //xóa vĩnh viễn
+    Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
+    //khôi phục tất cả
+    Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
+
+    //khôi phục từng danh mục
+    Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+    //xóa vĩnh viễn từng danh mục
+    Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
+
+    //xóa sản phẩm
+    //thùng rác 
+    Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
+    //khôi phục từng sản phẩm
+    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+    //khôi phục tất cả sản phẩm
+    Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
+    //xóa vĩnh viễn từng sản phẩm
+    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
+    //xóa vĩnh viễn tất cả sản phẩm
+    Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
 Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(function () {
     Route::get('/', function () {
       return view('admin.dashboard');
     })->name('admin');
+     
+    
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
     //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -84,12 +121,18 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
-    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
     Route::resource('products', ProductController::class);
 
+    Route::resource('revenue', RevenueController::class);
 
     Route::resource('orders', OrderController::class);
-    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    // Route::resource('pending', OrderController::class);
+    Route::get('/cancelled', [OrderController::class, 'cancelled'])->name('orders.cancelled');
+    Route::get('/pending', [OrderController::class, 'pending'])->name('orders.pending');
+    Route::get('/processing', [OrderController::class, 'processing'])->name('orders.processing');
+    Route::get('/picking', [OrderController::class, 'picking'])->name('orders.picking');
+    Route::get('/shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
+Route::get('/shipped', [OrderController::class, 'shipped'])->name('orders.shipped');
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
