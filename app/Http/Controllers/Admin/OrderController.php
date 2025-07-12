@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Events\OrderStatusUpdated; // Import sự kiện OrderStatusUpdated
-use App\Mail\OrderGiao; 
+use App\Mail\OrderGiao;
 use App\Mail\OrderErrors;
 use App\Mail\OrderPicking;
 use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
-use Illuminate\Support\Facades\Mail; 
+use Illuminate\Support\Facades\Mail;
 use App\Jobs\UpdateOrderStatus;
 
 
@@ -82,7 +82,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(10)->withQueryString(); 
+        $orders = $query->paginate(10)->withQueryString();
 
         return view('admin.orders.cancelled', compact('orders'));
     }
@@ -116,7 +116,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(10)->withQueryString(); 
+        $orders = $query->paginate(10)->withQueryString();
 
         return view('admin.orders.pending', compact('orders'));
     }
@@ -150,7 +150,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(10)->withQueryString(); 
+        $orders = $query->paginate(10)->withQueryString();
 
         return view('admin.orders.processing', compact('orders'));
     }
@@ -184,7 +184,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(10)->withQueryString(); 
+        $orders = $query->paginate(10)->withQueryString();
 
         return view('admin.orders.picking', compact('orders'));
     }
@@ -218,7 +218,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(10)->withQueryString(); 
+        $orders = $query->paginate(10)->withQueryString();
 
         return view('admin.orders.shipping', compact('orders'));
     }
@@ -252,12 +252,12 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(10)->withQueryString(); 
+        $orders = $query->paginate(10)->withQueryString();
 
         return view('admin.orders.shipped', compact('orders'));
     }
 
-    public function show($id) 
+    public function show($id)
     {
         $order = Order::with([
             'items.variant.product',    // tên sản phẩm
@@ -299,7 +299,7 @@ class OrderController extends Controller
 
     $order->status = $newStatus;
 
-    // ✅ Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
+    // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
     if (in_array($newStatus, ['shipped', 'delivered', 'completed']) && $order->payment_status !== 'paid') {
         $order->payment_status = 'paid';
     }
@@ -321,12 +321,12 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
         $oldStatus = $order->status;
         $order->update($request->all());
-         UpdateOrderStatus::dispatch($order);
+         UpdateOrderStatus::dispatch($order->id);
        // Nếu trạng thái giao hàng là "shipped" và chưa thanh toán thì tự động chuyển sang "paid"
         if ($order->status === 'shipped' && $order->payment_status !== 'paid') {
             $order->payment_status = 'paid';
             $order->save();
-            
+
         }
         if ($order->status !== $oldStatus) {
         \App\Jobs\UpdateOrderStatus::dispatch($order->id);
@@ -350,4 +350,32 @@ class OrderController extends Controller
     // }
         return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
+
+    public function handleReturn(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
+
+    $request->validate([
+        'action' => 'required|in:accept,reject',
+        'note_admin' => 'nullable|string',
+    ]);
+
+    $order->note_admin = $request->input('note_admin');
+
+    if ($request->action === 'accept') {
+        $order->status = 'returned';
+        $order->returned_at = now();
+        $order->save();
+        Mail::to($order->customer_email)->queue(new \App\Mail\ReturnAccepted($order));
+    } else {
+        $order->status = 'delivered';
+        $order->delivered_at = now();
+        $order->save();
+        Mail::to($order->customer_email)->queue(new \App\Mail\ReturnRejected($order));
+    }
+
+    return redirect()->route('orders.edit', $order->id)
+        ->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
+}
+
 }
