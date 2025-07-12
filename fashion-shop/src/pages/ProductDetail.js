@@ -64,7 +64,7 @@ export default function ProductDetail() {
       });
     });
 
-    return unsubscribe; 
+    return unsubscribe;
   }, [product]);
 
 
@@ -168,60 +168,30 @@ export default function ProductDetail() {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
       setAlertMsg(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
-    if (!shippingAddress || !customerPhone) {
-      setAlertMsg('Vui lòng nhập địa chỉ và số điện thoại.');
-      return;
-    }
 
-    try {
-      const token = localStorage.getItem('token');
-      const userEmail = localStorage.getItem('user_email') || 'user@example.com';
-      const price = selectedVariant.sale_price ?? selectedVariant.price;
-      const subtotal = price * quantity;
-      const tax = Math.round(subtotal * 0.1);
-      const shipping = 20000;
-      const total = subtotal + tax + shipping;
+    const item = {
+      product_name: product.name,
+      variant_id: selectedVariant.id,
+      product_variant_id: selectedVariant.id,
+      quantity,
+      price: selectedVariant.sale_price ?? selectedVariant.price,
+      image: selectedVariant.img || product.img,
+      size: selectedVariant.size?.name,
+      color: selectedVariant.color?.name,
+      size_id: selectedVariant.size?.id,
+      color_id: selectedVariant.color?.id,
+    };
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/orders/checkout`, {
-        payment_method: paymentMethod,
-        shipping_address: shippingAddress,
-        customer_phone: customerPhone,
-        customer_email: userEmail,
-        items: [{ product_variant_id: selectedVariantId, quantity }],
-        subtotal,
-        tax,
-        shipping,
-        total
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const paymentUrl = response?.data?.data?.payment_url;
-      const orderId = response?.data?.data?.order?.id;
-
-      if (paymentUrl) {
-        window.location.href = paymentUrl;
-      } else {
-        setAlertMsg('Đặt hàng thành công!');
-        navigate(`/orders/${orderId || ''}`);
-      }
-
-    } catch (error) {
-      if (error.response) {
-        console.error('Lỗi chi tiết:', error.response.data);
-        setAlertMsg(error.response.data.message || 'Lỗi khi tạo đơn hàng.');
-      } else {
-        console.error('Lỗi không xác định:', error);
-        setAlertMsg('Lỗi không xác định. Vui lòng thử lại.');
-      }
-    }
+    localStorage.setItem('buy_now', JSON.stringify(item));
+    navigate('/checkout?buy_now=1');
   };
+
 
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (!product) return <Alert variant="danger">{alertMsg || 'Sản phẩm không tồn tại'}</Alert>;
@@ -310,14 +280,13 @@ export default function ProductDetail() {
             </Button>
             <Button
               variant="danger"
-              onClick={() => {
-                if (!requireLoginAndVariant()) return;
-                setShowCheckoutForm(true);
-              }}
+              onClick={handleBuyNow}
               disabled={!selectedVariant}
             >
               ⚡ Mua ngay
             </Button>
+
+
           </div>
 
           {showCheckoutForm && (
@@ -336,7 +305,12 @@ export default function ProductDetail() {
             {reviews.map(r => (
               <div key={r.id} className="mb-3 border-bottom pb-2">
                 <strong>{r.user?.name || 'Khách hàng'}</strong>
-                <p>{r.comment}</p>
+                <div>
+                  {[...Array(r.rating)].map((_, i) => (
+                    <span key={i} style={{ color: '#ffc107' }}>★</span>
+                  ))}
+                </div>
+                <p>{r.content}</p>
               </div>
             ))}
             <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />
@@ -344,29 +318,29 @@ export default function ProductDetail() {
         </Col>
       </Row>
 
-     <div className="mt-5">
-  <h4>Sản phẩm liên quan</h4>
-  <Row>
-    {relatedProducts.map((rp) => {
-      const imageUrl =
-        rp.variants?.[0]?.thumbnail ||
-        'https://via.placeholder.com/150x150?text=No+Image';
+      <div className="mt-5">
+        <h4>Sản phẩm liên quan</h4>
+        <Row>
+          {relatedProducts.map((rp) => {
+            const imageUrl =
+              rp.variants?.[0]?.thumbnail ||
+              'https://via.placeholder.com/150x150?text=No+Image';
 
-      return (
-        <Col md={3} key={rp.id} className="mb-3">
-          <div className="border p-2 h-100 d-flex flex-column align-items-center">
-            <img
-              src={imageUrl}
-              alt={rp.name}
-              style={{ maxHeight: 150, objectFit: 'contain' }}
-            />
-            <p className="fw-bold mt-2 text-center">{rp.name}</p>
-          </div>
-        </Col>
-      );
-    })}
-  </Row>
-</div>
+            return (
+              <Col md={3} key={rp.id} className="mb-3">
+                <div className="border p-2 h-100 d-flex flex-column align-items-center">
+                  <img
+                    src={imageUrl}
+                    alt={rp.name}
+                    style={{ maxHeight: 150, objectFit: 'contain' }}
+                  />
+                  <p className="fw-bold mt-2 text-center">{rp.name}</p>
+                </div>
+              </Col>
+            );
+          })}
+        </Row>
+      </div>
 
     </Container>
   );
