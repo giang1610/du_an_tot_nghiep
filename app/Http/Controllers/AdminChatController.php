@@ -12,7 +12,7 @@ class AdminChatController extends Controller
         $user = User::findOrFail($userId);
         $chats = Chat::where('user_id', $userId)->orderBy('created_at')->get();
 
-        return view('admin.chat', compact('user', 'chats'));
+        return view('admin.chat.show', compact('user', 'chats'));
     }
 
     public function send(Request $request)

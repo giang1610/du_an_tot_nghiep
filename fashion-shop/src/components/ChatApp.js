@@ -6,15 +6,19 @@ export default function ChatApp() {
   const [isOpen, setIsOpen] = useState(false);
   const [avatar, setAvatar] = useState('');
   const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [userId, setUserId] = useState(null);
   const { token } = useAuth();
 
-  const adminAvatar = 'https://img.freepik.com/premium-vector/man-avatar-profile-picture-isolated-background-avatar-profile-picture-man_1293239-4841.jpg';
+  const adminAvatar = 'https://secure.gravatar.com/avatar/2ad86d4128742b555b487c8a62a33e9e?s=500&d=mm&r=g';
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
         const user = JSON.parse(userData);
+        setUserId(user.id);
+
         if (user.img_thumbnail) {
           setAvatar(`${process.env.REACT_APP_IMAGE_BASE_URL}/storage/${user.img_thumbnail}`);
         } else {
@@ -28,6 +32,17 @@ export default function ChatApp() {
       setAvatar(adminAvatar);
     }
   }, []);
+
+  const loadMessages = async (userId) => {
+    try {
+      const res = await axios.get('/chat', {
+        params: { user_id: userId }
+      });
+      setMessages(res.data.data || []);
+    } catch (error) {
+      console.error(' Lỗi load tin nhắn:', error);
+    }
+  };
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -43,9 +58,9 @@ export default function ChatApp() {
         }
       );
       setMessage('');
-      // Có thể thêm push tin nhắn vào state nếu muốn hiển thị real-time
+      if (userId) loadMessages(userId); 
     } catch (error) {
-      console.error('❌ Lỗi gửi tin nhắn:', error);
+      console.error(' Lỗi gửi tin nhắn:', error);
     }
   };
 
@@ -56,7 +71,10 @@ export default function ChatApp() {
         <button
           className="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle shadow"
           style={{ width: 60, height: 60, zIndex: 1050 }}
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setIsOpen(true);
+            if (userId) loadMessages(userId);
+          }}
         >
           💬
         </button>
@@ -83,20 +101,38 @@ export default function ChatApp() {
             </button>
           </div>
 
-          {/* Nội dung chat (admin nhắn trước) */}
+          {/* Nội dung chat */}
           <div className="flex-grow-1 p-3 overflow-auto" style={{ background: '#f8f9fa' }}>
-            <div className="d-flex mb-3">
-              <img
-                src={adminAvatar}
-                alt="Admin"
-                className="rounded-circle me-2"
-                style={{ width: 40, height: 40, objectFit: 'cover' }}
-              />
-              <div>
-                <div className="bg-light p-2 rounded">Xin chào! Tôi có thể giúp gì cho bạn?</div>
-                <div className="text-muted small mt-1">10:00</div>
-              </div>
-            </div>
+            {messages.length === 0 ? (
+              <div className="text-center text-muted">Chưa có tin nhắn nào.</div>
+            ) : (
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`d-flex mb-3 ${msg.sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`}
+                >
+                  {msg.sender === 'admin' && (
+                    <img
+                      src={adminAvatar}
+                      alt="Admin"
+                      className="rounded-circle me-2"
+                      style={{ width: 40, height: 40, objectFit: 'cover' }}
+                    />
+                  )}
+                  <div className="bg-light p-2 rounded" style={{ maxWidth: '75%' }}>
+                    {msg.message}
+                  </div>
+                  {msg.sender === 'user' && (
+                    <img
+                      src={avatar}
+                      alt="User"
+                      className="rounded-circle ms-2"
+                      style={{ width: 40, height: 40, objectFit: 'cover' }}
+                    />
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           {/* Footer nhập tin nhắn */}

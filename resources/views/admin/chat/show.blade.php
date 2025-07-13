@@ -80,7 +80,7 @@
                     </div>
 
                     @if($chat->sender === 'admin')
-                        <img src="{{ asset('images/admin-avatar.png') }}" alt="Admin" class="avatar ms-2">
+                        <img src="https://secure.gravatar.com/avatar/2ad86d4128742b555b487c8a62a33e9e?s=500&d=mm&r=g"  class="avatar ms-2">
                     @endif
                 </div>
             @empty

@@ -12,24 +12,28 @@ class ChatController extends Controller
     /**
      * Lấy lịch sử tin nhắn của user hiện tại
      */
-    public function index()
-    {
-        $user = Auth::guard('sanctum')->user();
+    public function index(Request $request)
+        {
+            $userId = $request->query('user_id');
 
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            if (!$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thiếu user_id'
+                ], 400);
+            }
+
+            $messages = Chat::where('user_id', $userId)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $messages
+            ]);
         }
 
-        $chats = Chat::where('user_id', $user->id)
-                     ->orderBy('created_at')
-                     ->get();
-
-        return response()->json([
-            'success' => true,
-            'chats' => $chats
-        ]);
-    }
-
+        
     /**
      * Gửi tin nhắn từ client
      */

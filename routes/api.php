@@ -51,6 +51,7 @@ Route::post('/chat/send', [ChatController::class, 'store']);
 
 
 
+
 // Public product routes
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/slug/{slug}', [ProductController::class, 'showBySlug']);
