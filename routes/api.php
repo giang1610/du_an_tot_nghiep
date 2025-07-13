@@ -18,6 +18,10 @@ use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\Auth\ChangePasswordController;
 
+// route chat
+use App\Http\Controllers\Api\Chat\ChatController;
+
+
 
 
 // User info
@@ -40,7 +44,9 @@ Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'u
 Route::middleware('auth:sanctum')->put('/change-password', [ChangePasswordController::class, 'change']);
 
 
-
+//route chat
+Route::get('/chat', [ChatController::class, 'index']);
+Route::post('/chat/send', [ChatController::class, 'store']);
 
 
 
@@ -115,4 +121,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Các route khác: logout, cart, review...
+    
 });

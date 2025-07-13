@@ -170,6 +170,11 @@
         <i class="bi bi-cash-stack"></i><span class="menu-text">Doanh thu</span>
       </a>
     </li>
++    <li class="nav-item menu-item" data-title="khách hàng customers">
+      <a href="{{ route('admin.chat.list') }}" class="nav-link">
+        <i class="bi bi-people"></i><span class="menu-text"> Chat Với Khách hàng</span>
+      </a>
+    </li>
   </ul>
 </aside>
 

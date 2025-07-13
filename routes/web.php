@@ -24,6 +24,8 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerifiFotnController;
 use App\Http\Controllers\Auth\NewEmailVerificationController;
 
+use App\Http\Controllers\AdminChatController;
+
 
 
 /*
@@ -141,6 +143,10 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
 
     Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
 
+    // Admin chat routes
+    Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
+    Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
+    Route::post('/chat/send', [AdminChatController::class, 'send'])->name('admin.chat.send');
 
 });
 
