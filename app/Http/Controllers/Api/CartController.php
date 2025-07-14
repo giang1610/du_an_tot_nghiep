@@ -16,7 +16,6 @@ use App\Models\ProductVariant;
 use App\Models\Stock;
 
 
-
 class CartController extends Controller
 {
     public function addToCart(CartRequest $request)

@@ -13,7 +13,7 @@ use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
 use Illuminate\Support\Facades\Mail;
 use App\Jobs\UpdateOrderStatus;
-
+use App\Mail\OrderCancelledMail;
 
 class OrderController extends Controller
 {

@@ -157,5 +157,4 @@ Route::get('/thank-you', function () {
     return view('thank-you');
 });
 
-
 require __DIR__.'/auth.php';
