@@ -11,6 +11,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+ 
+  <!-- linkcss Notification -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
+
   <style>
     :root{--full:260px;--mini:72px;--radius:10px;--primary:#2563eb;--active-dark:#1e2a48}
 
@@ -166,6 +170,11 @@
         <i class="bi bi-cash-stack"></i><span class="menu-text">Doanh thu</span>
       </a>
     </li>
++    <li class="nav-item menu-item" data-title="khách hàng customers">
+      <a href="{{ route('admin.chat.list') }}" class="nav-link">
+        <i class="bi bi-people"></i><span class="menu-text"> Chat Với Khách hàng</span>
+      </a>
+    </li>
   </ul>
 </aside>
 
@@ -186,7 +195,10 @@
 
     <div class="d-flex align-items-center gap-3">
       <button id="darkModeToggle" class="btn btn-icon"><i class="bi bi-moon"></i></button>
-      <button class="btn-icon position-relative"><i class="bi bi-bell"></i></button>
+       
+      <!-- Thông báo -->
+       <x-notification/>
+
 
       <div class="dropdown">
         <a href="#" class="d-flex align-items-center gap-2 dropdown-toggle text-decoration-none" data-bs-toggle="dropdown">
@@ -222,7 +234,28 @@
 <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script src="{{ asset('js/echo-setup.js') }}"></script>
+<script src="{{ asset('js/notification_RealTime.js') }}"></script>
+
+{{-- chatbox --}}
+
+<script>
+    window.currentUserId = {!! json_encode(Auth::id()) !!};
+</script>
+
+<script src="{{ asset('js/typing.js') }}"></script>
+
+
+{{-- chatbox --}}
+
+
+
+
+
+
 {{-- relTime --}}
+<!-- Notification -->
+<script src="https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js"></script>
+
 
 <script>
   const sidebar = document.getElementById('sidebar'),
@@ -275,6 +308,7 @@
 
 
 
+@yield('scripts')
 
 </body>
 </html>
