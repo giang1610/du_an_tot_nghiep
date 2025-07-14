@@ -15,9 +15,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use App\Events\ProductStockUpdated;
 use App\Models\Cart;
 use App\Models\CartItem;
+
+// RealTime
+use App\Events\ProductStockUpdated;
+use App\Events\NewOrderCreated;
+
 
 class OrderController extends Controller
 {
@@ -97,10 +101,10 @@ class OrderController extends Controller
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
 
-                //realTime stock
+          
 
             }
-
+            
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
 
             DB::commit();
@@ -315,12 +319,15 @@ class OrderController extends Controller
                 // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
+                   
                     broadcast(new ProductStockUpdated(
                         $variant->id,
                         $variant->fresh()->stock->quantity
                     ));
                 }
             }
+           
+            event(new NewOrderCreated($order->order_number, $order->id)); 
 
             DB::commit();
 
@@ -615,11 +622,13 @@ class OrderController extends Controller
     public function momoWebhook(Request $request)
     {
         $data = $request->all();
+
         $secretKey = env('MOMO_SECRET_KEY');
+        $accessKey = env('MOMO_ACCESS_KEY');
 
         // Danh sách các trường cần kiểm tra và xác minh
         $requiredFields = [
-            'accessKey', 'amount', 'message', 'orderId', 'orderInfo',
+            'amount', 'message', 'orderId', 'orderInfo',
             'orderType', 'partnerCode', 'payType', 'requestId',
             'responseTime', 'resultCode', 'transId', 'signature'
         ];
@@ -636,7 +645,7 @@ class OrderController extends Controller
         $extraData = $data['extraData'] ?? '';
 
         // Tạo chuỗi raw hash
-        $rawHash = "accessKey={$data['accessKey']}"
+        $rawHash = "accessKey={$accessKey}"
             . "&amount={$data['amount']}"
             . "&extraData={$extraData}"
             . "&message={$data['message']}"

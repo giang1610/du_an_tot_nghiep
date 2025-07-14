@@ -21,6 +21,9 @@ import MomoReturn from './pages/MomoReturn';
 import ResetPassword from './pages/ResetPassword';
 import ProductReview from './components/ProductReview';
 
+// import chatbox
+import ChatApp from './components/ChatApp';
+
 
 function App() {
   return (
@@ -66,9 +69,10 @@ function App() {
 
         <Route path="/review/:orderId" element={<ProductReview />} />
 
-
+       
 
       </Routes>
+       <ChatApp />
       <Footer />
     </Router>
   );

@@ -116,7 +116,7 @@
                             <th>Sản phẩm</th>
                             <th>Địa chỉ</th>
                             <th>Tổng tiền</th>
-                            <th>PTTT & TTTT</th>
+                            <th>Phương thức & Trạng thái</th>
                             <th>TT giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
@@ -161,10 +161,10 @@
                             <td>
                                 <div class="small">
                                     <div><i class="fas fa-truck me-2"></i> {{ $order->shipping_method }}</div>
-                                    <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 3) }}</div>
+                                    <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 10) }}</div>
                                 </div>
                             </td>
-                              <td class="text-end">
+                              <td>
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">
@@ -200,14 +200,6 @@
                                     </span>
                                     @endif
                                 </div>
-                            </td>
-                            <td>
-                                <strong>{{ number_format($order->total) }} VNĐ</strong>
-                                @if($order->discount > 0)
-                                <div class="text-danger small">
-                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
-                                </div>
-                                @endif
                             </td>
                             <td>
                                 @switch($order->status)

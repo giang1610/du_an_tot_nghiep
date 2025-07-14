@@ -128,7 +128,7 @@ export default function Checkout() {
       shipping_address: form.address,
       billing_address: form.address,
       customer_phone: form.phone,
-      customer_email: form.email,
+      customer_email: form.email, // ✅ lấy từ form
       notes: form.notes,
       name: form.name,
       payment_method: form.payment_method,

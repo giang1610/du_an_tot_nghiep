@@ -306,7 +306,6 @@ class OrderController extends Controller
 
     $order->save();
 
-    broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
 
     return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
 }
