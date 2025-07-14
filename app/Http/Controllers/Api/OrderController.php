@@ -615,11 +615,13 @@ class OrderController extends Controller
     public function momoWebhook(Request $request)
     {
         $data = $request->all();
+
         $secretKey = env('MOMO_SECRET_KEY');
+        $accessKey = env('MOMO_ACCESS_KEY');
 
         // Danh sách các trường cần kiểm tra và xác minh
         $requiredFields = [
-            'accessKey', 'amount', 'message', 'orderId', 'orderInfo',
+            'amount', 'message', 'orderId', 'orderInfo',
             'orderType', 'partnerCode', 'payType', 'requestId',
             'responseTime', 'resultCode', 'transId', 'signature'
         ];
@@ -636,7 +638,7 @@ class OrderController extends Controller
         $extraData = $data['extraData'] ?? '';
 
         // Tạo chuỗi raw hash
-        $rawHash = "accessKey={$data['accessKey']}"
+        $rawHash = "accessKey={$accessKey}"
             . "&amount={$data['amount']}"
             . "&extraData={$extraData}"
             . "&message={$data['message']}"
