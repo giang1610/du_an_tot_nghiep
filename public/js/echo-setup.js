@@ -11,7 +11,7 @@ window.Echo = new EchoInstance({
 });
 
 window.Echo.connector.pusher.connection.bind('connected', function () {
-    console.log('[Pusher] ✅ Đã kết nối thành công!');
+    console.log('[Pusher] Đã kết nối thành công! Stock ');
 });
 
 
@@ -29,3 +29,5 @@ window.Echo.channel('product-stock')
         badge.classList.remove('bg-success', 'bg-danger');
         badge.classList.add(quantity > 0 ? 'bg-success' : 'bg-danger');
     });
+
+

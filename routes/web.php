@@ -24,6 +24,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerifiFotnController;
 use App\Http\Controllers\Auth\NewEmailVerificationController;
 
+use App\Http\Controllers\AdminChatController;
 
 
 
@@ -70,7 +71,7 @@ Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke
 
     //xác minh mail client
 Route::get('/verify-email-custom', [EmailVerifiFotnController::class, 'verify'])
-    ->middleware(['signed'])
+    ->middleware(middleware: ['signed'])
     ->name('verification.verify.fotn');
 
 //cập nhật mail client nếu có nhu cầu và xác minh
@@ -141,6 +142,15 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
         ->middleware(['auth:sanctum', 'is_admin']);
 
     Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
+
+    // Admin chat routes
+    Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
+    Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
+Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+
+
+
+
 });
 
 Route::get('/thank-you', function () {

@@ -96,18 +96,26 @@ export default function MyOrdersPage() {
         fetchOrders();
     }, [navigate]);
 
-    useEffect(() => {
-        const channel = listenToOrderStatusRealtime((orderId, newStatus) => {
-            setOrders(prev =>
-                prev.map(order =>
-                    order.id === Number(orderId) ? { ...order, status: newStatus } : order
-                )
-            );
-        });
-        return () => {
-            channel.stopListening('.order.updated');
-        };
-    }, []);
+        useEffect(() => {
+            const channel = listenToOrderStatusRealtime((orderId, newStatus, paymentStatus) => {
+                setOrders(prev =>
+                    prev.map(order =>
+                        order.id === Number(orderId)
+                            ? {
+                                ...order,
+                                status: newStatus ?? order.status,
+                                payment_status: paymentStatus ?? order.payment_status,
+                            }
+                            : order
+                    )
+                );
+            });
+
+            return () => {
+                channel.stopListening('.order.updated');
+            };
+        }, []);
+
 
     const handleConfirmReceived = async (orderId) => {
         const token = localStorage.getItem('token');

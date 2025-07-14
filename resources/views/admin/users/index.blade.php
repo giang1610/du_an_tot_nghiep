@@ -36,13 +36,13 @@
                             <span class="d-none d-md-inline">Tìm kiếm</span>
                         </button>
                     </div>
-                    <div class="col-6 col-md-2">
+                    {{-- <div class="col-6 col-md-2">
                         @if($search)
                             <a href="{{ route('users.index') }}" class="btn btn-outline-secondary w-100">
                                 <i class="fas fa-times me-1 d-none d-md-inline"></i> Xóa lọc
                             </a>
                         @endif
-                    </div>
+                    </div> --}}
                 </div>
             </form>
 

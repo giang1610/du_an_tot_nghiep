@@ -15,8 +15,6 @@ use App\Models\CartItem;
 use App\Models\ProductVariant;
 use App\Models\Stock;
 
-//realTime đặt hàng
-use App\Events\ProductStockUpdated;
 
 class CartController extends Controller
 {
