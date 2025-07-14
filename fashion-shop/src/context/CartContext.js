@@ -27,6 +27,7 @@ export const CartProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       const items = res.data.cart_items || [];
+      
       setCart(items);
       calculateTotal(items);
     } catch (err) {

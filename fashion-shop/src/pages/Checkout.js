@@ -128,7 +128,7 @@ export default function Checkout() {
       shipping_address: form.address,
       billing_address: form.address,
       customer_phone: form.phone,
-      customer_email: form.email, // ✅ lấy từ form
+      customer_email: form.email,
       notes: form.notes,
       name: form.name,
       payment_method: form.payment_method,
@@ -149,6 +149,7 @@ export default function Checkout() {
         );
 
         if (data?.data?.payment_url) {
+          
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
           return;
