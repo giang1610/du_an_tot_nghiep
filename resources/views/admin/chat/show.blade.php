@@ -28,7 +28,7 @@
     }
 
     .chat-bubble {
-        max-width: 70%;
+        max-width: 100%;
         padding: 0.6rem 1rem;
         border-radius: 12px;
         font-size: 0.95rem;
@@ -52,6 +52,21 @@
         color: #6c757d;
         margin-top: 4px;
     }
+    
+    /* css cho hiệu ứng đang nhập */
+    @keyframes blink {
+        0% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+
+    .dot {
+        animation: blink 1.5s infinite;
+        animation-delay: calc(var(--i) * 0.3s);
+    }
+    .dot:nth-child(2) { --i: 1; }
+    .dot:nth-child(3) { --i: 2; }
+    .dot:nth-child(4) { --i: 3; }
 </style>
 
 <div class="card">
@@ -86,18 +101,32 @@
             @empty
                 <p class="text-muted text-center">Chưa có tin nhắn nào.</p>
             @endforelse
+                <div id="typing-indicator" class="text-muted small fst-italic ps-2" style="display: none;">
+                    <span>Đang nhập</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+                 </div>
+
         </div>
 
         {{-- Send message form --}}
-        <form method="POST" action="{{ route('admin.chat.send') }}">
-            @csrf
-            <input type="hidden" name="user_id" value="{{ $user->id }}">
+        <form method="POST" action="{{ route('admin.chat.send', ['userId' => $user->id]) }}">
+    @csrf
 
-            <div class="input-group">
-                <input type="text" name="message" class="form-control" placeholder="Nhập tin nhắn..." required>
-                <button class="btn btn-primary" type="submit">Gửi</button>
-            </div>
-        </form>
+    <div class="input-group">
+        <input type="text" name="message" class="form-control" placeholder="Nhập tin nhắn..." required>
+        <button class="btn btn-primary" type="submit">Gửi</button>
+    </div>
+</form>
+
     </div>
 </div>
+
+
 @endsection
+@section('scripts')
+<script>
+  window.chatUserId = {{ $user->id }};
+</script>
+<script src="{{ asset('js/chat-realtime.js') }}"></script>
+@endsection
+
+

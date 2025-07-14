@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { listenToNewMessages } from '../realtime/NewChat';
+import { sendTypingStatus } from '../realtime/tyPing';
 
 export default function ChatApp() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +13,7 @@ export default function ChatApp() {
   const { token } = useAuth();
 
   const adminAvatar = 'https://secure.gravatar.com/avatar/2ad86d4128742b555b487c8a62a33e9e?s=500&d=mm&r=g';
+  const userAvatar = 'https://img.freepik.com/premium-vector/man-avatar-profile-picture-isolated-background-avatar-profile-picture-man_1293239-4841.jpg';
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -22,10 +25,10 @@ export default function ChatApp() {
         if (user.img_thumbnail) {
           setAvatar(`${process.env.REACT_APP_IMAGE_BASE_URL}/storage/${user.img_thumbnail}`);
         } else {
-          setAvatar(adminAvatar);
+          setAvatar(userAvatar);
         }
       } catch (err) {
-        console.error('Lỗi parse user:', err);
+        console.error('❌ Lỗi parse user:', err);
         setAvatar(adminAvatar);
       }
     } else {
@@ -33,14 +36,29 @@ export default function ChatApp() {
     }
   }, []);
 
-  const loadMessages = async (userId) => {
+  useEffect(() => {
+    if (!userId) return;
+
+    const unsubscribeMessage = listenToNewMessages(userId, (newMessage) => {
+      setMessages(prev => [...prev, newMessage]);
+    });
+
+    return () => {
+      if (unsubscribeMessage?.stopListening) {
+        unsubscribeMessage.stopListening();
+      }
+    };
+  }, [userId]);
+
+  const loadMessages = async (uid) => {
     try {
       const res = await axios.get('/chat', {
-        params: { user_id: userId }
+        params: { user_id: uid },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setMessages(res.data.data || []);
     } catch (error) {
-      console.error(' Lỗi load tin nhắn:', error);
+      console.error('❌ Lỗi load tin nhắn:', error.response?.data || error.message);
     }
   };
 
@@ -48,7 +66,7 @@ export default function ChatApp() {
     if (!message.trim()) return;
 
     try {
-      await axios.post(
+      const res = await axios.post(
         '/chat/send',
         { message },
         {
@@ -57,16 +75,23 @@ export default function ChatApp() {
           },
         }
       );
+
+     
+      const newMessage = res.data.data;
+
+      setMessages(prev => [...prev, newMessage]);
+
       setMessage('');
-      if (userId) loadMessages(userId); 
+      console.log('data' , res.data);
     } catch (error) {
-      console.error(' Lỗi gửi tin nhắn:', error);
+      console.error('❌ Lỗi gửi tin nhắn:', error.response?.data || error.message);
     }
   };
 
+  
+
   return (
     <>
-      {/* Nút mở chat */}
       {!isOpen && (
         <button
           className="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle shadow"
@@ -80,20 +105,11 @@ export default function ChatApp() {
         </button>
       )}
 
-      {/* Khung chat */}
       {isOpen && (
         <div
           className="position-fixed bottom-0 end-0 m-4 bg-white border rounded shadow"
-          style={{
-            width: 420,
-            maxWidth: '95vw',
-            zIndex: 1040,
-            height: 600,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
+          style={{ width: 420, maxWidth: '95vw', zIndex: 1040, height: 600, display: 'flex', flexDirection: 'column' }}
         >
-          {/* Header */}
           <div className="border-bottom p-2 d-flex justify-content-between align-items-center">
             <strong>Trò chuyện</strong>
             <button className="btn btn-sm btn-danger" onClick={() => setIsOpen(false)}>
@@ -101,14 +117,13 @@ export default function ChatApp() {
             </button>
           </div>
 
-          {/* Nội dung chat */}
           <div className="flex-grow-1 p-3 overflow-auto" style={{ background: '#f8f9fa' }}>
             {messages.length === 0 ? (
               <div className="text-center text-muted">Chưa có tin nhắn nào.</div>
             ) : (
-              messages.map((msg) => (
+              messages.map((msg, index) => (
                 <div
-                  key={msg.id}
+                  key={msg.id || `msg-${index}-${Date.now()}`}
                   className={`d-flex mb-3 ${msg.sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`}
                 >
                   {msg.sender === 'admin' && (
@@ -135,7 +150,6 @@ export default function ChatApp() {
             )}
           </div>
 
-          {/* Footer nhập tin nhắn */}
           <div className="border-top p-2 d-flex align-items-center">
             <img
               src={avatar}
@@ -148,7 +162,9 @@ export default function ChatApp() {
               className="form-control me-2"
               placeholder="Nhập tin nhắn..."
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {setMessage(e.target.value);
+                sendTypingStatus(userId, token);}
+              }
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             />
             <button className="btn btn-primary" onClick={handleSend}>

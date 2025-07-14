@@ -236,6 +236,21 @@
 <script src="{{ asset('js/echo-setup.js') }}"></script>
 <script src="{{ asset('js/notification_RealTime.js') }}"></script>
 
+{{-- chatbox --}}
+
+<script>
+    window.currentUserId = {!! json_encode(Auth::id()) !!};
+</script>
+
+<script src="{{ asset('js/typing.js') }}"></script>
+
+
+{{-- chatbox --}}
+
+
+
+
+
 
 {{-- relTime --}}
 <!-- Notification -->
@@ -293,6 +308,7 @@
 
 
 
+@yield('scripts')
 
 </body>
 </html>

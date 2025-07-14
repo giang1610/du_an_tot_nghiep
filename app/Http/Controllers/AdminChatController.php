@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Chat;
 use App\Models\User;
+use App\Events\NewMessageEvent;
 
 class AdminChatController extends Controller
 {
@@ -15,31 +16,35 @@ class AdminChatController extends Controller
         return view('admin.chat.show', compact('user', 'chats'));
     }
 
-    public function send(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'message' => 'required|string',
-        ]);
+        public function send(Request $request, $userId)
+        {
+            $request->validate([
+                'message' => 'required|string',
+            ]);
 
-        $chat = Chat::create([
-            'user_id' => $request->user_id,
-            'message' => $request->message,
-            'sender'  => 'admin',
-        ]);
+            $user = User::findOrFail($userId);
 
-        return back()->with('success', 'Tin nhắn đã gửi!');
-    }
-    public function listUsers()
-    {
-    $users = Chat::select('user_id', \DB::raw('MAX(created_at) as latest'))
-    ->with('user')
-    ->groupBy('user_id')
-    ->orderByDesc('latest')
-    ->get();
+            broadcast(new NewMessageEvent($request->message, $user->id));
+
+            Chat::create([
+                'user_id' => $user->id,
+                'message' => $request->message,
+                'sender'  => 'admin',
+            ]);
+
+            return back()->with('success', 'Tin nhắn đã gửi!');
+        }
+
+        public function listUsers()
+        {
+        $users = Chat::select('user_id', \DB::raw('MAX(created_at) as latest'))
+        ->with('user')
+        ->groupBy('user_id')
+        ->orderByDesc('latest')
+        ->get();
 
 
-    return view('admin.chat.index', compact('users'));
-    }
+        return view('admin.chat.index', compact('users'));
+        }
 
 }

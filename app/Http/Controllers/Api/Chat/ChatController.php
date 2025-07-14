@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chat;
 use Illuminate\Support\Facades\Auth;
+use App\Events\UserTypingEvent;
+use App\Events\NewMessageEvent;
 
 class ChatController extends Controller
 {
-    /**
-     * Lấy lịch sử tin nhắn của user hiện tại
-     */
+  
     public function index(Request $request)
         {
             $userId = $request->query('user_id');
@@ -33,7 +33,7 @@ class ChatController extends Controller
             ]);
         }
 
-        
+
     /**
      * Gửi tin nhắn từ client
      */
@@ -49,6 +49,8 @@ class ChatController extends Controller
             'message' => 'required|string|max:1000',
         ]);
 
+        broadcast(new NewMessageEvent($validated['message'], $user->id));
+
         $chat = Chat::create([
             'user_id' => $user->id,
             'sender' => 'user',
@@ -60,5 +62,18 @@ class ChatController extends Controller
             'message' => 'Tin nhắn đã được gửi!',
             'data' => $chat
         ], 201);
+    }
+
+
+    public function typing(Request $request)
+    {
+        $user = Auth::user(); 
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        broadcast(new UserTypingEvent($user))->toOthers();
+        return response()->json(['status' => 'ok']);
     }
 }

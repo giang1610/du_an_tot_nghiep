@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->put('/change-password', [ChangePasswordContro
 //route chat
 Route::get('/chat', [ChatController::class, 'index']);
 Route::post('/chat/send', [ChatController::class, 'store']);
+Route::middleware('auth:api')->post('/chat/typing', [ChatController::class, 'typing']);
 
 
 
