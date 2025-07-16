@@ -49,7 +49,7 @@ class ChatController extends Controller
             'message' => 'required|string|max:1000',
         ]);
 
-        broadcast(new NewMessageEvent($validated['message'], $user->id));
+        broadcast(new NewMessageEvent($validated['message'], $user->id,'user',$request['avatar']));
 
         $chat = Chat::create([
             'user_id' => $user->id,

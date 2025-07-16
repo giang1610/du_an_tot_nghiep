@@ -100,4 +100,6 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->role == 1; // Giả sử role 1 là admin
     }
+
+    
 }

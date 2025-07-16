@@ -144,8 +144,10 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
 
     // Admin chat routes
-    Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
-    Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
+//     Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
+//     Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
+// Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+Route::get('/chat/{userId?}', [AdminChatController::class, 'index'])->name('admin.chat');
 Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
 
 

@@ -171,7 +171,7 @@
       </a>
     </li>
 +    <li class="nav-item menu-item" data-title="khách hàng customers">
-      <a href="{{ route('admin.chat.list') }}" class="nav-link">
+      <a href="{{ route('admin.chat') }}" class="nav-link">
         <i class="bi bi-people"></i><span class="menu-text"> Chat Với Khách hàng</span>
       </a>
     </li>
@@ -208,7 +208,7 @@
         <ul class="dropdown-menu dropdown-menu-end shadow">
           <li class="dropdown-header">{{ Auth::user()->name ?? 'Admin' }}<br><small class="text-muted">{{ Auth::user()->email ?? 'admin@example.com' }}</small></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
+          <li><a class="dropdown-item" href="{{route('profile.edit') }}"><i class="bi bi-person"></i> Hồ sơ</a></li>
           <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li>
           <li><hr class="dropdown-divider"></li>
           <li>
