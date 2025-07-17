@@ -232,7 +232,7 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-         // Lấy cart của user
+        // Lấy cart của user
         $cart = Cart::where('user_id', $user->id)->first();
 
         if (!$cart) {
@@ -250,7 +250,7 @@ class OrderController extends Controller
         }
 
         // Tạo mảng items cho đơn hàng từ cartItems
-        $items = $cartItems->map(function($item) {
+        $items = $cartItems->map(function ($item) {
             return [
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => $item->quantity,
@@ -499,9 +499,12 @@ class OrderController extends Controller
             ]);
 
             // Lấy giỏ hàng và chỉ lấy item selected = 1
-            $cart = Cart::with(['items' => function($q) {
-                $q->where('selected', true);
-            }, 'items.variant'])->where('user_id', $user->id)->first();
+            $cart = Cart::with([
+                'items' => function ($q) {
+                    $q->where('selected', true);
+                },
+                'items.variant'
+            ])->where('user_id', $user->id)->first();
 
             if (!$cart || $cart->items->isEmpty()) {
                 return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
@@ -634,9 +637,18 @@ class OrderController extends Controller
 
         // Danh sách các trường cần kiểm tra và xác minh
         $requiredFields = [
-            'amount', 'message', 'orderId', 'orderInfo',
-            'orderType', 'partnerCode', 'payType', 'requestId',
-            'responseTime', 'resultCode', 'transId', 'signature'
+            'amount',
+            'message',
+            'orderId',
+            'orderInfo',
+            'orderType',
+            'partnerCode',
+            'payType',
+            'requestId',
+            'responseTime',
+            'resultCode',
+            'transId',
+            'signature'
         ];
 
         // Kiểm tra thiếu trường
@@ -918,14 +930,15 @@ class OrderController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
+        // Chỉ cho phép xác nhận khi trạng thái là 'shipped'
         if ($order->status !== 'shipped') {
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'delivered';
-        $order->delivered_at = now();
+        $order->status = 'completed'; // Đã hoàn thành
+        $order->completed_at = now();
 
-        // ✅ Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
+        // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {
             $order->payment_status = 'paid';
         }
@@ -936,23 +949,35 @@ class OrderController extends Controller
     }
 
     // Yêu cầu trả hàng
+public function requestReturn(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
 
-    public function requestReturn(Request $request, $id)
-    {
-        $order = Order::findOrFail($id);
-
-        if ($order->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Không có quyền truy cập'], 403);
-        }
-
-        $request->validate([
-            'reason' => 'required|string|max:255',
-        ]);
-
-        $order->status = 'return_requested';
-        $order->return_reason = $request->input('reason');
-        $order->save();
-
-        return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+    if ($order->user_id !== auth()->id()) {
+        return response()->json(['message' => 'Không có quyền truy cập'], 403);
     }
+
+    $request->validate([
+        'reason' => 'required|string|max:255',
+        'media' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB
+    ]);
+
+    if ($order->status !== 'shipped') {
+        return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng'], 400);
+    }
+
+    $order->status = 'return_requested';
+    $order->return_reason = $request->input('reason');
+    $order->return_requested_at = now();
+
+    // Xử lý file upload
+    if ($request->hasFile('media')) {
+        $path = $request->file('media')->store('returns', 'public');
+        $order->return_media = $path;
+    }
+
+    $order->save();
+
+    return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+}
 }

@@ -84,20 +84,20 @@ export default function OrderDetailPage() {
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
-  //realTime Status
-  useEffect(() => {
-  const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
-    if (Number(orderIdFromSocket) === Number(id)) {
-      console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
-      setOrder(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          status: newStatus
-        };
-      });
-    }
-  });
+    //realTime Status
+    useEffect(() => {
+        const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
+            if (Number(orderIdFromSocket) === Number(id)) {
+                console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
+                setOrder(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        status: newStatus
+                    };
+                });
+            }
+        });
 
         return () => {
             channel.stopListening('.order.updated');
@@ -354,17 +354,16 @@ export default function OrderDetailPage() {
             <Card>
                 <Card.Body className="d-flex justify-content-between align-items-center">
                     <div>
-                        {/* Chỉ hiển thị các nút thao tác khi trạng thái cho phép */}
+                        {/* Hiển thị cả 2 nút khi trạng thái là 'shipped' */}
                         {order.status === 'shipped' && (
-                            <Button variant="success" size="sm" onClick={() => setShowConfirmReceived(true)}>
-                                Xác nhận đã nhận hàng
-                            </Button>
-                        )}
-
-                        {order.status === 'delivered' && (
-                            <Button variant="warning" size="sm" onClick={() => setShowReturnModal(true)} className="me-2">
-                                Yêu cầu hoàn đơn
-                            </Button>
+                            <>
+                                <Button variant="success" size="sm" onClick={() => setShowConfirmReceived(true)}>
+                                    Xác nhận đã nhận hàng
+                                </Button>
+                                <Button variant="warning" size="sm" onClick={() => setShowReturnModal(true)} className="ms-2">
+                                    Yêu cầu hoàn đơn
+                                </Button>
+                            </>
                         )}
 
                         {order.status === 'pending' && (
@@ -437,7 +436,7 @@ export default function OrderDetailPage() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowReviewModal(false)}>Đóng</Button>
-<Button variant="primary" onClick={handleSubmitReview} disabled={reviewLoading}>
+                    <Button variant="primary" onClick={handleSubmitReview} disabled={reviewLoading}>
                         {reviewLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
                     </Button>
                 </Modal.Footer>
