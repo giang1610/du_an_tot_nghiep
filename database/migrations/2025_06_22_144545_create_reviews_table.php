@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // users
             $table->foreignId('order_id')->constrained()->onDelete('cascade'); // orders
             $table->foreignId('product_variant_id')->constrained()->onDelete('cascade'); // product_variants
-
+            $table->string('media')->nullable(); // Đường dẫn file ảnh/video đánh giá
             $table->tinyInteger('review_round'); // 1 hoặc 2
             $table->tinyInteger('rating')->checkBetween(1, 5); // Laravel 10+ hỗ trợ checkBetween
             $table->text('content')->nullable();

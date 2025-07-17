@@ -14,15 +14,14 @@ const formatDate = (iso) => {
 const formatCurrency = (amount) => Number(amount).toLocaleString('vi-VN') + '₫';
 
 const STATUS_LABELS = {
-    pending: 'Chờ xác nhận',
+    pending: 'Chờ xử lý',
     processing: 'Đang xử lý',
     picking: 'Đang lấy hàng',
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
-    delivered: 'Đã nhận hàng',
+    delivered: 'Hoàn thành', // coi là hoàn thành
     return_requested: 'Đã yêu cầu hoàn hàng',
     returned: 'Hoàn hàng',
-    completed: 'Hoàn thành',
     cancelled: 'Đã hủy',
     failed: 'Giao hàng thất bại',
     failed_1: 'Giao hàng thất bại lần 1',
@@ -96,25 +95,25 @@ export default function MyOrdersPage() {
         fetchOrders();
     }, [navigate]);
 
-        useEffect(() => {
-            const channel = listenToOrderStatusRealtime((orderId, newStatus, paymentStatus) => {
-                setOrders(prev =>
-                    prev.map(order =>
-                        order.id === Number(orderId)
-                            ? {
-                                ...order,
-                                status: newStatus ?? order.status,
-                                payment_status: paymentStatus ?? order.payment_status,
-                            }
-                            : order
-                    )
-                );
-            });
+    useEffect(() => {
+        const channel = listenToOrderStatusRealtime((orderId, newStatus, paymentStatus) => {
+            setOrders(prev =>
+                prev.map(order =>
+                    order.id === Number(orderId)
+                        ? {
+                            ...order,
+                            status: newStatus ?? order.status,
+                            payment_status: paymentStatus ?? order.payment_status,
+                        }
+                        : order
+                )
+            );
+        });
 
-            return () => {
-                channel.stopListening('.order.updated');
-            };
-        }, []);
+        return () => {
+            channel.stopListening('.order.updated');
+        };
+    }, []);
 
 
     const handleConfirmReceived = async (orderId) => {
@@ -188,8 +187,16 @@ export default function MyOrdersPage() {
                                             </small>
                                             <div>
                                                 {reviews.map(r => (
-                                                    <div key={r.id} className="border p-1 my-1 rounded">
+                                                    <div key={r.id} className="border rounded mb-1 p-1">
                                                         {'★'.repeat(r.rating)} - {r.content}
+                                                        {r.media && (
+                                                            <div className="mt-2">
+                                                                {/\.(jpg|jpeg|png)$/i.test(r.media)
+                                                                    ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
+                                                                    : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
+                                                                }
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                                 {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}

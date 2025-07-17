@@ -14,12 +14,11 @@ const STATUS_LABELS = {
     picking: 'Đang lấy hàng',
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
-    delivered: 'Đã nhận hàng',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy',
-    failed: 'Giao hàng thất bại',
+    delivered: 'Hoàn thành', // coi là hoàn thành
     return_requested: 'Đã yêu cầu hoàn hàng',
     returned: 'Hoàn hàng',
+    cancelled: 'Đã hủy',
+    failed: 'Giao hàng thất bại',
     failed_1: 'Giao hàng thất bại lần 1',
     failed_2: 'Giao hàng thất bại lần 2',
 };
@@ -69,6 +68,7 @@ export default function OrderDetailPage() {
     // Modal HOÀN ĐƠN
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [returnReason, setReturnReason] = useState('');
+    const [returnMedia, setReturnMedia] = useState(null);
 
     // Modal XÁC NHẬN HỦY
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -79,6 +79,7 @@ export default function OrderDetailPage() {
     const [reviewContent, setReviewContent] = useState('');
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewLoading, setReviewLoading] = useState(false);
+    const [reviewMedia, setReviewMedia] = useState(null);
 
     // Modal XÁC NHẬN ĐÃ NHẬN HÀNG
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
@@ -173,26 +174,32 @@ export default function OrderDetailPage() {
         }
     };
 
+
     const handleRequestReturn = async () => {
         if (!returnReason.trim()) {
             alert('Vui lòng nhập lý do hoàn đơn!');
             return;
         }
+        const formData = new FormData();
+        formData.append('reason', returnReason);
+        if (returnMedia) formData.append('media', returnMedia);
+
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, {
-                reason: returnReason
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             alert('Đã gửi yêu cầu hoàn đơn!');
             setShowReturnModal(false);
             setReturnReason('');
+            setReturnMedia(null);
             fetchOrder();
         } catch {
             alert('Yêu cầu hoàn đơn thất bại!');
         }
     };
-
     const handleCancelOrder = async () => {
         try {
             await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/cancel`, {}, {
@@ -216,17 +223,23 @@ export default function OrderDetailPage() {
         if (!reviewItem) return;
         setReviewLoading(true);
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, {
-                order_id: order.id,
-                product_id: reviewItem.product_variant.product_id,
-                product_variant_id: reviewItem.product_variant_id,
-                rating: reviewRating,
-                content: reviewContent
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
+            const formData = new FormData();
+            formData.append('order_id', order.id);
+            formData.append('product_id', reviewItem.product_variant.product_id);
+            formData.append('product_variant_id', reviewItem.product_variant_id);
+            formData.append('rating', reviewRating);
+            formData.append('content', reviewContent);
+            if (reviewMedia) formData.append('media', reviewMedia);
+
+            await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             alert('Đánh giá thành công!');
             setShowReviewModal(false);
+            setReviewMedia(null);
             fetchOrder();
         } catch {
             alert('Gửi đánh giá thất bại.');
@@ -330,6 +343,14 @@ export default function OrderDetailPage() {
                                                 {reviews.map(r => (
                                                     <div key={r.id} className="border rounded mb-1 p-1">
                                                         {'★'.repeat(r.rating)} - {r.content}
+                                                        {r.media && (
+                                                            <div className="mt-2">
+                                                                {/\.(jpg|jpeg|png)$/i.test(r.media)
+                                                                    ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
+                                                                    : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
+                                                                }
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                                 {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
@@ -400,6 +421,14 @@ export default function OrderDetailPage() {
                             placeholder="Nhập lý do chi tiết..."
                         />
                     </Form.Group>
+                    <Form.Group className="mt-2">
+                        <Form.Label>Ảnh/Video sản phẩm lỗi</Form.Label>
+                        <Form.Control
+                            type="file"
+                            accept="image/*,video/*"
+                            onChange={e => setReturnMedia(e.target.files[0])}
+                        />
+                    </Form.Group>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowReturnModal(false)}>Hủy</Button>
@@ -428,6 +457,14 @@ export default function OrderDetailPage() {
                     <Form.Group>
                         <Form.Label>Đánh giá sao</Form.Label>
                         <Form.Control type="number" min={1} max={5} value={reviewRating} onChange={e => setReviewRating(Number(e.target.value))} />
+                    </Form.Group>
+                    <Form.Group className="mt-2">
+                        <Form.Label>Ảnh/Video sản phẩm</Form.Label>
+                        <Form.Control
+                            type="file"
+                            accept="image/*,video/*"
+                            onChange={e => setReviewMedia(e.target.files[0])}
+                        />
                     </Form.Group>
                     <Form.Group className="mt-2">
                         <Form.Label>Nội dung</Form.Label>

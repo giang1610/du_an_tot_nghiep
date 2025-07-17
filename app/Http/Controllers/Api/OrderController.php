@@ -101,19 +101,11 @@ class OrderController extends Controller
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
 
-
-
             }
 
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
 
             DB::commit();
-
-
-
-
-
-
 
             return response()->json([
                 'message' => 'Tạo đơn hàng thành công',
@@ -232,7 +224,7 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-        // Lấy cart của user
+         // Lấy cart của user
         $cart = Cart::where('user_id', $user->id)->first();
 
         if (!$cart) {
@@ -250,7 +242,7 @@ class OrderController extends Controller
         }
 
         // Tạo mảng items cho đơn hàng từ cartItems
-        $items = $cartItems->map(function ($item) {
+        $items = $cartItems->map(function($item) {
             return [
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => $item->quantity,
@@ -325,13 +317,14 @@ class OrderController extends Controller
                 // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
-
                     broadcast(new ProductStockUpdated(
                         $variant->id,
                         $variant->fresh()->stock->quantity
                     ));
                 }
             }
+
+            event(new NewOrderCreated($order->order_number, $order->id));
 
             event(new NewOrderCreated($order->order_number, $order->id));
 
@@ -499,12 +492,9 @@ class OrderController extends Controller
             ]);
 
             // Lấy giỏ hàng và chỉ lấy item selected = 1
-            $cart = Cart::with([
-                'items' => function ($q) {
-                    $q->where('selected', true);
-                },
-                'items.variant'
-            ])->where('user_id', $user->id)->first();
+            $cart = Cart::with(['items' => function($q) {
+                $q->where('selected', true);
+            }, 'items.variant'])->where('user_id', $user->id)->first();
 
             if (!$cart || $cart->items->isEmpty()) {
                 return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
@@ -637,18 +627,9 @@ class OrderController extends Controller
 
         // Danh sách các trường cần kiểm tra và xác minh
         $requiredFields = [
-            'amount',
-            'message',
-            'orderId',
-            'orderInfo',
-            'orderType',
-            'partnerCode',
-            'payType',
-            'requestId',
-            'responseTime',
-            'resultCode',
-            'transId',
-            'signature'
+            'amount', 'message', 'orderId', 'orderInfo',
+            'orderType', 'partnerCode', 'payType', 'requestId',
+            'responseTime', 'resultCode', 'transId', 'signature'
         ];
 
         // Kiểm tra thiếu trường
@@ -732,7 +713,6 @@ class OrderController extends Controller
                             ->delete();
                     }
                 }
-
                 Mail::to($order->customer_email)->queue(new OrderPlaced($order, $order->user));
 
                 DB::commit();
@@ -935,8 +915,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'completed'; // Đã hoàn thành
-        $order->completed_at = now();
+        $order->status = 'delivered'; // Đã nhận hàng (coi là hoàn thành)
+        $order->delivered_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {

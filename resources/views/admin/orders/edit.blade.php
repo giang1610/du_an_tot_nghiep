@@ -23,6 +23,16 @@
                         <div class="border rounded p-2 bg-light">
                             {{ $order->return_reason ?? '— Không có lý do —' }}
                         </div>
+                        @if($order->return_media)
+                            <div>
+                                <strong>File minh chứng:</strong>
+                                @if(Str::endsWith($order->return_media, ['.jpg','.jpeg','.png']))
+                                    <img src="{{ asset('storage/' . $order->return_media) }}" alt="Ảnh lỗi" width="200" />
+                                @else
+                                    <video src="{{ asset('storage/' . $order->return_media) }}" controls width="300"></video>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                     <form action="{{ route('orders.handleReturn', $order->id) }}" method="POST">
                         @csrf
