@@ -15,11 +15,12 @@ const STATUS_LABELS = {
     picking: 'Đang lấy hàng',
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
-    delivered: 'Hoàn thành', // coi là hoàn thành
-    return_requested: 'Đã yêu cầu hoàn hàng',
-    returned: 'Hoàn hàng',
+    delivered: 'Đã nhận hàng',
+    completed: 'Hoàn thành',
     cancelled: 'Đã hủy',
     failed: 'Giao hàng thất bại',
+    return_requested: 'Đã yêu cầu hoàn hàng',
+    returned: 'Hoàn hàng',
     failed_1: 'Giao hàng thất bại lần 1',
     failed_2: 'Giao hàng thất bại lần 2',
 };
@@ -68,22 +69,15 @@ export default function OrderDetailPage() {
 
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [returnReason, setReturnReason] = useState('');
-    const [returnMedia, setReturnMedia] = useState(null);
-
-    // Modal XÁC NHẬN HỦY
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewItem, setReviewItem] = useState(null);
     const [reviewContent, setReviewContent] = useState('');
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewLoading, setReviewLoading] = useState(false);
-    const [reviewMedia, setReviewMedia] = useState(null);
-
-    // Modal XÁC NHẬN ĐÃ NHẬN HÀNG
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
-    //realTime Status
     useEffect(() => {
         const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
             if (Number(orderIdFromSocket) === Number(id)) {
@@ -116,21 +110,6 @@ export default function OrderDetailPage() {
     useEffect(() => {
         fetchOrder();
     }, [fetchOrder]);
-
-    useEffect(() => {
-        const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
-            if (Number(orderIdFromSocket) === Number(id)) {
-                setOrder(prev => {
-                    if (!prev) return prev;
-                    return { ...prev, status: newStatus };
-                });
-            }
-        });
-
-        return () => {
-            channel.stopListening('.order.updated');
-        };
-    }, [id]);
 
     const handleUpdateAddress = async () => {
         if (!newAddress.trim()) return;
@@ -166,27 +145,20 @@ export default function OrderDetailPage() {
         }
     };
 
-
     const handleRequestReturn = async () => {
         if (!returnReason.trim()) {
             alert('Vui lòng nhập lý do hoàn đơn!');
             return;
         }
-        const formData = new FormData();
-        formData.append('reason', returnReason);
-        if (returnMedia) formData.append('media', returnMedia);
-
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, {
+                reason: returnReason
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
             });
             alert('Đã gửi yêu cầu hoàn đơn!');
             setShowReturnModal(false);
             setReturnReason('');
-            setReturnMedia(null);
             fetchOrder();
         } catch {
             alert('Yêu cầu hoàn đơn thất bại!');
@@ -216,23 +188,17 @@ export default function OrderDetailPage() {
         if (!reviewItem) return;
         setReviewLoading(true);
         try {
-            const formData = new FormData();
-            formData.append('order_id', order.id);
-            formData.append('product_id', reviewItem.product_variant.product_id);
-            formData.append('product_variant_id', reviewItem.product_variant_id);
-            formData.append('rating', reviewRating);
-            formData.append('content', reviewContent);
-            if (reviewMedia) formData.append('media', reviewMedia);
-
-            await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
+            await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, {
+                order_id: order.id,
+                product_id: reviewItem.product_variant.product_id,
+                product_variant_id: reviewItem.product_variant_id,
+                rating: reviewRating,
+                content: reviewContent
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
             });
             alert('Đánh giá thành công!');
             setShowReviewModal(false);
-            setReviewMedia(null);
             fetchOrder();
         } catch {
             alert('Gửi đánh giá thất bại.');
@@ -289,13 +255,13 @@ export default function OrderDetailPage() {
                                     </>
                                 )}
                             </div>
+
                             <p className="mb-0">
                                 <strong>Phương thức thanh toán:</strong>{' '}
                                 {PAYMENT_METHOD_LABELS[order.payment_method] || 'Không rõ'}
                             </p>
-
                             {order.return_reason && (
-                                <div className="mt-3">
+                                <p className="mt-3">
                                     <strong>Lý do hoàn đơn:</strong><br />
                                     <span className="border rounded d-block p-2 bg-light">{order.return_reason}</span>
                                     {/* Hiển thị ảnh/video minh chứng nếu có */}
@@ -306,25 +272,27 @@ export default function OrderDetailPage() {
                                                     <img
                                                         src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
                                                         alt="Ảnh minh chứng hoàn đơn"
-                                                        style={{ maxWidth: 200, borderRadius: 8 }}
+                                                        style={{ maxWidth: 150, borderRadius: 8 }}
                                                     />
                                                 )
                                                 : (
                                                     <video
                                                         src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
                                                         controls
-                                                        style={{ maxWidth: 240, borderRadius: 8 }}
+                                                        style={{ maxWidth: 150, borderRadius: 8 }}
                                                     />
                                                 )
                                             }
                                         </div>
                                     )}
-                                </div>
+                                </p>
                             )}
                         </Card.Body>
                     </Card>
+                </Col>
 
-                    <Card className="mb-3">
+                <Col md={7}>
+                    <Card>
                         <Card.Header className="fw-bold">Sản phẩm</Card.Header>
                         <Card.Body className="p-0">
                             <Table responsive borderless hover className="mb-0 text-center align-middle">
@@ -346,9 +314,7 @@ export default function OrderDetailPage() {
                                         const deliveredAt = new Date(order.delivered_at);
                                         const now = new Date();
                                         const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
-                                        let canReview = false;
-                                        if (count === 0) canReview = true;
-                                        else if (count === 1 && diffDays >= 7) canReview = true;
+                                        let canReview = count === 0 || (count === 1 && diffDays >= 7);
 
                                         return (
                                             <tr key={item.id}>
@@ -363,14 +329,6 @@ export default function OrderDetailPage() {
                                                         {reviews.map(r => (
                                                             <div key={r.id} className="border rounded mb-1 p-1">
                                                                 {'★'.repeat(r.rating)} - {r.content}
-                                                                {r.media && (
-                                                                    <div className="mt-2">
-                                                                        {/\.(jpg|jpeg|png)$/i.test(r.media)
-                                                                            ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
-                                                                            : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
-                                                                        }
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                         ))}
                                                         {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
@@ -397,17 +355,25 @@ export default function OrderDetailPage() {
             <Card>
                 <Card.Body className="d-flex justify-content-between align-items-center flex-wrap">
                     <div>
-                        {/* Hiển thị cả 2 nút khi trạng thái là 'shipped' */}
-                        {order.status === 'shipped' && (
-                            <>
+                        <div className="d-flex flex-column gap-2">
+                            {order.status === 'shipped' && (
                                 <Button variant="success" size="sm" onClick={() => setShowConfirmReceived(true)}>
-                                    Xác nhận đã nhận hàng
+                                    Đã nhận hàng
                                 </Button>
-                                <Button variant="warning" size="sm" onClick={() => setShowReturnModal(true)} className="ms-2">
-                                    Yêu cầu hoàn đơn
-                                </Button>
-                            </>
-                        )}
+                            )}
+                            {(order.status === 'delivered' || order.status === 'shipped') && (() => {
+                                const baseDate = new Date(order.delivered_at || order.shipped_at || order.updated_at || order.created_at);
+                                const now = new Date();
+                                const diffDays = Math.floor((now - baseDate) / (1000 * 60 * 60 * 24));
+
+                                return diffDays <= 7 ? (
+                                    <Button variant="warning" size="sm" onClick={() => setShowReturnModal(true)}>
+                                        Yêu cầu hoàn đơn
+                                    </Button>
+                                ) : null;
+                            })()}
+
+                        </div>
 
                         <p className="mt-3 mb-0">
                             <strong>Thanh toán:</strong>{' '}
@@ -435,14 +401,6 @@ export default function OrderDetailPage() {
                         <Form.Label>Lý do hoàn đơn</Form.Label>
                         <Form.Control as="textarea" rows={4} value={returnReason} onChange={(e) => setReturnReason(e.target.value)} placeholder="Nhập lý do chi tiết..." />
                     </Form.Group>
-                    <Form.Group className="mt-2">
-                        <Form.Label>Ảnh/Video sản phẩm lỗi</Form.Label>
-                        <Form.Control
-                            type="file"
-                            accept="image/*,video/*"
-                            onChange={e => setReturnMedia(e.target.files[0])}
-                        />
-                    </Form.Group>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowReturnModal(false)}>Hủy</Button>
@@ -467,14 +425,6 @@ export default function OrderDetailPage() {
                     <Form.Group className="mb-3">
                         <Form.Label>Đánh giá sao</Form.Label>
                         <InteractiveStarRating rating={reviewRating} onChange={setReviewRating} />
-                    </Form.Group>
-                    <Form.Group className="mt-2">
-                        <Form.Label>Ảnh/Video sản phẩm</Form.Label>
-                        <Form.Control
-                            type="file"
-                            accept="image/*,video/*"
-                            onChange={e => setReviewMedia(e.target.files[0])}
-                        />
                     </Form.Group>
                     <Form.Group className="mt-2">
                         <Form.Label>Nội dung</Form.Label>
