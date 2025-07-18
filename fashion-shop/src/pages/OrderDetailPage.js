@@ -200,6 +200,7 @@ export default function OrderDetailPage() {
             alert('Yêu cầu hoàn đơn thất bại!');
         }
     };
+
     const handleCancelOrder = async () => {
         try {
             await axios.put(`${process.env.REACT_APP_API_URL}/orders/${id}/cancel`, {}, {
@@ -296,10 +297,31 @@ export default function OrderDetailPage() {
                     </div>
 
                     {order.return_reason && (
-                        <p className="mt-3">
+                        <div className="mt-3">
                             <strong>Lý do hoàn đơn:</strong><br />
                             <span className="border rounded d-block p-2 bg-light">{order.return_reason}</span>
-                        </p>
+                            {/* Hiển thị ảnh/video minh chứng nếu có */}
+                            {order.return_media && (
+                                <div className="mt-2">
+                                    {/\.(jpg|jpeg|png)$/i.test(order.return_media)
+                                        ? (
+                                            <img
+                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
+                                                alt="Ảnh minh chứng hoàn đơn"
+                                                style={{ maxWidth: 200, borderRadius: 8 }}
+                                            />
+                                        )
+                                        : (
+                                            <video
+                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
+                                                controls
+                                                style={{ maxWidth: 240, borderRadius: 8 }}
+                                            />
+                                        )
+                                    }
+                                </div>
+                            )}
+                        </div>
                     )}
                 </Card.Body>
             </Card>

@@ -90,6 +90,8 @@ class ReviewController extends Controller
 
         return response()->json(['success' => true, 'data' => $reviews]);
     }
+
+    // Lấy danh sách đánh giá cho 1 variant cụ thể
     public function receivedOrders(Request $request)
 {
     $user = $request->user();

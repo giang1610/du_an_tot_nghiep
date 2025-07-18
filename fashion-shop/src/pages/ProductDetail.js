@@ -316,14 +316,14 @@ export default function ProductDetail() {
                                         {/\.(jpg|jpeg|png)$/i.test(r.media)
                                             ? (
                                                 <img
-                                                    src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`}
+                                                    src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${r.media}`}
                                                     alt="Ảnh đánh giá"
                                                     style={{ maxWidth: 180, borderRadius: 8 }}
                                                 />
                                             )
                                             : (
                                                 <video
-                                                    src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`}
+                                                    src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${r.media}`}
                                                     controls
                                                     style={{ maxWidth: 240, borderRadius: 8 }}
                                                 />
