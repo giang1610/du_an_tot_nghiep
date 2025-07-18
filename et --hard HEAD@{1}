@@ -1,0 +1,125 @@
+[33mf246c83a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdemo[m[33m, [m[1;31morigin/demo[m[33m)[m HEAD@{0}: reset: moving to origin/demo
+[33mc77800f2[m[33m ([m[1;31morigin/lyhongcong[m[33m, [m[1;32mlyhongcong[m[33m)[m HEAD@{1}: merge origin/lyhongcong: Fast-forward
+[33mf246c83a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdemo[m[33m, [m[1;31morigin/demo[m[33m)[m HEAD@{2}: pull origin demo: Fast-forward
+[33ma99ecd16[m HEAD@{3}: checkout: moving from lyhongcong to demo
+[33mc77800f2[m[33m ([m[1;31morigin/lyhongcong[m[33m, [m[1;32mlyhongcong[m[33m)[m HEAD@{4}: commit (merge): chỉnh lại trc khi đẩy đánh giá và hoàn đơn
+[33m18288bfb[m HEAD@{5}: checkout: moving from demo to lyhongcong
+[33ma99ecd16[m HEAD@{6}: reset: moving to HEAD~1
+[33mf246c83a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdemo[m[33m, [m[1;31morigin/demo[m[33m)[m HEAD@{7}: pull origin demo: Fast-forward
+[33m7a557650[m HEAD@{8}: checkout: moving from lyhongcong to demo
+[33m18288bfb[m HEAD@{9}: commit: sửa lại đánh giá và hoàn đơn
+[33mdff5e42c[m HEAD@{10}: commit (merge): tạm commit 01
+[33m513b0da4[m HEAD@{11}: checkout: moving from demo to lyhongcong
+[33m7a557650[m HEAD@{12}: checkout: moving from lyhongcong to demo
+[33m513b0da4[m HEAD@{13}: commit: lưu để pull demo về làm lại hoàn đơn
+[33mb94a4da3[m HEAD@{14}: commit: 002
+[33m8b19e5bb[m HEAD@{15}: checkout: moving from lyhongcong to lyhongcong
+[33m8b19e5bb[m HEAD@{16}: checkout: moving from demo to lyhongcong
+[33m7a557650[m HEAD@{17}: pull origin demo: Fast-forward
+[33m2f075db7[m HEAD@{18}: checkout: moving from lyhongcong to demo
+[33m8b19e5bb[m HEAD@{19}: commit: 1234
+[33m2284cbd1[m HEAD@{20}: checkout: moving from lyhongcong to lyhongcong
+[33m2284cbd1[m HEAD@{21}: checkout: moving from demo to lyhongcong
+[33m2f075db7[m HEAD@{22}: pull origin demo: Fast-forward
+[33mdca73f0d[m HEAD@{23}: checkout: moving from lyhongcong to demo
+[33m2284cbd1[m HEAD@{24}: checkout: moving from demo to lyhongcong
+[33mdca73f0d[m HEAD@{25}: commit: tt hoàn đơn
+[33m042222c6[m HEAD@{26}: checkout: moving from lyhongcong to demo
+[33m2284cbd1[m HEAD@{27}: commit (merge): hoàn đơn
+[33m45a3eda8[m HEAD@{28}: checkout: moving from demo to lyhongcong
+[33m042222c6[m HEAD@{29}: rebase (finish): returning to refs/heads/demo
+[33m042222c6[m HEAD@{30}: rebase (pick): hoàn đơn
+[33mb87b2eff[m HEAD@{31}: rebase (pick): trạng thái hoàn đơn
+[33me2e875fe[m HEAD@{32}: commit (amend): WIP: update OrderController
+[33m6c42c5a1[m HEAD@{33}: commit (amend): WIP: update OrderController
+[33m2ab6ee07[m HEAD@{34}: pull --rebase origin demo (start): checkout 2ab6ee072eaf9fb167561ca7fa695b6293ed719f
+[33m83b17be4[m HEAD@{35}: commit: hoàn đơn
+[33me4f2dff6[m HEAD@{36}: checkout: moving from demo to demo
+[33me4f2dff6[m HEAD@{37}: commit: trạng thái hoàn đơn
+[33m63c46a1f[m HEAD@{38}: checkout: moving from demo to demo
+[33m63c46a1f[m HEAD@{39}: commit: trạng thái hoàn hàng
+[33mdd8a90c2[m HEAD@{40}: checkout: moving from demo to demo
+[33mdd8a90c2[m HEAD@{41}: reset: moving to HEAD
+[33mdd8a90c2[m HEAD@{42}: merge origin/lyhongcong: updating HEAD
+[33mdd8a90c2[m HEAD@{43}: checkout: moving from demo to demo
+[33mdd8a90c2[m HEAD@{44}: checkout: moving from lyhongcong to demo
+[33m45a3eda8[m HEAD@{45}: commit: trạng thái hoàn đơn
+[33maf5cc990[m HEAD@{46}: checkout: moving from lyhongcong to lyhongcong
+[33maf5cc990[m HEAD@{47}: reset: moving to HEAD
+[33maf5cc990[m HEAD@{48}: pull origin demo: updating HEAD
+[33maf5cc990[m HEAD@{49}: checkout: moving from demo to lyhongcong
+[33mdd8a90c2[m HEAD@{50}: checkout: moving from demo to demo
+[33mdd8a90c2[m HEAD@{51}: checkout: moving from lyhongcong to demo
+[33maf5cc990[m HEAD@{52}: commit: 111
+[33m63d9e8a0[m HEAD@{53}: checkout: moving from lyhongcong to lyhongcong
+[33m63d9e8a0[m HEAD@{54}: reset: moving to HEAD
+[33m63d9e8a0[m HEAD@{55}: pull origin demo: updating HEAD
+[33m63d9e8a0[m HEAD@{56}: pull origin demo: updating HEAD
+[33m63d9e8a0[m HEAD@{57}: pull origin demo: updating HEAD
+[33m63d9e8a0[m HEAD@{58}: checkout: moving from lyhongcong to lyhongcong
+[33m63d9e8a0[m HEAD@{59}: checkout: moving from demo to lyhongcong
+[33mdd8a90c2[m HEAD@{60}: checkout: moving from demo to demo
+[33mdd8a90c2[m HEAD@{61}: commit: 123
+[33m18aa750c[m HEAD@{62}: checkout: moving from demo to demo
+[33m18aa750c[m HEAD@{63}: checkout: moving from lyhongcong to demo
+[33m63d9e8a0[m HEAD@{64}: commit: 234
+[33m0c315206[m HEAD@{65}: checkout: moving from lyhongcong to lyhongcong
+[33m0c315206[m HEAD@{66}: commit: -123
+[33md2767b0a[m HEAD@{67}: pull origin demo: updating HEAD
+[33md2767b0a[m HEAD@{68}: checkout: moving from lyhongcong to lyhongcong
+[33md2767b0a[m HEAD@{69}: checkout: moving from demo to lyhongcong
+[33m18aa750c[m HEAD@{70}: commit (merge): Fix conflict
+[33m007193c5[m HEAD@{71}: reset: moving to HEAD
+[33m007193c5[m HEAD@{72}: pull origin demo: updating HEAD
+[33m007193c5[m HEAD@{73}: pull origin demo: updating HEAD
+[33m007193c5[m HEAD@{74}: checkout: moving from demo to demo
+[33m007193c5[m HEAD@{75}: reset: moving to HEAD
+[33m007193c5[m HEAD@{76}: reset: moving to HEAD
+[33m007193c5[m HEAD@{77}: pull origin demo: updating HEAD
+[33m007193c5[m HEAD@{78}: checkout: moving from demo to demo
+[33m007193c5[m HEAD@{79}: checkout: moving from lyhongcong to demo
+[33md2767b0a[m HEAD@{80}: commit: 123
+[33m3fe444df[m HEAD@{81}: commit: đánh giá
+[33m54d96aef[m HEAD@{82}: checkout: moving from lyhongcong to lyhongcong
+[33m54d96aef[m HEAD@{83}: reset: moving to HEAD
+[33m54d96aef[m HEAD@{84}: pull origin demo: updating HEAD
+[33m54d96aef[m HEAD@{85}: checkout: moving from demo to lyhongcong
+[33m007193c5[m HEAD@{86}: reset: moving to HEAD
+[33m007193c5[m HEAD@{87}: reset: moving to HEAD
+[33m007193c5[m HEAD@{88}: pull origin demo: updating HEAD
+[33m007193c5[m HEAD@{89}: checkout: moving from demo to demo
+[33m007193c5[m HEAD@{90}: checkout: moving from lyhongcong to demo
+[33m54d96aef[m HEAD@{91}: commit: 007
+[33m066cf621[m HEAD@{92}: checkout: moving from lyhongcong to lyhongcong
+[33m066cf621[m HEAD@{93}: commit: WIP: local changes
+[33m01949590[m HEAD@{94}: pull origin demo: updating HEAD
+[33m01949590[m HEAD@{95}: checkout: moving from lyhongcong to lyhongcong
+[33m01949590[m HEAD@{96}: commit: WIP: update OrderController
+[33m10ee9e63[m HEAD@{97}: checkout: moving from demo to lyhongcong
+[33m007193c5[m HEAD@{98}: commit: WIP: update OrderController
+[33mefda39d4[m HEAD@{99}: pull origin demo: Fast-forward
+[33m10ee9e63[m HEAD@{100}: reset: moving to HEAD
+[33m10ee9e63[m HEAD@{101}: checkout: moving from lyhongcong to demo
+[33m10ee9e63[m HEAD@{102}: pull origin demo: Fast-forward
+[33m08211901[m HEAD@{103}: checkout: moving from demo to lyhongcong
+[33m10ee9e63[m HEAD@{104}: pull origin demo: Fast-forward
+[33mccb62cfb[m HEAD@{105}: checkout: moving from lyhongcong to demo
+[33m08211901[m HEAD@{106}: commit: 005
+[33mf1b19b5d[m HEAD@{107}: commit: 004
+[33m6382888a[m HEAD@{108}: checkout: moving from lyhongcong to lyhongcong
+[33m6382888a[m HEAD@{109}: checkout: moving from ming25 to lyhongcong
+[33mc75c8aaf[m[33m ([m[1;32mming25[m[33m)[m HEAD@{110}: commit (merge): 004
+[33m4dbd5564[m HEAD@{111}: checkout: moving from lyhongcong to ming25
+[33m6382888a[m HEAD@{112}: commit: 003
+[33mea487d21[m HEAD@{113}: checkout: moving from lyhongcong to lyhongcong
+[33mea487d21[m HEAD@{114}: commit: 002
+[33ma3caf289[m HEAD@{115}: pull origin ming25: updating HEAD
+[33ma3caf289[m HEAD@{116}: checkout: moving from lyhongcong to lyhongcong
+[33ma3caf289[m HEAD@{117}: commit: WIP: save local changes
+[33m4dbd5564[m HEAD@{118}: pull origin ming25: updating HEAD
+[33m4dbd5564[m HEAD@{119}: checkout: moving from ming25 to lyhongcong
+[33m4dbd5564[m HEAD@{120}: pull origin ming25: updating HEAD
+[33m4dbd5564[m HEAD@{121}: checkout: moving from ming25 to ming25
+[33m4dbd5564[m HEAD@{122}: reset: moving to HEAD
+[33m4dbd5564[m HEAD@{123}: pull origin ming25: updating HEAD
+[
