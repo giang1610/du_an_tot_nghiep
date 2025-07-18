@@ -703,7 +703,7 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            if ((int) $data['resultCode'] === 0) {
+            if ((int)$data['resultCode'] === 0) {
                 // Thanh toán thành công
                 $order->update([
                     'status' => 'processing',
