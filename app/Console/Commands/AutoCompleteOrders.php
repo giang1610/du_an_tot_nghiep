@@ -9,21 +9,38 @@ use Carbon\Carbon;
 class AutoCompleteOrders extends Command
 {
     protected $signature = 'orders:auto-complete';
-    protected $description = 'Tự động chuyển đơn hàng Đã nhận sang Đã hoàn thành sau 3 ngày';
+    protected $description = 'Tự động chuyển đơn hàng Đã nhận hoặc Đã hoàn hàng sang Đã hoàn thành sau 3 ngày';
 
     public function handle()
     {
-        $orders = Order::where('status', 'delivered')
+        // Đơn hàng delivered > 3 ngày, không có yêu cầu hoàn hàng
+        $deliveredOrders = Order::where('status', 'delivered')
+            ->whereNotNull('delivered_at')
             ->where('delivered_at', '<=', Carbon::now()->subDays(3))
-            ->whereNull('return_requested_at')
             ->get();
 
-        foreach ($orders as $order) {
+        // Đơn hàng returned > 3 ngày
+        $returnedOrders = Order::where('status', 'returned')
+            ->whereNotNull('returned_at')
+            ->where('returned_at', '<=', Carbon::now()->subDays(3))
+            ->get();
+
+        $count = 0;
+
+        foreach ($deliveredOrders as $order) {
             $order->status = 'completed';
             $order->completed_at = now();
             $order->save();
+            $count++;
         }
 
-        $this->info('Đã tự động hoàn thành ' . $orders->count() . ' đơn hàng.');
+        foreach ($returnedOrders as $order) {
+            $order->status = 'completed';
+            $order->completed_at = now();
+            $order->save();
+            $count++;
+        }
+
+        $this->info('Đã tự động hoàn thành ' . $count . ' đơn hàng.');
     }
 }
