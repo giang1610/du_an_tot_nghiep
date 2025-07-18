@@ -2,11 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
     Container, Card, Table, Spinner, Alert,
-    Button, Form, Badge, Modal
+    Button, Form, Badge, Modal, Row, Col
 } from 'react-bootstrap';
 import axios from 'axios';
 import '../css/OrderDetail.css';
 import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
+import InteractiveStarRating from '../components/InteractiveStarRating';
 
 const STATUS_LABELS = {
     pending: 'Chờ xử lý',
@@ -65,15 +66,12 @@ export default function OrderDetailPage() {
     const [editingAddress, setEditingAddress] = useState(false);
     const [updatingAddress, setUpdatingAddress] = useState(false);
 
-    // Modal HOÀN ĐƠN
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [returnReason, setReturnReason] = useState('');
     const [returnMedia, setReturnMedia] = useState(null);
 
     // Modal XÁC NHẬN HỦY
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-
-    // Modal REVIEW
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewItem, setReviewItem] = useState(null);
     const [reviewContent, setReviewContent] = useState('');
@@ -92,17 +90,11 @@ export default function OrderDetailPage() {
                 console.log('[Realtime] Cập nhật trạng thái mới:', newStatus);
                 setOrder(prev => {
                     if (!prev) return prev;
-                    return {
-                        ...prev,
-                        status: newStatus
-                    };
+                    return { ...prev, status: newStatus };
                 });
             }
         });
-
-        return () => {
-            channel.stopListening('.order.updated');
-        };
+        return () => channel.stopListening('.order.updated');
     }, [id]);
 
     const fetchOrder = useCallback(async () => {
@@ -267,135 +259,143 @@ export default function OrderDetailPage() {
                 </Card.Header>
             </Card>
 
-            <Card className="mb-3">
-                <Card.Header className="fw-bold">Thông tin giao hàng</Card.Header>
-                <Card.Body>
-                    <p><strong>Name:</strong> {order.user?.name || 'Không rõ'}</p>
-                    <p><strong>Email:</strong> {order.customer_email}</p>
-                    <p><strong>SĐT:</strong> {order.customer_phone}</p>
-                    <div>
-                        <strong>Địa chỉ:</strong>{' '}
-                        {editingAddress ? (
-                            <>
-                                <Form.Control size="sm" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} disabled={updatingAddress} />
-                                <div className="mt-2">
-                                    <Button size="sm" variant="success" onClick={handleUpdateAddress} disabled={updatingAddress}>Lưu</Button>{' '}
-                                    <Button size="sm" variant="secondary" onClick={() => {
-                                        setNewAddress(order.shipping_address);
-                                        setEditingAddress(false);
-                                    }}>Hủy</Button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                {order.shipping_address}{' '}
-                                {order.status === 'pending' && (
-                                    <Button size="sm" variant="link" onClick={() => setEditingAddress(true)}>[Sửa]</Button>
+            <Row className="mb-3">
+                <Col md={5}>
+                    <Card>
+                        <Card.Header className="fw-bold">Thông tin giao hàng</Card.Header>
+                        <Card.Body>
+                            <p><strong>Name:</strong> {order.user?.name || 'Không rõ'}</p>
+                            <p><strong>Email:</strong> {order.customer_email}</p>
+                            <p><strong>SĐT:</strong> {order.customer_phone}</p>
+                            <div>
+                                <strong>Địa chỉ:</strong>{' '}
+                                {editingAddress ? (
+                                    <>
+                                        <Form.Control size="sm" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} disabled={updatingAddress} />
+                                        <div className="mt-2">
+                                            <Button size="sm" variant="success" onClick={handleUpdateAddress} disabled={updatingAddress}>Lưu</Button>{' '}
+                                            <Button size="sm" variant="secondary" onClick={() => {
+                                                setNewAddress(order.shipping_address);
+                                                setEditingAddress(false);
+                                            }}>Hủy</Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        {order.shipping_address}{' '}
+                                        {order.status === 'pending' && (
+                                            <Button size="sm" variant="link" onClick={() => setEditingAddress(true)}>[Sửa]</Button>
+                                        )}
+                                    </>
                                 )}
-                            </>
-                        )}
-                    </div>
+                            </div>
+                            <p className="mb-0">
+                                <strong>Phương thức thanh toán:</strong>{' '}
+                                {PAYMENT_METHOD_LABELS[order.payment_method] || 'Không rõ'}
+                            </p>
 
-                    {order.return_reason && (
-                        <div className="mt-3">
-                            <strong>Lý do hoàn đơn:</strong><br />
-                            <span className="border rounded d-block p-2 bg-light">{order.return_reason}</span>
-                            {/* Hiển thị ảnh/video minh chứng nếu có */}
-                            {order.return_media && (
-                                <div className="mt-2">
-                                    {/\.(jpg|jpeg|png)$/i.test(order.return_media)
-                                        ? (
-                                            <img
-                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
-                                                alt="Ảnh minh chứng hoàn đơn"
-                                                style={{ maxWidth: 200, borderRadius: 8 }}
-                                            />
-                                        )
-                                        : (
-                                            <video
-                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
-                                                controls
-                                                style={{ maxWidth: 240, borderRadius: 8 }}
-                                            />
-                                        )
-                                    }
+                            {order.return_reason && (
+                                <div className="mt-3">
+                                    <strong>Lý do hoàn đơn:</strong><br />
+                                    <span className="border rounded d-block p-2 bg-light">{order.return_reason}</span>
+                                    {/* Hiển thị ảnh/video minh chứng nếu có */}
+                                    {order.return_media && (
+                                        <div className="mt-2">
+                                            {/\.(jpg|jpeg|png)$/i.test(order.return_media)
+                                                ? (
+                                                    <img
+                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
+                                                        alt="Ảnh minh chứng hoàn đơn"
+                                                        style={{ maxWidth: 200, borderRadius: 8 }}
+                                                    />
+                                                )
+                                                : (
+                                                    <video
+                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
+                                                        controls
+                                                        style={{ maxWidth: 240, borderRadius: 8 }}
+                                                    />
+                                                )
+                                            }
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    )}
-                </Card.Body>
-            </Card>
+                        </Card.Body>
+                    </Card>
 
-            <Card className="mb-3">
-                <Card.Header className="fw-bold">Sản phẩm</Card.Header>
-                <Card.Body className="p-0">
-                    <Table responsive borderless hover className="mb-0 text-center align-middle">
-                        <thead className="table-light">
-                            <tr>
-                                <th>Ảnh</th>
-                                <th>Sản phẩm</th>
-                                <th>Phân loại</th>
-                                <th>SL</th>
-                                <th>Giá</th>
-                                <th>Tạm tính</th>
-                                <th>Đánh giá</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {order.items.map((item) => {
-                                const reviews = item.reviews || [];
-                                const count = reviews.length;
-                                const deliveredAt = new Date(order.delivered_at);
-                                const now = new Date();
-                                const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
-                                let canReview = false;
-                                if (count === 0) canReview = true;
-                                else if (count === 1 && diffDays >= 7) canReview = true;
+                    <Card className="mb-3">
+                        <Card.Header className="fw-bold">Sản phẩm</Card.Header>
+                        <Card.Body className="p-0">
+                            <Table responsive borderless hover className="mb-0 text-center align-middle">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Ảnh</th>
+                                        <th>Sản phẩm</th>
+                                        <th>Phân loại</th>
+                                        <th>SL</th>
+                                        <th>Giá</th>
+                                        <th>Tạm tính</th>
+                                        <th>Đánh giá</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {order.items.map((item) => {
+                                        const reviews = item.reviews || [];
+                                        const count = reviews.length;
+                                        const deliveredAt = new Date(order.delivered_at);
+                                        const now = new Date();
+                                        const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                        let canReview = false;
+                                        if (count === 0) canReview = true;
+                                        else if (count === 1 && diffDays >= 7) canReview = true;
 
-                                return (
-                                    <tr key={item.id}>
-                                        <td><img src={item.product_variant?.img} alt="" width={60} /></td>
-                                        <td>{item.product_variant?.product?.name}</td>
-                                        <td>{item.product_variant?.color?.name} / {item.product_variant?.size?.name}</td>
-                                        <td>{item.quantity}</td>
-                                        <td>{item.price}₫</td>
-                                        <td>{(item.price * item.quantity).toLocaleString()}₫</td>
-                                        <td>
-                                            <div>
-                                                {reviews.map(r => (
-                                                    <div key={r.id} className="border rounded mb-1 p-1">
-                                                        {'★'.repeat(r.rating)} - {r.content}
-                                                        {r.media && (
-                                                            <div className="mt-2">
-                                                                {/\.(jpg|jpeg|png)$/i.test(r.media)
-                                                                    ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
-                                                                    : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
-                                                                }
+                                        return (
+                                            <tr key={item.id}>
+                                                <td><img src={item.product_variant?.img} alt="" width={60} /></td>
+                                                <td>{item.product_variant?.product?.name}</td>
+                                                <td>{item.product_variant?.color?.name} / {item.product_variant?.size?.name}</td>
+                                                <td>{item.quantity}</td>
+                                                <td>{item.price}₫</td>
+                                                <td>{(item.price * item.quantity).toLocaleString()}₫</td>
+                                                <td>
+                                                    <div>
+                                                        {reviews.map(r => (
+                                                            <div key={r.id} className="border rounded mb-1 p-1">
+                                                                {'★'.repeat(r.rating)} - {r.content}
+                                                                {r.media && (
+                                                                    <div className="mt-2">
+                                                                        {/\.(jpg|jpeg|png)$/i.test(r.media)
+                                                                            ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
+                                                                            : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
+                                                                        }
+                                                                    </div>
+                                                                )}
                                                             </div>
+                                                        ))}
+                                                        {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
+                                                        {canReview && count < 2 && order.status === 'delivered' && (
+                                                            <Button size="sm" variant="outline-primary" onClick={() => handleShowReviewModal(item)}>
+                                                                Đánh giá
+                                                            </Button>
+                                                        )}
+                                                        {!canReview && count < 2 && (
+                                                            <span className="text-muted">Chờ đủ 7 ngày</span>
                                                         )}
                                                     </div>
-                                                ))}
-                                                {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
-                                                {canReview && count < 2 && order.status === 'delivered' && (
-                                                    <Button size="sm" variant="outline-primary" onClick={() => handleShowReviewModal(item)}>
-                                                        Đánh giá
-                                                    </Button>
-                                                )}
-                                                {!canReview && count < 2 && (
-                                                    <span className="text-muted">Chờ đủ 7 ngày</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </Table>
-                </Card.Body>
-            </Card>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </Table>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
 
             <Card>
-                <Card.Body className="d-flex justify-content-between align-items-center">
+                <Card.Body className="d-flex justify-content-between align-items-center flex-wrap">
                     <div>
                         {/* Hiển thị cả 2 nút khi trạng thái là 'shipped' */}
                         {order.status === 'shipped' && (
@@ -409,39 +409,31 @@ export default function OrderDetailPage() {
                             </>
                         )}
 
-                        {order.status === 'pending' && (
-                            <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)}>
-                                Hủy đơn
-                            </Button>
-                        )}
                         <p className="mt-3 mb-0">
                             <strong>Thanh toán:</strong>{' '}
                             <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
                                 {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
                             </Badge>
                         </p>
+                        {order.status === 'pending' && (
+                            <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)}>
+                                Hủy đơn
+                            </Button>
+                        )}
                     </div>
                     <Link to="/orders">
-                        <Button variant="secondary" size="sm">← Trở lại</Button>
+                        <Button variant="secondary" size="sm" className="mt-3 mt-md-0">← Trở lại</Button>
                     </Link>
                 </Card.Body>
             </Card>
 
             {/* Modal HOÀN ĐƠN */}
             <Modal show={showReturnModal} onHide={() => setShowReturnModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Yêu cầu hoàn đơn</Modal.Title>
-                </Modal.Header>
+                <Modal.Header closeButton><Modal.Title>Yêu cầu hoàn đơn</Modal.Title></Modal.Header>
                 <Modal.Body>
                     <Form.Group>
                         <Form.Label>Lý do hoàn đơn</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={4}
-                            value={returnReason}
-                            onChange={(e) => setReturnReason(e.target.value)}
-                            placeholder="Nhập lý do chi tiết..."
-                        />
+                        <Form.Control as="textarea" rows={4} value={returnReason} onChange={(e) => setReturnReason(e.target.value)} placeholder="Nhập lý do chi tiết..." />
                     </Form.Group>
                     <Form.Group className="mt-2">
                         <Form.Label>Ảnh/Video sản phẩm lỗi</Form.Label>
@@ -458,11 +450,9 @@ export default function OrderDetailPage() {
                 </Modal.Footer>
             </Modal>
 
-            {/* Modal XÁC NHẬN HỦY */}
+            {/* Modal HỦY */}
             <Modal show={showCancelConfirm} onHide={() => setShowCancelConfirm(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Xác nhận hủy đơn</Modal.Title>
-                </Modal.Header>
+                <Modal.Header closeButton><Modal.Title>Xác nhận hủy đơn</Modal.Title></Modal.Header>
                 <Modal.Body>Bạn có chắc chắn muốn hủy đơn này?</Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowCancelConfirm(false)}>Đóng</Button>
@@ -472,13 +462,11 @@ export default function OrderDetailPage() {
 
             {/* Modal REVIEW */}
             <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Đánh giá sản phẩm</Modal.Title>
-                </Modal.Header>
+                <Modal.Header closeButton><Modal.Title>Đánh giá sản phẩm</Modal.Title></Modal.Header>
                 <Modal.Body>
-                    <Form.Group>
+                    <Form.Group className="mb-3">
                         <Form.Label>Đánh giá sao</Form.Label>
-                        <Form.Control type="number" min={1} max={5} value={reviewRating} onChange={e => setReviewRating(Number(e.target.value))} />
+                        <InteractiveStarRating rating={reviewRating} onChange={setReviewRating} />
                     </Form.Group>
                     <Form.Group className="mt-2">
                         <Form.Label>Ảnh/Video sản phẩm</Form.Label>
@@ -501,14 +489,10 @@ export default function OrderDetailPage() {
                 </Modal.Footer>
             </Modal>
 
-            {/* Modal xác nhận nhận hàng */}
+            {/* Modal XÁC NHẬN NHẬN HÀNG */}
             <Modal show={showConfirmReceived} onHide={() => setShowConfirmReceived(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Xác nhận đã nhận hàng</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    Bạn có chắc chắn muốn xác nhận đã nhận được hàng?
-                </Modal.Body>
+                <Modal.Header closeButton><Modal.Title>Đã nhận hàng</Modal.Title></Modal.Header>
+                <Modal.Body>Bạn có chắc chắn muốn xác nhận đã nhận được hàng?</Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowConfirmReceived(false)}>Hủy</Button>
                     <Button variant="success" onClick={handleConfirmReceived} disabled={confirmReceivedLoading}>
