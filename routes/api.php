@@ -126,3 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
 Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
+
+// VNPay payment
+Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
+Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
