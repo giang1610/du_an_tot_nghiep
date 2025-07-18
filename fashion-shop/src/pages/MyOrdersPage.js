@@ -379,7 +379,7 @@ export default function MyOrdersPage() {
                                         </Link>
                                     )}
 
-                                {(order.status === 'delivered' || order.status === 'shipped') && (() => {
+                                {(order.status === 'shipped') && (() => {
                                     const deliveredAt = new Date(order.delivered_at || order.updated_at);
                                     const now = new Date();
                                     const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
