@@ -6,10 +6,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
 
-class OrderFailed_1 extends Mailable
+class ReturnAccepted extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public $order;
 
     public function __construct(Order $order)
@@ -19,7 +17,8 @@ class OrderFailed_1 extends Mailable
 
     public function build()
     {
-        return $this->subject('Đơn hàng của bạn đã giao thất bại sau 1 lần')
-                    ->markdown('emails.orders.failed_1');
+        return $this->subject('Xác nhận hoàn hàng')
+            ->markdown('emails.orders.return-accepted')
+            ->with(['order' => $this->order]);
     }
 }

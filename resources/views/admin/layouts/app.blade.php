@@ -145,6 +145,16 @@
         <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
       
     </li>
+    <!-- Khuyến mãi -->
+    <li class="nav-item menu-parent" data-title="vouchers">
+      <a class="nav-link" data-bs-toggle="collapse" href="#catMenu">
+        <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <div id="catMenu" class="collapse ps-3">
+        <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item" data-title="danh sách khuyến mãi">Danh sách</a>
+        <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item" data-title="thêm khuyến mãi">Thêm mới</a>
+      </div>
+    </li>
 
     <!-- Đơn hàng
     <li class="nav-item menu-item" data-title="orders">

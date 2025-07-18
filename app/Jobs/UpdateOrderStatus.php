@@ -42,7 +42,7 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderGiao($order));
 
                 break;
-            case 'errors':
+            case 'cancelled':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
@@ -67,7 +67,6 @@ class UpdateOrderStatus implements ShouldQueue
             case 'failed_2':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed_2($order));
                 break;
-            
             default:
                 // Nếu muốn, có thể gửi mail mặc định hoặc không gửi gì
                 break;

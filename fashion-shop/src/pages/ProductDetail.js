@@ -305,7 +305,12 @@ export default function ProductDetail() {
             {reviews.map(r => (
               <div key={r.id} className="mb-3 border-bottom pb-2">
                 <strong>{r.user?.name || 'Khách hàng'}</strong>
-                <p>{r.comment}</p>
+                <div>
+                  {[...Array(r.rating)].map((_, i) => (
+                    <span key={i} style={{ color: '#ffc107' }}>★</span>
+                  ))}
+                </div>
+                <p>{r.content}</p>
               </div>
             ))}
             <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />

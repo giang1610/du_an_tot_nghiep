@@ -25,11 +25,11 @@ class UpdateStatus implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('order-status'); 
+        return new Channel('order-status');
     }
 
     public function broadcastAs()
     {
-        return 'order.updated'; 
+        return 'order.updated';
     }
 }
