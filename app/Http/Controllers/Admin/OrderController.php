@@ -257,6 +257,40 @@ class OrderController extends Controller
         return view('admin.orders.shipped', compact('orders'));
     }
 
+     public function completed(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'completed')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return view('admin.orders.completed', compact('orders'));
+    }
+
     public function show($id)
     {
         $order = Order::with([
