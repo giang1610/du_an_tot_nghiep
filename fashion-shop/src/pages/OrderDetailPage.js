@@ -15,7 +15,6 @@ const STATUS_LABELS = {
     picking: 'Đang lấy hàng',
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
-    delivered: 'Đã nhận hàng',
     completed: 'Hoàn thành',
     cancelled: 'Đã hủy',
     failed: 'Giao hàng thất bại',
@@ -38,7 +37,7 @@ const statusBadgeVariant = {
     cancelled: 'secondary',
     failed: 'danger',
     processing: 'info',
-    delivered: 'primary',
+    completed: 'primary',
     shipping: 'info',
     shipped: 'success',
     return_requested: 'warning',
@@ -311,9 +310,9 @@ export default function OrderDetailPage() {
                                     {order.items.map((item) => {
                                         const reviews = item.reviews || [];
                                         const count = reviews.length;
-                                        const deliveredAt = new Date(order.delivered_at);
+                                        const completedAt = new Date(order.completed_at);
                                         const now = new Date();
-                                        const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                         let canReview = count === 0 || (count === 1 && diffDays >= 7);
 
                                         return (
@@ -332,7 +331,7 @@ export default function OrderDetailPage() {
                                                             </div>
                                                         ))}
                                                         {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
-                                                        {canReview && count < 2 && order.status === 'delivered' && (
+                                                        {canReview && count < 2 && order.status === 'completed' && (
                                                             <Button size="sm" variant="outline-primary" onClick={() => handleShowReviewModal(item)}>
                                                                 Đánh giá
                                                             </Button>
@@ -361,8 +360,8 @@ export default function OrderDetailPage() {
                                     Đã nhận hàng
                                 </Button>
                             )}
-                            {(order.status === 'delivered' || order.status === 'shipped') && (() => {
-                                const baseDate = new Date(order.delivered_at || order.shipped_at || order.updated_at || order.created_at);
+                            {(order.status === 'completed' || order.status === 'shipped') && (() => {
+                                const baseDate = new Date(order.completed_at || order.shipped_at || order.updated_at || order.created_at);
                                 const now = new Date();
                                 const diffDays = Math.floor((now - baseDate) / (1000 * 60 * 60 * 24));
 

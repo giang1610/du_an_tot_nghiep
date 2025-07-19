@@ -19,7 +19,7 @@ const STATUS_LABELS = {
     picking: 'Đang lấy hàng',
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
-    delivered: 'Hoàn thành', // coi là hoàn thành
+    completed: 'Hoàn thành',
     return_requested: 'Đã yêu cầu hoàn hàng',
     returned: 'Hoàn hàng',
     cancelled: 'Đã hủy',
@@ -34,7 +34,6 @@ const STATUS_VARIANTS = {
     picking: 'primary',
     shipping: 'primary',
     shipped: 'info',
-    delivered: 'success',
     completed: 'success',
     cancelled: 'secondary',
     failed: 'danger',
@@ -122,7 +121,7 @@ export default function MyOrdersPage() {
                             );
                             setOrders(prev =>
                                 prev.map(o =>
-                                    o.id === order.id ? { ...o, status: 'delivered' } : o
+                                    o.id === order.id ? { ...o, status: 'completed' } : o
                                 )
                             );
                             console.log(`✅ Đã tự động xác nhận đơn hàng #${order.id} sau ${diffDays} ngày.`);
@@ -210,7 +209,7 @@ export default function MyOrdersPage() {
             });
             setOrders(prev =>
                 prev.map(order =>
-                    order.id === orderId ? { ...order, status: 'delivered' } : order
+                    order.id === orderId ? { ...order, status: 'completed' } : order
                 )
             );
             alert('Xác nhận thành công!');
@@ -287,9 +286,9 @@ export default function MyOrdersPage() {
                                     {order.items.map(item => {
                                         const reviews = item.reviews || [];
                                         const count = reviews.length;
-                                        const deliveredAt = new Date(order.delivered_at);
+                                        const completedAt = new Date(order.completed_at);
                                         const now = new Date();
-                                        const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                         let canReview = false;
                                         if (count === 0) canReview = true;
                                         else if (count === 1 && diffDays >= 7) canReview = true;
@@ -366,12 +365,12 @@ export default function MyOrdersPage() {
                                 {order.items.some(item => {
                                     const reviews = item.reviews || [];
                                     const count = reviews.length;
-                                    const deliveredAt = new Date(order.delivered_at);
+                                    const completedAt = new Date(order.completed_at);
                                     const now = new Date();
-                                    const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                    const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                     return (
                                         (count === 0 || (count === 1 && diffDays >= 7)) &&
-                                        order.status === 'delivered'
+                                        order.status === 'completed'
                                     );
                                 }) && (
                                         <Link to={`/orders/${order.id}`}>
@@ -379,10 +378,10 @@ export default function MyOrdersPage() {
                                         </Link>
                                     )}
 
-                                {(order.status === 'delivered' || order.status === 'shipped') && (() => {
-                                    const deliveredAt = new Date(order.delivered_at || order.updated_at);
+                                {(order.status === 'completed' || order.status === 'shipped') && (() => {
+                                    const completedAt = new Date(order.completed_at || order.updated_at);
                                     const now = new Date();
-                                    const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                    const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                     if (diffDays <= 7) {
                                         return (
                                             <Button variant="warning" size="sm" onClick={() => handleReturnOrder(order.id)}>
