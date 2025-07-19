@@ -117,12 +117,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payment Momo
     Route::prefix('payment')->group(function () {
-        Route::post('/momo', [OrderController::class, 'processMomoPayment']); 
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']);
     });
 
     // Các route khác: logout, cart, review...
-    
+
 });
 
 Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
 Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
+
+// VNPay payment
+Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
+Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
