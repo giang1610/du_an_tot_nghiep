@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SizeController;
+
 
 use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 use App\Http\Controllers\Api\ProfileController;
@@ -120,8 +122,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/momo', [OrderController::class, 'processMomoPayment']); 
     });
 
-    // Các route khác: logout, cart, review...
     
+    
+});
+
+Route::middleware('auth:sanctum')->group(function() {
+    Route::post('/vouchers/validate', [VoucherController::class, 'validateVoucher']);
+    Route::get('/vouchers/my', [VoucherController::class, 'getUserVouchers']);  // Lấy danh sách voucher của người dùng
 });
 
 Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
