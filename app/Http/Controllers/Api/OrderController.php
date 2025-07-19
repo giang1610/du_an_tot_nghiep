@@ -101,10 +101,8 @@ class OrderController extends Controller
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
 
-          
-
             }
-            
+
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
 
             DB::commit();
@@ -319,15 +317,16 @@ class OrderController extends Controller
                 // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
-                   
                     broadcast(new ProductStockUpdated(
                         $variant->id,
                         $variant->fresh()->stock->quantity
                     ));
                 }
             }
-           
-            event(new NewOrderCreated($order->order_number, $order->id)); 
+
+            event(new NewOrderCreated($order->order_number, $order->id));
+
+            event(new NewOrderCreated($order->order_number, $order->id));
 
             DB::commit();
 
@@ -538,7 +537,7 @@ class OrderController extends Controller
             ]);
 
             foreach ($cart->items as $item) {
-                OrderItem::create([
+                \App\Models\OrderItem::create([
                     'order_id' => $order->id,
                     'product_variant_id' => $item->product_variant_id,
                     'quantity' => $item->quantity,
@@ -725,7 +724,6 @@ class OrderController extends Controller
                             ->delete();
                     }
                 }
-                
                 Mail::to($order->customer_email)->queue(new OrderPlaced($order, $order->user));
 
                 DB::commit();
@@ -1192,14 +1190,15 @@ class OrderController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
+        // Chỉ cho phép xác nhận khi trạng thái là 'shipped'
         if ($order->status !== 'shipped') {
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'delivered';
+        $order->status = 'delivered'; // Đã nhận hàng (coi là hoàn thành)
         $order->delivered_at = now();
 
-        // ✅ Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
+        // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {
             $order->payment_status = 'paid';
         }
@@ -1210,23 +1209,35 @@ class OrderController extends Controller
     }
 
     // Yêu cầu trả hàng
+public function requestReturn(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
 
-    public function requestReturn(Request $request, $id)
-    {
-        $order = Order::findOrFail($id);
-
-        if ($order->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Không có quyền truy cập'], 403);
-        }
-
-        $request->validate([
-            'reason' => 'required|string|max:255',
-        ]);
-
-        $order->status = 'return_requested';
-        $order->return_reason = $request->input('reason');
-        $order->save();
-
-        return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+    if ($order->user_id !== auth()->id()) {
+        return response()->json(['message' => 'Không có quyền truy cập'], 403);
     }
+
+    $request->validate([
+        'reason' => 'required|string|max:255',
+        'media' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB
+    ]);
+
+    if ($order->status !== 'shipped') {
+        return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng'], 400);
+    }
+
+    $order->status = 'return_requested';
+    $order->return_reason = $request->input('reason');
+    $order->return_requested_at = now();
+
+    // Xử lý file upload
+    if ($request->hasFile('media')) {
+        $path = $request->file('media')->store('returns', 'public');
+        $order->return_media = $path;
+    }
+
+    $order->save();
+
+    return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+}
 }

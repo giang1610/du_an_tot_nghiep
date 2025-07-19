@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-    Container, Card, Row, Col, Button, Badge, Spinner, Alert, Image
+    Container, Card, Row, Col, Button, Badge, Spinner, Alert, Image, Modal, Form
 } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
@@ -14,15 +14,14 @@ const formatDate = (iso) => {
 const formatCurrency = (amount) => Number(amount).toLocaleString('vi-VN') + '₫';
 
 const STATUS_LABELS = {
-    pending: 'Chờ xác nhận',
+    pending: 'Chờ xử lý',
     processing: 'Đang xử lý',
     picking: 'Đang lấy hàng',
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
-    delivered: 'Đã nhận hàng',
+    delivered: 'Hoàn thành', // coi là hoàn thành
     return_requested: 'Đã yêu cầu hoàn hàng',
     returned: 'Hoàn hàng',
-    completed: 'Hoàn thành',
     cancelled: 'Đã hủy',
     failed: 'Giao hàng thất bại',
     failed_1: 'Giao hàng thất bại lần 1',
@@ -66,6 +65,13 @@ export default function MyOrdersPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [returnReason, setReturnReason] = useState('');
+    const [returnMedia, setReturnMedia] = useState(null);
+    const [returnOrderId, setReturnOrderId] = useState(null);
+    const [returnLoading, setReturnLoading] = useState(false);
+
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -151,6 +157,49 @@ export default function MyOrdersPage() {
         };
     }, []);
 
+    const handleShowReturnModal = (orderId) => {
+        setReturnOrderId(orderId);
+        setReturnReason('');
+        setReturnMedia(null);
+        setShowReturnModal(true);
+    };
+
+    const handleRequestReturn = async () => {
+        if (!returnReason.trim()) {
+            alert('Vui lòng nhập lý do hoàn đơn!');
+            return;
+        }
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('reason', returnReason);
+        if (returnMedia) formData.append('media', returnMedia);
+
+        setReturnLoading(true);
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${returnOrderId}/request-return`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            alert('Đã gửi yêu cầu hoàn đơn!');
+            setShowReturnModal(false);
+            setReturnReason('');
+            setReturnMedia(null);
+            setReturnOrderId(null);
+            // Reload orders
+            setLoading(true);
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOrders(res.data.data?.data || []);
+        } catch {
+            alert('Yêu cầu hoàn đơn thất bại!');
+        } finally {
+            setReturnLoading(false);
+        }
+    };
+
     const handleConfirmReceived = async (orderId) => {
         if (!window.confirm('Bạn xác nhận đã nhận hàng?')) return;
         const token = localStorage.getItem('token');
@@ -209,6 +258,7 @@ export default function MyOrdersPage() {
     };
 
     return (
+        <>
         <Container className="py-4">
             <h3 className="mb-4">Đơn hàng của tôi</h3>
 
@@ -262,6 +312,14 @@ export default function MyOrdersPage() {
                                                         {reviews.map(r => (
                                                             <div key={r.id} className="border p-1 my-1 rounded">
                                                                 {'★'.repeat(r.rating)} - {r.content}
+                                                                {r.media && (
+                                                                <div className="mt-2">
+                                                                    {/\.(jpg|jpeg|png)$/i.test(r.media)
+                                                                        ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
+                                                                        : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
+                                                                    }
+                                                                </div>
+                                                            )}
                                                             </div>
                                                         ))}
                                                         {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
@@ -344,6 +402,14 @@ export default function MyOrdersPage() {
                                     <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>
                                         Hủy đơn
                                     </Button>
+
+                                )}
+
+                                {/* Nút hoàn đơn */}
+                                {order.status === 'shipped' && (
+                                    <Button variant="warning" size="sm" className="ms-2" onClick={() => handleShowReturnModal(order.id)}>
+                                        Yêu cầu hoàn đơn
+                                    </Button>
                                 )}
                             </div>
                         </Card.Footer>
@@ -351,5 +417,38 @@ export default function MyOrdersPage() {
                 ))
             )}
         </Container>
+        {/* Modal HOÀN ĐƠN */}
+        <Modal show={showReturnModal} onHide={() => setShowReturnModal(false)} centered>
+            <Modal.Header closeButton>
+                <Modal.Title>Yêu cầu hoàn đơn</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Form.Group>
+                    <Form.Label>Lý do hoàn đơn</Form.Label>
+                    <Form.Control
+                        as="textarea"
+                        rows={4}
+                        value={returnReason}
+                        onChange={(e) => setReturnReason(e.target.value)}
+                        placeholder="Nhập lý do chi tiết..."
+                    />
+                </Form.Group>
+                <Form.Group className="mt-2">
+                    <Form.Label>Ảnh/Video sản phẩm lỗi</Form.Label>
+                    <Form.Control
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={e => setReturnMedia(e.target.files[0])}
+                    />
+                </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowReturnModal(false)}>Hủy</Button>
+                <Button variant="primary" onClick={handleRequestReturn} disabled={returnLoading}>
+                    {returnLoading ? 'Đang gửi...' : 'Gửi yêu cầu'}
+                </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
     );
 }

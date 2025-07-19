@@ -264,6 +264,27 @@ export default function OrderDetailPage() {
                                 <p className="mt-3">
                                     <strong>Lý do hoàn đơn:</strong><br />
                                     <span className="border rounded d-block p-2 bg-light">{order.return_reason}</span>
+                                    {/* Hiển thị ảnh/video minh chứng nếu có */}
+                                    {order.return_media && (
+                                        <div className="mt-2">
+                                            {/\.(jpg|jpeg|png)$/i.test(order.return_media)
+                                                ? (
+                                                    <img
+                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
+                                                        alt="Ảnh minh chứng hoàn đơn"
+                                                        style={{ maxWidth: 150, borderRadius: 8 }}
+                                                    />
+                                                )
+                                                : (
+                                                    <video
+                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
+                                                        controls
+                                                        style={{ maxWidth: 150, borderRadius: 8 }}
+                                                    />
+                                                )
+                                            }
+                                        </div>
+                                    )}
                                 </p>
                             )}
                         </Card.Body>
