@@ -43,7 +43,7 @@
                         <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
                         <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
                         <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
-                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Hoàn thành</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
                         <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Giao hàng thất bại</option>
                         <option value="failed_1" {{ request('status') == 'failed_1' ? 'selected' : '' }}>Giao hàng thất bại lần 1</option>
                         <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
@@ -235,11 +235,11 @@
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
                                 </span>
                                 @break
-                                @case('delivered')
+                                {{-- @case('delivered')
                                 <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i> Đã nhận hàng
+                                    <i class="fas fa-check-circle me-1"></i> Hoàn thành
                                 </span>
-                                @break
+                                @break --}}
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành

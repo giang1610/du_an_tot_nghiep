@@ -147,6 +147,7 @@
         <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
         <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
         <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
+        <a href="{{ route('orders.completed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Hoàn thành</a>
       
     </li>
     <!-- Khuyến mãi -->
@@ -176,7 +177,7 @@
 
     <!-- 👉 Doanh thu (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="doanh thu revenue">
-      <a href="#" class="nav-link">
+      <a href="{{ route('admin.reports.revenue') }}" class="nav-link">
         <i class="bi bi-cash-stack"></i><span class="menu-text">Doanh thu</span>
       </a>
     </li>
