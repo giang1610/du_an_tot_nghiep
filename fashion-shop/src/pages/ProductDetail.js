@@ -1,15 +1,17 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
+  Container, Row, Col, Spinner, Alert,
+  Button, ButtonGroup, ToggleButton, Form, InputGroup
 } from 'react-bootstrap';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import ProductReview from './ProductReview';
 import CheckoutForm from '../components/CheckoutForm';
 import ProductImageGallery from '../components/ProductImageGallery';
 import { listenToStockUpdates } from '../realtime/stockRealtime';
-
-
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -28,6 +30,14 @@ export default function ProductDetail() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cod');
+
+  const quantityRef = useRef(null);
+  const [isShaking, setIsShaking] = useState(false);
+
+  const triggerShake = () => {
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 300);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -49,17 +59,11 @@ export default function ProductDetail() {
     if (!product) return;
 
     const unsubscribe = listenToStockUpdates(({ variantId, stock }) => {
-      setProduct((prev) => {
+      setProduct(prev => {
         if (!prev) return prev;
-        const updatedVariants = prev.variants.map((v) => {
-          if (v.id === variantId && v.stock) {
-            return {
-              ...v,
-              stock: { ...v.stock, quantity: stock },
-            };
-          }
-          return v;
-        });
+        const updatedVariants = prev.variants.map(v =>
+          v.id === variantId ? { ...v, stock: { ...v.stock, quantity: stock } } : v
+        );
         return { ...prev, variants: updatedVariants };
       });
     });
@@ -67,24 +71,13 @@ export default function ProductDetail() {
     return unsubscribe;
   }, [product]);
 
-
-
   const imageList = useMemo(() => {
     if (!product) return [];
-
     const mainImage = product.img ? [{ url: product.img }] : [];
-
-    const variantImages = product.variants
-      ?.map(v => v.img)
-      .filter(Boolean)
-      .map(url => ({ url })) || [];
-
+    const variantImages = product.variants?.map(v => v.img).filter(Boolean).map(url => ({ url })) || [];
     const uniqueUrls = Array.from(new Set([...mainImage, ...variantImages].map(i => i.url)))
       .map(url => ({ url }));
-
-    return uniqueUrls.length > 0
-      ? uniqueUrls
-      : [{ url: 'https://via.placeholder.com/500x500?text=No+Image' }];
+    return uniqueUrls.length > 0 ? uniqueUrls : [{ url: 'https://via.placeholder.com/500x500?text=No+Image' }];
   }, [product]);
 
   const sizes = useMemo(() => {
@@ -127,19 +120,23 @@ export default function ProductDetail() {
   const handleQuantityChange = (e) => {
     let val = Number(e.target.value);
     if (isNaN(val) || val < 1) val = 1;
-    else if (val > maxQuantity) val = maxQuantity;
+    else if (val > maxQuantity) {
+      val = maxQuantity;
+      triggerShake();
+      toast.warning(`⚠️ Chỉ còn lại ${maxQuantity} sản phẩm trong kho.`);
+    }
     setQuantity(val);
   };
 
   const requireLoginAndVariant = () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setAlertMsg('Vui lòng đăng nhập để tiếp tục.');
+      toast.info('Vui lòng đăng nhập để tiếp tục.');
       navigate('/login');
       return false;
     }
     if (!selectedVariantId) {
-      setAlertMsg('Vui lòng chọn size và màu.');
+      toast.warning('Vui lòng chọn size và màu.');
       return false;
     }
     return true;
@@ -148,7 +145,8 @@ export default function ProductDetail() {
   const handleAddToCart = async () => {
     if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
-      setAlertMsg(`Số lượng tối đa là ${maxQuantity}.`);
+      triggerShake();
+      toast.warning(`⚠️ Số lượng tối đa là ${maxQuantity}`);
       return;
     }
     try {
@@ -161,17 +159,18 @@ export default function ProductDetail() {
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setAlertMsg('Đã thêm vào giỏ hàng!');
+      toast.success('✅ Đã thêm vào giỏ hàng!');
     } catch (error) {
       console.error(error);
-      setAlertMsg('Lỗi khi thêm vào giỏ hàng.');
+      toast.error('❌ Lỗi khi thêm vào giỏ hàng.');
     }
   };
 
   const handleBuyNow = () => {
     if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
-      setAlertMsg(`Số lượng tối đa là ${maxQuantity}.`);
+      triggerShake();
+      toast.warning(`⚠️ Số lượng tối đa là ${maxQuantity}`);
       return;
     }
 
@@ -192,24 +191,19 @@ export default function ProductDetail() {
     navigate('/checkout?buy_now=1');
   };
 
-
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (!product) return <Alert variant="danger">{alertMsg || 'Sản phẩm không tồn tại'}</Alert>;
 
   return (
     <Container className="py-5">
-      {alertMsg && (
-        <Alert variant="info" onClose={() => setAlertMsg('')} dismissible className="mb-4">
-          {alertMsg}
-        </Alert>
-      )}
-
+      <ToastContainer position="top-right" autoClose={3000} />
       <Row>
         <Col md={6}>
           <ProductImageGallery
             images={imageList}
             mainImage={selectedVariant?.img || product.img}
-            productName={product.name} />
+            productName={product.name}
+          />
         </Col>
 
         <Col md={6}>
@@ -261,15 +255,43 @@ export default function ProductDetail() {
               </p>
               <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
 
-              <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
+              <Form.Group className="mb-3" style={{ maxWidth: 200 }}>
                 <Form.Label>Số lượng:</Form.Label>
-                <Form.Control
-                  type="number"
-                  min={1}
-                  max={maxQuantity}
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                />
+                <InputGroup>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    disabled={quantity <= 1}
+                  >
+                    −
+                  </Button>
+
+                  <Form.Control
+                    ref={quantityRef}
+                    type="number"
+                    min={1}
+                    max={maxQuantity}
+                    value={quantity}
+                    onChange={handleQuantityChange}
+                    className={isShaking ? 'shake' : ''}
+                    style={{ textAlign: 'center' }}
+                  />
+
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => {
+                      if (quantity >= maxQuantity) {
+                        triggerShake();
+                        toast.warning(`⚠️ Chỉ còn ${maxQuantity} sản phẩm trong kho.`);
+                      } else {
+                        setQuantity(q => q + 1);
+                      }
+                    }}
+                    disabled={quantity >= maxQuantity}
+                  >
+                    +
+                  </Button>
+                </InputGroup>
               </Form.Group>
             </>
           )}
@@ -278,15 +300,9 @@ export default function ProductDetail() {
             <Button variant="dark" onClick={handleAddToCart} disabled={!selectedVariant}>
               🛒 Thêm vào giỏ
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleBuyNow}
-              disabled={!selectedVariant}
-            >
+            <Button variant="danger" onClick={handleBuyNow} disabled={!selectedVariant}>
               ⚡ Mua ngay
             </Button>
-
-
           </div>
 
           {showCheckoutForm && (
@@ -325,7 +341,6 @@ export default function ProductDetail() {
             const imageUrl =
               rp.variants?.[0]?.thumbnail ||
               'https://via.placeholder.com/150x150?text=No+Image';
-
             return (
               <Col md={3} key={rp.id} className="mb-3">
                 <div className="border p-2 h-100 d-flex flex-column align-items-center">
@@ -341,7 +356,6 @@ export default function ProductDetail() {
           })}
         </Row>
       </div>
-
     </Container>
   );
 }
