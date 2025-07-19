@@ -43,11 +43,7 @@
                         <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
                         <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
                         <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
-<<<<<<< HEAD
-                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Đã nhận hàng</option>
-=======
                         <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Hoàn thành</option>
->>>>>>> 238157f0b29ab532cfe845968802108ed1e75f95
                         <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Giao hàng thất bại</option>
                         <option value="failed_1" {{ request('status') == 'failed_1' ? 'selected' : '' }}>Giao hàng thất bại lần 1</option>
                         <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
@@ -167,11 +163,7 @@
                                     <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 10) }}</div>
                                 </div>
                             </td>
-<<<<<<< HEAD
-                              <td class="text-end">
-=======
-                              <td>
->>>>>>> 238157f0b29ab532cfe845968802108ed1e75f95
+                              <td >
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">

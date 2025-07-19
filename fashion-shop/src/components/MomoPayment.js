@@ -10,7 +10,7 @@ const MomoPayment = ({ shippingAddress, billingAddress, customerPhone, notes }) 
       const token = localStorage.getItem('token');
 
       const response = await axios.post(
-        'http://localhost:8000/api/payment/momo',
+        `${process.env.REACT_APP_API_URL}/payment/momo`,
         {
           shipping_address: shippingAddress,
           billing_address: billingAddress,

@@ -16,11 +16,13 @@ class UpdateStatus implements ShouldBroadcast
 
     public $orderId;
     public $newStatus;
+    public $paymentStatus;
 
-    public function __construct($orderId, $newStatus)
+    public function __construct($orderId, $newStatus,$paymentStatus)
     {
         $this->orderId = $orderId;
         $this->newStatus = $newStatus;
+        $this->paymentStatus = $paymentStatus;
     }
 
     public function broadcastOn()

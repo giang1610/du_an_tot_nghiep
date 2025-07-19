@@ -18,6 +18,10 @@ use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\Auth\ChangePasswordController;
 
+// route chat
+use App\Http\Controllers\Api\Chat\ChatController;
+
+
 
 
 // User info
@@ -40,6 +44,10 @@ Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'u
 Route::middleware('auth:sanctum')->put('/change-password', [ChangePasswordController::class, 'change']);
 
 
+//route chat
+Route::get('/chat', [ChatController::class, 'index']);
+Route::post('/chat/send', [ChatController::class, 'store']);
+Route::middleware('auth:api')->post('/chat/typing', [ChatController::class, 'typing']);
 
 
 
@@ -109,10 +117,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payment Momo
     Route::prefix('payment')->group(function () {
-        Route::post('/momo', [OrderController::class, 'processMomoPayment']);
-        Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-        Route::get('/momo/return', [OrderController::class, 'momoReturn']);
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']); 
     });
 
     // Các route khác: logout, cart, review...
+    
 });
+
+Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);

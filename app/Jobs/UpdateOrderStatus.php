@@ -38,7 +38,7 @@ class UpdateOrderStatus implements ShouldQueue
     if ($order && $order->user && $order->user->email) {
         switch ($order->status) {
             case 'shipping':
-                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status, $order->payment_status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderGiao($order));
 
                 break;
@@ -46,15 +46,15 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
-                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status, $order->payment_status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderPicking($order));
                 break;
             case 'processing':
-                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status, $order->payment_status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderProcessing($order));
                 break;
             case 'shipped':
-                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status))->toOthers();
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status,$order->payment_status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderShipped($order));
                 break;
             case 'failed':
@@ -67,7 +67,6 @@ class UpdateOrderStatus implements ShouldQueue
             case 'failed_2':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed_2($order));
                 break;
-            
             default:
                 // Nếu muốn, có thể gửi mail mặc định hoặc không gửi gì
                 break;

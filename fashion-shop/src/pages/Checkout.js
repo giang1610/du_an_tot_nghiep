@@ -149,6 +149,7 @@ export default function Checkout() {
         );
 
         if (data?.data?.payment_url) {
+          
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
           return;

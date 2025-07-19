@@ -13,7 +13,7 @@ use App\Mail\OrderProcessing;
 use App\Mail\OrderShipped;
 use Illuminate\Support\Facades\Mail;
 use App\Jobs\UpdateOrderStatus;
-
+use App\Mail\OrderCancelledMail;
 
 class OrderController extends Controller
 {
@@ -306,7 +306,6 @@ class OrderController extends Controller
 
     $order->save();
 
-    broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
 
     return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
 }

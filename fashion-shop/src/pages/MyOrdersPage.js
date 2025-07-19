@@ -55,15 +55,11 @@ const PAYMENT_STATUS_VARIANTS = {
     pending: 'warning',
     failed: 'danger',
 };
+
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
     momo: 'Ví Momo',
-    // vnpay: 'VNPay',
-    // zalopay: 'ZaloPay',
-    // bank: 'Chuyển khoản ngân hàng',
-    // other: 'Khác'
 };
-
 
 export default function MyOrdersPage() {
     const [orders, setOrders] = useState([]);
@@ -96,22 +92,68 @@ export default function MyOrdersPage() {
         fetchOrders();
     }, [navigate]);
 
+    // ✅ Tự động xác nhận đơn hàng sau 3 ngày trạng thái là "shipped"
     useEffect(() => {
-        const channel = listenToOrderStatusRealtime((orderId, newStatus) => {
+        const token = localStorage.getItem('token');
+        if (!token || orders.length === 0) return;
+
+        const autoConfirmReceived = async () => {
+            const now = new Date();
+
+            for (const order of orders) {
+                if (order.status === 'shipped') {
+                    const shippedAt = new Date(order.shipped_at || order.updated_at || order.created_at);
+                    const diffDays = Math.floor((now - shippedAt) / (1000 * 60 * 60 * 24));
+
+                    if (diffDays >= 3) {
+                        try {
+                            await axios.post(
+                                `${process.env.REACT_APP_API_URL}/orders/${order.id}/confirm-received`,
+                                {},
+                                {
+                                    headers: { Authorization: `Bearer ${token}` }
+                                }
+                            );
+                            setOrders(prev =>
+                                prev.map(o =>
+                                    o.id === order.id ? { ...o, status: 'delivered' } : o
+                                )
+                            );
+                            console.log(`✅ Đã tự động xác nhận đơn hàng #${order.id} sau ${diffDays} ngày.`);
+                        } catch (err) {
+                            console.warn(`❌ Không thể xác nhận đơn hàng #${order.id}`, err);
+                        }
+                    }
+                }
+            }
+        };
+
+        autoConfirmReceived();
+    }, [orders]);
+
+    useEffect(() => {
+        const channel = listenToOrderStatusRealtime((orderId, newStatus, paymentStatus) => {
             setOrders(prev =>
                 prev.map(order =>
-                    order.id === Number(orderId) ? { ...order, status: newStatus } : order
+                    order.id === Number(orderId)
+                        ? {
+                            ...order,
+                            status: newStatus ?? order.status,
+                            payment_status: paymentStatus ?? order.payment_status,
+                        }
+                        : order
                 )
             );
         });
+
         return () => {
             channel.stopListening('.order.updated');
         };
     }, []);
 
     const handleConfirmReceived = async (orderId) => {
-        const token = localStorage.getItem('token');
         if (!window.confirm('Bạn xác nhận đã nhận hàng?')) return;
+        const token = localStorage.getItem('token');
 
         try {
             await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/confirm-received`, {}, {
@@ -125,6 +167,44 @@ export default function MyOrdersPage() {
             alert('Xác nhận thành công!');
         } catch {
             alert('Thất bại. Vui lòng thử lại.');
+        }
+    };
+
+    const handleCancelOrder = async (orderId) => {
+        if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
+        const token = localStorage.getItem('token');
+
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/cancel`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOrders(prev =>
+                prev.map(order =>
+                    order.id === orderId ? { ...order, status: 'cancelled' } : order
+                )
+            );
+            alert('Hủy đơn hàng thành công!');
+        } catch {
+            alert('Không thể hủy đơn hàng. Vui lòng thử lại.');
+        }
+    };
+
+    const handleReturnOrder = async (orderId) => {
+        if (!window.confirm('Bạn xác nhận muốn hoàn hàng đơn này?')) return;
+        const token = localStorage.getItem('token');
+
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/request-return`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOrders(prev =>
+                prev.map(order =>
+                    order.id === orderId ? { ...order, status: 'return_requested' } : order
+                )
+            );
+            alert('Yêu cầu hoàn hàng đã được gửi!');
+        } catch {
+            alert('Không thể yêu cầu hoàn hàng. Vui lòng thử lại.');
         }
     };
 
@@ -143,103 +223,130 @@ export default function MyOrdersPage() {
                     <Card className="mb-4 shadow-sm" key={order.id}>
                         <Card.Header className="d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>Mã đơn:</strong> #{order.order_number || order.id} &nbsp;|&nbsp;
-                                <strong>Ngày đặt:</strong> {formatDate(order.created_at)} <br />
-                                <strong>Khách hàng:</strong> {order.user?.name || 'Không rõ'}
+                                <strong>Mã đơn:</strong> #{order.order_number || order.id}
+                                <div><strong>Ngày đặt:</strong> {formatDate(order.created_at)}</div>
                             </div>
                             <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
                                 {STATUS_LABELS[order.status] || 'Không rõ'}
                             </Badge>
                         </Card.Header>
 
-
                         <Card.Body>
-                            {order.items.map(item => {
-                                const reviews = item.reviews || [];
-                                const count = reviews.length;
-                                const deliveredAt = new Date(order.delivered_at);
-                                const now = new Date();
-                                const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
-                                let canReview = false;
-                                if (count === 0) canReview = true;
-                                else if (count === 1 && diffDays >= 7) canReview = true;
+                            <Row>
+                                <Col md={8}>
+                                    {order.items.map(item => {
+                                        const reviews = item.reviews || [];
+                                        const count = reviews.length;
+                                        const deliveredAt = new Date(order.delivered_at);
+                                        const now = new Date();
+                                        const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                        let canReview = false;
+                                        if (count === 0) canReview = true;
+                                        else if (count === 1 && diffDays >= 7) canReview = true;
 
-                                return (
-                                    <Row key={item.id} className="align-items-center mb-3">
-                                        <Col xs={2}>
-                                            <Image
-                                                src={item.product_variant?.img || item.product_variant?.product?.img || 'https://via.placeholder.com/60'}
-                                                rounded
-                                                style={{ width: 60, height: 60, objectFit: 'cover' }}
-                                            />
-                                        </Col>
-                                        <Col xs={7}>
-                                            <div>{item.product_variant?.product?.name}</div>
-                                            <small className="text-muted">
-                                                Phân loại: {item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}
-                                            </small>
-                                            <div>
-                                                {reviews.map(r => (
-                                                    <div key={r.id} className="border p-1 my-1 rounded">
-                                                        {'★'.repeat(r.rating)} - {r.content}
+                                        return (
+                                            <Row key={item.id} className="align-items-center mb-3">
+                                                <Col xs={3}>
+                                                    <Image
+                                                        src={item.product_variant?.img || item.product_variant?.product?.img || 'https://via.placeholder.com/60'}
+                                                        rounded
+                                                        style={{ width: '100%', height: 80, objectFit: 'contain', backgroundColor: '#f8f9fa' }}
+                                                    />
+                                                </Col>
+                                                <Col xs={9}>
+                                                    <div className="fw-semibold">{item.product_variant?.product?.name}</div>
+                                                    <small className="text-muted">
+                                                        Phân loại: {item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}
+                                                    </small>
+                                                    <div>
+                                                        {reviews.map(r => (
+                                                            <div key={r.id} className="border p-1 my-1 rounded">
+                                                                {'★'.repeat(r.rating)} - {r.content}
+                                                            </div>
+                                                        ))}
+                                                        {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
+                                                        {!canReview && count === 1 && (
+                                                            <span className="text-muted">Chờ đủ 7 ngày để đánh giá tiếp</span>
+                                                        )}
                                                     </div>
-                                                ))}
-                                                {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
-                                                {canReview && count < 2 && order.status === 'delivered' && (
-                                                    <Link to={`/orders/${order.id}`}>
-                                                        <Button size="sm" variant="outline-primary" className="mt-1">
-                                                            Đánh giá
-                                                        </Button>
-                                                    </Link>
-                                                )}
-                                                {!canReview && count === 1 && (
-                                                    <span className="text-muted">Chờ đủ 7 ngày để đánh giá tiếp</span>
-                                                )}
-                                            </div>
-                                        </Col>
-                                        <Col xs={3} className="text-end">
-                                            <div>{formatCurrency(item.sale_price || item.price)}</div>
-                                            <small>Số lượng: {item.quantity}</small>
-                                        </Col>
-                                    </Row>
-                                );
-                            })}
+                                                    <div>{formatCurrency(item.sale_price || item.price)} | SL: {item.quantity}</div>
+                                                </Col>
+                                            </Row>
+                                        );
+                                    })}
+                                </Col>
+
+                                <Col md={4}>
+                                    <div><strong>Khách hàng:</strong> {order.user?.name}</div>
+                                    <div><strong>Địa chỉ:</strong> {order.address || order.shipping_address || order.user?.address || 'Chưa có'}</div>
+                                    <div><strong>Trạng thái:</strong>{' '}
+                                        <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
+                                            {STATUS_LABELS[order.status] || 'Không rõ'}
+                                        </Badge>
+                                    </div>
+                                    <div className="mt-2"><strong>Thanh toán:</strong>{' '}
+                                        <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
+                                            {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                                        </Badge>
+                                    </div>
+                                    {order.payment_method && (
+                                        <div>Hình thức: {PAYMENT_METHOD_LABELS[order.payment_method]}</div>
+                                    )}
+                                    <div className="fw-bold mt-2 text-danger">
+                                        Tổng: {formatCurrency(order.total ?? order.total_amount ?? 0)}
+                                    </div>
+                                </Col>
+                            </Row>
                         </Card.Body>
 
                         <Card.Footer className="d-flex justify-content-between align-items-center">
-                            <div>
-                                {order.status !== 'cancelled' && (
-                                    <>
-                                        <strong>Thanh toán:</strong>{' '}
-                                        <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
-                                            {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
-                                        </Badge>{' '}
-                                        {order.payment_method && (
-                                            <span className="ms-2">
-                                                ({PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method})
-                                            </span>
-                                        )}
-                                        <span className="ms-2 text-danger fw-bold">
-                                            {formatCurrency(order.total ?? order.total_amount ?? 0)}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                            <div>
-                                <Link to={`/orders/${order.id}`}>
-                                    <Button variant="outline-primary" size="sm" className="me-2">
-                                        Chi tiết
-                                    </Button>
-                                </Link>
+                            <Link to={`/orders/${order.id}`}>
+                                <Button variant="outline-primary" size="sm">Chi tiết</Button>
+                            </Link>
+
+                            <div className="d-flex flex-wrap gap-2">
+                                {order.items.some(item => {
+                                    const reviews = item.reviews || [];
+                                    const count = reviews.length;
+                                    const deliveredAt = new Date(order.delivered_at);
+                                    const now = new Date();
+                                    const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                    return (
+                                        (count === 0 || (count === 1 && diffDays >= 7)) &&
+                                        order.status === 'delivered'
+                                    );
+                                }) && (
+                                        <Link to={`/orders/${order.id}`}>
+                                            <Button variant="primary" size="sm">Đánh giá</Button>
+                                        </Link>
+                                    )}
+
+                                {(order.status === 'delivered' || order.status === 'shipped') && (() => {
+                                    const deliveredAt = new Date(order.delivered_at || order.updated_at);
+                                    const now = new Date();
+                                    const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                    if (diffDays <= 7) {
+                                        return (
+                                            <Button variant="warning" size="sm" onClick={() => handleReturnOrder(order.id)}>
+                                                Hoàn hàng
+                                            </Button>
+                                        );
+                                    }
+                                    return null;
+                                })()}
 
                                 {order.status === 'shipped' && (
                                     <Button variant="success" size="sm" onClick={() => handleConfirmReceived(order.id)}>
-                                        Xác nhận nhận hàng
+                                        Đã nhận hàng
+                                    </Button>
+                                )}
+                                {(order.status === 'pending' || order.status === 'processing') && (
+                                    <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>
+                                        Hủy đơn
                                     </Button>
                                 )}
                             </div>
                         </Card.Footer>
-
                     </Card>
                 ))
             )}
