@@ -23,6 +23,11 @@ import ProductReview from './components/ProductReview';
 
 // import chatbox
 import ChatApp from './components/ChatApp';
+import ShippingForm from './components/ShippingForm';
+import VnpayReturnPage from './pages/VnpayReturnPage';
+
+
+
 
 
 function App() {
@@ -43,7 +48,9 @@ function App() {
 
         {/* Thanh toán momo */}
         <Route path="/momo-return" element={<MomoReturn />} />
-        
+         {/* Thanh toán Vnpay*/}
+         <Route path="/thanh-toan" element={<ShippingForm />} />
+        <Route path="/vnpay-return" element={<VnpayReturnPage />} />
         {/* Đăng ký,đăng nhập */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

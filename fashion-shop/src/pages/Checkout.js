@@ -141,6 +141,7 @@ export default function Checkout() {
 
     try {
       setLoading(true);
+
       if (form.payment_method === 'momo') {
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/payment/momo`,
@@ -149,13 +150,34 @@ export default function Checkout() {
         );
 
         if (data?.data?.payment_url) {
-          
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
           return;
         }
         setError('Không nhận được liên kết thanh toán MoMo');
+      } else if (form.payment_method === 'vnpay') {
+        const { data } = await axios.post(
+          `${process.env.REACT_APP_API_URL}/vnpay/process-payment`,
+          {
+            shipping_address: form.address,
+            billing_address: form.address,
+            customer_phone: form.phone,
+            notes: form.notes
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        if (data?.data?.payment_url) {
+          localStorage.removeItem('buy_now');
+          window.location.href = data.data.payment_url;
+          return;
+        }
+
+        setError('Không nhận được liên kết thanh toán VNPay');
       } else {
+        // COD
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
@@ -173,6 +195,7 @@ export default function Checkout() {
     } finally {
       setLoading(false);
     }
+
   };
 
   // ✅ Lấy thông tin người dùng khi component mount
@@ -261,6 +284,7 @@ export default function Checkout() {
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                 <option value="momo">Thanh toán MoMo</option>
+                <option value="vnpay">Thanh toán VNPay</option>
               </Form.Select>
             </Form.Group>
 
@@ -270,7 +294,12 @@ export default function Checkout() {
                   <Spinner animation="border" size="sm" className="me-2" />
                   Đang xử lý...
                 </>
-              ) : form.payment_method === 'momo' ? 'Thanh toán qua MoMo' : 'Xác nhận đặt hàng'}
+              ) : form.payment_method === 'momo'
+                ? 'Thanh toán qua MoMo'
+                : form.payment_method === 'vnpay'
+                  ? 'Thanh toán qua VNPay'
+                  : 'Xác nhận đặt hàng'}
+
             </Button>
           </Form>
         </Col>
