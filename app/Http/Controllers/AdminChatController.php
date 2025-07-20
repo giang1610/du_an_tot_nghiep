@@ -85,7 +85,7 @@ class AdminChatController extends Controller
 
         $user = User::findOrFail($userId);
 
-        broadcast(new NewMessageEvent($request->message, $user->id, 'admin'))->toOthers();
+        broadcast(new NewMessageEvent($request->message, $user->id, 'admin',null))->toOthers();
 
         Chat::create([
             'user_id' => $user->id,
