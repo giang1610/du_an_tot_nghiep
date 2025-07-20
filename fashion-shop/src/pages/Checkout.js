@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Form, Button, Alert, Row, Col, Card, Image, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
@@ -38,7 +38,7 @@ const ProductSummary = ({ items }) => {
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { cart, clearCart } = useCart();
+  const { cart, removeSelectedItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -58,6 +58,7 @@ export default function Checkout() {
     name: '',
     phone: '',
     address: '',
+    email: '',
     notes: '',
     payment_method: 'cod',
   });
@@ -71,6 +72,14 @@ export default function Checkout() {
     if (isBuyNow) return buyNowItem ? [buyNowItem] : [];
     return cart.filter(item => item.selected);
   }, [isBuyNow, buyNowItem, cart]);
+
+  const totals = useMemo(() => {
+    const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    const tax = subtotal * 0.1;
+    const shipping = 20000;
+    const total = subtotal + tax + shipping;
+    return { subtotal, tax, shipping, total };
+  }, [selectedItems]);
 
   const setField = (name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
@@ -118,10 +127,15 @@ export default function Checkout() {
       shipping_address: form.address,
       billing_address: form.address,
       customer_phone: form.phone,
+      customer_email: form.email, // ✅ lấy từ form
       notes: form.notes,
       name: form.name,
       payment_method: form.payment_method,
       items: itemsPayload,
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      shipping: totals.shipping,
+      total: totals.total,
     };
 
     try {
@@ -134,8 +148,8 @@ export default function Checkout() {
         );
 
         if (data?.data?.payment_url) {
+          
           localStorage.removeItem('buy_now');
-          clearCart();
           window.location.href = data.data.payment_url;
           return;
         }
@@ -148,23 +162,43 @@ export default function Checkout() {
         );
 
         setSuccess(data.message || 'Đặt hàng thành công!');
-        clearCart();
         localStorage.removeItem('buy_now');
+        await removeSelectedItems();
         setTimeout(() => navigate('/orders'), 3000);
       }
-    } catch (err) {
-      const resp = err.response?.data;
-      if (resp) {
-        if (resp.errors) setFormErrors(resp.errors);
-        if (resp.message) setError(resp.message);
-      } else {
-        setError('Lỗi đặt hàng.');
-      }
-      console.error(err);
+    } catch (error) {
+      console.error('❌ Lỗi:', error);
+      setError('Đặt hàng thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
   };
+
+  // ✅ Lấy thông tin người dùng khi component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token') || user?.token;
+    if (!token || !user) return;
+
+    const fetchUserInfo = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/user`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const userData = res.data;
+        setForm(prev => ({
+          ...prev,
+          name: userData.name || '',
+          phone: userData.phone || '',
+          address: userData.address || '',
+          email: userData.email || '',
+        }));
+      } catch (err) {
+        console.error('❌ Không lấy được thông tin user:', err);
+      }
+    };
+
+    fetchUserInfo();
+  }, [user]);
 
   return (
     <Container className="py-5">
@@ -194,6 +228,18 @@ export default function Checkout() {
               </Form.Group>
             ))}
 
+            {/* ✅ Email hiển thị, không sửa */}
+            <Form.Group className="mb-3">
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={e => setField('email', e.target.value)}
+                disabled
+              />
+            </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Ghi chú</Form.Label>
               <Form.Control
@@ -213,7 +259,6 @@ export default function Checkout() {
                 onChange={e => setField('payment_method', e.target.value)}
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                <option value="banking">Chuyển khoản</option>
                 <option value="momo">Thanh toán MoMo</option>
               </Form.Select>
             </Form.Group>
@@ -232,6 +277,15 @@ export default function Checkout() {
         <Col md={6}>
           <h5>Sản phẩm trong giỏ</h5>
           <ProductSummary items={selectedItems} />
+          {selectedItems.length > 0 && (
+            <>
+              <hr />
+              <p>Tạm tính: {totals.subtotal.toLocaleString()} đ</p>
+              <p>Phí vận chuyển: {totals.shipping.toLocaleString()} đ</p>
+              <p>Thuế: {totals.tax.toLocaleString()} đ</p>
+              <h5 className="fw-bold">Tổng cộng: {totals.total.toLocaleString()} đ</h5>
+            </>
+          )}
         </Col>
       </Row>
     </Container>

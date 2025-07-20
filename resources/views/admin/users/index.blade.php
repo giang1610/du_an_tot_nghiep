@@ -36,13 +36,13 @@
                             <span class="d-none d-md-inline">Tìm kiếm</span>
                         </button>
                     </div>
-                    <div class="col-6 col-md-2">
+                    {{-- <div class="col-6 col-md-2">
                         @if($search)
                             <a href="{{ route('users.index') }}" class="btn btn-outline-secondary w-100">
                                 <i class="fas fa-times me-1 d-none d-md-inline"></i> Xóa lọc
                             </a>
                         @endif
-                    </div>
+                    </div> --}}
                 </div>
             </form>
 
@@ -121,6 +121,7 @@
                                             <span class="avatar-title rounded-circle bg-primary text-white">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </span>
+                                            <!-- <small class="text-muted">@if($user->role == 1) Quản trị @else Người dùng @endif</small> -->
                                         </div>
                                         <div>
                                             <h6 class="mb-0">{{ $user->name }}</h6>

@@ -49,6 +49,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder|Order whereTotal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Order whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Order whereUserId($value)
+ * @property-read \App\Models\User $user
  * @mixin \Eloquent
  */
 class Order extends Model
@@ -79,4 +80,5 @@ class Order extends Model
             $order->order_number = 'ORD-' . strtoupper(uniqid());
         });
     }
+
 }

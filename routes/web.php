@@ -9,7 +9,6 @@ use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
@@ -25,6 +24,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerifiFotnController;
 use App\Http\Controllers\Auth\NewEmailVerificationController;
 
+use App\Http\Controllers\AdminChatController;
 
 
 
@@ -50,7 +50,6 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-    
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
@@ -71,7 +70,7 @@ Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke
 
     //xác minh mail client
 Route::get('/verify-email-custom', [EmailVerifiFotnController::class, 'verify'])
-    ->middleware(['signed'])
+    ->middleware(middleware: ['signed'])
     ->name('verification.verify.fotn');
 
 //cập nhật mail client nếu có nhu cầu và xác minh
@@ -84,7 +83,7 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
 
 // Admin routes
     //xóa danh mục
-    //thùng rác 
+    //thùng rác
     Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
     //xóa vĩnh viễn
     Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
@@ -97,7 +96,7 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
     Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
 
     //xóa sản phẩm
-    //thùng rác 
+    //thùng rác
     Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
     //khôi phục từng sản phẩm
     Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
@@ -111,8 +110,6 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::get('/', function () {
       return view('admin.dashboard');
     })->name('admin');
-     
-    
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
     //cập nhật profile
@@ -123,7 +120,6 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
     Route::resource('products', ProductController::class);
 
-    Route::resource('revenue', RevenueController::class);
 
     Route::resource('orders', OrderController::class);
     // Route::resource('pending', OrderController::class);
@@ -132,12 +128,27 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::get('/processing', [OrderController::class, 'processing'])->name('orders.processing');
     Route::get('/picking', [OrderController::class, 'picking'])->name('orders.picking');
     Route::get('/shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
-Route::get('/shipped', [OrderController::class, 'shipped'])->name('orders.shipped');
+    Route::get('/shipped', [OrderController::class, 'shipped'])->name('orders.shipped');
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{id}/update-status', [OrderController::class, 'updateStatus']);
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Admin xử lý yêu cầu hoàn đơn
+    Route::post('/admin/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])
+        ->middleware(['auth:sanctum', 'is_admin']);
+
+    Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
+
+    // Admin chat routes
+    Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
+    Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
+Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+
+
+
+
 });
 
 Route::get('/thank-you', function () {

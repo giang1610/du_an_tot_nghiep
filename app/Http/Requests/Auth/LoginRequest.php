@@ -2,12 +2,16 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Password;
+
+use function Laravel\Prompts\confirm;
 
 class LoginRequest extends FormRequest
 {
@@ -27,25 +31,70 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'email' => ['nullable', 'string', 'email'],
+            'password' => ['nullable', 'string', 'max:255'],
         ];
     }
 
-    /**
-     * Attempt to authenticate the request's credentials.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Vui lòng nhập địa chỉ email',
+            'email.email' => 'Địa chỉ email không hợp lệ',
+            'password.required' => 'Vui lòng nhập mật khẩu',
+            'password.max' => 'Mật khẩu không được vượt quá :max ký tự',
+
+        ];
+    }
+
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        $email = $this->input('email');
+        $password = $this->input('password');
 
+        // Kiểm tra nếu không nhập email hoặc pass
+        if (empty($email)) {
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Vui lòng nhập email ',
+            ]);
+        }
+        if (empty($password)) {
+            throw ValidationException::withMessages([
+                'password' => 'Vui lòng nhập mật khẩu',
+            ]);
+        }
+        // Kiểm tra email có tồn tại không
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            // Email không tồn tại
+            throw ValidationException::withMessages([
+                'email' => 'Email không tồn tại.',
+            ]);
+        }
+
+        if ($user->status === 1) {
+            throw ValidationException::withMessages([
+                'email' => 'Bạn không có quyền truy cập vào hệ thống.',
+            ]);
+        }
+
+        // Nếu trạng thái == 0, kiểm tra mật khẩu
+        if (!Auth::attempt(['email' => $email, 'password' => $password])) {
+            // Sai mật khẩu
+            throw ValidationException::withMessages([
+                'email' => 'Mật khẩu sai, vui lòng nhập lại',
+            ]);
+        }
+
+        // Kiểm tra quyền nếu cần (ví dụ ở đây chỉ cho user có ID = 1 đăng nhập)
+        if (Auth::id() !== 1) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'email' => 'Bạn không có quyền đăng nhập vào hệ thống',
             ]);
         }
 
@@ -80,6 +129,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

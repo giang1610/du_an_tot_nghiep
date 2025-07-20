@@ -27,6 +27,12 @@ return new class extends Migration
             $table->string('customer_email');
             $table->string('customer_phone');
             $table->text('notes')->nullable();
+            $table->timestamp('delivered_at')->nullable();
+            $table->timestamp('returned_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
+            $table->text('return_reason')->nullable();
+            $table->text('note_admin')->nullable();
+            $table->enum('return_status', ['pending', 'accepted', 'rejected'])->nullable();
             $table->timestamps();
         });
     }

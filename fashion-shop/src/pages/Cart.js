@@ -157,7 +157,23 @@ export default function CartPage() {
               <td>{Number(item.price).toLocaleString()}₫</td>
               <td>{Number(item.subtotal).toLocaleString()}₫</td>
               <td>
-                <Button variant="danger" size="sm" onClick={() => removeItem(item.id)}>Xóa</Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => {
+                    if (!item.selected) {
+                      alert('Vui lòng chọn sản phẩm trước khi xóa.');
+                      return;
+                    }
+                    if (window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                      removeItem(item.id);
+                    }
+                  }}
+                >
+                  Xóa
+                </Button>
+
+
               </td>
             </tr>
           ))}
@@ -166,8 +182,18 @@ export default function CartPage() {
 
       <h4 className="text-end mt-4">Tổng cộng: {total.toLocaleString()}₫</h4>
       <div className="text-end">
-        <Button variant="success" href="/checkout">Thanh toán</Button>
+        <Button
+          variant="success"
+          disabled={!cartItems.some(item => item.selected)}
+          onClick={() => {
+            // Gửi danh sách sản phẩm được chọn nếu cần (ví dụ dùng Context / Redux hoặc localStorage)
+            window.location.href = '/checkout';
+          }}
+        >
+          Thanh toán
+        </Button>
       </div>
+
     </Container>
   );
 }

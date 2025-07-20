@@ -9,7 +9,7 @@ import Login from './pages/Login';
 import AllProductsPage from './pages/AllProductsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ForgotPassword from './pages/ForgotPassword';
-import ResendVerification from './pages/ResendVerification';
+import ResendVerification from './pages/ResendEmailPage';
 import Checkout from './pages/Checkout';
 import Profile from './pages/Profile';
 import OrderDetailPage from './pages/OrderDetailPage';
@@ -17,6 +17,13 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import MomoReturn from './pages/MomoReturn';
+// import Test from './pages/test';
+import ResetPassword from './pages/ResetPassword';
+import ProductReview from './components/ProductReview';
+
+// import chatbox
+import ChatApp from './components/ChatApp';
+
 
 function App() {
   return (
@@ -54,9 +61,18 @@ function App() {
         <Route path="/profile" element={<Profile />} />
          <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
+        
+        {/* anhkato */}
+        {/* <Route path="/test" element={<Test />} /> */}
+        {/* route ResetPassword anhkato vieêt */}
+        <Route path="/reset-password" element={<ResetPassword />} />
 
+        <Route path="/review/:orderId" element={<ProductReview />} />
+
+       
 
       </Routes>
+       <ChatApp />
       <Footer />
     </Router>
   );

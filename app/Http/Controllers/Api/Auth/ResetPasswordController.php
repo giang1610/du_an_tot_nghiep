@@ -39,7 +39,7 @@ class ResetPasswordController extends Controller
                  return response()->json(['message' => 'Token không hợp lệ.'], 400);
             }
 
-            $expiresInMinutes = config('auth.passwords.' . config('auth.defaults.passwords') . '.expire', 15);
+            $expiresInMinutes = config('auth.passwords.' . config('auth.defaults.passwords') . '.expire', 1);
             if (Carbon::parse($record->created_at)->addMinutes($expiresInMinutes)->isPast()) {
                 DB::table('password_reset_tokens')->where('token', $request->token)->delete();
                 return response()->json(['message' => 'Token đã hết hạn. Vui lòng yêu cầu lại.'], 400);
@@ -60,6 +60,8 @@ class ResetPasswordController extends Controller
             
             $user->password = Hash::make($request->password);
             $user->save();
+            $user->tokens()->delete();
+
 
            //xóa token
             DB::table('password_reset_tokens')->where('email', $record->email)->delete();

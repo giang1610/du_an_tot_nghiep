@@ -1,10 +1,17 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container-fluid px-4"> <!-- Header với nút quay lại -->
+<div class="container-fluid px-4">
+    <nav aria-label="breadcrumb" class="mt-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Chi tiết đơn hàng</li>
+        </ol>
+    </nav>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <a href="/admin/orders" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách </a> <!-- Nút hành động -->
+            <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách </a>
         <div class="btn-group">
             @if(!in_array($order->status, ['completed', 'cancelled']))
             <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-primary">
@@ -14,23 +21,23 @@
                 <i class="bi bi-printer me-2"></i>In đơn hàng
             </button>
         </div>
-    </div> <!-- Card thông tin chính -->
+    </div>
     <div class="card mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0"> Đơn hàng #{{ $order->order_number }}
-                <span class="badge 
-                @switch($order->status) 
-                @case('pending') bg-warning text-dark @break 
-                @case('processing') bg-primary @break 
-                @case('picking') bg-info text-dark @break 
-                @case('shipping') bg-secondary @break 
-                @case('shipped') bg-success @break 
-                @case('completed') bg-success @break 
-                @case('cancelled') bg-danger @break 
-                @default bg-light text-dark @endswitch ms-2"> {{ match($order->status) 
+                <span class="badge
+                @switch($order->status)
+                @case('pending') bg-warning text-dark @break
+                @case('processing') bg-primary @break
+                @case('picking') bg-info text-dark @break
+                @case('shipping') bg-secondary @break
+                @case('shipped') bg-success @break
+                @case('completed') bg-success @break
+                @case('cancelled') bg-danger @break
+                @default bg-light text-dark @endswitch ms-2"> {{ match($order->status)
                     {'pending' => 'Chờ xử lý',
                     'processing' => 'Đang xử lý',
-                    'picking' => 'Đang lấy hàng', 
+                    'picking' => 'Đang lấy hàng',
                     'shipping' => 'Đang giao hàng',
                     'shipped' => 'Đã giao hàng',
                     'completed' => 'Hoàn thành',
@@ -44,7 +51,6 @@
         </div>
 
         <div class="card-body">
-            <!-- Thông tin khách hàng -->
             <div class="row mb-4">
                 <div class="col-12 col-md-6 mb-3 mb-md-0">
                     <div class="card h-100">
@@ -79,7 +85,7 @@
                             <ul class="list-unstyled mb-0">
                                 <li class="mb-2">
                                     <strong>Phương thức thanh toán:</strong>
-                                    <span class="badge 
+                                    <span class="badge
                                     @switch($order->payment_method)
                                         @case('cod') bg-success @break
                                         @case('momo') momo-payment @break
@@ -120,7 +126,6 @@
                 </div>
             </div>
 
-            <!-- Danh sách sản phẩm -->
             <h5 class="border-bottom pb-2 mb-3">
                 <i class="bi bi-cart me-2"></i>Sản phẩm đã đặt
             </h5>
@@ -279,7 +284,6 @@
         body > *:not(.print-content) {
             display: none !important;
         }
-        
         /* Hiển thị phần nội dung in */
         .print-content {
             position: absolute;
@@ -289,24 +293,20 @@
             padding: 20px;
             background: white;
         }
-        
         /* Tối ưu hiển thị khi in */
         .card {
             border: none !important;
             box-shadow: none !important;
         }
-        
         .table {
             width: 100% !important;
             font-size: 14px !important;
         }
-        
         .badge {
             border: 1px solid #000 !important;
             color: #000 !important;
             background: transparent !important;
         }
-        
         /* Ẩn các nút và phần không cần in */
         .btn, .d-print-none {
             display: none !important;
@@ -323,18 +323,17 @@
         // Thêm lớp print-content vào phần cần in
         const content = document.querySelector('.container-fluid').cloneNode(true);
         content.classList.add('print-content');
-        
+
         // Xóa các phần không cần in
         const elementsToRemove = content.querySelectorAll('.d-print-none, .btn');
         elementsToRemove.forEach(el => el.remove());
-        
+
         // Mở cửa sổ in mới
         const printWindow = window.open('', '', 'width=800,height=600');
         printWindow.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
-                
                 <style>
                     body { font-family: Arial; margin: 0; padding: 20px; }
                     .table { width: 100%; border-collapse: collapse; }
@@ -353,7 +352,6 @@
             </html>
         `);
         printWindow.document.close();
-        
         // Tự động in sau khi tải xong
         setTimeout(() => {
             printWindow.print();

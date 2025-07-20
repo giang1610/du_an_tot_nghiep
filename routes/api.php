@@ -13,7 +13,16 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SizeController;
-use App\Http\Requests\CustomEmailVerificationRequest;
+
+use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\Auth\ChangePasswordController;
+
+// route chat
+use App\Http\Controllers\Api\Chat\ChatController;
+
+
+
 
 // User info
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -21,16 +30,28 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // ========== PUBLIC ROUTES ========== //
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1');
 
-// Email verification
-Route::get('/email/verify/{id}/{hash}', function (CustomEmailVerificationRequest $request) {
-    $request->fulfill();
-    return redirect('https://online-shop-sigma-eight.vercel.app/login?verified=true');
-})->middleware(['signed'])->name('verification.verify');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:5,1');
+
+
+Route::middleware('auth:sanctum')->post('/email/verify-token', [TokenEmailVerificationController::class, 'verify']);
+//route profile
+Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'update']);
+//route updatepass
+Route::middleware('auth:sanctum')->put('/change-password', [ChangePasswordController::class, 'change']);
+
+
+//route chat
+Route::get('/chat', [ChatController::class, 'index']);
+Route::post('/chat/send', [ChatController::class, 'store']);
+Route::middleware('auth:api')->post('/chat/typing', [ChatController::class, 'typing']);
+
+
+
+
 
 // Public product routes
 Route::get('/products', [ProductController::class, 'index']);
@@ -53,17 +74,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $request) => $request->user());
 
     // Reviews
+    // Gửi đánh giá
     Route::post('/reviews', [ReviewController::class, 'store']);
+    // Lấy danh sách đánh giá theo product_id (dùng ?product_id=...)
+    Route::get('/reviews', [ReviewController::class, 'getByProductQuery']);
+    // Kiểm tra đã nhận hàng
     Route::get('/orders/received-product', [ReviewController::class, 'receivedOrders']);
+
     // Cart
-    Route::prefix('cart')->group(function () {
-        Route::post('/add', [CartController::class, 'addToCart']);
-        Route::get('/', [CartController::class, 'viewCart']);
-        Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
-        Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
-        Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
-        Route::get('/total', [CartController::class, 'getCartTotal']);
-        Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::prefix('cart')->group(function () {
+            Route::post('/add', [CartController::class, 'addToCart']);
+            Route::get('/', [CartController::class, 'viewCart']);
+            Route::put('/update-selected/{item_id}', [CartController::class, 'updateSelected']);
+            Route::put('/update/{item_id}', [CartController::class, 'updateQuantity']);
+            Route::delete('/remove/{item_id}', [CartController::class, 'removeFromCart']);
+            Route::delete('/remove-selected', [CartController::class, 'removeSelectedItems']);
+            Route::delete('/clear', [CartController::class, 'clearCart']);
+            Route::get('/total', [CartController::class, 'getCartTotal']);
+            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
+
+        });
     });
 });
 
@@ -71,20 +102,26 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
     // Orders
-    Route::prefix('orders')->group(function () {
+    Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']);
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/checkout', [OrderController::class, 'checkout']);
-       Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
+        Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+        Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
+        // Gửi yêu cầu hoàn đơn
+        Route::post('/{id}/request-return', [OrderController::class, 'requestReturn']);
+
+    });
+
+    // Payment Momo
+    Route::prefix('payment')->group(function () {
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']); 
     });
 
     // Các route khác: logout, cart, review...
+    
 });
 
-// Payment Momo
-Route::prefix('payment')->group(function () {
-    Route::post('/momo', [OrderController::class, 'payViaMomo']);
-    Route::post('/momo-notify', [OrderController::class, 'momoNotify']);
-    Route::get('/momo-return', [OrderController::class, 'momoReturn']);
-});
+Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);

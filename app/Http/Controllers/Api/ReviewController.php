@@ -29,8 +29,8 @@ class ReviewController extends Controller
         }
 
         // Kiểm tra trạng thái đơn hàng
-        if ($order->status !== 'shipped') {
-            return response()->json(['error' => 'Chỉ có thể đánh giá khi đơn đã được giao.'], 400);
+        if ($order->status !== 'delivered') {
+            return response()->json(['error' => 'Chỉ có thể đánh giá khi đơn đã được nhận.'], 400);
         }
 
         // Kiểm tra số lần đánh giá
@@ -82,4 +82,31 @@ class ReviewController extends Controller
 
         return response()->json(['success' => true, 'data' => $reviews]);
     }
+    public function receivedOrders(Request $request)
+{
+    $user = $request->user();
+    $variantId = $request->query('product_variant_id');
+
+    $order = Order::where('user_id', $user->id)
+        ->where('status', 'delivered')
+        ->whereHas('items', fn($q) => $q->where('product_variant_id', $variantId))
+        ->latest()->first();
+
+    return response()->json([
+        'received' => !!$order,
+        'order_id' => $order?->id
+    ]);
+}
+// Lấy review qua query ?product_id=...
+public function getByProductQuery(Request $request)
+{
+    $productId = $request->query('product_id');
+    if (!$productId) {
+        return response()->json(['error' => 'Thiếu product_id'], 400);
+    }
+
+    return $this->listByProduct($productId);
+}
+
+
 }

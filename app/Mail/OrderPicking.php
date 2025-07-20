@@ -19,7 +19,7 @@ class OrderPicking extends Mailable
 
     public function build()
     {
-        return $this->subject('Đơn hàng của bạn đang được giao')
+        return $this->subject('Đơn hàng của bạn đang được lấy hàng')
                     ->markdown('emails.orders.picking');
     }
 }

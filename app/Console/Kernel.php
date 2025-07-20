@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
          $schedule->command('clean:reset-tokens')->everyMinute();
+         $schedule->command('orders:auto-complete')->daily();
     }
 
     /**
@@ -25,4 +26,5 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
 }

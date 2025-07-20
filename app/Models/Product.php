@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ProductVariant;
 use App\Models\ProductImage;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 /**

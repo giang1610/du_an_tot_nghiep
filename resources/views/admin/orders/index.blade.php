@@ -2,10 +2,10 @@
 
 @section('content')
 <div class="container-fluid px-0 px-md-3">
-    <nav aria-label="breadcrumb" class="mt-4">
+    <nav aria-label="breadcrumb" class="mt-2">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Quản lý đơn hàng</li>
+            <li class="breadcrumb-item active" aria-current="page"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
         </ol>
     </nav>
 
@@ -43,7 +43,16 @@
                         <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
                         <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
                         <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
+                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Đã nhận hàng</option>
+                        <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Giao hàng thất bại</option>
+                        <option value="failed_1" {{ request('status') == 'failed_1' ? 'selected' : '' }}>Giao hàng thất bại lần 1</option>
+                        <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
+                        <option value="returning" {{ request('status') == 'returning' ? 'selected' : '' }}>Đang trả hàng</option>
+                        <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Yêu cầu trả hàng</option>
+                        <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
                         <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
+                        <option value="failed_1" {{ request('status') == 'failed_1' ? 'selected' : '' }}>Giao hàng thất bại lần 1</option>
+                        <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
                     </select>
                 </div>
 
@@ -105,10 +114,10 @@
                             <th>Mã đơn</th>
                             <th>Khách hàng</th>
                             <th>Sản phẩm</th>
-                            <th>Thông tin</th>
-                            <th>Thanh toán</th>
+                            <th>Địa chỉ</th>
                             <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
+                            <th>Phương thức & Trạng thái</th>
+                            <th>TT giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -128,7 +137,7 @@
                                 </div>
                             </td>
                             <td>
-                                @foreach($order->items as $item)    
+                                @foreach($order->items as $item)
                                 <div class="d-flex align-items-center mb-2">
                                     @if($item->variant->product->image)
                                     <img src="{{ asset($item->variant->product->image) }}"
@@ -152,8 +161,16 @@
                             <td>
                                 <div class="small">
                                     <div><i class="fas fa-truck me-2"></i> {{ $order->shipping_method }}</div>
-                                    <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 15) }}</div>
+                                    <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 10) }}</div>
                                 </div>
+                            </td>
+                              <td>
+                                <strong>{{ number_format($order->total) }} VNĐ</strong>
+                                @if($order->discount > 0)
+                                <div class="text-danger small">
+                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
+                                </div>
+                                @endif
                             </td>
                             <td>
                                 @switch($order->payment_method)
@@ -163,7 +180,7 @@
                                 </span>
                                 @break
                                 @case('momo')
-                                <span style="background-color: #A50064; color: white" class="badge">
+                                <span style="background-color: #A50064; color: white" class="badge ">
                                     <i class="fas fa-mobile-alt me-1"></i> Momo
                                 </span>
                                 @break
@@ -183,14 +200,6 @@
                                     </span>
                                     @endif
                                 </div>
-                            </td>
-                            <td class="text-end">
-                                <strong>{{ number_format($order->total) }} VNĐ</strong>
-                                @if($order->discount > 0)
-                                <div class="text-danger small">
-                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
-                                </div>
-                                @endif
                             </td>
                             <td>
                                 @switch($order->status)
@@ -219,9 +228,44 @@
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
                                 </span>
                                 @break
+                                @case('delivered')
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i> Đã nhận hàng
+                                </span>
+                                @break
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành
+                                </span>
+                                @break
+                                @case('failed')
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i> Giao hàng thất bại
+                                </span>
+                                @break
+                                 @case('failed_1')
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i> Giao hàng thất bại lần 1
+                                </span>
+                                @break
+                                 @case('failed_2')
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i> Giao hàng thất bại lần 2
+                                </span>
+                                @break
+                                @case('returning')
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-undo me-1"></i> Đang hoàn hàng
+                                </span>
+                                @break
+                                @case('return_requested')
+                                <span class="badge bg-info">
+                                    <i class="fas fa-exchange-alt me-1"></i> Yêu cầu hoàn hàng
+                                </span>
+                                @break
+                                @case('returned')
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-undo-alt me-1"></i> Hoàn hàng
                                 </span>
                                 @break
                                 @case('cancelled')
@@ -245,7 +289,7 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
 
-                                    @if (!in_array($order->status, ['completed', 'cancelled']))
+                                    @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
                                     <a href="{{ route('orders.edit', $order->id) }}"
                                         class="btn btn-sm btn-outline-success"
                                         data-bs-toggle="tooltip"
@@ -328,6 +372,10 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5
                             </div>
                         </div>
                         <div class="card-body">
@@ -412,8 +460,7 @@
                                     class="btn btn-sm btn-outline-primary flex-grow-1">
                                     <i class="fas fa-eye me-1"></i> Chi tiết
                                 </a>
-
-                                @if (!in_array($order->status, ['completed', 'cancelled']))
+                                @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
                                 <a href="{{ route('orders.edit', $order->id) }}"
                                     class="btn btn-sm btn-outline-success flex-grow-1">
                                     <i class="fas fa-edit me-1"></i> Cập nhật

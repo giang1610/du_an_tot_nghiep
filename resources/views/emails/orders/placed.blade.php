@@ -1,5 +1,8 @@
 @component('mail::message')
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5
 <div style="text-align: center; margin-bottom: 20px;">
     <img src="{{ asset('images/logo.png') }}" alt="MG Fashion Store" style="max-height: 80px;">
     <h1 style="color: #2d3748; margin-top: 10px;">Cảm ơn bạn đã đặt hàng!</h1>
@@ -102,6 +105,7 @@
     <p>MG Fashion Store - Thời trang cho mọi người</p>
 </div>
 @endcomponent
+<<<<<<< HEAD
 =======
 # 🎉 Cảm ơn bạn đã đặt hàng tại **MG Fashion Store**!
 
@@ -173,3 +177,5 @@ Trân trọng,
 **MG Fashion Store**
 @endcomponent
 >>>>>>> d05ea496963963675dbd1e8fecebf3d54c40d8dd
+=======
+>>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5

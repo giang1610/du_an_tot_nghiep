@@ -13,7 +13,7 @@ export default function ProductCard({ product }) {
         alt={product.name}
         style={{ height: 200, objectFit: 'contain', backgroundColor: '#fff' }}
       />
-      <Badge bg="danger" className="position-absolute top-0 start-0 m-2">-30%</Badge>
+      {/* <Badge bg="danger" className="position-absolute top-0 start-0 m-2">-30%</Badge> */}
       <Card.Body className="text-center">
         <Card.Title>{product.name}</Card.Title>
         <Card.Text className="text-danger fw-bold">
@@ -29,15 +29,11 @@ export default function ProductCard({ product }) {
           )}
         </Card.Text>
 
-<<<<<<< HEAD
-        <Button as={Link} to={`/products/slug/${product.slug}`} variant="outline-dark" size="sm">
+        <Button as={Link} to={`/products/${product.slug}`} variant="outline-dark" size="sm">
           Xem chi tiết
         </Button>
 
 
-=======
-        <Button as={Link} to={`/products/${product.slug}`} variant="outline-dark" size="sm">Xem chi tiết</Button>
->>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
       </Card.Body>
     </Card>
   );

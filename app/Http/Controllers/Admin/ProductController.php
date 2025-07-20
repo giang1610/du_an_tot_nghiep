@@ -14,6 +14,10 @@ use App\Models\Color;
 use App\Models\Size;
 use Illuminate\Support\Facades\DB;
 
+//use RealTime
+use App\Events\ProductChanged;
+
+
 
 use Illuminate\Support\Facades\Storage;
 
@@ -108,7 +112,7 @@ public function store(ProductRequest $request)
                         'sale_price' => $variantData['sale_price'] ?? null,
                         'sale_start_date' => $variantData['sale_start_date'] ?? null,
                         'sale_end_date' => $variantData['sale_end_date'] ?? null,
-                        // 'stock' => $variantData['stock'] ?? 0,
+                        'stock' => $variantData['stock'] ?? 0,
                         'color_id' => $variantData['color_id'] ?? null,
                         'size_id' => $variantData['size_id'] ?? null,
                         'image' => $variantImagePath, // Lưu đường dẫn ảnh biến thể
@@ -121,7 +125,10 @@ public function store(ProductRequest $request)
                     $variant->stock()->create(['quantity' => $quantity]);
                 }
             }
+           
+  
 
+            broadcast(new ProductChanged);
             DB::commit(); // Hoàn tất transaction nếu mọi thứ thành công
             return redirect()->route('products.index')->with('success', 'Thêm sản phẩm thành công!');
         } catch (\Exception $e) {
@@ -399,6 +406,7 @@ public function update(ProductRequest $request, $id)
         });
 
         DB::commit();
+        broadcast(new ProductChanged);
         return redirect()->route('products.index')->with('success', 'Cập nhật sản phẩm thành công!');
     } catch (\Exception $e) {
         DB::rollBack();
@@ -469,7 +477,8 @@ public function update(ProductRequest $request, $id)
     try {
         $product = Product::findOrFail($id);
         $product->delete(); // XÓA MỀM
-
+        //realTime
+         broadcast(new ProductChanged);
         return redirect()->route('products.index')->with('success', 'Sản phẩm đã được đưa vào thùng rác!');
     } catch (\Exception $e) {
         return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
@@ -480,6 +489,8 @@ public function update(ProductRequest $request, $id)
     public function trash()
     {
         $products = Product::onlyTrashed()->with('category')->paginate(10);
+        //realTimeProduct
+       
         return view('admin.products.trash', compact('products'));
     }
     
@@ -487,12 +498,16 @@ public function update(ProductRequest $request, $id)
     public function restore($id)
     {
         Product::withTrashed()->findOrFail($id)->restore();
+         //realTimeProduct
+        broadcast(new ProductChanged);
         return back()->with('success', 'Khôi phục sản phẩm thành công!');
     }
     // Khôi phục tất cả sản phẩm đã xóa mềm
     public function restoreAll()
     {
         Product::onlyTrashed()->restore();
+         //realTimeProduct
+        broadcast(new ProductChanged);
         return back()->with('success', 'Khôi phục tất cả sản phẩm thành công!');
     }
 
@@ -545,7 +560,8 @@ public function update(ProductRequest $request, $id)
             }
             $product->forceDelete();
         }
-
+        //realTimeProduct
+        broadcast(new ProductChanged);
         return back()->with('success', 'Đã xóa vĩnh viễn tất cả sản phẩm!');
     }
 }

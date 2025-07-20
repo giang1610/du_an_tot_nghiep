@@ -6,30 +6,26 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import HeroBanner from '../components/HeroBanner';
 import ServiceBar from '../components/ServiceBar';
+import { listenToProductChanged } from '../realtime/productRealtime';
 
 export default function HomePage() {
-  const [latestProducts, setLatestProducts] = useState([]);
-  const [saleProducts, setSaleProducts] = useState([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError('');
     try {
+      setLoading(true);
       const res = await fetch(`${process.env.REACT_APP_API_URL}/products`);
       const json = await res.json();
+
       if (!json.success || !Array.isArray(json.data)) {
         throw new Error('Dữ liệu sản phẩm không hợp lệ');
       }
-      const products = json.data;
-      setSaleProducts(products.filter(p => p.variants.some(v => v.sale_price != null && v.sale_price < v.price)));
-      setLatestProducts(
-        [...products]
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          .slice(0, 10)
-      );
+
+      setData(json.data); 
     } catch (err) {
+      console.error('❌ Lỗi khi fetch sản phẩm:', err);
       setError(err.message || 'Lỗi khi tải sản phẩm');
     } finally {
       setLoading(false);
@@ -40,7 +36,26 @@ export default function HomePage() {
     fetchProducts();
   }, [fetchProducts]);
 
-  const renderSection = useCallback((title, products) => (
+  useEffect(() => {
+    const unsubscribe = listenToProductChanged(() => {
+      console.log(' Laravel báo thay đổi → gọi lại API');
+      fetchProducts();
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [fetchProducts]);
+
+  const latestProducts = [...data]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 10);
+
+  const saleProducts = data.filter(p =>
+    p.variants?.some(v => v.sale_price != null && v.sale_price < v.price)
+  );
+
+  const renderSection = (title, products) => (
     <>
       <div className="d-flex justify-content-between align-items-center mt-5 mb-3">
         <h4>{title}</h4>
@@ -69,7 +84,7 @@ export default function HomePage() {
         </Swiper>
       )}
     </>
-  ), []);
+  );
 
   if (loading) {
     return (
@@ -77,7 +92,7 @@ export default function HomePage() {
         <HeroBanner />
         <ServiceBar />
         <Container className="py-5 text-center">
-          <div className="spinner-border" role="status" aria-hidden="true" />
+          <div className="spinner-border" role="status" />
           <span className="visually-hidden">Đang tải...</span>
         </Container>
       </>

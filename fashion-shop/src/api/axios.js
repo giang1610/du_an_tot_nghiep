@@ -1,32 +1,28 @@
-// import axios from "axios";
 
-// const baseURL=process.env.REACT_APP_URI;
-// const timeout=+process.env.REACT_APP_TIME_OUT||20000;
+import axios from 'axios';
 
+const axiosInstance = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api',
+  timeout: +process.env.REACT_APP_API_TIME_OUT || 20000,
+});
 
-// const axiosInstance =axios.create({
-//     baseURL,
-//     timeout,
-// });
+axiosInstance.interceptors.request.use(
+  function (config) {
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
 
-// axiosInstance.interceptors.request.use(
+axiosInstance.interceptors.response.use(
+  function (response) {
+    return response;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
 
-//     function(config){
-//         config.headers["Content-Type"]= "application/json";
-//         return config
-//     },
-//     function(error){
-//         return Promise.reject(error)
-//     }
-// );
-// axiosInstance.interceptors.response.use(
-//     function (response){
-//         if(response.data){
-//             return response.data
-//         }
-//         return response
-//     },
-//     function(error){
-//         return Promise.reject(error)
-//     }
-// )
+export default axiosInstance;

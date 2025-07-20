@@ -1,96 +1,256 @@
 import { useEffect, useState } from 'react';
-import { Container, Table, Spinner, Alert, Button } from 'react-bootstrap';
+import {
+    Container, Card, Row, Col, Button, Badge, Spinner, Alert, Image
+} from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
+import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
 import axios from 'axios';
 
-const formatDate = (isoDate) => {
-  const date = new Date(isoDate);
-  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth()+1)
-    .toString().padStart(2, '0')}/${date.getFullYear()}`;
+const formatDate = (iso) => {
+    const d = new Date(iso);
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
 };
 
-const formatCurrency = (amount) =>
-  Number(amount).toLocaleString('vi-VN') + '₫';
+const formatCurrency = (amount) => Number(amount).toLocaleString('vi-VN') + '₫';
 
-const getPaymentMethodLabel = (method) =>
-  method === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản';
+const STATUS_LABELS = {
+    pending: 'Chờ xác nhận',
+    processing: 'Đang xử lý',
+    picking: 'Đang lấy hàng',
+    shipping: 'Đang giao hàng',
+    shipped: 'Đã giao hàng',
+    delivered: 'Đã nhận hàng',
+    return_requested: 'Đã yêu cầu hoàn hàng',
+    returned: 'Hoàn hàng',
+    completed: 'Hoàn thành',
+    cancelled: 'Đã hủy',
+    failed: 'Giao hàng thất bại',
+    failed_1: 'Giao hàng thất bại lần 1',
+    failed_2: 'Giao hàng thất bại lần 2',
+};
+
+const STATUS_VARIANTS = {
+    pending: 'warning',
+    processing: 'info',
+    picking: 'primary',
+    shipping: 'primary',
+    shipped: 'info',
+    delivered: 'success',
+    completed: 'success',
+    cancelled: 'secondary',
+    failed: 'danger',
+    returned: 'success',
+};
+
+const PAYMENT_STATUS_LABELS = {
+    paid: 'Đã thanh toán',
+    unpaid: 'Chưa thanh toán',
+    pending: 'Đang xử lý',
+    failed: 'Thất bại',
+};
+
+const PAYMENT_STATUS_VARIANTS = {
+    paid: 'success',
+    unpaid: 'danger',
+    pending: 'warning',
+    failed: 'danger',
+};
+const PAYMENT_METHOD_LABELS = {
+    cod: 'Thanh toán khi nhận hàng',
+    momo: 'Ví Momo',
+    // vnpay: 'VNPay',
+    // zalopay: 'ZaloPay',
+    // bank: 'Chuyển khoản ngân hàng',
+    // other: 'Khác'
+};
+
 
 export default function MyOrdersPage() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+    useEffect(() => {
+        const fetchOrders = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return navigate('/login');
 
-      try {
-        setLoading(true);
-        setError('');
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setOrders(res.data.data?.data || []);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
-        } else {
-          setError('Lỗi khi tải đơn hàng. Vui lòng thử lại sau.');
+            try {
+                setLoading(true);
+                const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setOrders(res.data.data?.data || []);
+            } catch (err) {
+                setError('Không thể tải đơn hàng. Vui lòng thử lại.');
+                if (err.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    navigate('/login');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOrders();
+    }, [navigate]);
+
+        useEffect(() => {
+            const channel = listenToOrderStatusRealtime((orderId, newStatus, paymentStatus) => {
+                setOrders(prev =>
+                    prev.map(order =>
+                        order.id === Number(orderId)
+                            ? {
+                                ...order,
+                                status: newStatus ?? order.status,
+                                payment_status: paymentStatus ?? order.payment_status,
+                            }
+                            : order
+                    )
+                );
+            });
+
+            return () => {
+                channel.stopListening('.order.updated');
+            };
+        }, []);
+
+
+    const handleConfirmReceived = async (orderId) => {
+        const token = localStorage.getItem('token');
+        if (!window.confirm('Bạn xác nhận đã nhận hàng?')) return;
+
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/confirm-received`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOrders(prev =>
+                prev.map(order =>
+                    order.id === orderId ? { ...order, status: 'delivered' } : order
+                )
+            );
+            alert('Xác nhận thành công!');
+        } catch {
+            alert('Thất bại. Vui lòng thử lại.');
         }
-      } finally {
-        setLoading(false);
-      }
     };
 
-    fetchOrders();
-  }, [navigate]);
+    return (
+        <Container className="py-4">
+            <h3 className="mb-4">Đơn hàng của tôi</h3>
 
-  return (
-    <Container className="py-4">
-      <h3 className="mb-4">Đơn hàng của tôi</h3>
+            {loading ? (
+                <div className="text-center"><Spinner animation="border" /></div>
+            ) : error ? (
+                <Alert variant="danger">{error}</Alert>
+            ) : orders.length === 0 ? (
+                <Alert variant="info">Bạn chưa có đơn hàng nào.</Alert>
+            ) : (
+                orders.map(order => (
+                    <Card className="mb-4 shadow-sm" key={order.id}>
+                        <Card.Header className="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Mã đơn:</strong> #{order.order_number || order.id} &nbsp;|&nbsp;
+                                <strong>Ngày đặt:</strong> {formatDate(order.created_at)} <br />
+                                <strong>Khách hàng:</strong> {order.user?.name || 'Không rõ'}
+                            </div>
+                            <Badge bg={STATUS_VARIANTS[order.status] || 'secondary'}>
+                                {STATUS_LABELS[order.status] || 'Không rõ'}
+                            </Badge>
+                        </Card.Header>
 
-      {loading ? (
-        <div className="text-center py-4">
-          <Spinner animation="border" />
-        </div>
-      ) : error ? (
-        <Alert variant="danger">{error}</Alert>
-      ) : orders.length === 0 ? (
-        <Alert variant="info">Bạn chưa có đơn hàng nào.</Alert>
-      ) : (
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th>Mã đơn</th>
-              <th>Ngày đặt</th>
-              <th>Phương thức</th>
-              <th>Tổng tiền</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map(order => (
-              <tr key={order.id}>
-                <td>{order.order_number || order.id}</td>
-                <td>{formatDate(order.created_at)}</td>
-                <td>{getPaymentMethodLabel(order.payment_method)}</td>
-                <td>{formatCurrency(order.total)}</td>
-                <td>
-                  <Link to={`/orders/${order.id}`}>
-                    <Button variant="primary" size="sm">Xem chi tiết</Button>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
-    </Container>
-  );
+
+                        <Card.Body>
+                            {order.items.map(item => {
+                                const reviews = item.reviews || [];
+                                const count = reviews.length;
+                                const deliveredAt = new Date(order.delivered_at);
+                                const now = new Date();
+                                const diffDays = Math.floor((now - deliveredAt) / (1000 * 60 * 60 * 24));
+                                let canReview = false;
+                                if (count === 0) canReview = true;
+                                else if (count === 1 && diffDays >= 7) canReview = true;
+
+                                return (
+                                    <Row key={item.id} className="align-items-center mb-3">
+                                        <Col xs={2}>
+                                            <Image
+                                                src={item.product_variant?.img || item.product_variant?.product?.img || 'https://via.placeholder.com/60'}
+                                                rounded
+                                                style={{ width: 60, height: 60, objectFit: 'cover' }}
+                                            />
+                                        </Col>
+                                        <Col xs={7}>
+                                            <div>{item.product_variant?.product?.name}</div>
+                                            <small className="text-muted">
+                                                Phân loại: {item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}
+                                            </small>
+                                            <div>
+                                                {reviews.map(r => (
+                                                    <div key={r.id} className="border p-1 my-1 rounded">
+                                                        {'★'.repeat(r.rating)} - {r.content}
+                                                    </div>
+                                                ))}
+                                                {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
+                                                {canReview && count < 2 && order.status === 'delivered' && (
+                                                    <Link to={`/orders/${order.id}`}>
+                                                        <Button size="sm" variant="outline-primary" className="mt-1">
+                                                            Đánh giá
+                                                        </Button>
+                                                    </Link>
+                                                )}
+                                                {!canReview && count === 1 && (
+                                                    <span className="text-muted">Chờ đủ 7 ngày để đánh giá tiếp</span>
+                                                )}
+                                            </div>
+                                        </Col>
+                                        <Col xs={3} className="text-end">
+                                            <div>{formatCurrency(item.sale_price || item.price)}</div>
+                                            <small>Số lượng: {item.quantity}</small>
+                                        </Col>
+                                    </Row>
+                                );
+                            })}
+                        </Card.Body>
+
+                        <Card.Footer className="d-flex justify-content-between align-items-center">
+                            <div>
+                                {order.status !== 'cancelled' && (
+                                    <>
+                                        <strong>Thanh toán:</strong>{' '}
+                                        <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
+                                            {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                                        </Badge>{' '}
+                                        {order.payment_method && (
+                                            <span className="ms-2">
+                                                ({PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method})
+                                            </span>
+                                        )}
+                                        <span className="ms-2 text-danger fw-bold">
+                                            {formatCurrency(order.total ?? order.total_amount ?? 0)}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                            <div>
+                                <Link to={`/orders/${order.id}`}>
+                                    <Button variant="outline-primary" size="sm" className="me-2">
+                                        Chi tiết
+                                    </Button>
+                                </Link>
+
+                                {order.status === 'shipped' && (
+                                    <Button variant="success" size="sm" onClick={() => handleConfirmReceived(order.id)}>
+                                        Xác nhận nhận hàng
+                                    </Button>
+                                )}
+                            </div>
+                        </Card.Footer>
+
+                    </Card>
+                ))
+            )}
+        </Container>
+    );
 }

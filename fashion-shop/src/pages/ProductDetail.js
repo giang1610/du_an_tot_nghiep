@@ -2,19 +2,14 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-<<<<<<< HEAD
   Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
 } from 'react-bootstrap';
 import ProductReview from './ProductReview';
 import CheckoutForm from '../components/CheckoutForm';
-import ProductImageGallery from '../components/ProductImageGallery'; // ✅ Thêm dòng này
-=======
-  Container, Row, Col, Image, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
-} from 'react-bootstrap';
-import ProductReview from './ProductReview';
-import CheckoutForm from '../components/CheckoutForm';
+import ProductImageGallery from '../components/ProductImageGallery';
+import { listenToStockUpdates } from '../realtime/stockRealtime';
 
->>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
+
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -24,16 +19,11 @@ export default function ProductDetail() {
   const [reviews, setReviews] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
-=======
-  const [mainImage, setMainImage] = useState('');
->>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [alertMsg, setAlertMsg] = useState('');
-
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -47,10 +37,6 @@ export default function ProductDetail() {
         setProduct(product);
         setReviews(reviews || []);
         setRelatedProducts(related_products || []);
-<<<<<<< HEAD
-=======
-        setMainImage(product?.images?.[0]?.url || '');
->>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
       })
       .catch(err => {
         console.error(err);
@@ -58,6 +44,48 @@ export default function ProductDetail() {
       })
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    const unsubscribe = listenToStockUpdates(({ variantId, stock }) => {
+      setProduct((prev) => {
+        if (!prev) return prev;
+        const updatedVariants = prev.variants.map((v) => {
+          if (v.id === variantId && v.stock) {
+            return {
+              ...v,
+              stock: { ...v.stock, quantity: stock },
+            };
+          }
+          return v;
+        });
+        return { ...prev, variants: updatedVariants };
+      });
+    });
+
+    return unsubscribe;
+  }, [product]);
+
+
+
+  const imageList = useMemo(() => {
+    if (!product) return [];
+
+    const mainImage = product.img ? [{ url: product.img }] : [];
+
+    const variantImages = product.variants
+      ?.map(v => v.img)
+      .filter(Boolean)
+      .map(url => ({ url })) || [];
+
+    const uniqueUrls = Array.from(new Set([...mainImage, ...variantImages].map(i => i.url)))
+      .map(url => ({ url }));
+
+    return uniqueUrls.length > 0
+      ? uniqueUrls
+      : [{ url: 'https://via.placeholder.com/500x500?text=No+Image' }];
+  }, [product]);
 
   const sizes = useMemo(() => {
     if (!product) return [];
@@ -140,61 +168,30 @@ export default function ProductDetail() {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
       setAlertMsg(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
 
-    if (!shippingAddress || !customerPhone) {
-      setAlertMsg('Vui lòng nhập địa chỉ và số điện thoại.');
-      return;
-    }
+    const item = {
+      product_name: product.name,
+      variant_id: selectedVariant.id,
+      product_variant_id: selectedVariant.id,
+      quantity,
+      price: selectedVariant.sale_price ?? selectedVariant.price,
+      image: selectedVariant.img || product.img,
+      size: selectedVariant.size?.name,
+      color: selectedVariant.color?.name,
+      size_id: selectedVariant.size?.id,
+      color_id: selectedVariant.color?.id,
+    };
 
-    try {
-      const token = localStorage.getItem('token');
-      const userEmail = localStorage.getItem('user_email') || 'user@example.com';
-      const price = selectedVariant.sale_price ?? selectedVariant.price;
-      const subtotal = price * quantity;
-      const tax = Math.round(subtotal * 0.1);
-      const shipping = 20000;
-      const total = subtotal + tax + shipping;
-
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/orders/checkout`, {
-        payment_method: paymentMethod,
-        shipping_address: shippingAddress,
-        customer_phone: customerPhone,
-        customer_email: userEmail,
-        items: [{ product_variant_id: selectedVariantId, quantity }],
-        subtotal,
-        tax,
-        shipping,
-        total
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const paymentUrl = response?.data?.data?.payment_url;
-      const orderId = response?.data?.data?.order?.id;
-
-      if (paymentUrl) {
-        window.location.href = paymentUrl;
-      } else {
-        setAlertMsg('Đặt hàng thành công!');
-        navigate(`/orders/${orderId || ''}`);
-      }
-
-    } catch (error) {
-      if (error.response) {
-        console.error('Lỗi chi tiết:', error.response.data);
-        setAlertMsg(error.response.data.message || 'Lỗi khi tạo đơn hàng.');
-      } else {
-        console.error('Lỗi không xác định:', error);
-        setAlertMsg('Lỗi không xác định. Vui lòng thử lại.');
-      }
-    }
+    localStorage.setItem('buy_now', JSON.stringify(item));
+    navigate('/checkout?buy_now=1');
   };
+
 
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (!product) return <Alert variant="danger">{alertMsg || 'Sản phẩm không tồn tại'}</Alert>;
@@ -209,24 +206,10 @@ export default function ProductDetail() {
 
       <Row>
         <Col md={6}>
-<<<<<<< HEAD
-          <ProductImageGallery images={product.images} productName={product.name} />
-=======
-          <Image src={mainImage || 'placeholder.jpg'} fluid style={{ border: '1px solid #ccc' }} />
-          <div className="d-flex mt-3 gap-2 flex-wrap">
-            {product.images?.map(img => (
-              <Image
-                key={img.id}
-                src={img.url}
-                width={70}
-                height={70}
-                style={{ objectFit: 'cover', border: '1px solid #ddd', cursor: 'pointer' }}
-                onClick={() => setMainImage(img.url)}
-                alt={product.name}
-              />
-            ))}
-          </div>
->>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
+          <ProductImageGallery
+            images={imageList}
+            mainImage={selectedVariant?.img || product.img}
+            productName={product.name} />
         </Col>
 
         <Col md={6}>
@@ -297,14 +280,13 @@ export default function ProductDetail() {
             </Button>
             <Button
               variant="danger"
-              onClick={() => {
-                if (!requireLoginAndVariant()) return;
-                setShowCheckoutForm(true);
-              }}
+              onClick={handleBuyNow}
               disabled={!selectedVariant}
             >
               ⚡ Mua ngay
             </Button>
+
+
           </div>
 
           {showCheckoutForm && (
@@ -323,7 +305,12 @@ export default function ProductDetail() {
             {reviews.map(r => (
               <div key={r.id} className="mb-3 border-bottom pb-2">
                 <strong>{r.user?.name || 'Khách hàng'}</strong>
-                <p>{r.comment}</p>
+                <div>
+                  {[...Array(r.rating)].map((_, i) => (
+                    <span key={i} style={{ color: '#ffc107' }}>★</span>
+                  ))}
+                </div>
+                <p>{r.content}</p>
               </div>
             ))}
             <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />
@@ -334,26 +321,27 @@ export default function ProductDetail() {
       <div className="mt-5">
         <h4>Sản phẩm liên quan</h4>
         <Row>
-          {relatedProducts.map(rp => (
-            <Col md={3} key={rp.id} className="mb-3">
-              <div className="border p-2 h-100 d-flex flex-column align-items-center">
-<<<<<<< HEAD
-                <img
-                  src={rp.images?.[0]?.url || 'placeholder.jpg'}
-=======
-                <Image
-                  src={rp.images?.[0]?.url || 'placeholder.jpg'}
-                  fluid
->>>>>>> ad45c50f6c3d737e3470ec1213e51e61a1cf0c95
-                  alt={rp.name}
-                  style={{ maxHeight: 150, objectFit: 'contain' }}
-                />
-                <p className="fw-bold mt-2 text-center">{rp.name}</p>
-              </div>
-            </Col>
-          ))}
+          {relatedProducts.map((rp) => {
+            const imageUrl =
+              rp.variants?.[0]?.thumbnail ||
+              'https://via.placeholder.com/150x150?text=No+Image';
+
+            return (
+              <Col md={3} key={rp.id} className="mb-3">
+                <div className="border p-2 h-100 d-flex flex-column align-items-center">
+                  <img
+                    src={imageUrl}
+                    alt={rp.name}
+                    style={{ maxHeight: 150, objectFit: 'contain' }}
+                  />
+                  <p className="fw-bold mt-2 text-center">{rp.name}</p>
+                </div>
+              </Col>
+            );
+          })}
         </Row>
       </div>
+
     </Container>
   );
 }

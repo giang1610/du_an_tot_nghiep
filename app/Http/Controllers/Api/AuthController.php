@@ -15,10 +15,16 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:25',
+            'email' => 'required|string|email|max:40',
             'password' => 'required|string|confirmed|min:8',
         ]);
+
+        if (User::where('email', $request->email)->exists()) {
+         return response()->json([
+        'message' => 'Email đã được đăng ký.',
+        ], 401); 
+        }
 
         // Tạo người dùng mới
         $user = User::create([
@@ -26,18 +32,18 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-
-
-        dispatch(new SendVerificationEmailJob($user));
+      
+        
+       dispatch(new SendVerificationEmailJob($user));
 
 
 
         return response()->json([
             'message' => 'Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản của bạn.',
-            'user' => [
+            'user' => [ 
                 'name' => $user->name,
                 'email' => $user->email,
-                'email_verified_at' => $user->email_verified_at,
+                'email_verified_at' => $user->email_verified_at, 
             ],
 
         ], 200);
@@ -73,12 +79,13 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'img_thumbnail' => $user->img_thumbnail ?? null
             ],
             'token' => $token,
         ]);
     }
 
-
+   
 
 
     public function logout(Request $request)
