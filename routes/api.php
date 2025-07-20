@@ -18,16 +18,16 @@ use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\Auth\ChangePasswordController;
 
+use App\Http\Controllers\Api\Auth\GetUserController;
+
+
 // route chat
 use App\Http\Controllers\Api\Chat\ChatController;
 
 
 
 
-// User info
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
 
 // ========== PUBLIC ROUTES ========== //
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
@@ -73,6 +73,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', fn(Request $request) => $request->user());
+
+    Route::get('user', [GetUserController::class, 'getUser']);
 
     // Reviews
     // Gửi đánh giá
