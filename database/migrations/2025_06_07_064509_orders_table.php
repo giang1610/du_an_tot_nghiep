@@ -26,13 +26,19 @@ return new class extends Migration
             $table->text('billing_address')->nullable();
             $table->string('customer_email');
             $table->string('customer_phone');
+            $table->string('voucher_code')->nullable(); // Mã voucher
+            $table->decimal('voucher_discount', 10, 2)->default(0);
+            $table->string('voucher_type')->nullable(); // 'percent' hoặc 'amount'
+           $table->foreignId('voucher_id')->nullable()->constrained('vouchers');
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->text('notes')->nullable();
-            $table->timestamp('delivered_at')->nullable();
-            $table->timestamp('returned_at')->nullable();
             $table->timestamp('completed_at')->nullable();
+            $table->timestamp('return_requested_at')->nullable();
             $table->text('return_reason')->nullable();
-            $table->text('note_admin')->nullable();
+            $table->string('return_media')->nullable();
+            $table->timestamp('returned_at')->nullable();
             $table->enum('return_status', ['pending', 'accepted', 'rejected'])->nullable();
+            $table->text('note_admin')->nullable();
             $table->timestamps();
         });
     }

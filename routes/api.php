@@ -109,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [OrderController::class, 'index']);
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/checkout', [OrderController::class, 'checkout']);
+        Route::post('/checkout/validate-voucher', [OrderController::class, 'validateVoucher']);
         Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
         Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
@@ -119,7 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payment Momo
     Route::prefix('payment')->group(function () {
-        Route::post('/momo', [OrderController::class, 'processMomoPayment']); 
+        Route::post('/momo', [OrderController::class, 'processMomoPayment']);
     });
 
     
@@ -132,4 +133,8 @@ Route::middleware('auth:sanctum')->group(function() {
 });
 
 Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);
+Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
+
+// VNPay payment
+Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
+Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);

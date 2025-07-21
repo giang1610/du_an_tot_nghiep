@@ -379,11 +379,7 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
-<<<<<<< HEAD
                                 
-=======
-
->>>>>>> 238157f0b29ab532cfe845968802108ed1e75f95
                             </div>
                         </div>
                         <div class="card-body">
@@ -468,10 +464,7 @@
                                     class="btn btn-sm btn-outline-primary flex-grow-1">
                                     <i class="fas fa-eye me-1"></i> Chi tiết
                                 </a>
-<<<<<<< HEAD
                                 
-=======
->>>>>>> 238157f0b29ab532cfe845968802108ed1e75f95
                                 @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
                                 <a href="{{ route('orders.edit', $order->id) }}"
                                     class="btn btn-sm btn-outline-success flex-grow-1">

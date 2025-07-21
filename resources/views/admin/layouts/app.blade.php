@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
- 
+
   <!-- linkcss Notification -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
 
@@ -206,7 +206,7 @@
 
     <div class="d-flex align-items-center gap-3">
       <button id="darkModeToggle" class="btn btn-icon"><i class="bi bi-moon"></i></button>
-       
+
       <!-- Thông báo -->
        <x-notification/>
 
