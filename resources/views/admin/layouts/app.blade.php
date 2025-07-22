@@ -139,38 +139,57 @@
   <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#ordersMenu" aria-expanded="{{ request()->routeIs('orders.*') ? 'true' : 'false' }}">
     <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
-  <div id="ordersMenu" class="collapse ps-3 {{ request()->routeIs('orders.*') ? 'show' : '' }}">
-    <a href="{{ route('orders.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('orders.index') ? 'active' : '' }}">Danh sách</a>
-    <a href="{{ route('orders.cancelled') }}" class="nav-link py-2 menu-item {{ request()->routeIs('orders.cancelled') ? 'active' : '' }}">Đơn đã huỷ</a>
-    <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item {{ request()->routeIs('orders.pending') ? 'active' : '' }}">Đơn chờ xử lí</a>
-    <a href="{{ route('orders.processing') }}" class="nav-link py-2 menu-item {{ request()->routeIs('orders.processing') ? 'active' : '' }}">Đơn đang xử lý</a>
-    <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item {{ request()->routeIs('orders.picking') ? 'active' : '' }}">Đang lấy hàng</a>
-    <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item {{ request()->routeIs('orders.shipping') ? 'active' : '' }}">Đang giao hàng</a>
-    <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item {{ request()->routeIs('orders.shipped') ? 'active' : '' }}">Đã giao hàng</a>
-  </div>
-</li>
+  <div id="ordersMenu" class="collapse ps-3">
+        <a href="{{ route('orders.index') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Danh sách</a>
+        <a href="{{ route('orders.cancelled') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Đơn đã huỷ</a>
+        <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lí</a>
+        <a href="{{ route('orders.processing') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn đang xử lý</a>
+        <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
+        <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
+        <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
+        <a href="{{ route('orders.completed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Hoàn thành</a>
+        <a href="{{ route('orders.failed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Giao hàng thất bại</a>
+        <a href="{{ route('orders.returning') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang trả hàng</a>
+        <a href="{{ route('orders.return_requested') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Yêu cầu trả hàng</a>
+        <a href="{{ route('orders.returned') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã trả hàng</a>
+    </li>
+    <!-- Khuyến mãi -->
+    <li class="nav-item menu-parent" data-title="vouchers">
+      <a class="nav-link" data-bs-toggle="collapse" href="#catMenu">
+        <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <div id="catMenu" class="collapse ps-3">
+        <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item" data-title="danh sách khuyến mãi">Danh sách</a>
+        <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item" data-title="thêm khuyến mãi">Thêm mới</a>
+      </div>
+    </li>
 
-<!-- Khách hàng -->
-<li class="nav-item menu-item" data-title="khách hàng customers">
-  <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
-    <i class="bi bi-people"></i><span class="menu-text">Khách hàng</span>
-  </a>
-</li>
+    <!-- Đơn hàng
+    <li class="nav-item menu-item" data-title="orders">
+      <a href="{{ route('orders.index') }}" class="nav-link">
+        <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span>
+      </a>
+    </li> -->
 
-<!-- Doanh thu -->
-<li class="nav-item menu-item" data-title="doanh thu revenue">
-  <a href="#" class="nav-link">
-    <i class="bi bi-cash-stack"></i><span class="menu-text">Doanh thu</span>
-  </a>
-</li>
+    <!-- 👉 Khách hàng (mới, chưa có route) -->
+    <li class="nav-item menu-item" data-title="khách hàng customers">
+      <a href="{{ route('users.index') }}" class="nav-link">
+        <i class="bi bi-people"></i><span class="menu-text">Khách hàng</span>
+      </a>
+    </li>
 
-<!-- Chat với khách hàng -->
-<li class="nav-item menu-item" data-title="chat khách hàng">
-  <a href="{{ route('admin.chat.list') }}" class="nav-link {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}">
-    <i class="bi bi-people"></i><span class="menu-text"> Chat Với Khách hàng</span>
-  </a>
-</li>
-
+    <!-- 👉 Doanh thu (mới, chưa có route) -->
+    <li class="nav-item menu-item" data-title="doanh thu revenue">
+      <a href="{{ route('admin.reports.revenue') }}" class="nav-link">
+        <i class="bi bi-cash-stack"></i><span class="menu-text">Doanh thu</span>
+      </a>
+    </li>
+    <li class="nav-item menu-item" data-title="khách hàng customers">
+      <a href="{{ route('admin.chat') }}" class="nav-link">
+        <i class="bi bi-people"></i><span class="menu-text"> Chat</span>
+      </a>
+    </li>
+  </ul>
 </aside>
 
 <!-- ===== MAIN WRAPPER ===== -->

@@ -13,7 +13,7 @@
     <p><strong>Mã đơn hàng:</strong> {{ $order->order_number }}</p>
     <p><strong>Ngày đặt:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}</p>
     <p><strong>Tổng tiền:</strong> <span style="color: #e53e3e; font-weight: bold;">{{ number_format($order->total, 0, ',', '.') }} VND</span></p>
-    <p><strong>Phương thức thanh toán:</strong> {{ strtoupper($order->payment_method) === 'COD' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản' }}</p>
+    <p><strong>Phương thức thanh toán:</strong> {{ strtoupper($order->payment_method) === 'COD' ? 'Thanh toán khi nhận hàng' : 'Momo' }}</p>
 </div>
 
 <div style="margin-bottom: 20px;">
