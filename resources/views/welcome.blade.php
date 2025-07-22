@@ -745,7 +745,7 @@
                         <p class="description">
                             Chúng tôi tin rằng thời trang không chỉ là quần áo, đó là cách bạn kể câu chuyện về chính mình mà không cần một lời nào. MG - Định hình phong cách, khẳng định cá tính.
                         </p>
-                        <a href="https://online-shop-sigma-eight.vercel.app" class="btn">Khám phá bộ sưu tập</a>
+                        <a href="{{ config('app.production_url') }}" class="btn">Khám phá bộ sưu tập</a>
                     </div>
                     <figure class="hero-image">
                         <img src="https://photo.znews.vn/w1920/Uploaded/wohaahp/2021_04_11/Nguoi_mau_nam_noi_tieng_moi_thoi_dai_9.jpg" alt="Người mẫu mặc trang phục MG" loading="lazy">

@@ -8,6 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Order;
+use App\Models\vouchers;
+
+
+
 
 /**
  * 
@@ -89,6 +93,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function cart()
     {
         return $this->hasOne(Cart::class);
+    }
+
+    public function vouchers()
+    {
+        return $this->belongsToMany(Voucher::class, 'voucher_user')  ->using(VoucherUser::class) 
+            ->withPivot('used')
+            ->withTimestamps();
     }
 
     public function orders()

@@ -6,7 +6,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
             <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('orders.shipping') }}" style="text-decoration: none">Đơn đang giao hàng</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.returned') }}" style="text-decoration: none">Đã trả hàng</a></li>
         </ol>
     </nav>
 
@@ -63,7 +63,7 @@
         </div>
     </div>
 
-   <div class="card mb-4">
+    <div class="card mb-4">
         <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
             <div class="mb-2 mb-md-0">
                 <i class="fas fa-table me-1"></i>
