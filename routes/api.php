@@ -121,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment Momo
     Route::prefix('payment')->group(function () {
         Route::post('/momo', [OrderController::class, 'processMomoPayment']);
+        Route::post('/vnpay', [OrderController::class, 'processVnpayPayment']);
     });
 
     

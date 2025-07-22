@@ -24,6 +24,7 @@ import ProductReview from './components/ProductReview';
 // import chatbox
 import ChatApp from './components/ChatApp';
 import MyVouchers from './pages/MyVouchers';
+import VnpayReturnPage from './pages/VnpayReturnPage';
 
 
 
@@ -73,6 +74,8 @@ function App() {
         <Route path="/review/:orderId" element={<ProductReview />} />
         {/* vocher của người dùng */}
         <Route path="/my-vouchers" element={<MyVouchers />} />
+        {/* Thanh toán VNPay */}
+        <Route path="/vnpay-return" element={<VnpayReturnPage />} />
         {/* Các trang không tìm thấy */}
         <Route path="*" element={<h1 className="text-center mt-5">Trang không tìm thấy</h1>} />
 

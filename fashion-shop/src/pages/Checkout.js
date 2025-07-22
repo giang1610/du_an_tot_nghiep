@@ -2,12 +2,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Container, Form, Button, Alert, Row, Col, Card, Image, Spinner, Badge
+  Container, Form, Button, Alert, Row, Col, Card, Image, Spinner
 } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
 import VoucherInput from '../components/VoucherInput';
+import { toast } from "react-toastify";
+
 
 const ProductSummary = ({ items }) => {
   if (!items.length) return <p>Bạn chưa chọn sản phẩm nào để đặt hàng.</p>;
@@ -201,9 +203,28 @@ export default function Checkout() {
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
           return;
+        } else {
+          setError('Không nhận được liên kết thanh toán MoMo');
         }
-        setError('Không nhận được liên kết thanh toán MoMo');
-      } else {
+      }
+
+      else if (form.payment_method === 'vnpay') {
+        const { data } = await axios.post(
+          `${process.env.REACT_APP_API_URL}/payment/vnpay`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log('VNPay response:', data);
+        if (data.data && data.data.payment_url) {
+          window.location.href = data.data.payment_url;
+        } else {
+          toast.error("Không nhận được liên kết thanh toán VNPay");
+        }
+
+      }
+
+      else {
+        // Thanh toán COD
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
@@ -215,6 +236,7 @@ export default function Checkout() {
         await removeSelectedItems();
         setTimeout(() => navigate('/orders'), 3000);
       }
+
     } catch (error) {
       console.error('❌ Lỗi:', error);
       setError('Đặt hàng thất bại. Vui lòng thử lại.');
@@ -222,7 +244,6 @@ export default function Checkout() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     const token = localStorage.getItem('token') || user?.token;
     if (!token || !user) return;
@@ -307,6 +328,8 @@ export default function Checkout() {
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                 <option value="momo">Thanh toán MoMo</option>
+                <option value="vnpay">Thanh toán VNPay</option>
+
               </Form.Select>
             </Form.Group>
 
@@ -338,7 +361,7 @@ export default function Checkout() {
                 info={productVoucherInfo}
                 label="Mã giảm giá sản phẩm"
                 variant="success"
-                 token={token}
+                token={token}
               />
               <VoucherInput
                 type="shipping"
@@ -348,7 +371,7 @@ export default function Checkout() {
                 info={shippingVoucherInfo}
                 label="Mã miễn phí vận chuyển"
                 variant="primary"
-                 token={token}
+                token={token}
               />
 
               <p>Tạm tính: {totals.subtotal.toLocaleString()} đ</p>
