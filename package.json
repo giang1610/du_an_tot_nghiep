@@ -1,5 +1,9 @@
 {
   "dependencies": {
+<<<<<<< HEAD
     "react-hot-toast": "^2.5.2"
+=======
+    "chart.js": "^4.5.0"
+>>>>>>> 8a1c4f0c878957fc3d231f3f8fa2c193bd12c0a6
   }
 }

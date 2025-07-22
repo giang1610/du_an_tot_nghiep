@@ -8,6 +8,7 @@ use Database\Seeders\CategorySeeder;
 use Database\Seeders\ColorSeeder;
 use Database\Seeders\SizeSeeder;
 use Database\Seeders\AdminUserSeeder;
+use Database\Seeders\VouchersTableSeeder;
 
 
 class DatabaseSeeder extends Seeder
@@ -21,7 +22,8 @@ class DatabaseSeeder extends Seeder
                         // ProductImageSeeder::class,
                         ColorSeeder::class,
                         SizeSeeder::class,
-                        AdminUserSeeder::class
+                        AdminUserSeeder::class,
+                        VouchersTableSeeder::class,
                 ]);
         }
 }
