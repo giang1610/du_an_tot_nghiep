@@ -8,6 +8,9 @@ import { useCart } from '../context/CartContext';
 import axios from 'axios';
 import { toast } from "react-toastify";
 
+// Helper
+const formatCurrency = (num) => (num ?? 0).toLocaleString();
+
 const ProductSummary = ({ items }) => {
   if (!items.length) return <p>Bạn chưa chọn sản phẩm nào để đặt hàng.</p>;
   return (
@@ -27,7 +30,7 @@ const ProductSummary = ({ items }) => {
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
                 Số lượng: {item.quantity} <br />
-                Giá: {item.price.toLocaleString()} đ <br />
+                Giá: {formatCurrency(item.price)} đ <br />
                 {item.color && <>Màu: {item.color}<br /></>}
                 {item.size && <>Size: {item.size}</>}
               </Card.Text>
@@ -73,15 +76,13 @@ export default function Checkout() {
 
   const [productVoucherCode, setProductVoucherCode] = useState('');
   const [shippingVoucherCode, setShippingVoucherCode] = useState('');
-
   const [productVoucherInfo, setProductVoucherInfo] = useState(null);
   const [shippingVoucherInfo, setShippingVoucherInfo] = useState(null);
-
   const [availableProductVouchers, setAvailableProductVouchers] = useState([]);
   const [availableShippingVouchers, setAvailableShippingVouchers] = useState([]);
 
   const totals = useMemo(() => {
-    const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * (item.price ?? 0), 0);
     const tax = subtotal * 0.1;
     let shipping = 20000;
     let discount = 0;
@@ -124,7 +125,7 @@ export default function Checkout() {
     const code = type === 'product' ? productVoucherCode : shippingVoucherCode;
     if (!code.trim()) return setError('Vui lòng chọn mã giảm giá.');
 
-    const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * (item.price ?? 0), 0);
 
     try {
       const res = await axios.post(
@@ -184,8 +185,8 @@ export default function Checkout() {
       discount: totals.discount,
       total: totals.total,
       voucher_codes: {
-        product: productVoucherInfo?.code || null,
-        shipping: shippingVoucherInfo?.code || null
+        product: productVoucherInfo?.code ?? null,
+        shipping: shippingVoucherInfo?.code ?? null
       }
     };
 
@@ -198,7 +199,6 @@ export default function Checkout() {
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
         if (data?.data?.payment_url) {
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
@@ -206,35 +206,28 @@ export default function Checkout() {
         } else {
           setError('Không nhận được liên kết thanh toán MoMo');
         }
-      }
-
-      else if (form.payment_method === 'vnpay') {
+      } else if (form.payment_method === 'vnpay') {
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/payment/vnpay`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (data.data && data.data.payment_url) {
+        if (data?.data?.payment_url) {
           window.location.href = data.data.payment_url;
         } else {
           toast.error("Không nhận được liên kết thanh toán VNPay");
         }
-
-      }
-
-      else {
+      } else {
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
         setSuccess(data.message || 'Đặt hàng thành công!');
         localStorage.removeItem('buy_now');
         await removeSelectedItems();
         setTimeout(() => navigate('/orders'), 3000);
       }
-
     } catch (error) {
       console.error('❌ Lỗi:', error);
       setError('Đặt hàng thất bại. Vui lòng thử lại.');
@@ -372,7 +365,6 @@ export default function Checkout() {
             <>
               <hr />
 
-              {/* Chọn mã giảm giá sản phẩm */}
               <Form.Group className="mb-3">
                 <Form.Label>Mã giảm giá sản phẩm</Form.Label>
                 <Form.Select
@@ -382,7 +374,9 @@ export default function Checkout() {
                   <option value="">-- Không áp dụng --</option>
                   {availableProductVouchers.map(voucher => (
                     <option key={voucher.code} value={voucher.code}>
-                      {voucher.code} - {voucher.type === 'percent' ? `${voucher.value}%` : `${voucher.value.toLocaleString()} đ`}
+                      {voucher.code} - {voucher.type === 'percent' 
+                        ? `${voucher.value ?? 0}%` 
+                        : `${formatCurrency(voucher.value)} đ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -391,13 +385,12 @@ export default function Checkout() {
                 </Button>
                 {productVoucherInfo && (
                   <div className="mt-2 text-success">
-                    ✅ Đã áp dụng: {productVoucherInfo.code} 
+                    ✅ Đã áp dụng: {productVoucherInfo.code}
                     <Button variant="link" size="sm" onClick={() => applyVoucher('remove_product')}>[Hủy]</Button>
                   </div>
                 )}
               </Form.Group>
 
-              {/* Chọn mã miễn phí vận chuyển */}
               <Form.Group className="mb-3">
                 <Form.Label>Mã miễn phí vận chuyển</Form.Label>
                 <Form.Select
@@ -407,7 +400,9 @@ export default function Checkout() {
                   <option value="">-- Không áp dụng --</option>
                   {availableShippingVouchers.map(voucher => (
                     <option key={voucher.code} value={voucher.code}>
-                      {voucher.code} - {voucher.type === 'percent' ? `${voucher.value}%` : `${voucher.value.toLocaleString()} đ`}
+                      {voucher.code} - {voucher.type === 'percent'
+                        ? `${voucher.value ?? 0}%`
+                        : `${formatCurrency(voucher.value)} đ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -422,13 +417,13 @@ export default function Checkout() {
                 )}
               </Form.Group>
 
-              <p>Tạm tính: {totals.subtotal.toLocaleString()} đ</p>
-              <p>Phí vận chuyển: {totals.shipping.toLocaleString()} đ</p>
-              <p>Thuế: {totals.tax.toLocaleString()} đ</p>
+              <p>Tạm tính: {formatCurrency(totals.subtotal)} đ</p>
+              <p>Phí vận chuyển: {formatCurrency(totals.shipping)} đ</p>
+              <p>Thuế: {formatCurrency(totals.tax)} đ</p>
               {totals.discount > 0 && (
-                <p className="text-success">Giảm giá: -{totals.discount.toLocaleString()} đ</p>
+                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} đ</p>
               )}
-              <h5 className="fw-bold">Tổng cộng: {totals.total.toLocaleString()} đ</h5>
+              <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} đ</h5>
             </>
           )}
         </Col>

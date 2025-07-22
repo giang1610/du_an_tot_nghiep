@@ -104,7 +104,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot('used')
             ->withTimestamps();
     }
-
+    
     public function orders()
     {
         return $this->hasMany(Order::class, 'user_id');

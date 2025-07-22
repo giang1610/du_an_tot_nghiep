@@ -13,6 +13,18 @@ use Log;
 
 class VoucherController extends Controller
 {
+    public function index(Request $request)
+{
+    $type = $request->query('type'); // e.g., 'product'
+
+    $vouchers = Voucher::query();
+
+    if ($type) {
+        $vouchers->where('type', $type);
+    }
+
+    return response()->json($vouchers->get());
+}
 
     /**
      * Kiểm tra tính hợp lệ của voucher
