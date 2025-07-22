@@ -18,38 +18,38 @@ class VoucherController extends Controller
      * Kiểm tra tính hợp lệ của voucher
      */
     public function checkVoucherValidity($voucher, $user)
-{
-    try {
-        $now = now();
+    {
+        try {
+            $now = now();
 
-        if ($voucher->start_date && $now->lt($voucher->start_date)) {
-            return ['valid' => false, 'message' => 'Voucher chưa có hiệu lực'];
-        }
-
-        if ($voucher->end_date && $now->gt($voucher->end_date)) {
-            return ['valid' => false, 'message' => 'Voucher đã hết hạn'];
-        }
-
-        if ($voucher->quantity !== null && $voucher->quantity <= 0) {
-            return ['valid' => false, 'message' => 'Voucher đã hết lượt sử dụng'];
-        }
-
-        if ($voucher->usage_limit) {
-            $userUsage = VoucherUser::where('voucher_id', $voucher->id)
-                ->where('user_id', $user->id)
-                ->first();
-
-            if ($userUsage && $userUsage->used >= $voucher->usage_limit) {
-                return ['valid' => false, 'message' => 'Bạn đã sử dụng hết lượt cho voucher này'];
+            if ($voucher->start_date && $now->lt($voucher->start_date)) {
+                return ['valid' => false, 'message' => 'Voucher chưa có hiệu lực'];
             }
-        }
 
-        return ['valid' => true];
-    } catch (\Exception $e) {
-        Log::error('Lỗi kiểm tra voucher: ' . $e->getMessage());
-        return ['valid' => false, 'message' => 'Lỗi hệ thống khi kiểm tra voucher'];
+            if ($voucher->end_date && $now->gt($voucher->end_date)) {
+                return ['valid' => false, 'message' => 'Voucher đã hết hạn'];
+            }
+
+            if ($voucher->quantity !== null && $voucher->quantity <= 0) {
+                return ['valid' => false, 'message' => 'Voucher đã hết lượt sử dụng'];
+            }
+
+            if ($voucher->usage_limit) {
+                $userUsage = VoucherUser::where('voucher_id', $voucher->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($userUsage && $userUsage->used >= $voucher->usage_limit) {
+                    return ['valid' => false, 'message' => 'Bạn đã sử dụng hết lượt cho voucher này'];
+                }
+            }
+
+            return ['valid' => true];
+        } catch (\Exception $e) {
+            Log::error('Lỗi kiểm tra voucher: ' . $e->getMessage());
+            return ['valid' => false, 'message' => 'Lỗi hệ thống khi kiểm tra voucher'];
+        }
     }
-}
 
     public function validateAndApplyVoucher($voucherCode, $user, $subtotal)
     {
@@ -161,22 +161,22 @@ class VoucherController extends Controller
     }
 
     public function updateVoucherUsage($voucher, $user)
-{
-    // Giảm số lượng voucher
-    if ($voucher->quantity !== null) {
-        $voucher->decrement('quantity');
+    {
+        // Giảm số lượng voucher
+        if ($voucher->quantity !== null) {
+            $voucher->decrement('quantity');
+        }
+
+        // Cập nhật số lần sử dụng của user
+        $voucherUser = VoucherUser::firstOrNew([
+            'voucher_id' => $voucher->id,
+            'user_id' => $user->id
+        ]);
+
+        $voucherUser->used = ($voucherUser->used ?? 0) + 1;
+        $voucherUser->save();
     }
 
-    // Cập nhật số lần sử dụng của user
-    $voucherUser = VoucherUser::firstOrNew([
-        'voucher_id' => $voucher->id,
-        'user_id' => $user->id
-    ]);
-
-    $voucherUser->used = ($voucherUser->used ?? 0) + 1;
-    $voucherUser->save();
-}
-    
     public function getUserVouchers()
     {
         $user = Auth::user();

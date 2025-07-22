@@ -4,6 +4,10 @@
     "react-hot-toast": "^2.5.2"
 =======
     "chart.js": "^4.5.0"
+<<<<<<< HEAD
 >>>>>>> 8a1c4f0c878957fc3d231f3f8fa2c193bd12c0a6
+=======
+>>>>>>> 7d62ec50381b1eaf81b53fea98786aa592ff58cf
+>>>>>>> demo
   }
 }
