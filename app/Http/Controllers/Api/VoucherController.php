@@ -8,6 +8,7 @@ use App\Models\VoucherUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Log;
 
 class VoucherController extends Controller
@@ -210,4 +211,56 @@ class VoucherController extends Controller
             'data' => $validVouchers
         ]);
     }
+    public function apply(Request $request)
+{
+    $user = $request->user();
+    $code = $request->input('code');
+    $subtotal = $request->input('total');
+
+    if (!$code || !$subtotal) {
+        return response()->json(['success' => false, 'message' => 'Thiếu thông tin'], 422);
+    }
+
+    $result = $this->validateAndApplyVoucher($code, $user, $subtotal);
+
+    if ($result['success']) {
+        return response()->json([
+            'success' => true,
+            'code' => $result['voucher']->code,
+            'type' => $result['voucher']->discount_type === 'percent' ? 'percent' : 'fixed',
+            'value' => $result['voucher']->discount_type === 'percent'
+                ? $result['voucher']->discount_percent
+                : $result['voucher']->discount_amount,
+            'discount_amount' => $result['discount_amount']
+        ]);
+    } else {
+        return response()->json(['success' => false, 'message' => $result['message']], 400);
+    }
+}
+public function suggest(Request $request)
+{
+    $total = $request->input('total');
+    $userId = auth()->id();
+
+    $now = now();
+
+    $vouchers = DB::table('vouchers')
+        ->whereDate('start_date', '<=', $now)
+        ->whereDate('end_date', '>=', $now)
+        ->where('quantity', '>', 0)
+        ->get()
+        ->filter(function ($voucher) use ($userId) {
+            // Đếm số lần user đã sử dụng
+            $usedCount = DB::table('orders')
+                ->where('user_id', $userId)
+                ->where('voucher_code', $voucher->code)
+                ->count();
+
+            return !$voucher->usage_limit || $usedCount < $voucher->usage_limit;
+        })
+        ->values();
+
+    return response()->json($vouchers);
+}
+
 }
