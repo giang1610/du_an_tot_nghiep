@@ -1,20 +1,22 @@
 import Echo from '../echo';
 
 export function listenToNewMessages(userId, callback) {
-  console.log('[📡] Lắng nghe tin nhắn mới tại: chat.' + userId);
+  // console.log('[📡] Lắng nghe tin nhắn mới tại: chat.' + userId);
 
   const localUser = JSON.parse(localStorage.getItem('user'));
   const localUserId = localUser?.id;
 
   const channel = Echo.channel(`chat.${userId}`)
     .listen('.chat.message', (e) => {
-      console.log('💬 Nhận tin nhắn mới:', e);
+      // console.log('💬 Nhận tin nhắn mới:', e);
 
-      // So sánh với userId từ localStorage
-      if (e.user_id !== localUserId) {
-        console.log('🛑 Tin nhắn không phải của user hiện tại, bỏ qua');
+  
+   
+      if (e.sender === 'user') {
+        // console.log('📤 Tin nhắn do user gửi, bỏ qua WebSocket');
         return;
       }
+      
 
       callback({
         id: e.id || Date.now(),

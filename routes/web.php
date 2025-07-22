@@ -134,6 +134,14 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::get('/shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
     Route::get('/shipped', [OrderController::class, 'shipped'])->name('orders.shipped');
     Route::get('/completed', [OrderController::class, 'completed'])->name('orders.completed');
+    Route::get('/returned', [OrderController::class, 'returned'])->name('orders.returned');
+    Route::get('/failed', [OrderController::class, 'failed'])->name('orders.failed');
+    Route::get('/returning', [OrderController::class, 'returning'])->name('orders.returning');
+    Route::get('/return_requested', [OrderController::class, 'return_requested'])->name('orders.return_requested');
+    Route::get('/returned', [OrderController::class, 'returned'])->name('orders.returned');
+
+
+    
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
@@ -147,9 +155,12 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
 
     // Admin chat routes
-    Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
-    Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
-    Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+//     Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
+//     Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
+// Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+Route::get('/chat/{userId?}', [AdminChatController::class, 'index'])->name('admin.chat');
+Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+
 
     Route::get('revenue', [ReportController::class, 'revenueReport'])->name('admin.reports.revenue');
     // Route::get('inventory', [ReportController::class, 'inventoryReport'])->name('admin.reports.inventory');
