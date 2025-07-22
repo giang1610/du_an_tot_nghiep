@@ -121,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment Momo
     Route::prefix('payment')->group(function () {
         Route::post('/momo', [OrderController::class, 'processMomoPayment']);
+        Route::post('/vnpay', [OrderController::class, 'processVnpayPayment']);
     });
 
     
@@ -133,9 +134,7 @@ Route::middleware('auth:sanctum')->group(function() {
 });
 
 Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
+Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);
 
-// VNPay payment
-Route::middleware('auth:sanctum')->post('/vnpay/process-payment', [OrderController::class, 'processVnpayPayment']);
-Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
-Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
+Route::middleware('auth:sanctum')->post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
+Route::middleware('auth:sanctum')->post('/vouchers/apply', [VoucherController::class, 'apply']);

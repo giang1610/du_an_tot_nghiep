@@ -1,9 +1,15 @@
+// Checkout.jsx
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Container, Form, Button, Alert, Row, Col, Card, Image, Spinner } from 'react-bootstrap';
+import {
+  Container, Form, Button, Alert, Row, Col, Card, Image, Spinner
+} from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
+import VoucherInput from '../components/VoucherInput';
+import { toast } from "react-toastify";
+
 
 const ProductSummary = ({ items }) => {
   if (!items.length) return <p>Bạn chưa chọn sản phẩm nào để đặt hàng.</p>;
@@ -37,7 +43,7 @@ const ProductSummary = ({ items }) => {
 };
 
 export default function Checkout() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { cart, removeSelectedItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,13 +60,13 @@ export default function Checkout() {
     }
   }, [isBuyNow]);
 
+  const selectedItems = useMemo(() => {
+    if (isBuyNow) return buyNowItem ? [buyNowItem] : [];
+    return Array.isArray(cart) ? cart.filter(item => item.selected) : [];
+  }, [isBuyNow, buyNowItem, cart]);
+
   const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    address: '',
-    email: '',
-    notes: '',
-    payment_method: 'cod',
+    name: '', phone: '', address: '', email: '', notes: '', payment_method: 'cod'
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -68,18 +74,31 @@ export default function Checkout() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const selectedItems = useMemo(() => {
-    if (isBuyNow) return buyNowItem ? [buyNowItem] : [];
-    return cart.filter(item => item.selected);
-  }, [isBuyNow, buyNowItem, cart]);
+  const [productVoucherCode, setProductVoucherCode] = useState('');
+  const [shippingVoucherCode, setShippingVoucherCode] = useState('');
+
+  const [productVoucherInfo, setProductVoucherInfo] = useState(null);
+  const [shippingVoucherInfo, setShippingVoucherInfo] = useState(null);
 
   const totals = useMemo(() => {
     const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
     const tax = subtotal * 0.1;
-    const shipping = 20000;
-    const total = subtotal + tax + shipping;
-    return { subtotal, tax, shipping, total };
-  }, [selectedItems]);
+    let shipping = 20000;
+    let discount = 0;
+
+    if (productVoucherInfo) {
+      if (productVoucherInfo.type === 'percent') discount = (subtotal * productVoucherInfo.value) / 100;
+      else if (productVoucherInfo.type === 'fixed') discount = productVoucherInfo.value;
+    }
+
+    if (shippingVoucherInfo) {
+      if (shippingVoucherInfo.type === 'fixed') shipping = Math.max(0, shipping - shippingVoucherInfo.value);
+      else if (shippingVoucherInfo.type === 'percent') shipping = shipping * (1 - shippingVoucherInfo.value / 100);
+    }
+
+    const total = subtotal + tax + shipping - discount;
+    return { subtotal, tax, shipping, discount, total };
+  }, [selectedItems, productVoucherInfo, shippingVoucherInfo]);
 
   const setField = (name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
@@ -97,6 +116,39 @@ export default function Checkout() {
     return Object.keys(errors).length === 0;
   };
 
+  const applyVoucher = async (type) => {
+    if (type === 'remove_product') return setProductVoucherInfo(null);
+    if (type === 'remove_shipping') return setShippingVoucherInfo(null);
+
+    setError('');
+    const code = type === 'product' ? productVoucherCode : shippingVoucherCode;
+    if (!code.trim()) return setError('Vui lòng nhập mã giảm giá.');
+
+    const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/vouchers/apply`,
+        { code, total: totalAmount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const voucher = res.data;
+      if (!voucher || !voucher.value) return setError('Mã giảm giá không hợp lệ.');
+
+      if (voucher.applies_to === 'shipping') {
+        setShippingVoucherInfo(voucher);
+        setSuccess('Áp dụng mã miễn phí vận chuyển thành công!');
+      } else {
+        setProductVoucherInfo(voucher);
+        setSuccess('Áp dụng mã giảm giá sản phẩm thành công!');
+      }
+    } catch (err) {
+      console.error('❌ Voucher Error:', err);
+      setError(err.response?.data?.message || 'Không thể áp dụng mã giảm giá.');
+    }
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     setSuccess('');
@@ -106,15 +158,8 @@ export default function Checkout() {
     if (!validate()) return;
 
     const token = localStorage.getItem('token') || user?.token;
-    if (!token) {
-      setError('Bạn cần đăng nhập để đặt hàng.');
-      return;
-    }
-
-    if (selectedItems.length === 0) {
-      setError('Không có sản phẩm nào để đặt hàng.');
-      return;
-    }
+    if (!token) return setError('Bạn cần đăng nhập để đặt hàng.');
+    if (selectedItems.length === 0) return setError('Không có sản phẩm nào để đặt hàng.');
 
     const itemsPayload = selectedItems.map(item => ({
       product_variant_id: item.product_variant_id || item.variant_id,
@@ -136,7 +181,12 @@ export default function Checkout() {
       subtotal: totals.subtotal,
       tax: totals.tax,
       shipping: totals.shipping,
+      discount: totals.discount,
       total: totals.total,
+      voucher_codes: {
+        product: productVoucherInfo?.code || null,
+        shipping: shippingVoucherInfo?.code || null
+      }
     };
 
     try {
@@ -153,31 +203,28 @@ export default function Checkout() {
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
           return;
+        } else {
+          setError('Không nhận được liên kết thanh toán MoMo');
         }
-        setError('Không nhận được liên kết thanh toán MoMo');
-      } else if (form.payment_method === 'vnpay') {
+      }
+
+      else if (form.payment_method === 'vnpay') {
         const { data } = await axios.post(
-          `${process.env.REACT_APP_API_URL}/vnpay/process-payment`,
-          {
-            shipping_address: form.address,
-            billing_address: form.address,
-            customer_phone: form.phone,
-            notes: form.notes
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
+          `${process.env.REACT_APP_API_URL}/payment/vnpay`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        if (data?.data?.payment_url) {
-          localStorage.removeItem('buy_now');
+        console.log('VNPay response:', data);
+        if (data.data && data.data.payment_url) {
           window.location.href = data.data.payment_url;
-          return;
+        } else {
+          toast.error("Không nhận được liên kết thanh toán VNPay");
         }
 
-        setError('Không nhận được liên kết thanh toán VNPay');
-      } else {
-        // COD
+      }
+
+      else {
+        // Thanh toán COD
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
@@ -189,16 +236,14 @@ export default function Checkout() {
         await removeSelectedItems();
         setTimeout(() => navigate('/orders'), 3000);
       }
+
     } catch (error) {
       console.error('❌ Lỗi:', error);
       setError('Đặt hàng thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
-
   };
-
-  // ✅ Lấy thông tin người dùng khi component mount
   useEffect(() => {
     const token = localStorage.getItem('token') || user?.token;
     if (!token || !user) return;
@@ -252,7 +297,6 @@ export default function Checkout() {
               </Form.Group>
             ))}
 
-            {/* ✅ Email hiển thị, không sửa */}
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -285,6 +329,7 @@ export default function Checkout() {
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                 <option value="momo">Thanh toán MoMo</option>
                 <option value="vnpay">Thanh toán VNPay</option>
+
               </Form.Select>
             </Form.Group>
 
@@ -296,10 +341,7 @@ export default function Checkout() {
                 </>
               ) : form.payment_method === 'momo'
                 ? 'Thanh toán qua MoMo'
-                : form.payment_method === 'vnpay'
-                  ? 'Thanh toán qua VNPay'
-                  : 'Xác nhận đặt hàng'}
-
+                : 'Xác nhận đặt hàng'}
             </Button>
           </Form>
         </Col>
@@ -307,12 +349,37 @@ export default function Checkout() {
         <Col md={6}>
           <h5>Sản phẩm trong giỏ</h5>
           <ProductSummary items={selectedItems} />
+
           {selectedItems.length > 0 && (
             <>
               <hr />
+              <VoucherInput
+                type="product"
+                code={productVoucherCode}
+                setCode={setProductVoucherCode}
+                onApply={applyVoucher}
+                info={productVoucherInfo}
+                label="Mã giảm giá sản phẩm"
+                variant="success"
+                token={token}
+              />
+              <VoucherInput
+                type="shipping"
+                code={shippingVoucherCode}
+                setCode={setShippingVoucherCode}
+                onApply={applyVoucher}
+                info={shippingVoucherInfo}
+                label="Mã miễn phí vận chuyển"
+                variant="primary"
+                token={token}
+              />
+
               <p>Tạm tính: {totals.subtotal.toLocaleString()} đ</p>
               <p>Phí vận chuyển: {totals.shipping.toLocaleString()} đ</p>
               <p>Thuế: {totals.tax.toLocaleString()} đ</p>
+              {totals.discount > 0 && (
+                <p className="text-success">Giảm giá: -{totals.discount.toLocaleString()} đ</p>
+              )}
               <h5 className="fw-bold">Tổng cộng: {totals.total.toLocaleString()} đ</h5>
             </>
           )}

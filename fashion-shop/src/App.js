@@ -23,8 +23,9 @@ import ProductReview from './components/ProductReview';
 
 // import chatbox
 import ChatApp from './components/ChatApp';
-import ShippingForm from './components/ShippingForm';
+import MyVouchers from './pages/MyVouchers';
 import VnpayReturnPage from './pages/VnpayReturnPage';
+
 
 
 
@@ -48,9 +49,6 @@ function App() {
 
         {/* Thanh toán momo */}
         <Route path="/momo-return" element={<MomoReturn />} />
-         {/* Thanh toán Vnpay*/}
-         <Route path="/thanh-toan" element={<ShippingForm />} />
-        <Route path="/vnpay-return" element={<VnpayReturnPage />} />
         {/* Đăng ký,đăng nhập */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -73,8 +71,13 @@ function App() {
         {/* <Route path="/test" element={<Test />} /> */}
         {/* route ResetPassword anhkato vieêt */}
         <Route path="/reset-password" element={<ResetPassword />} />
-
         <Route path="/review/:orderId" element={<ProductReview />} />
+        {/* vocher của người dùng */}
+        <Route path="/my-vouchers" element={<MyVouchers />} />
+        {/* Thanh toán VNPay */}
+        <Route path="/vnpay-return" element={<VnpayReturnPage />} />
+        {/* Các trang không tìm thấy */}
+        <Route path="*" element={<h1 className="text-center mt-5">Trang không tìm thấy</h1>} />
 
        
 

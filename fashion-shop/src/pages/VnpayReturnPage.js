@@ -1,42 +1,44 @@
-// pages/VnpayReturnPage.js
-import React, { useEffect, useState } from 'react';
+// src/pages/VnpayReturn.jsx
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Alert, Spinner, Container } from 'react-bootstrap';
 
-const VnpayReturnPage = () => {
-  const [result, setResult] = useState(null);
+export default function VnpayReturn() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [message, setMessage] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchReturn = async () => {
+    const fetchResult = async () => {
       try {
-        const res = await axios.get(`/api/vnpay/return${window.location.search}`);
-        setResult({ success: true, data: res.data });
-      } catch (err) {
-        setResult({ success: false, error: err.response?.data || err.message });
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API_URL}/payment/vnpay-return${location.search}`
+        );
+        setMessage(data.message);
+        setSuccess(true);
+        setLoading(false);
+        setTimeout(() => navigate('/orders'), 3000);
+      } catch (error) {
+        setMessage(error.response?.data?.message || 'Lỗi không xác định');
+        setSuccess(false);
+        setLoading(false);
       }
     };
 
-    fetchReturn();
-  }, []);
-
-  if (!result) return <div>Đang xử lý kết quả thanh toán...</div>;
+    fetchResult();
+  }, [location, navigate]);
 
   return (
-    <div className="p-4">
-      {result.success ? (
-        <div className="bg-green-100 p-4 rounded">
-          <h2 className="text-xl font-bold text-green-800">✅ Thanh toán thành công!</h2>
-          <p>Mã đơn hàng: {result.data.data.order_number}</p>
-          <p>Trạng thái: {result.data.data.status}</p>
-          <p>Mã giao dịch: {result.data.data.transaction_id}</p>
-        </div>
+    <Container className="py-5">
+      <h3>Kết quả thanh toán</h3>
+      {loading ? (
+        <Spinner animation="border" />
       ) : (
-        <div className="bg-red-100 p-4 rounded">
-          <h2 className="text-xl font-bold text-red-800">❌ Giao dịch không thành công</h2>
-          <p>{result.error.message || 'Lỗi không xác định'}</p>
-        </div>
+        <Alert variant={success ? 'success' : 'danger'}>{message}</Alert>
       )}
-    </div>
+    </Container>
   );
-};
-
-export default VnpayReturnPage;
+}
