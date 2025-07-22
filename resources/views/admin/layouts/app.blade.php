@@ -148,7 +148,10 @@
         <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
         <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
         <a href="{{ route('orders.completed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Hoàn thành</a>
-      
+        <a href="{{ route('orders.failed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Giao hàng thất bại</a>
+        <a href="{{ route('orders.returning') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang trả hàng</a>
+        <a href="{{ route('orders.return_requested') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Yêu cầu trả hàng</a>
+        <a href="{{ route('orders.returned') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã trả hàng</a>
     </li>
     <!-- Khuyến mãi -->
     <li class="nav-item menu-parent" data-title="vouchers">
