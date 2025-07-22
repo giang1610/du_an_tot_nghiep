@@ -218,7 +218,6 @@
                 </table>
             </div>
 
-
             <!-- Tổng kết đơn hàng -->
             <div class="row justify-content-end mt-4">
                 <div class="col-12 col-md-8 col-lg-6 col-xl-5">
@@ -285,7 +284,6 @@
         body > *:not(.print-content) {
             display: none !important;
         }
-
         /* Hiển thị phần nội dung in */
         .print-content {
             position: absolute;
@@ -295,24 +293,20 @@
             padding: 20px;
             background: white;
         }
-
         /* Tối ưu hiển thị khi in */
         .card {
             border: none !important;
             box-shadow: none !important;
         }
-
         .table {
             width: 100% !important;
             font-size: 14px !important;
         }
-
         .badge {
             border: 1px solid #000 !important;
             color: #000 !important;
             background: transparent !important;
         }
-
         /* Ẩn các nút và phần không cần in */
         .btn, .d-print-none {
             display: none !important;
@@ -340,7 +334,6 @@
             <!DOCTYPE html>
             <html>
             <head>
-
                 <style>
                     body { font-family: Arial; margin: 0; padding: 20px; }
                     .table { width: 100%; border-collapse: collapse; }
@@ -359,7 +352,6 @@
             </html>
         `);
         printWindow.document.close();
-
         // Tự động in sau khi tải xong
         setTimeout(() => {
             printWindow.print();

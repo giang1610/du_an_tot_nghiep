@@ -69,7 +69,6 @@ Route::get('/sizes', [SizeController::class, 'index']);
 // Public reviews (view only)
 Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
 
-
 // ========== PROTECTED ROUTES (auth:sanctum) ========== //
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
