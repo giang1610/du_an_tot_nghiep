@@ -1,4 +1,3 @@
-// Checkout.jsx
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -7,9 +6,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
-import VoucherInput from '../components/VoucherInput';
 import { toast } from "react-toastify";
-
 
 const ProductSummary = ({ items }) => {
   if (!items.length) return <p>Bạn chưa chọn sản phẩm nào để đặt hàng.</p>;
@@ -80,6 +77,9 @@ export default function Checkout() {
   const [productVoucherInfo, setProductVoucherInfo] = useState(null);
   const [shippingVoucherInfo, setShippingVoucherInfo] = useState(null);
 
+  const [availableProductVouchers, setAvailableProductVouchers] = useState([]);
+  const [availableShippingVouchers, setAvailableShippingVouchers] = useState([]);
+
   const totals = useMemo(() => {
     const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
     const tax = subtotal * 0.1;
@@ -122,7 +122,7 @@ export default function Checkout() {
 
     setError('');
     const code = type === 'product' ? productVoucherCode : shippingVoucherCode;
-    if (!code.trim()) return setError('Vui lòng nhập mã giảm giá.');
+    if (!code.trim()) return setError('Vui lòng chọn mã giảm giá.');
 
     const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
 
@@ -214,7 +214,6 @@ export default function Checkout() {
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('VNPay response:', data);
         if (data.data && data.data.payment_url) {
           window.location.href = data.data.payment_url;
         } else {
@@ -224,7 +223,6 @@ export default function Checkout() {
       }
 
       else {
-        // Thanh toán COD
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
@@ -244,6 +242,7 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     const token = localStorage.getItem('token') || user?.token;
     if (!token || !user) return;
@@ -268,6 +267,26 @@ export default function Checkout() {
 
     fetchUserInfo();
   }, [user]);
+
+  useEffect(() => {
+    const fetchVouchers = async () => {
+      try {
+        const res1 = await axios.get(`${process.env.REACT_APP_API_URL}/vouchers?type=product`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAvailableProductVouchers(res1.data || []);
+
+        const res2 = await axios.get(`${process.env.REACT_APP_API_URL}/vouchers?type=shipping`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAvailableShippingVouchers(res2.data || []);
+      } catch (err) {
+        console.error('❌ Không lấy được danh sách voucher:', err);
+      }
+    };
+
+    if (token) fetchVouchers();
+  }, [token]);
 
   return (
     <Container className="py-5">
@@ -329,7 +348,6 @@ export default function Checkout() {
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                 <option value="momo">Thanh toán MoMo</option>
                 <option value="vnpay">Thanh toán VNPay</option>
-
               </Form.Select>
             </Form.Group>
 
@@ -353,26 +371,56 @@ export default function Checkout() {
           {selectedItems.length > 0 && (
             <>
               <hr />
-              <VoucherInput
-                type="product"
-                code={productVoucherCode}
-                setCode={setProductVoucherCode}
-                onApply={applyVoucher}
-                info={productVoucherInfo}
-                label="Mã giảm giá sản phẩm"
-                variant="success"
-                token={token}
-              />
-              <VoucherInput
-                type="shipping"
-                code={shippingVoucherCode}
-                setCode={setShippingVoucherCode}
-                onApply={applyVoucher}
-                info={shippingVoucherInfo}
-                label="Mã miễn phí vận chuyển"
-                variant="primary"
-                token={token}
-              />
+
+              {/* Chọn mã giảm giá sản phẩm */}
+              <Form.Group className="mb-3">
+                <Form.Label>Mã giảm giá sản phẩm</Form.Label>
+                <Form.Select
+                  value={productVoucherCode}
+                  onChange={e => setProductVoucherCode(e.target.value)}
+                >
+                  <option value="">-- Không áp dụng --</option>
+                  {availableProductVouchers.map(voucher => (
+                    <option key={voucher.code} value={voucher.code}>
+                      {voucher.code} - {voucher.type === 'percent' ? `${voucher.value}%` : `${voucher.value.toLocaleString()} đ`}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Button className="mt-2" variant="success" size="sm" onClick={() => applyVoucher('product')}>
+                  Áp dụng
+                </Button>
+                {productVoucherInfo && (
+                  <div className="mt-2 text-success">
+                    ✅ Đã áp dụng: {productVoucherInfo.code} 
+                    <Button variant="link" size="sm" onClick={() => applyVoucher('remove_product')}>[Hủy]</Button>
+                  </div>
+                )}
+              </Form.Group>
+
+              {/* Chọn mã miễn phí vận chuyển */}
+              <Form.Group className="mb-3">
+                <Form.Label>Mã miễn phí vận chuyển</Form.Label>
+                <Form.Select
+                  value={shippingVoucherCode}
+                  onChange={e => setShippingVoucherCode(e.target.value)}
+                >
+                  <option value="">-- Không áp dụng --</option>
+                  {availableShippingVouchers.map(voucher => (
+                    <option key={voucher.code} value={voucher.code}>
+                      {voucher.code} - {voucher.type === 'percent' ? `${voucher.value}%` : `${voucher.value.toLocaleString()} đ`}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Button className="mt-2" variant="info" size="sm" onClick={() => applyVoucher('shipping')}>
+                  Áp dụng
+                </Button>
+                {shippingVoucherInfo && (
+                  <div className="mt-2 text-info">
+                    ✅ Đã áp dụng: {shippingVoucherInfo.code}
+                    <Button variant="link" size="sm" onClick={() => applyVoucher('remove_shipping')}>[Hủy]</Button>
+                  </div>
+                )}
+              </Form.Group>
 
               <p>Tạm tính: {totals.subtotal.toLocaleString()} đ</p>
               <p>Phí vận chuyển: {totals.shipping.toLocaleString()} đ</p>
