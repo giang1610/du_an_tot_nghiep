@@ -1270,8 +1270,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'delivered'; // Đã nhận hàng (coi là hoàn thành)
-        $order->delivered_at = now();
+        $order->status = 'completed'; // Đã nhận hàng (coi là hoàn thành)
+        $order->completed_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {
@@ -1361,7 +1361,7 @@ public function requestReturn(Request $request, $id)
                 'voucher' => $voucher,
                 'discount_amount' => $discountAmount
             ];
-            
+
         } catch (\Exception $e) {
             Log::error('Voucher validation error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Lỗi khi kiểm tra voucher'];

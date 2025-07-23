@@ -378,7 +378,7 @@ export default function MyOrdersPage() {
                                         </Link>
                                     )}
 
-                                {(order.status === 'completed' || order.status === 'shipped') && (() => {
+                                {(order.status === 'completed') && (() => {
                                     const completedAt = new Date(order.completed_at || order.updated_at);
                                     const now = new Date();
                                     const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
@@ -407,7 +407,7 @@ export default function MyOrdersPage() {
                                 {/* Nút hoàn đơn */}
                                 {order.status === 'shipped' && (
                                     <Button variant="warning" size="sm" className="ms-2" onClick={() => handleShowReturnModal(order.id)}>
-                                        Yêu cầu hoàn đơn
+                                        Hoàn đơn
                                     </Button>
                                 )}
                             </div>
