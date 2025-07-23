@@ -158,19 +158,8 @@ export default function Checkout() {
     if (!validate()) return;
 
     const token = localStorage.getItem('token') || user?.token;
-<<<<<<< HEAD
-    if (!token) {
-      setError('Bạn cần đăng nhập để đặt hàng.');
-      return;
-    }
-    if (selectedItems.length === 0) {
-      setError('Không có sản phẩm nào để đặt hàng.');
-      return;
-    }
-=======
     if (!token) return setError('Bạn cần đăng nhập để đặt hàng.');
     if (selectedItems.length === 0) return setError('Không có sản phẩm nào để đặt hàng.');
->>>>>>> 07d2692ccc54961bf57ca6f74b42ec96b2ff8671
 
     const itemsPayload = selectedItems.map(item => ({
       product_variant_id: item.product_variant_id || item.variant_id,
