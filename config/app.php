@@ -59,6 +59,8 @@ return [
     'url' => env('APP_URL',),
     //config fotn_url
     'fotn_url' => env('FOTN_URL'),
+    
+    'production_url' => env('FRONTEND_URL'),
 
     'asset_url' => env('ASSET_URL'),
 
