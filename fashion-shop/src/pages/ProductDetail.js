@@ -311,26 +311,37 @@ export default function ProductDetail() {
                                     ))}
                                 </div>
                                 <p>{r.content}</p>
-                                {r.media && (
-                                    <div className="mt-2">
-                                        {/\.(jpg|jpeg|png)$/i.test(r.media)
-                                            ? (
-                                                <img
-                                                    src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${r.media}`}
-                                                    alt="Ảnh đánh giá"
-                                                    style={{ maxWidth: 180, borderRadius: 8 }}
-                                                />
-                                            )
-                                            : (
-                                                <video
-                                                    src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${r.media}`}
-                                                    controls
-                                                    style={{ maxWidth: 240, borderRadius: 8 }}
-                                                />
-                                            )
-                                        }
-                                    </div>
-                                )}
+                                {r.media && (() => {
+                                    let mediaList = [];
+                                    try {
+                                        mediaList = Array.isArray(r.media) ? r.media : JSON.parse(r.media);
+                                    } catch {
+                                        mediaList = [];
+                                    }
+                                    return (
+                                        <div className="mt-2 d-flex flex-wrap gap-2">
+                                            {mediaList.map((path, idx) =>
+                                                /\.(jpg|jpeg|png)$/i.test(path)
+                                                    ? (
+                                                        <img
+                                                            key={idx}
+                                                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                            alt="Ảnh đánh giá"
+                                                            style={{ maxWidth: 180, borderRadius: 8 }}
+                                                        />
+                                                    )
+                                                    : (
+                                                        <video
+                                                            key={idx}
+                                                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                            controls
+                                                            style={{ maxWidth: 240, borderRadius: 8 }}
+                                                        />
+                                                    )
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         ))}
                         <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />

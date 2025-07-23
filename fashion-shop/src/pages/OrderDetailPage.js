@@ -77,7 +77,9 @@ export default function OrderDetailPage() {
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
-    const [reviewMedia, setReviewMedia] = useState(null);
+    const [reviewMedia, setReviewMedia] = useState([]);
+    const [returnMedia, setReturnMedia] = useState([]);
+    const [returnLoading, setReturnLoading] = useState(false);
 
     useEffect(() => {
         const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
@@ -151,18 +153,27 @@ export default function OrderDetailPage() {
             alert('Vui lòng nhập lý do hoàn đơn!');
             return;
         }
+        const formData = new FormData();
+        formData.append('reason', returnReason);
+        returnMedia.forEach(file => formData.append('media[]', file));
+
+        setReturnLoading(true);
         try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, {
-                reason: returnReason
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${id}/request-return`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             alert('Đã gửi yêu cầu hoàn đơn!');
             setShowReturnModal(false);
             setReturnReason('');
-            fetchOrder();
+            setReturnMedia([]);
+            fetchOrder(); // reload lại đơn hàng
         } catch {
             alert('Yêu cầu hoàn đơn thất bại!');
+        } finally {
+            setReturnLoading(false);
         }
     };
 
@@ -186,38 +197,38 @@ export default function OrderDetailPage() {
     };
 
     const handleSubmitReview = async () => {
-    if (!reviewItem) return;
-    setReviewLoading(true);
-    try {
-        const formData = new FormData();
-        formData.append('order_id', order.id);
-        formData.append('product_id', reviewItem.product_variant.product_id);
-        formData.append('product_variant_id', reviewItem.product_variant_id);
-        formData.append('rating', reviewRating);
-        formData.append('content', reviewContent);
-        if (reviewMedia) formData.append('media', reviewMedia);
+        if (!reviewItem) return;
+        setReviewLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('order_id', order.id);
+            formData.append('product_id', reviewItem.product_variant.product_id);
+            formData.append('product_variant_id', reviewItem.product_variant_id);
+            formData.append('rating', reviewRating);
+            formData.append('content', reviewContent);
+            reviewMedia.forEach(file => formData.append('media[]', file));
 
-        await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, formData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data'
+            await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            alert('Đánh giá thành công!');
+            setShowReviewModal(false);
+            setReviewMedia([]);
+            fetchOrder();
+        } catch (err) {
+            alert('Gửi đánh giá thất bại.');
+            if (err.response) {
+                console.error('Lỗi API:', err.response.data);
+            } else {
+                console.error('Lỗi:', err);
             }
-        });
-        alert('Đánh giá thành công!');
-        setShowReviewModal(false);
-        setReviewMedia(null);
-        fetchOrder();
-    } catch (err) {
-        alert('Gửi đánh giá thất bại.');
-        if (err.response) {
-            console.error('Lỗi API:', err.response.data);
-        } else {
-            console.error('Lỗi:', err);
+        } finally {
+            setReviewLoading(false);
         }
-    } finally {
-        setReviewLoading(false);
-    }
-};
+    };
 
     if (loading) return <Spinner />;
     if (error) return <Alert variant="danger">{error}</Alert>;
@@ -277,26 +288,41 @@ export default function OrderDetailPage() {
                                     <strong>Lý do hoàn đơn:</strong><br />
                                     <span className="border rounded d-block p-2 bg-light">{order.return_reason}</span>
                                     {/* Hiển thị ảnh/video minh chứng nếu có */}
-                                    {order.return_media && (
-                                        <div className="mt-2">
-                                            {/\.(jpg|jpeg|png)$/i.test(order.return_media)
-                                                ? (
-                                                    <img
-                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
-                                                        alt="Ảnh minh chứng hoàn đơn"
-                                                        style={{ maxWidth: 150, borderRadius: 8 }}
-                                                    />
-                                                )
-                                                : (
-                                                    <video
-                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
-                                                        controls
-                                                        style={{ maxWidth: 150, borderRadius: 8 }}
-                                                    />
-                                                )
-                                            }
-                                        </div>
-                                    )}
+                                    {order.return_media && (() => {
+                                        let mediaList = [];
+                                        try {
+                                            // Nếu backend trả về JSON string, parse ra mảng
+                                            mediaList = Array.isArray(order.return_media)
+                                                ? order.return_media
+                                                : JSON.parse(order.return_media);
+                                        } catch {
+                                            // Nếu lỗi parse, fallback về mảng rỗng
+                                            mediaList = [];
+                                        }
+                                        return (
+                                            <div className="mt-2 d-flex flex-wrap gap-2">
+                                                {mediaList.map((path, idx) =>
+                                                    /\.(jpg|jpeg|png)$/i.test(path)
+                                                        ? (
+                                                            <img
+                                                                key={idx}
+                                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                alt="Ảnh minh chứng hoàn đơn"
+                                                                style={{ maxWidth: 150, borderRadius: 8 }}
+                                                            />
+                                                        )
+                                                        : (
+                                                            <video
+                                                                key={idx}
+                                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                controls
+                                                                style={{ maxWidth: 150, borderRadius: 8 }}
+                                                            />
+                                                        )
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                 </p>
                             )}
                         </Card.Body>
@@ -341,14 +367,39 @@ export default function OrderDetailPage() {
                                                         {reviews.map(r => (
                                                             <div key={r.id} className="border rounded mb-1 p-1">
                                                                 {'★'.repeat(r.rating)} - {r.content}
-                                                                {r.media && (
-                                                            <div className="mt-2">
-                                                                {/\.(jpg|jpeg|png)$/i.test(r.media)
-                                                                    ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
-                                                                    : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
-                                                                }
-                                                            </div>
-                                                                )}
+                                                                {r.media && (() => {
+                                                                    let mediaList = [];
+                                                                    try {
+                                                                        mediaList = Array.isArray(r.media) ? r.media : JSON.parse(r.media);
+                                                                    } catch {
+                                                                        mediaList = [];
+                                                                    }
+                                                                    return (
+                                                                        <div className="mt-2 d-flex flex-wrap gap-2">
+                                                                            {mediaList.map((path, idx) =>
+                                                                                /\.(jpg|jpeg|png)$/i.test(path)
+                                                                                    ? (
+                                                                                        <img
+                                                                                            key={idx}
+                                                                                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                                            alt="Ảnh đánh giá"
+                                                                                            width={120}
+                                                                                            style={{ borderRadius: 8 }}
+                                                                                        />
+                                                                                    )
+                                                                                    : (
+                                                                                        <video
+                                                                                            key={idx}
+                                                                                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                                            controls
+                                                                                            width={180}
+                                                                                            style={{ borderRadius: 8 }}
+                                                                                        />
+                                                                                    )
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         ))}
                                                         {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
@@ -451,7 +502,10 @@ export default function OrderDetailPage() {
                         <Form.Control
                             type="file"
                             accept="image/*,video/*"
-                            onChange={e => setReviewMedia(e.target.files[0])}
+                            multiple
+                            onChange={e => {
+                                setReviewMedia(prev => [...(Array.isArray(prev) ? prev : []), ...Array.from(e.target.files)]);
+                            }}
                         />
                     </Form.Group>
                     <Form.Group className="mt-2">

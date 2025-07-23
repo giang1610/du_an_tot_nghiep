@@ -1292,7 +1292,8 @@ public function requestReturn(Request $request, $id)
 
     $request->validate([
         'reason' => 'required|string|max:255',
-        'media' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB
+        'media' => 'nullable', // Có thể là ảnh hoặc video
+        'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Tối đa 10MB
     ]);
 
     if ($order->status !== 'shipped') {
@@ -1303,10 +1304,13 @@ public function requestReturn(Request $request, $id)
     $order->return_reason = $request->input('reason');
     $order->return_requested_at = now();
 
-    // Xử lý file upload
+    // Xử lý nhiều file upload
+    $mediaPaths = [];
     if ($request->hasFile('media')) {
-        $path = $request->file('media')->store('returns', 'public');
-        $order->return_media = $path;
+        foreach ($request->file('media') as $file) {
+            $mediaPaths[] = $file->store('returns', 'public');
+        }
+        $order->return_media = json_encode($mediaPaths);
     }
 
     $order->save();

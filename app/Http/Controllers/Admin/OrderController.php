@@ -300,7 +300,7 @@ class OrderController extends Controller
     $order->status = $newStatus;
 
     // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
-    if (in_array($newStatus, ['shipped', 'delivered', 'completed']) && $order->payment_status !== 'paid') {
+    if (in_array($newStatus, ['shipped', 'completed']) && $order->payment_status !== 'paid') {
         $order->payment_status = 'paid';
     }
 
@@ -367,8 +367,8 @@ class OrderController extends Controller
         $order->save();
         Mail::to($order->customer_email)->queue(new \App\Mail\ReturnAccepted($order));
     } else {
-        $order->status = 'delivered';
-        $order->delivered_at = now();
+        $order->status = 'completed';
+        $order->completed_at = now();
         $order->save();
         Mail::to($order->customer_email)->queue(new \App\Mail\ReturnRejected($order));
     }
