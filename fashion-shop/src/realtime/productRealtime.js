@@ -4,7 +4,7 @@ export function listenToProductChanged(onChanged) {
   const channel = echo.channel('products');
 
   echo.connector.pusher.connection.bind('connected', () => {
-    console.log('[Realtime] WebSocket kết nối thành công');
+    // console.log('[Realtime] WebSocket kết nối thành công');
   });
   channel.listen('.product.changed', () => {
    
