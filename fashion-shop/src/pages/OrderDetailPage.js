@@ -77,6 +77,8 @@ export default function OrderDetailPage() {
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
+    const [reviewMedia, setReviewMedia] = useState(null);
+
     useEffect(() => {
         const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
             if (Number(orderIdFromSocket) === Number(id)) {
@@ -184,27 +186,38 @@ export default function OrderDetailPage() {
     };
 
     const handleSubmitReview = async () => {
-        if (!reviewItem) return;
-        setReviewLoading(true);
-        try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, {
-                order_id: order.id,
-                product_id: reviewItem.product_variant.product_id,
-                product_variant_id: reviewItem.product_variant_id,
-                rating: reviewRating,
-                content: reviewContent
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert('Đánh giá thành công!');
-            setShowReviewModal(false);
-            fetchOrder();
-        } catch {
-            alert('Gửi đánh giá thất bại.');
-        } finally {
-            setReviewLoading(false);
+    if (!reviewItem) return;
+    setReviewLoading(true);
+    try {
+        const formData = new FormData();
+        formData.append('order_id', order.id);
+        formData.append('product_id', reviewItem.product_variant.product_id);
+        formData.append('product_variant_id', reviewItem.product_variant_id);
+        formData.append('rating', reviewRating);
+        formData.append('content', reviewContent);
+        if (reviewMedia) formData.append('media', reviewMedia);
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        alert('Đánh giá thành công!');
+        setShowReviewModal(false);
+        setReviewMedia(null);
+        fetchOrder();
+    } catch (err) {
+        alert('Gửi đánh giá thất bại.');
+        if (err.response) {
+            console.error('Lỗi API:', err.response.data);
+        } else {
+            console.error('Lỗi:', err);
         }
-    };
+    } finally {
+        setReviewLoading(false);
+    }
+};
 
     if (loading) return <Spinner />;
     if (error) return <Alert variant="danger">{error}</Alert>;
@@ -328,6 +341,14 @@ export default function OrderDetailPage() {
                                                         {reviews.map(r => (
                                                             <div key={r.id} className="border rounded mb-1 p-1">
                                                                 {'★'.repeat(r.rating)} - {r.content}
+                                                                {r.media && (
+                                                            <div className="mt-2">
+                                                                {/\.(jpg|jpeg|png)$/i.test(r.media)
+                                                                    ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
+                                                                    : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
+                                                                }
+                                                            </div>
+                                                                )}
                                                             </div>
                                                         ))}
                                                         {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
@@ -426,9 +447,18 @@ export default function OrderDetailPage() {
                         <InteractiveStarRating rating={reviewRating} onChange={setReviewRating} />
                     </Form.Group>
                     <Form.Group className="mt-2">
+                        <Form.Label>Ảnh/Video sản phẩm</Form.Label>
+                        <Form.Control
+                            type="file"
+                            accept="image/*,video/*"
+                            onChange={e => setReviewMedia(e.target.files[0])}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mt-2">
                         <Form.Label>Nội dung</Form.Label>
                         <Form.Control as="textarea" rows={3} value={reviewContent} onChange={e => setReviewContent(e.target.value)} />
                     </Form.Group>
+
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowReviewModal(false)}>Đóng</Button>
