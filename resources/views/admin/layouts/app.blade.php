@@ -154,18 +154,18 @@
         <a href="{{ route('orders.returned') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã trả hàng</a>
     </li>
     <!-- Khuyến mãi -->
-    <!-- <li class="nav-item menu-parent" data-title="vouchers">
-      <a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#voucherMenu" aria-expanded="{{ request()->routeIs('vouchers.*') ? 'true' : 'false' }}">
+    {{-- <li class="nav-item menu-parent" data-title="vouchers">
+      <a class="nav-link" data-bs-toggle="collapse" href="#catMenu2">
         <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
       </a>
-      <div id="catMenu" class="collapse ps-3">
+      <div id="catMenu2" class="collapse ps-3">
         <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item" data-title="danh sách khuyến mãi">Danh sách</a>
         <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item" data-title="thêm khuyến mãi">Thêm mới</a>
       </div>
-    </li> -->
+    </li>  --}}
 <li class="nav-item menu-parent" data-title="vouchers">
   <a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catvoucher" aria-expanded="{{ request()->routeIs('vouchers.*') ? 'true' : 'false' }}">
-    <i class="bi bi-folder"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <div id="catvoucher" class="collapse ps-3 {{ request()->routeIs('vouchers.*') ? 'show' : '' }}">
     <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('vouchers.index') ? 'active' : '' }}" data-title="danh sách danh mục">Danh sách</a>

@@ -13,6 +13,12 @@
         <h4 class="mb-0">Danh sách Voucher</h4>
         <a href="{{ route('vouchers.create') }}" class="btn btn-success">Thêm voucher mới</a>
     </div>
+    <form action="{{ route('vouchers.index') }}" method="GET" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo tên voucher..." value="{{ request()->get('search') }}">
+            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+        </div>
+    </form>
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <table class="table table-bordered table-hover mb-0">
@@ -36,7 +42,7 @@
                     @forelse($vouchers as $voucher)
                     {{-- <pre>{{ dd($voucher) }}</pre> --}}
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $voucher->id }}</td>
                             <td>{{ $voucher->code }}</td>
                             <td>{{ $voucher->name }}</td>
                             <td>
@@ -86,5 +92,16 @@
             </table>
         </div>
     </div>
+     <!-- Pagination -->
+    @if($vouchers->hasPages())
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted small">
+            Hiển thị {{ $vouchers->firstItem() }} đến {{ $vouchers->lastItem() }} trong tổng số {{ $vouchers->total() }} danh mục
+        </div>
+        <div class="">
+            {{ $vouchers->links('pagination::bootstrap-5') }}
+        </div>
+    </div>
+    @endif
 </div>
 @endsection
