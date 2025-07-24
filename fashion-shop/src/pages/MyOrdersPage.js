@@ -378,7 +378,7 @@ export default function MyOrdersPage() {
                                             </Link>
                                         )}
 
-                                    {(order.status === 'completed') && (() => {
+                                    {/* {(order.status === 'completed') && (() => {
                                         const completedAt = new Date(order.completed_at || order.updated_at);
                                         const now = new Date();
                                         const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
@@ -390,7 +390,7 @@ export default function MyOrdersPage() {
                                             );
                                         }
                                         return null;
-                                    })()}
+                                    })()} */}
 
                                     {order.status === 'shipped' && (
                                         <Button variant="success" size="sm" onClick={() => handleConfirmReceived(order.id)}>

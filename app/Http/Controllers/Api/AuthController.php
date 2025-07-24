@@ -64,6 +64,13 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // ✅ Kiểm tra nếu user chưa xác minh email
+        if (is_null($user->email_verified_at)) {
+            return response()->json([
+                'message' => 'Vui lòng xác thực email trước khi đăng nhập.',
+            ], 403);
+        }
+
         $token = $user->createToken('api_token')->plainTextToken;
 
         return response()->json([

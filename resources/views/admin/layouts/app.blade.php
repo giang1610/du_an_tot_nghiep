@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-
+ 
   <!-- linkcss Notification -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
 
@@ -106,40 +106,40 @@
   <div class="menu-label">MENU</div>
   <ul class="nav flex-column px-2" id="menuList">
     <!-- Dashboard -->
-    <li class="nav-item menu-item" data-title="dashboard">
-      <a href="{{ route('admin') }}" class="nav-link active">
-        <i class="bi bi-grid"></i><span class="menu-text">Dashboard</span>
-      </a>
-    </li>
+<li class="nav-item menu-item" data-title="dashboard">
+  <a href="{{ route('admin') }}" class="nav-link {{ request()->routeIs('admin') ? 'active' : '' }}">
+    <i class="bi bi-grid"></i><span class="menu-text">Dashboard</span>
+  </a>
+</li>
 
-    <!-- Danh mục -->
-    <li class="nav-item menu-parent" data-title="categories">
-      <a class="nav-link" data-bs-toggle="collapse" href="#catMenu">
-        <i class="bi bi-folder"></i><span class="menu-text">Danh mục</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
-      <div id="catMenu" class="collapse ps-3">
-        <a href="{{ route('categories.index') }}" class="nav-link py-2 menu-item" data-title="danh sách danh mục">Danh sách</a>
-        <a href="{{ route('categories.create') }}" class="nav-link py-2 menu-item" data-title="thêm danh mục">Thêm mới</a>
-      </div>
-    </li>
+<!-- Danh mục -->
+<li class="nav-item menu-parent" data-title="categories">
+  <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catMenu" aria-expanded="{{ request()->routeIs('categories.*') ? 'true' : 'false' }}">
+    <i class="bi bi-folder"></i><span class="menu-text">Danh mục</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <div id="catMenu" class="collapse ps-3 {{ request()->routeIs('categories.*') ? 'show' : '' }}">
+    <a href="{{ route('categories.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('categories.index') ? 'active' : '' }}" data-title="danh sách danh mục">Danh sách</a>
+    <a href="{{ route('categories.create') }}" class="nav-link py-2 menu-item {{ request()->routeIs('categories.create') ? 'active' : '' }}" data-title="thêm danh mục">Thêm mới</a>
+  </div>
+</li>
 
-    <!-- Sản phẩm -->
-    <li class="nav-item menu-parent" data-title="products">
-      <a class="nav-link" data-bs-toggle="collapse" href="#prodMenu">
-        <i class="bi bi-box-seam"></i><span class="menu-text">Sản phẩm</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
-      <div id="prodMenu" class="collapse ps-3">
-        <a href="{{ route('products.index') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Danh sách</a>
-        <a href="{{ route('products.create') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Thêm mới</a>
-      </div>
-    </li>
+<!-- Sản phẩm -->
+<li class="nav-item menu-parent" data-title="products">
+  <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#prodMenu" aria-expanded="{{ request()->routeIs('products.*') ? 'true' : 'false' }}">
+    <i class="bi bi-box-seam"></i><span class="menu-text">Sản phẩm</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <div id="prodMenu" class="collapse ps-3 {{ request()->routeIs('products.*') ? 'show' : '' }}">
+    <a href="{{ route('products.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('products.index') ? 'active' : '' }}" data-title="danh sách sản phẩm">Danh sách</a>
+    <a href="{{ route('products.create') }}" class="nav-link py-2 menu-item {{ request()->routeIs('products.create') ? 'active' : '' }}" data-title="thêm sản phẩm">Thêm mới</a>
+  </div>
+</li>
 
-    <!-- Đơn hàng -->
-     <li class="nav-item menu-parent" data-title="orders">
-      <a class="nav-link" data-bs-toggle="collapse" href="#ordersMenu">
-        <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
-      <div id="ordersMenu" class="collapse ps-3">
+<!-- Đơn hàng -->
+<li class="nav-item menu-parent" data-title="orders">
+  <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#ordersMenu" aria-expanded="{{ request()->routeIs('orders.*') ? 'true' : 'false' }}">
+    <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <div id="ordersMenu" class="collapse ps-3">
         <a href="{{ route('orders.index') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Danh sách</a>
         <a href="{{ route('orders.cancelled') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Đơn đã huỷ</a>
         <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lí</a>
@@ -147,8 +147,31 @@
         <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
         <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
         <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
-
+        <a href="{{ route('orders.completed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Hoàn thành</a>
+        <a href="{{ route('orders.failed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Giao hàng thất bại</a>
+        <a href="{{ route('orders.returning') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang trả hàng</a>
+        <a href="{{ route('orders.return_requested') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Yêu cầu trả hàng</a>
+        <a href="{{ route('orders.returned') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã trả hàng</a>
     </li>
+    <!-- Khuyến mãi -->
+    {{-- <li class="nav-item menu-parent" data-title="vouchers">
+      <a class="nav-link" data-bs-toggle="collapse" href="#catMenu2">
+        <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <div id="catMenu2" class="collapse ps-3">
+        <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item" data-title="danh sách khuyến mãi">Danh sách</a>
+        <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item" data-title="thêm khuyến mãi">Thêm mới</a>
+      </div>
+    </li>  --}}
+<li class="nav-item menu-parent" data-title="vouchers">
+  <a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catvoucher" aria-expanded="{{ request()->routeIs('vouchers.*') ? 'true' : 'false' }}">
+    <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <div id="catvoucher" class="collapse ps-3 {{ request()->routeIs('vouchers.*') ? 'show' : '' }}">
+    <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('vouchers.index') ? 'active' : '' }}" data-title="danh sách danh mục">Danh sách</a>
+    <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item {{ request()->routeIs('vouchers.create') ? 'active' : '' }}" data-title="thêm danh mục">Thêm mới</a>
+  </div>
+</li>
 
     <!-- Đơn hàng
     <li class="nav-item menu-item" data-title="orders">
@@ -159,20 +182,20 @@
 
     <!-- 👉 Khách hàng (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="khách hàng customers">
-      <a href="{{ route('users.index') }}" class="nav-link">
+      <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
         <i class="bi bi-people"></i><span class="menu-text">Khách hàng</span>
       </a>
     </li>
 
     <!-- 👉 Doanh thu (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="doanh thu revenue">
-      <a href="#" class="nav-link">
+      <a href="{{ route('admin.reports.revenue') }}" class="nav-link {{ request()->routeIs('admin.reports.revenue') ? 'active' : '' }}">
         <i class="bi bi-cash-stack"></i><span class="menu-text">Doanh thu</span>
       </a>
     </li>
-+    <li class="nav-item menu-item" data-title="khách hàng customers">
-      <a href="{{ route('admin.chat.list') }}" class="nav-link">
-        <i class="bi bi-people"></i><span class="menu-text"> Chat Với Khách hàng</span>
+    <li class="nav-item menu-item" data-title="khách hàng customers">
+      <a href="{{ route('admin.chat') }}" class="nav-link {{ request()->routeIs('admin.chat') ? 'active' : '' }}">
+        <i class="bi bi-people"></i><span class="menu-text"> Chat</span>
       </a>
     </li>
   </ul>
@@ -195,7 +218,7 @@
 
     <div class="d-flex align-items-center gap-3">
       <button id="darkModeToggle" class="btn btn-icon"><i class="bi bi-moon"></i></button>
-
+       
       <!-- Thông báo -->
        <x-notification/>
 

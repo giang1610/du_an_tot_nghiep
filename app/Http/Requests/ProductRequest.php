@@ -52,7 +52,6 @@ class ProductRequest extends FormRequest
     return $rules;
 }
 
-
     //validate kho
     public function withValidator($validator)
 {
@@ -104,7 +103,6 @@ class ProductRequest extends FormRequest
         'price_products.required' => 'Giá sản phẩm không được để trống.',
         'price_products.numeric' => 'Giá sản phẩm phải là số.',
         'price_products.min' => 'Giá sản phẩm phải lớn hơn 0.',
-
         'variants.*.sku.required' => 'Mã sản phẩm không được để trống.',
         'variants.*.sku.unique' => 'Mã sản phẩm đã tồn tại.',
         'variants.*.price.required' => 'Giá không được để trống.',
@@ -119,7 +117,6 @@ class ProductRequest extends FormRequest
         'variants.*.stock_quantity.integer' => 'Số lượng kho phải là số nguyên.',
         'variants.*.stock_quantity.min' => 'Số lượng kho phải lớn hơn 0.',
         'variants.*.stock_status.required' => 'Vui lòng chọn trạng thái kho.',
-
         ];
     }
 }

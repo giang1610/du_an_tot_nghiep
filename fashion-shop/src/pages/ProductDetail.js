@@ -5,7 +5,7 @@ import {
     Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
 } from 'react-bootstrap';
 import ProductReview from './ProductReview';
-import CheckoutForm from '../components/CheckoutForm';
+
 import ProductImageGallery from '../components/ProductImageGallery';
 import { listenToStockUpdates } from '../realtime/stockRealtime';
 
@@ -24,10 +24,7 @@ export default function ProductDetail() {
     const [selectedVariantId, setSelectedVariantId] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [alertMsg, setAlertMsg] = useState('');
-    const [showCheckoutForm, setShowCheckoutForm] = useState(false);
-    const [shippingAddress, setShippingAddress] = useState('');
-    const [customerPhone, setCustomerPhone] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('cod');
+
 
     useEffect(() => {
         setLoading(true);
@@ -289,17 +286,6 @@ export default function ProductDetail() {
 
                     </div>
 
-                    {showCheckoutForm && (
-                        <CheckoutForm
-                            shippingAddress={shippingAddress}
-                            setShippingAddress={setShippingAddress}
-                            customerPhone={customerPhone}
-                            setCustomerPhone={setCustomerPhone}
-                            paymentMethod={paymentMethod}
-                            setPaymentMethod={setPaymentMethod}
-                            onSubmit={handleBuyNow}
-                        />
-                    )}
 
                     <div className="mt-5">
                         {reviews.map(r => (
