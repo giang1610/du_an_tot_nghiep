@@ -201,14 +201,6 @@
                                 </div>
                             </td>
                             <td>
-                                <strong>{{ number_format($order->total) }} VNĐ</strong>
-                                @if($order->discount > 0)
-                                <div class="text-danger small">
-                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
-                                </div>
-                                @endif
-                            </td>
-                            <td>
                                 @switch($order->status)
                                 @case('pending')
                                 <span class="badge bg-warning text-dark">
@@ -379,7 +371,14 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5
+=======
                                 
+>>>>>>> 07d2692ccc54961bf57ca6f74b42ec96b2ff8671
                             </div>
                         </div>
                         <div class="card-body">

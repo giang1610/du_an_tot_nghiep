@@ -48,15 +48,13 @@
         <div class="mb-3" id="discount_amount_box" style="display: none;">
             <label class="form-label">Số tiền giảm (VNĐ)</label>
             <input type="number" name="discount_amount" class="form-control"
-                value="{{ old('discount_amount', $voucher->discount_amount) }}">
-            @error('discount_amount') <div class="text-danger small">{{ $message }}</div> @enderror
+                value="{{ $voucher->discount_type === 'amount' ? old('discount_amount', $voucher->discount_amount) : '' }}">
         </div>
 
         <div class="mb-3" id="discount_percent_box" style="display: none;">
             <label class="form-label">Phần trăm giảm (%)</label>
             <input type="number" name="discount_percent" class="form-control"
-                value="{{ (int)old('discount_percent', $voucher->discount_percent) }}">
-            @error('discount_percent') <div class="text-danger small">{{ $message }}</div> @enderror
+                value="{{ $voucher->discount_type === 'percent' ? (int)old('discount_percent', $voucher->discount_percent) : '' }}">
         </div>
 
         <div class="mb-3">
@@ -91,9 +89,30 @@
 <script>
     function toggleDiscountInput() {
         var type = document.getElementById('discount_type').value;
-        document.getElementById('discount_amount_box').style.display = (type === 'amount') ? 'block' : 'none';
-        document.getElementById('discount_percent_box').style.display = (type === 'percent') ? 'block' : 'none';
+        var amountBox = document.getElementById('discount_amount_box');
+        var percentBox = document.getElementById('discount_percent_box');
+        
+        if (type === 'amount') {
+            amountBox.style.display = 'block';
+            percentBox.style.display = 'none';
+            // Xóa giá trị phần trăm khi chọn amount
+            percentBox.querySelector('input').value = '';
+        } else if (type === 'percent') {
+            amountBox.style.display = 'none';
+            percentBox.style.display = 'block';
+            // Xóa giá trị tiền khi chọn percent
+            amountBox.querySelector('input').value = '';
+        } else {
+            amountBox.style.display = 'none';
+            percentBox.style.display = 'none';
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', toggleDiscountInput);
+    // Gọi hàm khi trang load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleDiscountInput();
+        
+        // Thêm sự kiện khi thay đổi select
+        document.getElementById('discount_type').addEventListener('change', toggleDiscountInput);
+    });
 </script>
