@@ -6,50 +6,60 @@ const MomoReturn = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [message, setMessage] = useState('Đang xác minh kết quả...');
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState(null); // ✅ đúng
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
+ useEffect(() => {
+  let isMounted = true;
 
-    const verifyPayment = async () => {
-      const params = new URLSearchParams(location.search);
-      const orderId = params.get('orderId');
-      const resultCode = params.get('resultCode');
+  const verifyPayment = async () => {
+    const params = new URLSearchParams(location.search);
+    const orderId = params.get('orderId');
+    const resultCode = params.get('resultCode');
 
-      if (!orderId || !resultCode) {
-        if (isMounted) {
-          setMessage('Thông tin không hợp lệ.');
-          setLoading(false);
-        }
-        return;
+    if (!orderId || !resultCode) {
+      if (isMounted) {
+        setMessage('Thông tin không hợp lệ.');
+        setLoading(false);
       }
+      return;
+    }
 
-      try {
-        const url = `http://localhost:8000/api/payment/momo/return?orderId=${encodeURIComponent(orderId)}&resultCode=${encodeURIComponent(resultCode)}`;
-        const res = await axios.get(url);
-        if (isMounted) {
-          setMessage(res.data.message || 'Xác minh thành công.');
-          setOrder(res.data.data); // lưu lại thông tin đơn hàng
+    try {
+      const url = `http://localhost:8000/api/payment/momo-return?orderId=${encodeURIComponent(orderId)}&resultCode=${encodeURIComponent(resultCode)}`;
+      const res = await axios.get(url);
+
+      if (isMounted) {
+        const msg = res.data.message || 'Xác minh thành công.';
+        setMessage(msg);
+        setOrder(res.data.order); 
+
+        if (res.data.success && resultCode === '0') {
+          // Đợi 2s rồi chuyển hướng
+          setTimeout(() => {
+            window.location.href = '/orders';
+          }, 2000);
         }
-      } catch {
-        if (isMounted) {
-          setMessage('Không thể xác minh kết quả thanh toán.');
-        }
-      } finally {
-        if (isMounted) setLoading(false);
       }
-    };
+    } catch {
+      if (isMounted) {
+        setMessage('Không thể xác minh kết quả thanh toán.');
+      }
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  };
 
-    verifyPayment();
+  verifyPayment();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [location.search]);
+  return () => {
+    isMounted = false;
+  };
+}, [location.search]);
+
 
   const handleBack = () => {
-    navigate('/my-orders');
+    navigate('/orders');
   };
 
   return (
@@ -87,7 +97,7 @@ const MomoReturn = () => {
                     order.items.map((item, idx) => (
                       <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                          <strong>{item.product_name}</strong>
+                          <strong>{item.product_variant?.product?.name}</strong>
                           <div className="text-muted" style={{fontSize: '0.95em'}}>
                             {item.variant_name && <span>Phân loại: {item.variant_name}</span>}
                           </div>

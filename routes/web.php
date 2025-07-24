@@ -9,7 +9,9 @@ use App\Http\Requests\CustomEmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 
@@ -69,7 +71,7 @@ Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke
 Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
     ->middleware(['auth', 'signed'])->name('verification.verify');
 
-    //xác minh mail client
+//xác minh mail client
 Route::get('/verify-email-custom', [EmailVerifiFotnController::class, 'verify'])
     ->middleware(middleware: ['signed'])
     ->name('verification.verify.fotn');
@@ -83,33 +85,33 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
 
 
 // Admin routes
-    //xóa danh mục
-    //thùng rác
-    Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
-    //xóa vĩnh viễn
-    Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
-    //khôi phục tất cả
-    Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
+//xóa danh mục
+//thùng rác
+Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
+//xóa vĩnh viễn
+Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
+//khôi phục tất cả
+Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
 
-    //khôi phục từng danh mục
-    Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
-    //xóa vĩnh viễn từng danh mục
-    Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
+//khôi phục từng danh mục
+Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+//xóa vĩnh viễn từng danh mục
+Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
 
-    //xóa sản phẩm
-    //thùng rác
-    Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
-    //khôi phục từng sản phẩm
-    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-    //khôi phục tất cả sản phẩm
-    Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
-    //xóa vĩnh viễn từng sản phẩm
-    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
-    //xóa vĩnh viễn tất cả sản phẩm
-    Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
-Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(function () {
+//xóa sản phẩm
+//thùng rác
+Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
+//khôi phục từng sản phẩm
+Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+//khôi phục tất cả sản phẩm
+Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
+//xóa vĩnh viễn từng sản phẩm
+Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
+//xóa vĩnh viễn tất cả sản phẩm
+Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
+Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(function () {
     Route::get('/', function () {
-      return view('admin.dashboard');
+        return view('admin.dashboard');
     })->name('admin');
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -121,7 +123,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
 
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
     Route::resource('products', ProductController::class);
-
+    Route::resource('vouchers', VoucherController::class);
 
     Route::resource('orders', OrderController::class);
     // Route::resource('pending', OrderController::class);
@@ -131,6 +133,15 @@ Route::prefix('admin')->middleware(['auth', 'is_admin','verified'])->group(funct
     Route::get('/picking', [OrderController::class, 'picking'])->name('orders.picking');
     Route::get('/shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
     Route::get('/shipped', [OrderController::class, 'shipped'])->name('orders.shipped');
+    Route::get('/completed', [OrderController::class, 'completed'])->name('orders.completed');
+    Route::get('/returned', [OrderController::class, 'returned'])->name('orders.returned');
+    Route::get('/failed', [OrderController::class, 'failed'])->name('orders.failed');
+    Route::get('/returning', [OrderController::class, 'returning'])->name('orders.returning');
+    Route::get('/return_requested', [OrderController::class, 'return_requested'])->name('orders.return_requested');
+    Route::get('/returned', [OrderController::class, 'returned'])->name('orders.returned');
+
+
+    
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
@@ -151,6 +162,11 @@ Route::get('/chat/{userId?}', [AdminChatController::class, 'index'])->name('admi
 Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
 
 
+    Route::get('revenue', [ReportController::class, 'revenueReport'])->name('admin.reports.revenue');
+    // Route::get('inventory', [ReportController::class, 'inventoryReport'])->name('admin.reports.inventory');
+    // Route::get('customers', [ReportController::class, 'customerReport'])->name('admin.reports.customers');
+    // Route::get('export-revenue', [ReportController::class, 'exportRevenueReport'])->name('admin.reports.export-revenue');
+    // Route::get('reports/export-revenue', [ReportController::class, 'exportRevenueReport'])->name('admin.reports.export-revenue');
 
 
 });
