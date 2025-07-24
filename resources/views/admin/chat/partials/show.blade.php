@@ -1,7 +1,7 @@
     <link rel="stylesheet" href="{{ asset('css/show.css') }}">
     @if(!isset($user))
-        <div class="text-center mt-5 text-muted">
-            <h5>Chọn một khách hàng để bắt đầu trò chuyện</h5>
+        <div class="text-center mt-5 text-muted ">
+            <h5 class=" text-white">Chọn một khách hàng để bắt đầu trò chuyện</h5>
         </div>
     @else
 
