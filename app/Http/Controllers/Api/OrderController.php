@@ -11,20 +11,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Cart;
 use App\Models\CartItem;
-
-// RealTime
-use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
-
+use App\Services\Payment\PaymentServiceFactory;
+use Str;
 
 class OrderController extends Controller
 {
+    // Validation rules
     protected $orderValidationRules = [
         'shipping_address' => 'required|string|max:255',
         'billing_address' => 'nullable|string|max:255',
@@ -32,6 +29,9 @@ class OrderController extends Controller
         'notes' => 'nullable|string|max:500',
     ];
 
+    /**
+     * Create a new order
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -40,7 +40,7 @@ class OrderController extends Controller
             'shipping' => 'nullable|numeric|min:0',
             'total' => 'required|numeric|min:0',
             'status' => 'nullable|string|in:pending,processing,completed,cancelled,failed',
-            'payment_method' => 'nullable|string|in:cod,momo',
+            'payment_method' => 'nullable|string|in:cod,momo,vnpay',
             'payment_status' => 'nullable|string|in:pending,paid,unpaid,failed',
             'shipping_address' => 'required|string|max:255',
             'billing_address' => 'nullable|string|max:255',
@@ -54,7 +54,7 @@ class OrderController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'Lỗi xác thực',
+                'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -62,13 +62,20 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
+            // Validate stock
             foreach ($request->items as $item) {
                 $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
-                if (!$variant || $variant->stock->quantity < $item['quantity']) {
-                    throw new \Exception("Không đủ tồn kho cho sản phẩm: {$item['product_variant_id']}");
+                
+                if (!$variant) {
+                    throw new \Exception("Product variant not found: {$item['product_variant_id']}");
+                }
+                
+                if (!$variant->stock || $variant->stock->quantity < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for product: {$item['product_variant_id']}");
                 }
             }
 
+            // Create order
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'order_number' => 'ORD-' . strtoupper(Str::random(8)),
@@ -86,12 +93,13 @@ class OrderController extends Controller
                 'notes' => $request->notes ?? null,
             ]);
 
+            // Create order items and update stock
             foreach ($request->items as $item) {
                 $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'product_variant_id' => $item['product_variant_id'],
+                    'product_variant_id' => $variant->id,
                     'quantity' => $item['quantity'],
                     'price' => $variant->price,
                     'sale_price' => $variant->sale_price,
@@ -100,128 +108,29 @@ class OrderController extends Controller
                 ]);
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
-
-          
-
             }
-            
-            Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
+
+            // Send confirmation email
+            Mail::to($request->customer_email)->queue(new OrderPlaced($order, auth()->user()));
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Tạo đơn hàng thành công',
+                'message' => 'Order created successfully',
                 'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
-
             ], 201);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
+            Log::error('Order creation error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Lỗi tạo đơn hàng',
+                'message' => 'Order creation failed',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
-    public function index(Request $request)
-    {
-        $perPage = $request->query('per_page', 10);
-        $status = $request->query('status');
-
-        $query = Auth::user()->orders()
-            ->with(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
-            ->latest();
-
-        if ($status) {
-            $query->where('status', $status);
-        }
-
-        $orders = $query->paginate($perPage);
-
-        return response()->json([
-            'message' => 'Lấy danh sách đơn hàng thành công',
-            'data' => $orders
-        ]);
-    }
-
-    public function show(Order $order)
-    {
-        if ($order->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Không có quyền truy cập'], 403);
-        }
-
-        $order->load(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
-
-        return response()->json([
-            'message' => 'Lấy thông tin đơn hàng thành công',
-            'data' => $order
-        ]);
-    }
-
-    public function updateAddress(Request $request, Order $order)
-    {
-        if ($order->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Không có quyền truy cập'], 403);
-        }
-
-        $request->validate([
-            'shipping_address' => 'required|string|max:255',
-        ]);
-
-        $order->shipping_address = $request->input('shipping_address');
-        $order->save();
-
-        return response()->json([
-            'message' => 'Cập nhật địa chỉ thành công',
-            'data' => $order,
-        ]);
-    }
-
-    public function cancel(Order $order)
-    {
-        if ($order->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Không có quyền truy cập'], 403);
-        }
-
-        if (!in_array($order->status, ['pending', 'processing'])) {
-            return response()->json(['message' => 'Không thể hủy đơn hàng ở trạng thái hiện tại.'], 400);
-        }
-
-        // $order->status = 'cancelled';
-        // $order->save();
-
-        // return response()->json(['message' => 'Hủy đơn hàng thành công']);
-        DB::beginTransaction();
-
-        try {
-            // Hoàn lại tồn kho nếu đã trừ (COD hoặc thanh toán online thành công)
-            if ($order->payment_status === 'paid' || $order->payment_method === 'cod') {
-                foreach ($order->items as $item) {
-                    $variant = $item->productVariant;
-                    $variant->stock()->increment('quantity', $item->quantity);
-                }
-            }
-
-            // Cập nhật trạng thái đơn hàng
-            $order->update([
-                'status' => 'cancelled',
-                'payment_status' => ($order->payment_status === 'paid') ? 'refunded' : 'cancelled',
-            ]);
-
-            DB::commit();
-            return response()->json(['message' => 'Hủy đơn hàng thành công']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Lỗi khi hủy đơn hàng: ' . $e->getMessage());
-            return response()->json(['message' => 'Lỗi khi hủy đơn hàng'], 500);
-        }
-    }
-
-
-    /**
-     * Xử lý thanh toán (COD hoặc MOMO)
-     */
+ 
     public function checkout(Request $request)
     {
         $user = auth()->user();
@@ -254,9 +163,9 @@ class OrderController extends Controller
         // Gán lại vào $request để dùng chung validate và xử lý phía dưới
         $request->merge(['items' => $items]);
 
-        // ...phần validate và xử lý tạo đơn hàng giữ nguyên như cũ...
+        // Validate request
         $validator = Validator::make($request->all(), [
-            'payment_method' => 'required|string|in:cod,vnpay,momo',
+            'payment_method' => 'required|string|in:cod,momo,vnpay',
             'shipping_address' => 'required|string',
             'customer_phone' => 'required|string',
             'customer_email' => 'required|email',
@@ -271,7 +180,7 @@ class OrderController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'Dữ liệu không hợp lệ',
+                'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 400);
         }
@@ -279,16 +188,24 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-
-            // Kiểm tra tồn kho trước
+            // Check stock availability
             foreach ($request->items as $item) {
                 $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
-                if (!$variant || !$variant->stock || $variant->stock->quantity < $item['quantity']) {
-                    throw new \Exception("Không đủ tồn kho cho sản phẩm: {$item['product_variant_id']}");
+                
+                if (!$variant) {
+                    throw new \Exception("Product variant not found: {$item['product_variant_id']}");
+                }
+                
+                if (!$variant->stock) {
+                    throw new \Exception("Stock information not available for variant: {$variant->id}");
+                }
+                
+                if ($variant->stock->quantity < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for product: {$item['product_variant_id']}");
                 }
             }
 
-            // Tạo đơn hàng
+            // Create order
             $order = Order::create([
                 'user_id' => $user->id,
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
@@ -299,11 +216,11 @@ class OrderController extends Controller
                 'subtotal' => $request->subtotal,
                 'tax' => $request->tax,
                 'shipping' => $request->shipping,
-                'total' => $request->total,
+                'total' => $request->total, 
                 'status' => 'pending',
             ]);
 
-            // Tạo các item cho đơn hàng
+            // Create order items
             foreach ($request->items as $item) {
                 $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
 
@@ -316,596 +233,123 @@ class OrderController extends Controller
                     'size_id' => $variant->size_id,
                 ]);
 
-                // Trừ kho ngay nếu là COD, còn MOMO sẽ trừ khi nhận webhook
+                // For COD, reduce stock immediately
                 if ($request->payment_method === 'cod') {
                     $variant->stock->decrement('quantity', $item['quantity']);
-                   
-                    broadcast(new ProductStockUpdated(
-                        $variant->id,
-                        $variant->fresh()->stock->quantity
-                    ));
-                }
-            }
-           
-            event(new NewOrderCreated($order->order_number, $order->id)); 
-
-            DB::commit();
-
-            // Xử lý theo phương thức thanh toán
-            switch ($request->payment_method) {
-                case 'momo':
-                    $momoResponse = $this->initiateMomoPayment($order, $order->total);
-                    return response()->json([
-                        'message' => 'Đã khởi tạo thanh toán MOMO',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'payment_url' => $momoResponse['payUrl'],
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
-                        ]
-                    ]);
-
-                case 'cod':
-                    // Gửi email xác nhận cho COD
-                    Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
-                    return response()->json([
-                        'message' => 'Đặt hàng COD thành công',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'payment_url' => null,
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
-                        ]
-                    ]);
-
-                default:
-                    return response()->json([
-                        'message' => 'Đặt hàng thành công',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
-                        ]
-                    ]);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Không thể tạo đơn hàng',
-                'error' => $e->getMessage(),
-            ], 400);
-        }
-    }
-
-
-    /**
-     * Xử lý thanh toán COD
-     */
-    protected function processCodPayment($user, $request, $cart, $totals)
-    {
-        DB::beginTransaction();
-
-        try {
-            // Kiểm tra tồn kho
-            foreach ($cart->items as $item) {
-                if ($item->variant->stock->quantity < $item->quantity) {
-                    throw new \Exception("Không đủ tồn kho cho sản phẩm: {$item->variant->product->name}");
                 }
             }
 
-            // Tạo đơn hàng
-            $order = $user->orders()->create([
-                'subtotal' => $totals['subtotal'],
-                'shipping' => $totals['shipping'],
-                'tax' => $totals['tax'],
-                'total' => $totals['total'],
-                'status' => 'processing',
-                'payment_method' => 'cod',
-                'payment_status' => 'unpaid',
-                'shipping_address' => $request->shipping_address,
-                'billing_address' => $request->billing_address ?? $request->shipping_address,
-                'customer_email' => $user->email,
-                'customer_phone' => $request->customer_phone,
-                'notes' => $request->notes,
-            ]);
-
-            // Tạo items đơn hàng và cập nhật tồn kho
-            foreach ($cart->items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_variant_id' => $item->product_variant_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->variant->price,
-                    'sale_price' => $item->variant->sale_price,
-                    'color_id' => $item->variant->color_id,
-                    'size_id' => $item->variant->size_id,
-                ]);
-
-                // Cập nhật tồn kho
-                $item->variant->stock()->decrement('quantity', $item->quantity);
-            }
-
-            // Xóa các sản phẩm đã chọn khỏi giỏ hàng
-            $cart->items()->where('selected', true)->delete();
-
-            // Gửi email xác nhận
-            Mail::to($user->email)->queue(new OrderPlaced($order, $user));
+            event(new NewOrderCreated($order->order_number, $order->id));
 
             DB::commit();
 
-            // Nếu là MOMO, trả về link thanh toán
-            switch ($request->payment_method) {
-                case 'momo':
-                    $momoResponse = $this->initiateMomoPayment($order, $order->total);
-                    return response()->json([
-                        'message' => 'Đã khởi tạo thanh toán MOMO',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'payment_url' => $momoResponse['payUrl'],
-                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                        ]
-                    ]);
-
-                case 'cod':
-                    // Gửi email xác nhận cho COD
-
-                    Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
-                    return response()->json([
-                        'message' => 'Đặt hàng COD thành công',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'payment_url' => null,
-                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                        ]
-                    ]);
-                default:
-                    return response()->json([
-                        'message' => 'Đặt hàng thành công',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                        ]
-                    ]);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Không thể tạo đơn hàng',
-                'error' => $e->getMessage(),
-            ], 400);
-        }
-    }
-    /**
-     * Xử lý thanh toán MOMO
-     */
-    public function processMomoPayment(Request $request)
-    {
-        $user = Auth::user();
-
-        DB::beginTransaction();
-
-        try {
-            // Validate đầu vào
-            $validated = $request->validate([
-                'shipping_address' => 'required|string',
-                'billing_address' => 'nullable|string',
-                'customer_phone' => 'required|string',
-                'notes' => 'nullable|string',
-            ]);
-
-            // Lấy giỏ hàng và chỉ lấy item selected = 1
-            $cart = Cart::with(['items' => function($q) {
-                $q->where('selected', true);
-            }, 'items.variant'])->where('user_id', $user->id)->first();
-
-            if (!$cart || $cart->items->isEmpty()) {
-                return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
-            }
-
-            // Tính tổng
-            $subtotal = 0;
-            foreach ($cart->items as $item) {
-                $subtotal += ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
-            }
-
-            $shipping = 20000;
-            $tax = $subtotal * 0.1;
-            $total = $subtotal + $shipping + $tax;
-
-            $order = $user->orders()->create([
-                'subtotal' => $subtotal,
-                'shipping' => $shipping,
-                'tax' => $tax,
-                'total' => $total,
-                'status' => 'pending',
-                'payment_method' => 'momo',
-                'payment_status' => 'pending',
-                'shipping_address' => $request->shipping_address,
-                'billing_address' => $request->billing_address ?? $request->shipping_address,
-                'customer_email' => $user->email,
-                'customer_phone' => $request->customer_phone,
-                'notes' => $request->notes,
-            ]);
-
-            foreach ($cart->items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_variant_id' => $item->product_variant_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->variant->price,
-                    'sale_price' => $item->variant->sale_price,
-                    'color_id' => $item->variant->color_id,
-                    'size_id' => $item->variant->size_id,
-                ]);
-            }
-
-            // Gọi API MoMo
-            $momoResponse = $this->initiateMomoPayment($order, $total);
-
-            DB::commit();
+            // Process payment
+            $paymentService = PaymentServiceFactory::create($request->payment_method);
+            $paymentResult = $paymentService->process($order, $order->total);
 
             return response()->json([
-                'message' => 'Đã khởi tạo thanh toán MOMO',
+                'message' => 'Checkout successful',
                 'data' => [
+                    'order_id' => $order->id,
+                    'payment_url' => $paymentResult['payment_url'] ?? null,
                     'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                    'payment_url' => $momoResponse['payUrl'],
-                    'order_id' => $order->id,
                 ]
             ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Lỗi khởi tạo MOMO: ' . $e->getMessage());
-
+            Log::error('Checkout error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Lỗi khởi tạo thanh toán MOMO',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Checkout failed',
+                'error' => $e->getMessage(),
+            ], 400);
         }
     }
 
     /**
-     * Khởi tạo thanh toán MOMO
+     * Get list of orders
      */
-    protected function initiateMomoPayment($order, $amount)
+    public function index(Request $request)
     {
-        $partnerCode = env('MOMO_PARTNER_CODE');
-        $accessKey = env('MOMO_ACCESS_KEY');
-        $secretKey = env('MOMO_SECRET_KEY');
-        $redirectUrl = env('MOMO_REDIRECT_URL');
-        $ipnUrl = env('MOMO_IPN_URL');
-        $requestType = env('MOMO_REQUEST_TYPE', 'payWithATM');
+        $perPage = $request->query('per_page', 10);
+        $status = $request->query('status');
 
-        $extraData = "";
-        $requestId = (string) Str::uuid();
-        $orderId = $order->id . '-' . time();
-        $orderInfo = "Thanh toán đơn hàng #{$order->order_number}";
+        $query = Auth::user()->orders()
+            ->with(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
+            ->latest();
 
-        $rawHash = "accessKey={$accessKey}&amount={$amount}&extraData={$extraData}&ipnUrl={$ipnUrl}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$partnerCode}&redirectUrl={$redirectUrl}&requestId={$requestId}&requestType={$requestType}";
-
-        $signature = hash_hmac('sha256', $rawHash, $secretKey);
-
-        $requestData = [
-            'partnerCode' => $partnerCode,
-            'partnerName' => env('APP_NAME'),
-            'storeId' => 'MOMO_STORE',
-            'requestId' => $requestId,
-            'amount' => (string) $amount,
-            'orderId' => $orderId,
-            'orderInfo' => $orderInfo,
-            'redirectUrl' => $redirectUrl,
-            'ipnUrl' => $ipnUrl,
-            'lang' => 'vi',
-            'extraData' => $extraData,
-            'requestType' => $requestType,
-            'signature' => $signature
-        ];
-
-        $momoApiUrl = 'https://test-payment.momo.vn/v2/gateway/api/create';
-        $response = Http::timeout(30)->post($momoApiUrl, $requestData);
-
-        if (!$response->successful()) {
-            throw new \Exception('Lỗi kết nối MOMO API: ' . $response->body());
+        if ($status) {
+            $query->where('status', $status);
         }
 
-        $responseData = $response->json();
-
-        if (!isset($responseData['payUrl'])) {
-            throw new \Exception($responseData['message'] ?? 'Khởi tạo thanh toán MOMO thất bại');
-        }
-
-        return $responseData;
-    }
-
-
-    /**
-     * Xử lý webhook thông báo từ MOMO
-     */
-    public function momoWebhook(Request $request)
-    {
-        $data = $request->all();
-
-        $secretKey = env('MOMO_SECRET_KEY');
-        $accessKey = env('MOMO_ACCESS_KEY');
-
-        // Danh sách các trường cần kiểm tra và xác minh
-        $requiredFields = [
-            'amount', 'message', 'orderId', 'orderInfo',
-            'orderType', 'partnerCode', 'payType', 'requestId',
-            'responseTime', 'resultCode', 'transId', 'signature'
-        ];
-
-        // Kiểm tra thiếu trường
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field])) {
-                Log::error("Thiếu trường {$field} trong dữ liệu MoMo", ['data' => $data]);
-                return response()->json(['message' => "Thiếu trường {$field}"], 400);
-            }
-        }
-
-        // Xử lý extraData rỗng
-        $extraData = $data['extraData'] ?? '';
-
-        // Tạo chuỗi raw hash
-        $rawHash = "accessKey={$accessKey}"
-            . "&amount={$data['amount']}"
-            . "&extraData={$extraData}"
-            . "&message={$data['message']}"
-            . "&orderId={$data['orderId']}"
-            . "&orderInfo={$data['orderInfo']}"
-            . "&orderType={$data['orderType']}"
-            . "&partnerCode={$data['partnerCode']}"
-            . "&payType={$data['payType']}"
-            . "&requestId={$data['requestId']}"
-            . "&responseTime={$data['responseTime']}"
-            . "&resultCode={$data['resultCode']}"
-            . "&transId={$data['transId']}";
-
-        $calculatedSignature = hash_hmac('sha256', $rawHash, $secretKey);
-
-        if ($calculatedSignature !== $data['signature']) {
-            Log::error('Xác minh chữ ký MOMO thất bại', [
-                'calculated' => $calculatedSignature,
-                'received' => $data['signature'],
-                'rawHash' => $rawHash,
-                'data' => $data
-            ]);
-            return response()->json(['message' => 'Chữ ký không hợp lệ'], 403);
-        }
-
-        Log::info('✅ Xác minh chữ ký MOMO thành công');
-
-        // Xử lý đơn hàng
-        $orderParts = explode('-', $data['orderId']);
-        $orderId = $orderParts[0] ?? null;
-
-        if (!$orderId) {
-            Log::error('Không thể trích xuất orderId từ chuỗi', ['orderId_raw' => $data['orderId']]);
-            return response()->json(['message' => 'orderId không hợp lệ'], 400);
-        }
-
-        $order = Order::with(['items.productVariant.stock'])->find($orderId);
-
-        if (!$order) {
-            Log::error('Không tìm thấy đơn hàng', ['order_id' => $orderId]);
-            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
-        }
-
-        DB::beginTransaction();
-
-        try {
-            if ((int)$data['resultCode'] === 0) {
-                // Thanh toán thành công
-                $order->update([
-                    'status' => 'processing',
-                    'payment_status' => 'paid',
-                    'transaction_id' => $data['transId'],
-                ]);
-
-                foreach ($order->items as $item) {
-                    $item->variant->stock()->decrement('quantity', $item->quantity);
-                }
-
-                // Xóa sản phẩm đã mua khỏi giỏ hàng
-                $cart = Cart::where('user_id', $order->user_id)->first();
-                if ($cart) {
-                    foreach ($order->items as $item) {
-                        CartItem::where('cart_id', $cart->id)
-                            ->where('product_variant_id', $item->product_variant_id)
-                            ->where('selected', true)
-                            ->delete();
-                    }
-                }
-                
-                Mail::to($order->customer_email)->queue(new OrderPlaced($order, $order->user));
-
-                DB::commit();
-                return response()->json(['message' => 'Xử lý thanh toán thành công'], 200);
-            } else {
-                // Thanh toán thất bại
-                $order->update([
-                    'status' => 'failed',
-                    'payment_status' => 'failed',
-                ]);
-
-                DB::commit();
-                return response()->json(['message' => 'Thanh toán thất bại'], 400);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Lỗi xử lý webhook MOMO: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['message' => 'Lỗi xử lý webhook'], 500);
-        }
-    }
-
-
-    /**
-     * Xử lý URL trả về từ MOMO
-     */
-    public function momoReturn(Request $request)
-    {
-        $orderId = $request->query('orderId');
-        $resultCode = $request->query('resultCode');
-
-        if (is_null($orderId) || is_null($resultCode)) {
-            return response()->json(['message' => 'Tham số không hợp lệ'], 400);
-        }
-
-        // Trích xuất ID đơn hàng (định dạng: orderId-thời gian)
-        $orderParts = explode('-', $orderId);
-        $orderId = $orderParts[0];
-        $order = Order::find($orderId);
-
-        if (!$order) {
-            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
-        }
-
-        if ((int) $resultCode === 0) {
-            return response()->json([
-                'message' => 'Thanh toán thành công',
-                'data' => [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'status' => $order->status,
-                    'payment_status' => $order->payment_status,
-                ]
-            ]);
-        }
+        $orders = $query->paginate($perPage);
 
         return response()->json([
-            'message' => 'Thanh toán thất bại hoặc đã hủy',
-            'data' => [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'status' => $order->status,
-                'payment_status' => $order->payment_status,
-            ]
-        ], 400);
-
-        // Nếu cần hoàn tiền MOMO, gọi hàm hoàn tiền
-        if ($order->payment_method === 'momo' && $order->payment_status === 'paid') {
-            $refundResponse = $this->refundMomoPayment($order);
-            if (!$refundResponse['success']) {
-                throw new \Exception('Hoàn tiền MOMO thất bại: ' . $refundResponse['message']);
-            }
-        }
+            'message' => 'Orders retrieved successfully',
+            'data' => $orders
+        ]);
     }
 
     /**
-     * Hoàn tiền MOMO
+     * Get order details
      */
-    protected function refundMomoPayment(Order $order, $amount = null)
+    public function show(Order $order)
     {
-        $endpoint = "https://test-payment.momo.vn/v2/gateway/api/refund";
-        $partnerCode = 'MOMOBKUN20180529';
-        $accessKey = 'klm05TvNBzhg7h7j';
-        $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
-        $requestId = Str::uuid();
-        $amount = $amount ?? $order->total;
-
-        $rawHash = "accessKey={$accessKey}&amount={$amount}&orderId={$order->id}&partnerCode={$partnerCode}&requestId={$requestId}";
-        $signature = hash_hmac('sha256', $rawHash, $secretKey);
-
-        $response = Http::post($endpoint, [
-            'partnerCode' => $partnerCode,
-            'orderId' => $order->id,
-            'requestId' => $requestId,
-            'amount' => $amount,
-            'transId' => $order->transaction_id,
-            'signature' => $signature,
-        ]);
-
-        if ($response->successful()) {
-            return ['success' => true];
-        } else {
-            return ['success' => false, 'message' => $response->json()['message'] ?? 'Lỗi không xác định'];
+        if ($order->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
-    }
 
-    public function checkReceivedProduct(Request $request)  // Kiểm tra xem người dùng đã nhận sản phẩm chưa
-    {
-        $productId = $request->query('product_id');
-        $user = auth()->user();
+        $order->load(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
 
-        $hasReceived = OrderItem::where('product_variant_id', $productId)
-            ->whereHas('order', function ($q) use ($user) {
-                $q->where('user_id', $user->id)->where('status', 'delivered');
-            })->exists();
-
-        return response()->json(['received' => $hasReceived]);
+        return response()->json([
+            'message' => 'Order retrieved successfully',
+            'data' => $order
+        ]);
     }
 
     /**
-     * Xử lý hoàn trả đơn hàng
+     * Cancel an order
      */
-    public function returnOrder(Request $request, Order $order)
+    public function cancel(Order $order)
     {
-        $validator = Validator::make($request->all(), [
-            'reason' => 'required|string|max:255',
-            'return_items' => 'required|array|min:1',
-            'return_items.*.order_item_id' => 'required|exists:order_items,id',
-            'return_items.*.quantity' => 'required|integer|min:1',
-            'refund_amount' => 'nullable|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        if ($order->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Kiểm tra quyền (chỉ admin hoặc user sở hữu đơn hàng)
-        if ($order->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            return response()->json(['message' => 'Không có quyền truy cập'], 403);
-        }
-
-        // Chỉ cho phép hoàn trả đơn hàng đã giao
-        if ($order->status !== 'completed') {
-            return response()->json(['message' => 'Chỉ có thể hoàn trả đơn hàng đã giao'], 400);
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return response()->json(['message' => 'Order cannot be cancelled in its current state'], 400);
         }
 
         DB::beginTransaction();
 
         try {
-            // Cập nhật số lượng hoàn trả và lý do
-            foreach ($request->return_items as $returnItem) {
-                $orderItem = OrderItem::find($returnItem['order_item_id']);
-
-                // Kiểm tra số lượng hợp lệ
-                if ($returnItem['quantity'] > $orderItem->quantity) {
-                    throw new \Exception("Số lượng hoàn trả vượt quá số lượng đã mua");
+            // Restock items if payment was made or COD
+            if ($order->payment_status === 'paid' || $order->payment_method === 'cod') {
+                foreach ($order->items as $item) {
+                    $variant = $item->productVariant;
+                    if ($variant && $variant->stock) {
+                        $variant->stock()->increment('quantity', $item->quantity);
+                    }
                 }
-
-                // Hoàn lại tồn kho
-                $orderItem->productVariant->stock()->increment('quantity', $returnItem['quantity']);
-
-                // Đánh dấu sản phẩm đã hoàn trả
-                $orderItem->update([
-                    'returned_quantity' => $returnItem['quantity'],
-                    'return_reason' => $request->reason,
-                ]);
             }
 
-            // Cập nhật trạng thái đơn hàng
             $order->update([
-                'status' => 'returned',
-                'refund_amount' => $request->refund_amount ?? $order->total,
+                'status' => 'cancelled',
+                'payment_status' => ($order->payment_status === 'paid') ? 'refunded' : 'cancelled',
             ]);
 
-            // Nếu cần hoàn tiền (MOMO/VNPay)
-            if ($order->payment_method !== 'cod' && $order->payment_status === 'paid') {
-                $refundResponse = $this->refundPayment($order, $request->refund_amount);
-                if (!$refundResponse['success']) {
-                    throw new \Exception('Hoàn tiền thất bại: ' . $refundResponse['message']);
-                }
-            }
-
             DB::commit();
-
-            return response()->json(['message' => 'Yêu cầu hoàn trả thành công']);
+            return response()->json(['message' => 'Order cancelled successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Lỗi hoàn trả đơn hàng: ' . $e->getMessage());
-            return response()->json(['message' => 'Lỗi khi xử lý hoàn trả'], 500);
+            Log::error('Order cancellation error: ' . $e->getMessage());
+            return response()->json(['message' => 'Order cancellation failed'], 500);
         }
     }
 
+    /**
+     * Confirm order received
+     */
     public function confirmReceived($orderId)
     {
         $order = Order::where('id', $orderId)
@@ -913,40 +357,42 @@ class OrderController extends Controller
             ->firstOrFail();
 
         if ($order->status !== 'shipped') {
-            return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
+            return response()->json(['message' => 'Order cannot be confirmed in its current state'], 400);
         }
 
         $order->status = 'delivered';
         $order->delivered_at = now();
 
-        // ✅ Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {
             $order->payment_status = 'paid';
         }
 
         $order->save();
 
-        return response()->json(['message' => 'Đã xác nhận nhận hàng thành công']);
+        return response()->json(['message' => 'Order received confirmed']);
     }
 
-    // Yêu cầu trả hàng
-
-    public function requestReturn(Request $request, $id)
+    /**
+     * Handle MOMO webhook
+     */
+    public function momoWebhook(Request $request)
     {
-        $order = Order::findOrFail($id);
+        $paymentService = PaymentServiceFactory::create('momo');
+        $result = $paymentService->handleWebhook($request->all());
 
-        if ($order->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Không có quyền truy cập'], 403);
-        }
+        $status = $result['success'] ? 200 : 400;
+        return response()->json(['message' => $result['message']], $status);
+    }
 
-        $request->validate([
-            'reason' => 'required|string|max:255',
-        ]);
+    /**
+     * Handle VNPay IPN
+     */
+    public function vnpayIpn(Request $request)
+    {
+        $paymentService = PaymentServiceFactory::create('vnpay');
+        $result = $paymentService->handleWebhook($request->all());
 
-        $order->status = 'return_requested';
-        $order->return_reason = $request->input('reason');
-        $order->save();
-
-        return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+        $rspCode = $result['success'] ? '00' : '99';
+        return response()->json(['RspCode' => $rspCode, 'Message' => $result['message']]);
     }
 }

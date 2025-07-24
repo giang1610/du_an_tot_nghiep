@@ -20,16 +20,16 @@ use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\Auth\ChangePasswordController;
 
+use App\Http\Controllers\Api\Auth\GetUserController;
+
+
 // route chat
 use App\Http\Controllers\Api\Chat\ChatController;
 
 
 
 
-// User info
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
 
 // ========== PUBLIC ROUTES ========== //
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
@@ -76,6 +76,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', fn(Request $request) => $request->user());
 
+    Route::get('user', [GetUserController::class, 'getUser']);
+
     // Reviews
     // Gửi đánh giá
     Route::post('/reviews', [ReviewController::class, 'store']);
@@ -121,6 +123,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment Momo
     Route::prefix('payment')->group(function () {
         Route::post('/momo', [OrderController::class, 'processMomoPayment']);
+        Route::post('/vnpay', [OrderController::class, 'processVnpayPayment']);
     });
 
     
@@ -133,8 +136,21 @@ Route::middleware('auth:sanctum')->group(function() {
 });
 
 Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
+Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);
 
-// VNPay payment
-Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
-Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
+Route::middleware('auth:sanctum')->post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
+Route::middleware('auth:sanctum')->post('/vouchers/apply', [VoucherController::class, 'apply']);
+
+
+// // Các route thanh toán
+// Route::post('/orders/checkout', [OrderController::class, 'checkout']);
+// Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']);
+// Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
+// Route::post('/payment/vnpay/ipn', [OrderController::class, 'vnpayIpn']);
+// Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
+
+// // Các route order khác
+// Route::apiResource('orders', OrderController::class)->except(['store', 'update', 'destroy']);
+// Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
+// Route::post('/orders/{order}/return', [OrderController::class, 'returnOrder']);
+// Route::post('/orders/{order}/confirm-received', [OrderController::class, 'confirmReceived']);

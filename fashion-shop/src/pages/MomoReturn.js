@@ -6,7 +6,7 @@ const MomoReturn = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [message, setMessage] = useState('Đang xác minh kết quả...');
-  const [order] = useState(null);
+  const [order, setOrder] = useState(null); // ✅ đúng
   const [loading, setLoading] = useState(true);
 
  useEffect(() => {
@@ -32,6 +32,7 @@ const MomoReturn = () => {
       if (isMounted) {
         const msg = res.data.message || 'Xác minh thành công.';
         setMessage(msg);
+        setOrder(res.data.order); 
 
         if (res.data.success && resultCode === '0') {
           // Đợi 2s rồi chuyển hướng
@@ -96,7 +97,7 @@ const MomoReturn = () => {
                     order.items.map((item, idx) => (
                       <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                          <strong>{item.product_name}</strong>
+                          <strong>{item.product_variant?.product?.name}</strong>
                           <div className="text-muted" style={{fontSize: '0.95em'}}>
                             {item.variant_name && <span>Phân loại: {item.variant_name}</span>}
                           </div>

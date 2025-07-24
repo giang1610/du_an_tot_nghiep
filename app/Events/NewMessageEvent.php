@@ -13,11 +13,18 @@ class NewMessageEvent implements ShouldBroadcastNow
 
     public $message;
     public $userId;
+    public $sender;
+    public $avatar;
 
-    public function __construct($message, $userId)
+
+    
+
+    public function __construct($message, $userId,$sender, $avatar)
     {
         $this->message = $message;
         $this->userId = $userId;
+        $this->sender = $sender;
+        $this->avatar = $avatar; 
     }
 
     public function broadcastOn(): Channel
@@ -33,7 +40,9 @@ class NewMessageEvent implements ShouldBroadcastNow
     {
         return [
             'message' => $this->message,
-            'user_id' => $this->userId, 
+            'user_id' => $this->userId,
+            'sender' => $this->sender,
+            'avatar' => $this->avatar,
             'id' => now()->timestamp, 
         ];
     }

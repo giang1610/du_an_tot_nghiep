@@ -2,10 +2,11 @@
 
 @section('content')
 <div class="container-fluid px-0 px-md-3">
-    <nav aria-label="breadcrumb" class="mt-2">
+    <nav aria-label="breadcrumb" class="mt-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
-            <li class="breadcrumb-item active" aria-current="page"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('orders.returned') }}" style="text-decoration: none">Đã trả hàng</a></li>
         </ol>
     </nav>
 
@@ -31,28 +32,6 @@
                         <input type="text" name="search" id="search" class="form-control" placeholder="Mã đơn, tên KH..."
                             value="{{ request('search') }}">
                     </div>
-                </div>
-
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label for="status" class="form-label">Trạng thái</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">Tất cả</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
-                        <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                        <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
-                        <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
-                        <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                        <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Giao hàng thất bại</option>
-                        <option value="failed_1" {{ request('status') == 'failed_1' ? 'selected' : '' }}>Giao hàng thất bại lần 1</option>
-                        <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
-                        <option value="returning" {{ request('status') == 'returning' ? 'selected' : '' }}>Đang trả hàng</option>
-                        <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Yêu cầu trả hàng</option>
-                        <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
-                        
-                        
-                    </select>
                 </div>
 
                 <div class="col-6 col-md-3 col-lg-2">
@@ -115,7 +94,7 @@
                             <th>Sản phẩm</th>
                             <th>Địa chỉ</th>
                             <th>Tổng tiền</th>
-                            <th>PTTT & TTTT</th>
+                            <th>Phương thức & Trạng thái</th>
                             <th>TT giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
@@ -163,7 +142,7 @@
                                     <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 10) }}</div>
                                 </div>
                             </td>
-                              <td >
+                              <td>
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">
@@ -227,11 +206,11 @@
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
                                 </span>
                                 @break
-                                {{-- @case('delivered')
+                                @case('delivered')
                                 <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i> Hoàn thành
+                                    <i class="fas fa-check-circle me-1"></i> Đã nhận hàng
                                 </span>
-                                @break --}}
+                                @break
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành
@@ -371,7 +350,7 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
-                                
+
                             </div>
                         </div>
                         <div class="card-body">
@@ -456,7 +435,6 @@
                                     class="btn btn-sm btn-outline-primary flex-grow-1">
                                     <i class="fas fa-eye me-1"></i> Chi tiết
                                 </a>
-                                
                                 @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
                                 <a href="{{ route('orders.edit', $order->id) }}"
                                     class="btn btn-sm btn-outline-success flex-grow-1">
