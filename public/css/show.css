@@ -13,13 +13,11 @@
 .chat-message.user {
     flex-direction: row;  
      text-align: left;
-    
-
 }
 
 .chat-message.admin {
     flex-direction: row-reverse;
-    /* text-align: right; */
+    text-align: right;
 }
 
 
