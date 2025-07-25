@@ -70,6 +70,7 @@ export default function MyOrdersPage() {
     const [returnMedia, setReturnMedia] = useState([]);
     const [returnOrderId, setReturnOrderId] = useState(null);
     const [returnLoading, setReturnLoading] = useState(false);
+    const [returnMediaPreviews, setReturnMediaPreviews] = useState([]);
 
 
     useEffect(() => {
@@ -236,6 +237,13 @@ export default function MyOrdersPage() {
             alert('Không thể hủy đơn hàng. Vui lòng thử lại.');
         }
     };
+
+    // Hoàn đơn
+const handleReturnMediaChange = (e) => {
+    const files = Array.from(e.target.files);
+    setReturnMedia(files);
+    setReturnMediaPreviews(files.map(file => URL.createObjectURL(file)));
+};
 
     const handleReturnOrder = async (orderId) => {
         if (!window.confirm('Bạn xác nhận muốn hoàn hàng đơn này?')) return;
@@ -423,16 +431,57 @@ export default function MyOrdersPage() {
                 </Modal.Header>
                 <Modal.Body>
                     <Form.Group className="mt-2">
-                        <Form.Label>Ảnh/Video sản phẩm lỗi</Form.Label>
-                        <Form.Control
-                            type="file"
-                            accept="image/*,video/*"
-                            multiple
-                            onChange={e => {
-                                setReturnMedia(prev => [...(Array.isArray(prev) ? prev : []), ...Array.from(e.target.files)]);
-                            }}
-                        />
-                    </Form.Group>
+    <Form.Label>Ảnh/Video sản phẩm lỗi</Form.Label>
+    <Form.Control
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        onChange={handleReturnMediaChange}
+    />
+    <div className="d-flex flex-wrap gap-2 mt-2">
+    {returnMediaPreviews.map((url, idx) => {
+        const file = returnMedia[idx];
+        if (!file) return null; // Fix lỗi undefined
+        return file.type && file.type.startsWith('image/')
+            ? (
+                <div key={idx} style={{ position: 'relative' }}>
+                    <img
+                        src={url}
+                        alt="preview"
+                        style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                    />
+                    <Button
+                        size="sm"
+                        variant="outline-danger"
+                        style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                        onClick={() => {
+                            setReturnMedia(prev => prev.filter((_, i) => i !== idx));
+                            setReturnMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                    >X</Button>
+                </div>
+            )
+            : (
+                <div key={idx} style={{ position: 'relative' }}>
+                    <video
+                        src={url}
+                        controls
+                        style={{ width: 120, height: 120, borderRadius: 8, border: '1px solid #ddd' }}
+                    />
+                    <Button
+                        size="sm"
+                        variant="outline-danger"
+                        style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                        onClick={() => {
+                            setReturnMedia(prev => prev.filter((_, i) => i !== idx));
+                            setReturnMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                    >X</Button>
+                </div>
+            );
+    })}
+</div>
+</Form.Group>
                     <Form.Group>
                         <Form.Label>Lý do hoàn đơn</Form.Label>
                         <Form.Control
