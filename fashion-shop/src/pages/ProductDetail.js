@@ -187,7 +187,7 @@ export default function ProductDetail() {
       color_id: selectedVariant.color?.id,
     };
 
-    localStorage.setItem('buy_now', JSON.stringify(item));
+    localStorage.setItem('buy_now', JSON.stringify([item]));
     navigate('/checkout?buy_now=1');
   };
 

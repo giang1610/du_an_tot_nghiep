@@ -25,6 +25,7 @@ import ProductReview from './components/ProductReview';
 import ChatApp from './components/ChatApp';
 
 
+
 function App() {
   return (
     <Router>
@@ -42,6 +43,7 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
 
         {/* Thanh toán momo */}
+        {/* <Route path="payment/momo" element={<MomoPayment />} /> */}
         <Route path="/momo-return" element={<MomoReturn />} />
         
         {/* Đăng ký,đăng nhập */}

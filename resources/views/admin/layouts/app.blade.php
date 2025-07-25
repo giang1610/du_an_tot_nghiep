@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
- 
+
   <!-- linkcss Notification -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
 
@@ -147,7 +147,7 @@
         <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
         <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
         <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
-      
+
     </li>
 
     <!-- Đơn hàng
@@ -195,7 +195,7 @@
 
     <div class="d-flex align-items-center gap-3">
       <button id="darkModeToggle" class="btn btn-icon"><i class="bi bi-moon"></i></button>
-       
+
       <!-- Thông báo -->
        <x-notification/>
 

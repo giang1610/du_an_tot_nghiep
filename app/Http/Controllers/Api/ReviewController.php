@@ -18,6 +18,8 @@ class ReviewController extends Controller
             'product_variant_id' => 'required|exists:product_variants,id',
             'rating' => 'required|integer|min:1|max:5',
             'content' => 'nullable|string',
+            'media' => 'nullable',
+            'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB mỗi file
         ]);
 
         $user = auth()->user();
@@ -29,7 +31,7 @@ class ReviewController extends Controller
         }
 
         // Kiểm tra trạng thái đơn hàng
-        if ($order->status !== 'delivered') {
+        if ($order->status !== 'completed') {
             return response()->json(['error' => 'Chỉ có thể đánh giá khi đơn đã được nhận.'], 400);
         }
 
@@ -49,15 +51,22 @@ class ReviewController extends Controller
 
         // Nếu là lần 2 thì kiểm tra ngày giao hàng >= 7 ngày
         if ($reviewRound === 2) {
-            if (empty($order->delivered_at)) {
+            if (empty($order->completed_at)) {
                 return response()->json(['error' => 'Không xác định được ngày giao hàng.'], 400);
             }
-            if (Carbon::parse($order->delivered_at)->diffInDays(now()) < 7) {
+            if (Carbon::parse($order->completed_at)->diffInDays(now()) < 7) {
                 return response()->json(['error' => 'Bạn chỉ có thể đánh giá lần 2 sau 7 ngày kể từ ngày giao hàng.'], 400);
             }
         }
 
-        // Tạo review
+        $mediaPaths = [];
+            if ($request->hasFile('media')) {
+                foreach ($request->file('media') as $file) {
+                    $mediaPaths[] = $file->store('reviews', 'public');
+                }
+        }
+
+            // Tạo đánh giá
         $review = Review::create([
             'user_id' => $user->id,
             'order_id' => $order->id,
@@ -65,6 +74,7 @@ class ReviewController extends Controller
             'review_round' => $reviewRound,
             'rating' => $request->rating,
             'content' => $request->content,
+            'media' => json_encode($mediaPaths),
         ]);
 
         return response()->json(['message' => 'Đánh giá thành công', 'review' => $review], 201);
@@ -82,13 +92,15 @@ class ReviewController extends Controller
 
         return response()->json(['success' => true, 'data' => $reviews]);
     }
+
+    // Lấy danh sách đánh giá cho 1 variant cụ thể
     public function receivedOrders(Request $request)
 {
     $user = $request->user();
     $variantId = $request->query('product_variant_id');
 
     $order = Order::where('user_id', $user->id)
-        ->where('status', 'delivered')
+        ->where('status', 'completed')
         ->whereHas('items', fn($q) => $q->where('product_variant_id', $variantId))
         ->latest()->first();
 

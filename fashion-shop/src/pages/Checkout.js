@@ -54,14 +54,18 @@ export default function Checkout() {
     if (!isBuyNow) return null;
     try {
       const item = localStorage.getItem('buy_now');
-      return item ? JSON.parse(item) : null;
+      if (!item) return null;
+      const parsed = JSON.parse(item);
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && typeof parsed === 'object') return [parsed];
+      return null;
     } catch {
       return null;
     }
   }, [isBuyNow]);
 
   const selectedItems = useMemo(() => {
-    if (isBuyNow) return buyNowItem ? [buyNowItem] : [];
+    if (isBuyNow) return buyNowItem || [];
     return Array.isArray(cart) ? cart.filter(item => item.selected) : [];
   }, [isBuyNow, buyNowItem, cart]);
 
@@ -166,12 +170,14 @@ export default function Checkout() {
 
     const token = localStorage.getItem('token') || user?.token;
     if (!token) return setError('Bạn cần đăng nhập để đặt hàng.');
+    // Log selectedItems để debug
+    console.log('selectedItems:', selectedItems);
     if (selectedItems.length === 0) return setError('Không có sản phẩm nào để đặt hàng.');
 
     const itemsPayload = selectedItems.map(item => ({
       product_variant_id: item.product_variant_id || item.variant_id,
       quantity: item.quantity,
-      price: item.price,
+      price: Number(item.price),
       size_id: item.size_id || null,
       color_id: item.color_id || null,
     }));
@@ -196,6 +202,9 @@ export default function Checkout() {
       }
     };
 
+    // Thêm log payload để debug
+    console.log('Payload gửi lên backend:', payload);
+
     try {
       setLoading(true);
 
@@ -203,8 +212,11 @@ export default function Checkout() {
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/payment/momo`,
           payload,
+          
           { headers: { Authorization: `Bearer ${token}` } }
+          
         );
+        
         if (data?.data?.payment_url) {
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
@@ -235,7 +247,11 @@ export default function Checkout() {
         setTimeout(() => navigate('/orders'), 3000);
       }
     } catch (error) {
+      // Log chi tiết lỗi trả về từ backend
       console.error('❌ Lỗi:', error);
+      if (error.response) {
+        console.log('Lỗi chi tiết từ backend:', error.response.data);
+      }
       setError('Đặt hàng thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);

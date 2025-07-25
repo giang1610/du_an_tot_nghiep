@@ -35,7 +35,6 @@ use App\Http\Controllers\Api\Chat\ChatController;
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1');
-
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:5,1');
 
 
@@ -121,19 +120,23 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment Momo
     Route::prefix('payment')->group(function () {
         Route::post('/momo', [OrderController::class, 'processMomoPayment']);
-        Route::post('/vnpay', [OrderController::class, 'processVnpayPayment']);
+        Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
     });
+
+    // Các route khác: logout, cart, review...
+
 });
 
 
+// VNPay payment
+Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
+Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
+
 Route::middleware('auth:sanctum')->prefix('vouchers')->group(function () {
-      Route::get('/', [VoucherController::class, 'index']);
+    Route::get('/', [VoucherController::class, 'index']);
     Route::post('/validate', [VoucherController::class, 'validateVoucher']);
     Route::get('/my', [VoucherController::class, 'getUserVouchers']);
     Route::post('/apply', [VoucherController::class, 'apply']);
     Route::post('/suggest', [VoucherController::class, 'suggest']);
 });
-
-
-Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);

@@ -13,10 +13,10 @@ class AutoCompleteOrders extends Command
 
     public function handle()
     {
-        // Đơn hàng delivered > 3 ngày, không có yêu cầu hoàn hàng
-        $deliveredOrders = Order::where('status', 'delivered')
-            ->whereNotNull('delivered_at')
-            ->where('delivered_at', '<=', Carbon::now()->subDays(3))
+        // Đơn hàng completed > 3 ngày, không có yêu cầu hoàn hàng
+        $completedOr = Order::where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->where('completed_at', '<=', Carbon::now()->subDays(3))
             ->get();
 
         // Đơn hàng returned > 3 ngày
@@ -27,7 +27,7 @@ class AutoCompleteOrders extends Command
 
         $count = 0;
 
-        foreach ($deliveredOrders as $order) {
+        foreach ($completedOr as $order) {
             $order->status = 'completed';
             $order->completed_at = now();
             $order->save();

@@ -1,13 +1,13 @@
 <?php
 
 namespace App\Models;
-    
+
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\ProductVariant;
 /**
- * 
+ *
  *
  * @property int $id
  * @property int $user_id
@@ -44,6 +44,7 @@ class Review extends Model
         'review_round',
         'rating',
         'content',
+        'media',
     ];
 
     public function user() {
