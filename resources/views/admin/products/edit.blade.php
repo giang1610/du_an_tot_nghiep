@@ -59,7 +59,7 @@
                     
                     <div class="col-6">
                         <label for="price_products" class="form-label fw-medium">Giá sản phẩm</label>
-                        <input type="number" name="price_products" id="price_products" class="form-control" placeholder="Nhập giá sản phẩm" value="{{ old('price_products', $product->price_products) }}">
+                        <input type="number" name="price_products" id="price_products" class="form-control" placeholder="Nhập giá sản phẩm" value="{{ old('price_products', number_format($product->price_products, 0, ',', '.') ) }}" >
                         @error('price_products')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -218,7 +218,7 @@
                             <div class="col-md-6">
                                 <label class="form-label small">Giá</label>
                                 <input type="number" name="variants[{{ $i }}][price]" class="form-control form-control-sm" 
-                                       value="{{ old('variants.'.$i.'.price', $variant['price'] ?? '') }}">
+                                       value="{{ old('variants.'.$i.'.price', number_format($variant['price'], 0, ',', '.')  ?? '') }}">
                                 @error('variants.'.$i.'.price')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror

@@ -1270,8 +1270,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'delivered'; // Đã nhận hàng (coi là hoàn thành)
-        $order->delivered_at = now();
+        $order->status = 'completed'; // Đã nhận hàng (coi là hoàn thành)
+        $order->completed_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {
@@ -1294,7 +1294,8 @@ public function requestReturn(Request $request, $id)
 
     $request->validate([
         'reason' => 'required|string|max:255',
-        'media' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB
+        'media' => 'nullable', // Có thể là ảnh hoặc video
+        'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Tối đa 10MB
     ]);
 
     if ($order->status !== 'shipped') {
@@ -1305,10 +1306,13 @@ public function requestReturn(Request $request, $id)
     $order->return_reason = $request->input('reason');
     $order->return_requested_at = now();
 
-    // Xử lý file upload
+    // Xử lý nhiều file upload
+    $mediaPaths = [];
     if ($request->hasFile('media')) {
-        $path = $request->file('media')->store('returns', 'public');
-        $order->return_media = $path;
+        foreach ($request->file('media') as $file) {
+            $mediaPaths[] = $file->store('returns', 'public');
+        }
+        $order->return_media = json_encode($mediaPaths);
     }
 
     $order->save();
@@ -1361,7 +1365,7 @@ public function requestReturn(Request $request, $id)
                 'voucher' => $voucher,
                 'discount_amount' => $discountAmount
             ];
-            
+
         } catch (\Exception $e) {
             Log::error('Voucher validation error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Lỗi khi kiểm tra voucher'];
