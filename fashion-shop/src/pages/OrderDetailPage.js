@@ -80,6 +80,7 @@ export default function OrderDetailPage() {
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
+
     useEffect(() => {
         const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
             if (Number(orderIdFromSocket) === Number(id)) {
@@ -287,26 +288,41 @@ export default function OrderDetailPage() {
                                     <strong>Lý do hoàn đơn:</strong><br />
                                     <span className="border rounded d-block p-2 bg-light">{order.return_reason}</span>
                                     {/* Hiển thị ảnh/video minh chứng nếu có */}
-                                    {order.return_media && (
-                                        <div className="mt-2">
-                                            {/\.(jpg|jpeg|png)$/i.test(order.return_media)
-                                                ? (
-                                                    <img
-                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
-                                                        alt="Ảnh minh chứng hoàn đơn"
-                                                        style={{ maxWidth: 150, borderRadius: 8 }}
-                                                    />
-                                                )
-                                                : (
-                                                    <video
-                                                        src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${order.return_media}`}
-                                                        controls
-                                                        style={{ maxWidth: 150, borderRadius: 8 }}
-                                                    />
-                                                )
-                                            }
-                                        </div>
-                                    )}
+                                    {order.return_media && (() => {
+                                        let mediaList = [];
+                                        try {
+                                            // Nếu backend trả về JSON string, parse ra mảng
+                                            mediaList = Array.isArray(order.return_media)
+                                                ? order.return_media
+                                                : JSON.parse(order.return_media);
+                                        } catch {
+                                            // Nếu lỗi parse, fallback về mảng rỗng
+                                            mediaList = [];
+                                        }
+                                        return (
+                                            <div className="mt-2 d-flex flex-wrap gap-2">
+                                                {mediaList.map((path, idx) =>
+                                                    /\.(jpg|jpeg|png)$/i.test(path)
+                                                        ? (
+                                                            <img
+                                                                key={idx}
+                                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                alt="Ảnh minh chứng hoàn đơn"
+                                                                style={{ maxWidth: 150, borderRadius: 8 }}
+                                                            />
+                                                        )
+                                                        : (
+                                                            <video
+                                                                key={idx}
+                                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                controls
+                                                                style={{ maxWidth: 150, borderRadius: 8 }}
+                                                            />
+                                                        )
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                 </p>
                             )}
                         </Card.Body>
@@ -351,6 +367,39 @@ export default function OrderDetailPage() {
                                                         {reviews.map(r => (
                                                             <div key={r.id} className="border rounded mb-1 p-1">
                                                                 {'★'.repeat(r.rating)} - {r.content}
+                                                                {r.media && (() => {
+                                                                    let mediaList = [];
+                                                                    try {
+                                                                        mediaList = Array.isArray(r.media) ? r.media : JSON.parse(r.media);
+                                                                    } catch {
+                                                                        mediaList = [];
+                                                                    }
+                                                                    return (
+                                                                        <div className="mt-2 d-flex flex-wrap gap-2">
+                                                                            {mediaList.map((path, idx) =>
+                                                                                /\.(jpg|jpeg|png)$/i.test(path)
+                                                                                    ? (
+                                                                                        <img
+                                                                                            key={`review-media-${r.id}-${idx}`}
+                                                                                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                                            alt="Ảnh đánh giá"
+                                                                                            width={120}
+                                                                                            style={{ borderRadius: 8 }}
+                                                                                        />
+                                                                                    )
+                                                                                    : (
+                                                                                        <video
+                                                                                            key={`review-media-${r.id}-${idx}`}
+                                                                                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                                            controls
+                                                                                            width={180}
+                                                                                            style={{ borderRadius: 8 }}
+                                                                                        />
+                                                                                    )
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         ))}
                                                         {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
@@ -399,9 +448,10 @@ export default function OrderDetailPage() {
 
                         <p className="mt-3 mb-0">
                             <strong>Thanh toán:</strong>{' '}
-                            <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
-                                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                            <Badge bg={paymentStatusBadgeVariant[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'secondary'}>
+                                {PAYMENT_STATUS_LABELS[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'Không rõ'}
                             </Badge>
+
                         </p>
                         {order.status === 'pending' && (
                             <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)}>
@@ -447,6 +497,17 @@ export default function OrderDetailPage() {
                     <Form.Group className="mb-3">
                         <Form.Label>Đánh giá sao</Form.Label>
                         <InteractiveStarRating rating={reviewRating} onChange={setReviewRating} />
+                    </Form.Group>
+                    <Form.Group className="mt-2">
+                        <Form.Label>Ảnh/Video sản phẩm</Form.Label>
+                        <Form.Control
+                            type="file"
+                            accept="image/*,video/*"
+                            multiple
+                            onChange={e => {
+                                setReviewMedia(prev => [...(Array.isArray(prev) ? prev : []), ...Array.from(e.target.files)]);
+                            }}
+                        />
                     </Form.Group>
                     <Form.Group className="mt-2">
                         <Form.Label>Nội dung</Form.Label>

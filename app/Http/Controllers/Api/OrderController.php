@@ -102,6 +102,7 @@ class OrderController extends Controller
                 ]);
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
+
             }
 
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
@@ -223,38 +224,32 @@ class OrderController extends Controller
      */
     public function checkout(Request $request)
     {
-
         $user = auth()->user();
 
-        // Nếu request có items truyền lên (từ buy now), dùng luôn
-        if ($request->has('items') && is_array($request->items) && count($request->items) > 0) {
-            $items = $request->items;
-        } else {
-            // Lấy cart của user
-            $cart = Cart::where('user_id', $user->id)->first();
+         // Lấy cart của user
+        $cart = Cart::where('user_id', $user->id)->first();
 
-            if (!$cart) {
-                return response()->json(['message' => 'Không tìm thấy giỏ hàng.'], 404);
-            }
-
-            // Lấy các sản phẩm được chọn để mua (selected = 1)
-            $cartItems = CartItem::with('productVariant')
-                ->where('cart_id', $cart->id)
-                ->where('selected', true)
-                ->get();
-
-            if ($cartItems->isEmpty()) {
-                return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
-            }
-
-            // Tạo mảng items cho đơn hàng từ cartItems
-            $items = $cartItems->map(function ($item) {
-                return [
-                    'product_variant_id' => $item->product_variant_id,
-                    'quantity' => $item->quantity,
-                ];
-            })->toArray();
+        if (!$cart) {
+            return response()->json(['message' => 'Không tìm thấy giỏ hàng.'], 404);
         }
+
+        // Lấy các sản phẩm được chọn để mua (selected = 1)
+        $cartItems = CartItem::with('productVariant')
+            ->where('cart_id', $cart->id)
+            ->where('selected', true)
+            ->get();
+
+        if ($cartItems->isEmpty()) {
+            return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
+        }
+
+        // Tạo mảng items cho đơn hàng từ cartItems
+        $items = $cartItems->map(function($item) {
+            return [
+                'product_variant_id' => $item->product_variant_id,
+                'quantity' => $item->quantity,
+            ];
+        })->toArray();
 
         // Gán lại vào $request để dùng chung validate và xử lý phía dưới
         $request->merge(['items' => $items]);
@@ -510,7 +505,7 @@ class OrderController extends Controller
             ]);
 
             // Lấy giỏ hàng và chỉ lấy item selected = 1
-            $cart = Cart::with(['items' => function ($q) {
+            $cart = Cart::with(['items' => function($q) {
                 $q->where('selected', true);
             }, 'items.variant'])->where('user_id', $user->id)->first();
 
@@ -645,18 +640,9 @@ class OrderController extends Controller
 
         // Danh sách các trường cần kiểm tra và xác minh
         $requiredFields = [
-            'amount',
-            'message',
-            'orderId',
-            'orderInfo',
-            'orderType',
-            'partnerCode',
-            'payType',
-            'requestId',
-            'responseTime',
-            'resultCode',
-            'transId',
-            'signature'
+            'amount', 'message', 'orderId', 'orderInfo',
+            'orderType', 'partnerCode', 'payType', 'requestId',
+            'responseTime', 'resultCode', 'transId', 'signature'
         ];
 
         // Kiểm tra thiếu trường
@@ -1187,9 +1173,6 @@ class OrderController extends Controller
         }
     }
 
-    // ...existing code...
-
-    // ...existing code...
     public function checkReceivedProduct(Request $request)  // Kiểm tra xem người dùng đã nhận sản phẩm chưa
     {
         $productId = $request->query('product_id');
@@ -1197,7 +1180,7 @@ class OrderController extends Controller
 
         $hasReceived = OrderItem::where('product_variant_id', $productId)
             ->whereHas('order', function ($q) use ($user) {
-                $q->where('user_id', $user->id)->where('status', 'completed');
+                $q->where('user_id', $user->id)->where('status', 'delivered');
             })->exists();
 
         return response()->json(['received' => $hasReceived]);
@@ -1252,19 +1235,91 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Cập nhật trạng thái đơn hàng nếu cần
-            // $order->status = 'return_requested';
-            // $order->save();
+            // Cập nhật trạng thái đơn hàng
+            $order->update([
+                'status' => 'returned',
+                'refund_amount' => $request->refund_amount ?? $order->total,
+            ]);
+
+            // Nếu cần hoàn tiền (MOMO/VNPay)
+            if ($order->payment_method !== 'cod' && $order->payment_status === 'paid') {
+                $refundResponse = $this->refundPayment($order, $request->refund_amount);
+                if (!$refundResponse['success']) {
+                    throw new \Exception('Hoàn tiền thất bại: ' . $refundResponse['message']);
+                }
+            }
 
             DB::commit();
-            return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+
+            return response()->json(['message' => 'Yêu cầu hoàn trả thành công']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Lỗi khi xử lý hoàn hàng', 'error' => $e->getMessage()], 500);
+            Log::error('Lỗi hoàn trả đơn hàng: ' . $e->getMessage());
+            return response()->json(['message' => 'Lỗi khi xử lý hoàn trả'], 500);
         }
     }
 
-    /**
+    public function confirmReceived($orderId)
+    {
+        $order = Order::where('id', $orderId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        // Chỉ cho phép xác nhận khi trạng thái là 'shipped'
+        if ($order->status !== 'shipped') {
+            return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
+        }
+
+        $order->status = 'completed'; // Đã nhận hàng (coi là hoàn thành)
+        $order->completed_at = now();
+
+        // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
+        if ($order->payment_method === 'cod') {
+            $order->payment_status = 'paid';
+        }
+
+        $order->save();
+
+        return response()->json(['message' => 'Đã xác nhận nhận hàng thành công']);
+    }
+
+    // Yêu cầu trả hàng
+public function requestReturn(Request $request, $id)
+{
+    $order = Order::findOrFail($id);
+
+    if ($order->user_id !== auth()->id()) {
+        return response()->json(['message' => 'Không có quyền truy cập'], 403);
+    }
+
+    $request->validate([
+        'reason' => 'required|string|max:255',
+        'media' => 'nullable', // Có thể là ảnh hoặc video
+        'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Tối đa 10MB
+    ]);
+
+    if ($order->status !== 'shipped') {
+        return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng'], 400);
+    }
+
+    $order->status = 'return_requested';
+    $order->return_reason = $request->input('reason');
+    $order->return_requested_at = now();
+
+    // Xử lý nhiều file upload
+    $mediaPaths = [];
+    if ($request->hasFile('media')) {
+        foreach ($request->file('media') as $file) {
+            $mediaPaths[] = $file->store('returns', 'public');
+        }
+        $order->return_media = json_encode($mediaPaths);
+    }
+
+    $order->save();
+
+    return response()->json(['message' => 'Yêu cầu hoàn hàng đã được gửi!']);
+}
+/**
      * Kiểm tra và áp dụng voucher
      */
     protected function validateAndApplyVoucher($voucherCode, $user, $subtotal)
@@ -1310,7 +1365,7 @@ class OrderController extends Controller
                 'voucher' => $voucher,
                 'discount_amount' => $discountAmount
             ];
-            
+
         } catch (\Exception $e) {
             Log::error('Voucher validation error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Lỗi khi kiểm tra voucher'];
