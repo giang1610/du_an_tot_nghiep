@@ -147,7 +147,21 @@
         <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
         <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
         <a href="{{ route('orders.shipped') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã giao hàng</a>
-
+        <a href="{{ route('orders.completed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Hoàn thành</a>
+        <a href="{{ route('orders.failed') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Giao hàng thất bại</a>
+        <a href="{{ route('orders.returning') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang trả hàng</a>
+        <a href="{{ route('orders.return_requested') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Yêu cầu trả hàng</a>
+        <a href="{{ route('orders.returned') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã trả hàng</a>
+    </li>
+    <!-- Khuyến mãi -->
+    <li class="nav-item menu-parent" data-title="vouchers">
+      <a class="nav-link" data-bs-toggle="collapse" href="#catMenu">
+        <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <div id="catMenu" class="collapse ps-3">
+        <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item" data-title="danh sách khuyến mãi">Danh sách</a>
+        <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item" data-title="thêm khuyến mãi">Thêm mới</a>
+      </div>
     </li>
 
     <!-- Đơn hàng
@@ -166,12 +180,12 @@
 
     <!-- 👉 Doanh thu (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="doanh thu revenue">
-      <a href="#" class="nav-link">
+      <a href="{{ route('admin.reports.revenue') }}" class="nav-link">
         <i class="bi bi-cash-stack"></i><span class="menu-text">Doanh thu</span>
       </a>
     </li>
 +    <li class="nav-item menu-item" data-title="khách hàng customers">
-      <a href="{{ route('admin.chat.list') }}" class="nav-link">
+      <a href="{{ route('admin.chat') }}" class="nav-link">
         <i class="bi bi-people"></i><span class="menu-text"> Chat Với Khách hàng</span>
       </a>
     </li>
@@ -208,7 +222,7 @@
         <ul class="dropdown-menu dropdown-menu-end shadow">
           <li class="dropdown-header">{{ Auth::user()->name ?? 'Admin' }}<br><small class="text-muted">{{ Auth::user()->email ?? 'admin@example.com' }}</small></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
+          <li><a class="dropdown-item" href="{{route('profile.edit') }}"><i class="bi bi-person"></i> Hồ sơ</a></li>
           <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li>
           <li><hr class="dropdown-divider"></li>
           <li>

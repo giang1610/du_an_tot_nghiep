@@ -18,6 +18,8 @@ class ProfileController extends Controller
             'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|string', // base64 string
+            'phone' => 'nullable|string|max:15',
+            'address' => 'nullable|string|max:255',
         ]);
 
         $user = $request->user();
@@ -33,8 +35,8 @@ class ProfileController extends Controller
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
-            'phone'    => $request->phone,
-            'address'  => $request->address,
+            'phone' => $request->phone,
+            'address' => $request->address,
         ];
 
 

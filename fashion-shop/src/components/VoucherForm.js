@@ -29,22 +29,10 @@ const VoucherForm = ({ subtotal, token, onApplied, appliedVoucher, onClear }) =>
       );
 
       if (res.data && res.data.success) {
-        const { code, type, discount_type, discount_amount, discount_percent } = res.data;
-
-        const value =
-          discount_type === 'percent' ? discount_percent : discount_amount;
-
-        const newVoucher = {
-          code,
-          type,
-          discount_type,
-          value,
-        };
-
-        setVoucherInfo(newVoucher);
+        setVoucherInfo(res.data);
         setSuccess('Áp dụng mã giảm giá thành công!');
         setVoucherCode('');
-        onApplied(newVoucher);
+        onApplied(res.data);
       } else {
         setError(res.data.message || 'Mã giảm giá không hợp lệ.');
       }
@@ -58,7 +46,7 @@ const VoucherForm = ({ subtotal, token, onApplied, appliedVoucher, onClear }) =>
     setVoucherCode('');
     setSuccess('');
     setError('');
-    onClear();
+    onClear(); // notify parent to clear voucher
   };
 
   return (
@@ -88,11 +76,14 @@ const VoucherForm = ({ subtotal, token, onApplied, appliedVoucher, onClear }) =>
         <Alert variant="success" className="d-flex justify-content-between align-items-center mb-3">
           <div>
             ✅ Đã áp dụng mã: <strong>{voucherInfo.code}</strong><br />
-            {voucherInfo.discount_type === 'percent'
-              ? `Giảm ${voucherInfo.value}%`
-              : `Giảm ${voucherInfo.value.toLocaleString()} đ`}
+            {voucherInfo.type === 'percent' && `Giảm ${voucherInfo.value}%`}
+            {voucherInfo.type === 'fixed' && `Giảm ${voucherInfo.value.toLocaleString()} đ`}
           </div>
-          <Button variant="outline-danger" size="sm" onClick={clearVoucher}>
+          <Button
+            variant="outline-danger"
+            size="sm"
+            onClick={clearVoucher}
+          >
             Hủy
           </Button>
         </Alert>

@@ -42,7 +42,7 @@ const VoucherInput = ({ type, code, setCode, onApply, info, label, variant }) =>
                 <div>
                   <strong>{info.code}</strong>{' '}
                   <Badge bg="success" className="ms-2">
-                    {info.discount_type === 'percent'
+                    {info.type === 'percent'
                       ? `-${info.value}%`
                       : `-${info.value.toLocaleString()} đ`}
                   </Badge>

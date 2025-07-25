@@ -76,6 +76,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $request) => $request->user());
     // Route::get('user', [GetUserController::class, 'getUser']);
 
+    Route::get('user', [GetUserController::class, 'getUser']);
+
     // Reviews
     // Gửi đánh giá
     Route::post('/reviews', [ReviewController::class, 'store']);
@@ -110,7 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::post('/checkout/validate-voucher', [OrderController::class, 'validateVoucher']);
-        Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
+        Route::post('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
         Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
         // Gửi yêu cầu hoàn đơn
@@ -120,23 +122,20 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment Momo
     Route::prefix('payment')->group(function () {
         Route::post('/momo', [OrderController::class, 'processMomoPayment']);
-        Route::post('/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-        Route::get('/momo-return', [OrderController::class, 'momoReturn']);
+        Route::post('/vnpay', [OrderController::class, 'processVnpayPayment']);
     });
 
-    // Các route khác: logout, cart, review...
-
+    
+    
 });
 
-
-// VNPay payment
-Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
-Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
-
-Route::middleware('auth:sanctum')->prefix('vouchers')->group(function () {
-    Route::get('/', [VoucherController::class, 'index']);
-    Route::post('/validate', [VoucherController::class, 'validateVoucher']);
-    Route::get('/my', [VoucherController::class, 'getUserVouchers']);
-    Route::post('/apply', [VoucherController::class, 'apply']);
-    Route::post('/suggest', [VoucherController::class, 'suggest']);
+Route::middleware('auth:sanctum')->group(function() {
+    Route::post('/vouchers/validate', [VoucherController::class, 'validateVoucher']);
+    Route::get('/vouchers/my', [VoucherController::class, 'getUserVouchers']);  // Lấy danh sách voucher của người dùng
 });
+
+Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
+Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);
+
+Route::middleware('auth:sanctum')->post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
+Route::middleware('auth:sanctum')->post('/vouchers/apply', [VoucherController::class, 'apply']);

@@ -18,8 +18,7 @@ class ReviewController extends Controller
             'product_variant_id' => 'required|exists:product_variants,id',
             'rating' => 'required|integer|min:1|max:5',
             'content' => 'nullable|string',
-            'media' => 'nullable',
-            'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB mỗi file
+            'media' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB
         ]);
 
         $user = auth()->user();
@@ -59,11 +58,10 @@ class ReviewController extends Controller
             }
         }
 
-        $mediaPaths = [];
-            if ($request->hasFile('media')) {
-                foreach ($request->file('media') as $file) {
-                    $mediaPaths[] = $file->store('reviews', 'public');
-                }
+        $mediaPath = null;
+        // Xử lý file media nếu có
+        if ($request->hasFile('media')) {
+            $mediaPath = $request->file('media')->store('reviews', 'public');
         }
 
             // Tạo đánh giá
@@ -74,7 +72,7 @@ class ReviewController extends Controller
             'review_round' => $reviewRound,
             'rating' => $request->rating,
             'content' => $request->content,
-            'media' => json_encode($mediaPaths),
+            'media' => $mediaPath,
         ]);
 
         return response()->json(['message' => 'Đánh giá thành công', 'review' => $review], 201);

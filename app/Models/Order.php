@@ -57,11 +57,31 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_number', 'subtotal', 'tax', 'shipping', 'total',
-        'status', 'payment_method', 'payment_status', 'shipping_address',
-        'billing_address', 'customer_email', 'customer_phone', 'notes',
-        'delivered_at', 'completed_at', 'return_requested_at','return_reason',
-        'return_media', 'returned_at', 'return_status', 'note_admin',
+        'user_id',
+        'order_number',
+        'subtotal',
+        'tax',
+        'shipping',
+        'total',
+        'status',
+        'payment_method',
+        'payment_status',
+        'shipping_address',
+        'billing_address',
+        'customer_email',
+        'customer_phone',
+        'voucher_code',
+        'voucher_discount',
+        'voucher_type',
+        'notes',
+        'delivered_at',
+        'completed_at',
+        'return_requested_at',
+        'return_reason',
+        'return_media',
+        'returned_at',
+        'return_status',
+        'note_admin',
     ];
 
     public function user()
@@ -82,5 +102,4 @@ class Order extends Model
             $order->order_number = 'ORD-' . strtoupper(uniqid());
         });
     }
-
 }
