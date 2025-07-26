@@ -13,7 +13,7 @@ class FailProduct implements ShouldBroadcast
     public string $orderNumber;
     public int $id;
 
-    public function __construct( int $id,string $orderNumber,)
+    public function __construct( string $orderNumber,int $id)
     {  
         $this->id = $id;
         $this->orderNumber = $orderNumber;

@@ -111,7 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::post('/checkout/validate-voucher', [OrderController::class, 'validateVoucher']);
-        Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
+        Route::post('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
         Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
         // Gửi yêu cầu hoàn đơn
