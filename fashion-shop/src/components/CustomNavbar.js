@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaUser, FaShoppingCart } from 'react-icons/fa';
 import SearchBar from './SearchBar';
+import Lottie from 'lottie-react';
+import phiHanhGia from '../animation/phi_hanh_gia.json';
 
 export default function CustomNavbar() {
   const { user, logout } = useAuth();
@@ -34,13 +36,17 @@ export default function CustomNavbar() {
             <Nav.Link as={Link} to="/products">Sản phẩm</Nav.Link>
             <Nav.Link as={Link} to="/about">Giới thiệu</Nav.Link>
             <Nav.Link as={Link} to="/contact">Liên hệ</Nav.Link>
+
           </Nav>
 
           {/* Center search */}
           <SearchBar />
+           <Lottie animationData={phiHanhGia} loop={true} style={{ width: 50, height: 50 }} />
+
 
           {/* Right nav */}
           <Nav className="align-items-center ms-3">
+
             <Nav.Link as={Link} to="/cart" className="me-2">
               <FaShoppingCart size={20} />
             </Nav.Link>
