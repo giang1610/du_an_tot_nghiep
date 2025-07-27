@@ -371,7 +371,14 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5
+=======
                                 
+>>>>>>> 07d2692ccc54961bf57ca6f74b42ec96b2ff8671
                             </div>
                         </div>
                         <div class="card-body">

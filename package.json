@@ -1,6 +1,11 @@
 {
   "dependencies": {
-    "react-hot-toast": "^2.5.2",
-    "chart.js": "^4.5.0"
+    "chart.js": "^4.5.0",
+    "react-hot-toast": "^2.5.2"
+  },
+  "devDependencies": {
+    "laravel-echo": "^2.1.7",
+    "pusher-js": "^8.4.0",
+    "socket.io-client": "^4.8.1"
   }
 }

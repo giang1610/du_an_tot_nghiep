@@ -153,19 +153,9 @@
         <a href="{{ route('orders.return_requested') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Yêu cầu trả hàng</a>
         <a href="{{ route('orders.returned') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã trả hàng</a>
     </li>
-    <!-- Khuyến mãi -->
-    <!-- <li class="nav-item menu-parent" data-title="vouchers">
-      <a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#voucherMenu" aria-expanded="{{ request()->routeIs('vouchers.*') ? 'true' : 'false' }}">
-        <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
-      <div id="catMenu" class="collapse ps-3">
-        <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item" data-title="danh sách khuyến mãi">Danh sách</a>
-        <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item" data-title="thêm khuyến mãi">Thêm mới</a>
-      </div>
-    </li> -->
 <li class="nav-item menu-parent" data-title="vouchers">
   <a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catvoucher" aria-expanded="{{ request()->routeIs('vouchers.*') ? 'true' : 'false' }}">
-    <i class="bi bi-folder"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <div id="catvoucher" class="collapse ps-3 {{ request()->routeIs('vouchers.*') ? 'show' : '' }}">
     <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('vouchers.index') ? 'active' : '' }}" data-title="danh sách danh mục">Danh sách</a>
@@ -173,12 +163,6 @@
   </div>
 </li>
 
-    <!-- Đơn hàng
-    <li class="nav-item menu-item" data-title="orders">
-      <a href="{{ route('orders.index') }}" class="nav-link">
-        <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span>
-      </a>
-    </li> -->
 
     <!-- 👉 Khách hàng (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="khách hàng customers">
@@ -325,10 +309,6 @@
   searchTrigger.onclick = doSearch;
   globalSearch.onkeydown = e => { if(e.key === 'Enter') doSearch(); };
 </script>
-
-
-
-
 
 
 @yield('scripts')

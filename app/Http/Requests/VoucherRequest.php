@@ -34,6 +34,7 @@ class VoucherRequest extends FormRequest
                 'required_if:discount_type,amount',
                 'numeric',
                 'min:1',
+                'prohibited_if:discount_type,percent',
             ],
             'discount_percent' => [
                 'nullable',
@@ -41,6 +42,7 @@ class VoucherRequest extends FormRequest
                 'numeric',
                 'min:1',
                 'max:100',
+                'prohibited_if:discount_type,amount',
             ],
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
@@ -90,6 +92,9 @@ class VoucherRequest extends FormRequest
         'usage_limit.required' => 'Giới hạn sử dụng không được để trống.',
         'usage_limit.integer' => 'Giới hạn sử dụng phải là số nguyên.',
         'usage_limit.min' => 'Giới hạn sử dụng không được nhỏ hơn 1.',
+
+        'discount_amount.prohibited_if' => 'Không được nhập số tiền giảm khi chọn loại giảm giá theo phần trăm.',
+        'discount_percent.prohibited_if' => 'Không được nhập phần trăm giảm khi chọn loại giảm giá theo tiền.',
         ];
     }
 }
