@@ -43,6 +43,7 @@ class UpdateOrderStatus implements ShouldQueue
 
                 break;
             case 'cancelled':
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status, $order->payment_status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
@@ -58,6 +59,7 @@ class UpdateOrderStatus implements ShouldQueue
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderShipped($order));
                 break;
             case 'failed':
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status, $order->payment_status))->toOthers();
                 \Log::info('Gửi mail failed 3 lần tới: ' . $order->user->email);
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed($order));
                 break;
