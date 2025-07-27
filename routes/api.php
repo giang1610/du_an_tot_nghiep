@@ -135,7 +135,7 @@ Route::middleware('auth:sanctum')->group(function() {
 });
 
 Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-Route::get('/payment/momo-return', [OrderController::class, 'momoReturn']);
+Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
 
 Route::middleware('auth:sanctum')->post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
 Route::middleware('auth:sanctum')->post('/vouchers/apply', [VoucherController::class, 'apply']);
