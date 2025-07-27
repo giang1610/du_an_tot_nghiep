@@ -7,7 +7,9 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
 import { toast } from "react-toastify";
-import { formatCurrency } from '../utils/formatCurrency';
+
+// Helper
+const formatCurrency = (num) => (num ?? 0).toLocaleString();
 
 const ProductSummary = ({ items }) => {
   if (!items.length) return <p>Bạn chưa chọn sản phẩm nào để đặt hàng.</p>;
@@ -30,8 +32,18 @@ const ProductSummary = ({ items }) => {
                 Số lượng: {item.quantity} <br />
                 Giá: {formatCurrency(item.price)} đ <br />
                 {item.color && <>Màu: {item.color}<br /></>}
-                {item.size && <>Size: {item.size}</>}
+                {item.size && <>Size: {item.size}<br /></>}
+
+                {item.stock === 0 && (
+                  <span className="text-danger fw-bold">Sản phẩm đã hết hàng</span>
+                )}
+                {item.quantity > item.stock && item.stock > 0 && (
+                  <span className="text-warning fw-bold">
+                    Chỉ còn {item.stock} sản phẩm trong kho
+                  </span>
+                )}
               </Card.Text>
+
             </div>
           </Card.Body>
         </Card>
@@ -52,11 +64,7 @@ export default function Checkout() {
     if (!isBuyNow) return null;
     try {
       const item = localStorage.getItem('buy_now');
-      if (!item) return null;
-      const parsed = JSON.parse(item);
-      if (Array.isArray(parsed)) return parsed;
-      if (parsed && typeof parsed === 'object') return [parsed];
-      return null;
+      return item ? JSON.parse(item) : null;
     } catch {
       return null;
     }
@@ -78,10 +86,8 @@ export default function Checkout() {
 
   const [productVoucherCode, setProductVoucherCode] = useState('');
   const [shippingVoucherCode, setShippingVoucherCode] = useState('');
-
   const [productVoucherInfo, setProductVoucherInfo] = useState(null);
   const [shippingVoucherInfo, setShippingVoucherInfo] = useState(null);
-
   const [availableProductVouchers, setAvailableProductVouchers] = useState([]);
   const [availableShippingVouchers, setAvailableShippingVouchers] = useState([]);
 
@@ -129,7 +135,7 @@ export default function Checkout() {
     const code = type === 'product' ? productVoucherCode : shippingVoucherCode;
     if (!code.trim()) return setError('Vui lòng chọn mã giảm giá.');
 
-    const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * (item.price ?? 0), 0);
 
     try {
       const res = await axios.post(
@@ -165,11 +171,14 @@ export default function Checkout() {
     const token = localStorage.getItem('token') || user?.token;
     if (!token) return setError('Bạn cần đăng nhập để đặt hàng.');
     if (selectedItems.length === 0) return setError('Không có sản phẩm nào để đặt hàng.');
+    if (selectedItems.some(item => item.stock === 0 || item.quantity > item.stock)) {
+      return setError('Có sản phẩm đã hết hàng hoặc vượt quá số lượng tồn kho. Vui lòng kiểm tra lại.');
+    }
 
     const itemsPayload = selectedItems.map(item => ({
       product_variant_id: item.product_variant_id || item.variant_id,
       quantity: item.quantity,
-      price: Number(item.price),
+      price: item.price,
       size_id: item.size_id || null,
       color_id: item.color_id || null,
     }));
@@ -189,13 +198,10 @@ export default function Checkout() {
       discount: totals.discount,
       total: totals.total,
       voucher_codes: {
-        product: productVoucherInfo?.code || null,
-        shipping: shippingVoucherInfo?.code || null
+        product: productVoucherInfo?.code ?? null,
+        shipping: shippingVoucherInfo?.code ?? null
       }
     };
-
-    // Thêm log payload để debug
-    console.log('Payload gửi lên backend:', payload);
 
     try {
       setLoading(true);
@@ -206,7 +212,6 @@ export default function Checkout() {
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
         if (data?.data?.payment_url) {
           localStorage.removeItem('buy_now');
           window.location.href = data.data.payment_url;
@@ -214,22 +219,21 @@ export default function Checkout() {
         } else {
           setError('Không nhận được liên kết thanh toán MoMo');
         }
-      }
-
-      else if (form.payment_method === 'vnpay') {
+      } else if (form.payment_method === 'vnpay') {
         const { data } = await axios.post(
-          `${process.env.REACT_APP_API_URL}/payment/vnpay`,
+          `${process.env.REACT_APP_API_URL}/vnpay/pay`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (data.data && data.data.payment_url) {
+
+        if (data?.data?.payment_url) {
+          localStorage.removeItem('buy_now');
+          await removeSelectedItems();
           window.location.href = data.data.payment_url;
         } else {
           toast.error("Không nhận được liên kết thanh toán VNPay");
         }
-
       }
-
       else {
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
@@ -241,13 +245,8 @@ export default function Checkout() {
         await removeSelectedItems();
         setTimeout(() => navigate('/orders'), 3000);
       }
-
     } catch (error) {
-      // Log chi tiết lỗi trả về từ backend
       console.error('❌ Lỗi:', error);
-      if (error.response) {
-        console.log('Lỗi chi tiết từ backend:', error.response.data);
-      }
       setError('Đặt hàng thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
@@ -383,7 +382,6 @@ export default function Checkout() {
             <>
               <hr />
 
-              {/* Chọn mã giảm giá sản phẩm */}
               <Form.Group className="mb-3">
                 <Form.Label>Mã giảm giá sản phẩm</Form.Label>
                 <Form.Select
@@ -393,7 +391,9 @@ export default function Checkout() {
                   <option value="">-- Không áp dụng --</option>
                   {availableProductVouchers.map(voucher => (
                     <option key={voucher.code} value={voucher.code}>
-                      {voucher.code} - {voucher.type === 'percent' ? `${voucher.value}%` : `${voucher.value.toLocaleString()} đ`}
+                      {voucher.code} - {voucher.type === 'percent'
+                        ? `${voucher.value ?? 0}%`
+                        : `${formatCurrency(voucher.value)} đ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -402,13 +402,12 @@ export default function Checkout() {
                 </Button>
                 {productVoucherInfo && (
                   <div className="mt-2 text-success">
-                    ✅ Đã áp dụng: {productVoucherInfo.code} 
+                    ✅ Đã áp dụng: {productVoucherInfo.code}
                     <Button variant="link" size="sm" onClick={() => applyVoucher('remove_product')}>[Hủy]</Button>
                   </div>
                 )}
               </Form.Group>
 
-              {/* Chọn mã miễn phí vận chuyển */}
               <Form.Group className="mb-3">
                 <Form.Label>Mã miễn phí vận chuyển</Form.Label>
                 <Form.Select
@@ -418,7 +417,9 @@ export default function Checkout() {
                   <option value="">-- Không áp dụng --</option>
                   {availableShippingVouchers.map(voucher => (
                     <option key={voucher.code} value={voucher.code}>
-                      {voucher.code} - {voucher.type === 'percent' ? `${voucher.value}%` : `${voucher.value.toLocaleString()} đ`}
+                      {voucher.code} - {voucher.type === 'percent'
+                        ? `${voucher.value ?? 0}%`
+                        : `${formatCurrency(voucher.value)} đ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -433,13 +434,13 @@ export default function Checkout() {
                 )}
               </Form.Group>
 
-              <p>Tạm tính: {totals.subtotal.toLocaleString()} đ</p>
-              <p>Phí vận chuyển: {totals.shipping.toLocaleString()} đ</p>
-              <p>Thuế: {totals.tax.toLocaleString()} đ</p>
+              <p>Tạm tính: {formatCurrency(totals.subtotal)} đ</p>
+              <p>Phí vận chuyển: {formatCurrency(totals.shipping)} đ</p>
+              <p>Thuế: {formatCurrency(totals.tax)} đ</p>
               {totals.discount > 0 && (
-                <p className="text-success">Giảm giá: -{totals.discount.toLocaleString()} đ</p>
+                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} đ</p>
               )}
-              <h5 className="fw-bold">Tổng cộng: {totals.total.toLocaleString()} đ</h5>
+              <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} đ</h5>
             </>
           )}
         </Col>
