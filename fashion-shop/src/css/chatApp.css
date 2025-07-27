@@ -18,16 +18,25 @@
     white-space: pre-wrap;
 }
 
+.container-relative {
+  position: relative;
+}
+
 
 .icon_chat {
- margin-bottom: 5%;
-  margin-right: 4%;
+  position: fixed;
+  bottom: 10%;
+  right: 5%;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  z-index: 1050;
+  cursor: pointer;
 }
-.icon_chat:hover {
-  background-color: #f0f0f0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
+
+
+
+
 .user-message {
   background-color: #ade7ba; 
   border-bottom-right-radius: 0;
