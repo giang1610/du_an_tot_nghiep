@@ -102,7 +102,7 @@
                     </div>
 
                     <div class="mb-3">
-                        @if ($currentStatus == 'delivered' && !in_array($order->status, ['return_requested', 'returned']))
+                        @if ($currentStatus == 'shipped' && !in_array($order->status, ['return_requested', 'returned']))
                             <input type="text" class="form-control bg-light fw-bold" value="{{ $statusOptions[$currentStatus] }}" readonly>
                             <div class="alert alert-info mt-3">
                                 <i class="bi bi-info-circle me-2"></i>
@@ -112,7 +112,7 @@
                         @else
                             <label class="form-label">Chọn trạng thái mới</label>
                             <select name="status" class="form-select" required>
-                                @if (!in_array($currentStatus, ['shipped', 'completed', 'cancelled']))
+                                @if (!in_array($currentStatus, ['shipped', 'completed', 'failed', 'returned', 'return_requested','failed_1', 'failed_2', 'returning']))
                                     <option value="cancelled" {{ $currentStatus == 'cancelled' ? 'selected' : '' }}>
                                         {{ $statusOptions['cancelled'] }}
                                     </option>
@@ -125,17 +125,24 @@
                                         {{ $statusOptions[$nextStatus] }}
                                     </option>
                                 @endif
+                                @if (in_array($currentStatus, ['cancelled', 'shipped', 'completed']))
+                                <div class="alert alert-warning mt-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Đơn hàng đã ở trạng thái <b>{{ $statusOptions[$currentStatus] }}</b>, không thể đổi trạng thái nữa.
+                                </div>
+                                @endif
                             </select>
-                        </div>
+                    </div>
                         <div class="alert alert-info mt-3">
                             <i class="bi bi-info-circle me-2"></i>
                             Chỉ có thể chuyển sang trạng thái kế tiếp trong quy trình hoặc hủy đơn hàng.
                         </div>
                         @endif
+                    
                 </div>
             </div>
 
-            @if (!($currentStatus == 'delivered' && !in_array($order->status, ['return_requested', 'returning', 'returned'])) && $order->status !== 'return_requested')
+            @if (!($currentStatus == ['shipped','cancelled','completed'] && !in_array($order->status, ['return_requested', 'returning', 'returned'])) && $order->status !== 'return_requested')
                 <div class="text-end">
                     <button type="submit" class="btn btn-primary px-4 py-2">
                         <i class="bi bi-check-circle me-2"></i>Cập nhật trạng thái

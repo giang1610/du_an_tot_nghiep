@@ -21,6 +21,7 @@ use App\Models\CartItem;
 // RealTime
 use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
+use App\Events\FailProduct;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
 use Carbon\Carbon;
@@ -67,7 +68,7 @@ class OrderController extends Controller
             foreach ($request->items as $item) {
                 $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
                 if (!$variant || $variant->stock->quantity < $item['quantity']) {
-                    throw new \Exception("Không đủ tồn kho cho sản phẩm: {$item['product_variant_id']}");
+                    throw new \Exception(message: "Không đủ tồn kho cho sản phẩm: {$item['product_variant_id']}");
                 }
             }
 
@@ -208,6 +209,8 @@ class OrderController extends Controller
                 'status' => 'cancelled',
                 'payment_status' => ($order->payment_status === 'paid') ? 'refunded' : 'cancelled',
             ]);
+            event(new FailProduct($order->order_number, $order->id));
+
 
             DB::commit();
             return response()->json(['message' => 'Hủy đơn hàng thành công']);
@@ -326,7 +329,6 @@ class OrderController extends Controller
                 }
             }
 
-            event(new NewOrderCreated($order->order_number, $order->id));
 
             event(new NewOrderCreated($order->order_number, $order->id));
 

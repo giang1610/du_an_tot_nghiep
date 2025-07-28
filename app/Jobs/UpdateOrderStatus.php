@@ -43,6 +43,7 @@ class UpdateOrderStatus implements ShouldQueue
 
                 break;
             case 'cancelled':
+                 broadcast(new \App\Events\UpdateStatus($order->id, $order->status, $order->payment_status))->toOthers();
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderErrors($order));
                 break;
             case 'picking':
