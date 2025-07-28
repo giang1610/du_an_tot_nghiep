@@ -242,6 +242,8 @@
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script src="{{ asset('js/echo-setup.js') }}"></script>
 <script src="{{ asset('js/notification_RealTime.js') }}"></script>
+<script src="{{ asset('js/fail.js') }}"></script>
+
 
 {{-- chatbox --}}
 
