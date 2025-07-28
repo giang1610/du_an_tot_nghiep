@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->string('payment_method');
             $table->string('payment_status')->default('pending');
+            $table->unsignedTinyInteger('vnp_retry_count')->default(0); // lưu số lần tạo lại thanh toán vnpay
+            $table->unsignedTinyInteger('momo_retry_count')->default(0); // lưu số lần tạo lại thanh toán momo
             $table->text('shipping_address');
             $table->text('billing_address')->nullable();
             $table->string('customer_email');
@@ -29,7 +31,7 @@ return new class extends Migration
             $table->string('voucher_code')->nullable(); // Mã voucher
             $table->decimal('voucher_discount', 10, 2)->default(0);
             $table->string('voucher_type')->nullable(); // 'percent' hoặc 'amount'
-           $table->foreignId('voucher_id')->nullable()->constrained('vouchers');
+            $table->foreignId('voucher_id')->nullable()->constrained('vouchers');
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->text('notes')->nullable();
             $table->timestamp('shipped_at')->nullable();

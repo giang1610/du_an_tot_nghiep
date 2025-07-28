@@ -59,7 +59,7 @@
                     
                     <div class="col-6">
                         <label for="price_products" class="form-label fw-medium">Giá sản phẩm</label>
-                        <input type="number" name="price_products" id="price_products" class="form-control" placeholder="Nhập giá sản phẩm" value="{{ old('price_products', number_format($product->price_products, 0, ',', '.') ) }}" >
+                        <input type="number" name="price_products" id="price_products" class="form-control" placeholder="Nhập giá sản phẩm" value="{{ old('price_products', (int)$product->price_products }}" >
                         @error('price_products')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -218,7 +218,7 @@
                             <div class="col-md-6">
                                 <label class="form-label small">Giá</label>
                                 <input type="number" name="variants[{{ $i }}][price]" class="form-control form-control-sm" 
-                                       value="{{ old('variants.'.$i.'.price', number_format($variant['price'], 0, ',', '.')  ?? '') }}">
+                                       value="{{ old('variants.'.$i.'.price', (int)$variant['price']  ?? '') }}">
                                 @error('variants.'.$i.'.price')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -227,7 +227,8 @@
                             <div class="col-md-6">
                                 <label class="form-label small">Giá khuyến mãi</label>
                                 <input type="number" name="variants[{{ $i }}][sale_price]" class="form-control form-control-sm" 
-                                       id="sale_price_{{ $i }}" value="{{ old('variants.'.$i.'.sale_price', $variant['sale_price'] ?? '') }}">
+                                       id="sale_price_{{ $i }}" value="{{ old('variants.'.$i.'.sale_price',(int)$variant['sale_price']?? '') }}"
+                                       {{ empty(old('variants.'.$i.'.sale_price', $variant['sale_price'] ?? '')) ? 'disabled' : '' }}>
                                 @error('variants.'.$i.'.sale_price')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror

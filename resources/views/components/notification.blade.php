@@ -35,7 +35,7 @@
 <style>
   .noti-item.unread {
     font-weight: 600;
-    background-color: #f8fafc;
+    background-color: #77e286ff;
     position: relative;
   }
 

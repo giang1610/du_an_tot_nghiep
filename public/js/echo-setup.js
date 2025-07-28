@@ -17,7 +17,7 @@ window.Echo.connector.pusher.connection.bind('connected', function () {
 
 window.Echo.channel('product-stock')
     .listen('.stock.updated', function (data) {
-        console.log('[Stock Update] Nhận cập nhật tồn kho:', data);
+        // console.log('[Stock Update] Nhận cập nhật tồn kho:', data);
 
         const badge = document.getElementById('stock-badge-' + data.variantId);
         if (!badge) return;
