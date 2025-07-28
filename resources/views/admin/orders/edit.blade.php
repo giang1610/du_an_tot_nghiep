@@ -22,14 +22,28 @@
                         <div class="border rounded p-2 bg-light">
                             {{ $order->return_reason ?? '— Không có lý do —' }}
                         </div>
-                        @if($order->return_media)
+                       @if($order->return_media)
                             <div>
                                 <strong>File minh chứng:</strong>
-                                @if(Str::endsWith($order->return_media, ['.jpg','.jpeg','.png']))
-                                    <img src="{{ asset('storage/' . $order->return_media) }}" alt="Ảnh lỗi" width="200" />
-                                @else
-                                    <video src="{{ asset('storage/' . $order->return_media) }}" controls width="300"></video>
-                                @endif
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    @php
+                                        $mediaList = [];
+                                        try {
+                                            $mediaList = is_array($order->return_media)
+                                                ? $order->return_media
+                                                : json_decode($order->return_media, true) ?? [];
+                                        } catch (\Throwable $e) {
+                                            $mediaList = [];
+                                        }
+                                    @endphp
+                                    @foreach($mediaList as $media)
+                                        @if(Str::endsWith($media, ['.jpg','.jpeg','.png']))
+                                            <img src="{{ asset('storage/' . $media) }}" alt="Ảnh lỗi" width="150" class="rounded border" />
+                                        @elseif(Str::endsWith($media, ['.mp4','.mov']))
+                                            <video src="{{ asset('storage/' . $media) }}" controls width="200" class="rounded border"></video>
+                                        @endif
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     </div>

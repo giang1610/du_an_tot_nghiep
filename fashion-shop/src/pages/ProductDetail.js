@@ -2,15 +2,15 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
+  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form, Card
 } from 'react-bootstrap';
-import ProductReview from './ProductReview';
-
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import ProductReview from './ProductReview';
 import ProductImageGallery from '../components/ProductImageGallery';
 import { listenToStockUpdates } from '../realtime/stockRealtime';
+import ReviewCard from '../components/ReviewCard';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -34,7 +34,8 @@ export default function ProductDetail() {
         setReviews(reviews || []);
         setRelatedProducts(related_products || []);
       })
-      .catch(() => {
+      .catch(err => {
+        console.error(err);
         toast.error('Không tải được sản phẩm.');
       })
       .finally(() => setLoading(false));
@@ -43,10 +44,9 @@ export default function ProductDetail() {
   useEffect(() => {
     if (!product) return;
     const unsubscribe = listenToStockUpdates(({ variantId, stock }) => {
-      setProduct((prev) => {
-        if (!prev) return prev;
-        const updatedVariants = prev.variants.map((v) =>
-          v.id === variantId && v.stock
+      setProduct(prev => {
+        const updatedVariants = prev.variants.map(v =>
+          v.id === variantId
             ? { ...v, stock: { ...v.stock, quantity: stock } }
             : v
         );
@@ -58,21 +58,24 @@ export default function ProductDetail() {
 
   const imageList = useMemo(() => {
     if (!product) return [];
-    const main = product.img ? [{ url: product.img }] : [];
-    const variants = product.variants?.map(v => v.img).filter(Boolean).map(url => ({ url })) || [];
-    const unique = Array.from(new Set([...main, ...variants].map(i => i.url))).map(url => ({ url }));
-    return unique.length ? unique : [{ url: 'https://via.placeholder.com/500x500?text=No+Image' }];
+    const mainImage = product.img ? [{ url: product.img }] : [];
+    const variantImages = product.variants?.map(v => v.img).filter(Boolean).map(url => ({ url })) || [];
+    const uniqueUrls = Array.from(new Set([...mainImage, ...variantImages].map(i => i.url)))
+      .map(url => ({ url }));
+    return uniqueUrls.length > 0 ? uniqueUrls : [{ url: 'https://via.placeholder.com/500x500?text=No+Image' }];
   }, [product]);
 
   const sizes = useMemo(() => {
+    if (!product) return [];
     const map = new Map();
-    product?.variants.forEach(v => v.size?.id && map.set(v.size.id, v.size));
+    product.variants.forEach(v => v.size?.id && map.set(v.size.id, v.size));
     return Array.from(map.values());
   }, [product]);
 
   const colors = useMemo(() => {
+    if (!product) return [];
     const map = new Map();
-    product?.variants.forEach(v => v.color?.id && map.set(v.color.id, v.color));
+    product.variants.forEach(v => v.color?.id && map.set(v.color.id, v.color));
     return Array.from(map.values());
   }, [product]);
 
@@ -99,15 +102,30 @@ export default function ProductDetail() {
   const handleQuantityChange = (e) => {
     let val = Number(e.target.value);
     if (isNaN(val) || val < 1) val = 1;
-    else if (val > maxQuantity) val = maxQuantity;
+    else if (val > maxQuantity) {
+      val = maxQuantity;
+      toast.warn(`Số lượng tối đa còn lại là ${maxQuantity}.`);
+    }
     setQuantity(val);
   };
 
- 
+  const requireLoginAndVariant = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.info('Vui lòng đăng nhập để tiếp tục.');
+      navigate('/login');
+      return false;
+    }
+    if (!selectedVariantId) {
+      toast.warn('Vui lòng chọn size và màu.');
+      return false;
+    }
+    return true;
+  };
 
   const handleAddToCart = async () => {
     if (quantity > maxQuantity) {
-      toast.info(`Số lượng tối đa là ${maxQuantity}.`);
+      toast.error(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
 
@@ -123,14 +141,14 @@ export default function ProductDetail() {
       });
       toast.success('Đã thêm vào giỏ hàng!');
     } catch (error) {
-      const msg = error?.response?.data?.message || ' Lỗi khi thêm vào giỏ hàng.';
-      toast.error(msg);
+      console.error(error);
+      toast.error('Lỗi khi thêm vào giỏ hàng.');
     }
   };
 
   const handleBuyNow = () => {
     if (quantity > maxQuantity) {
-      toast.info(`Số lượng tối đa là ${maxQuantity}.`);
+      toast.warn(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
 
@@ -156,8 +174,7 @@ export default function ProductDetail() {
 
   return (
     <Container className="py-5">
-      <ToastContainer position="top-right" autoClose={3000} />
-
+      <ToastContainer />
       <Row>
         <Col md={6}>
           <ProductImageGallery
@@ -238,18 +255,19 @@ export default function ProductDetail() {
             </Button>
           </div>
 
+          {/* ĐÁNH GIÁ */}
           <div className="mt-5">
+            <h4 className="mb-4">Đánh giá sản phẩm</h4>
+            {reviews.length === 0 && <p>Chưa có đánh giá nào.</p>}
+
             {reviews.map(r => (
-              <div key={r.id} className="mb-3 border-bottom pb-2">
-                <strong>{r.user?.name || 'Khách hàng'}</strong>
-                <div>
-                  {[...Array(r.rating)].map((_, i) => (
-                    <span key={i} style={{ color: '#ffc107' }}>★</span>
-                  ))}
-                </div>
-                <p>{r.content}</p>
-              </div>
+              <ReviewCard
+                key={r.id}
+                review={r}
+                baseUrl={process.env.REACT_APP_API_URL.replace('/api', '')}
+              />
             ))}
+
             <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />
           </div>
         </Col>
