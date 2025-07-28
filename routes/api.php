@@ -93,8 +93,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/remove-selected', [CartController::class, 'removeSelectedItems']);
             Route::delete('/clear', [CartController::class, 'clearCart']);
             Route::get('/total', [CartController::class, 'getCartTotal']);
-            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
-
         });
     });
 });
@@ -120,15 +118,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/payment/momo', [MomoPaymentController::class, 'processMomoPayment']);
-        Route::post('/payment/momo/ipn', [MomoPaymentController::class, 'momoIpn']);
-        Route::get('/payment/momo-return', [MomoPaymentController::class, 'momoReturn']);
+        Route::post('/momo/retry-payment', [MomoPaymentController::class, 'retryMomoPayment']);
+
     });
 
     // Payment VNPAY
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vnpay/pay', [VnpayPaymentController::class, 'processVnpayPayment']);
-        Route::get('/vnpay-return', [VnpayPaymentController::class, 'vnpayReturn']);
-        Route::get('/vnpay/ipn', [VnpayPaymentController::class, 'vnpayIpn']);
+        Route::post('/vnpay/retry-payment', [OrderController::class, 'retryVnpayPayment']);
     });
 });
 
@@ -139,9 +136,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
     Route::post('/vouchers/apply', [VoucherController::class, 'apply']);
 });
+// Không cho vào trong auth:sanctum
+Route::post('/payment/momo/webhook', [MomoPaymentController::class, 'momoIpn']); // IPN
+Route::get('/payment/momo/return', [MomoPaymentController::class, 'momoReturn']);
 
-Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
 
-Route::middleware('auth:sanctum')->post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
-Route::middleware('auth:sanctum')->post('/vouchers/apply', [VoucherController::class, 'apply']);
+Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);

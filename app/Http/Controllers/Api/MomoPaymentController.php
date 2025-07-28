@@ -112,7 +112,7 @@ class MomoPaymentController extends Controller
         $secretKey    = env('MOMO_SECRET_KEY');
         $redirectUrl  = env('MOMO_REDIRECT_URL');
         $ipnUrl       = env('MOMO_IPN_URL');
-        $requestType  = env('MOMO_REQUEST_TYPE', 'captureWallet');
+        $requestType  = env('MOMO_REQUEST_TYPE', 'payWithATM');
 
         $extraData = "";
         $requestId = (string) Str::uuid();
@@ -305,6 +305,57 @@ class MomoPaymentController extends Controller
         } else {
             Log::error('Refund MOMO thất bại', ['body' => $response->body()]);
             return ['success' => false, 'message' => $response->json()['message'] ?? 'Lỗi không xác định'];
+        }
+    }
+
+    public function retryMomoPayment(Request $request)
+    {
+        $user = Auth::user();
+        $orderId = $request->input('order_id');
+        $amount = $request->input('amount');
+
+        // Số lần tối đa tạo lại link MoMo
+        $maxRetry = 3;
+
+        $order = Order::where('id', $orderId)
+            ->where('user_id', $user->id)
+            ->where('payment_method', 'momo')
+            ->first();
+
+        if (!$order) {
+            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        if ($order->payment_method !== 'momo') {
+            return response()->json(['message' => 'Đơn hàng không dùng ví thanh toán Momo'], 400);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json(['message' => 'Đơn hàng đã được thanh toán thành công'], 400);
+        }
+
+        if ($order->momo_retry_count >= $maxRetry) {
+            return response()->json(['message' => 'Bạn đã vượt quá số lần thanh toán lại bằng Ví MoMo. Hãy tạo đơn hàng khác'], 429);
+        }
+
+        try {
+            // Gọi lại hàm tạo link thanh toán MoMo
+            $paymentUrl = $this->initiateMomoPayment($order, $order->total);
+
+            // Cập nhật số lần retry
+            $order->increment('momo_retry_count');
+
+            return response()->json([
+                'message' => 'Tạo lại liên kết thanh toán MoMo thành công',
+                'data' => [
+                    'payment_url' => $paymentUrl,
+                    'order_id' => $order->id,
+                    'retry_count' => $order->momo_retry_count + 1
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Lỗi tạo lại thanh toán MoMo: ' . $e->getMessage());
+            return response()->json(['message' => 'Lỗi khi tạo lại link thanh toán MoMo'], 500);
         }
     }
 }

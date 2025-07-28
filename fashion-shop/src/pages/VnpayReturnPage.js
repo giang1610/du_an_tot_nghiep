@@ -17,6 +17,8 @@ export default function VnpayReturn() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const tax = 20000;
+
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const data = {
@@ -56,7 +58,7 @@ export default function VnpayReturn() {
   return (
     <Container className="py-5">
       <div className=' text-center text-black'><h3 >Kết quả thanh toán : {urlData.message} </h3> </div>
-      
+
       <PaymentToast message={urlData.message} status={urlData.payment_status} />
 
       <Row className="mt-4">
@@ -86,7 +88,7 @@ export default function VnpayReturn() {
 
         {/* Bên phải: Sản phẩm + người nhận */}
         <Col md={6}>
-        
+
           <h5>Sản phẩm </h5>
           {orderDetail?.items?.map((item, idx) => (
             <div key={idx} className="d-flex justify-content-between border rounded p-2 mb-3">
@@ -113,9 +115,9 @@ export default function VnpayReturn() {
                 <div>{orderDetail.customer_name}</div>
                 <div><strong>SDT: </strong> {orderDetail.customer_phone}</div>
                 <div><strong>Địa chỉ: </strong>{orderDetail.shipping_address}</div>
-              
+
                   <div className="text-white m-1 bg-success p-1 rounded" style={{ fontSize: '14px', maxWidth: '200px',wordWrap: 'break-word' }}>
-                   <div className=' m-1'> Giá Tiền : {(item.price * item.quantity).toLocaleString()}  ₫</div>
+                   <div className=' m-1 text-center'> Giá Tiền : {((item.price * item.quantity) + tax + (item.price * item.quantity) * 0.1).toLocaleString()}  ₫</div>
                   </div>
               </div>
             </div>

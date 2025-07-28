@@ -85,18 +85,24 @@ export default function ProductDetail() {
       setQuantity(1);
       return;
     }
-    const matched = product.variants.find(
+    const match = product.variants.find(
       v => v.size?.id === Number(selectedSize) && v.color?.id === Number(selectedColor)
     );
-    setSelectedVariantId(matched?.id || null);
+    setSelectedVariantId(match?.id || null);
     setQuantity(1);
   }, [selectedSize, selectedColor, product]);
 
-  const selectedVariant = useMemo(() => {
-    return product?.variants.find(v => v.id === selectedVariantId);
-  }, [selectedVariantId, product]);
+  const selectedVariant = useMemo(
+    () => product?.variants.find(v => v.id === selectedVariantId),
+    [selectedVariantId, product]
+  );
 
-  const maxQuantity = selectedVariant?.stock?.quantity ?? 1;
+  const sizes = useMemo(() => {
+    if (!product) return [];
+    const map = new Map();
+    product.variants.forEach(v => v.size?.id && map.set(v.size.id, v.size));
+    return Array.from(map.values());
+  }, [product]);
 
   const handleQuantityChange = (e) => {
     let val = Number(e.target.value);
@@ -123,11 +129,11 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = async () => {
-    if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
       toast.error(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
+
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/cart/add`, {
         product_variant_id: selectedVariantId,
@@ -146,7 +152,6 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
-    if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
       toast.warn(`Số lượng tối đa là ${maxQuantity}.`);
       return;
@@ -165,9 +170,66 @@ export default function ProductDetail() {
       color_id: selectedVariant.color?.id,
     };
 
-    localStorage.setItem('buy_now', JSON.stringify(item));
-    navigate('/checkout?buy_now=1');
-  };
+    const requireLoginAndVariant = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setAlertMsg('Vui lòng đăng nhập để tiếp tục.');
+            navigate('/login');
+            return false;
+        }
+        if (!selectedVariantId) {
+            setAlertMsg('Vui lòng chọn size và màu.');
+            return false;
+        }
+        return true;
+    };
+
+    const handleAddToCart = async () => {
+        if (!requireLoginAndVariant()) return;
+        if (quantity > maxQuantity) {
+            setAlertMsg(`Số lượng tối đa là ${maxQuantity}.`);
+            return;
+        }
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/cart/add`, {
+                product_variant_id: selectedVariantId,
+                quantity,
+                color_id: Number(selectedColor),
+                size_id: Number(selectedSize),
+                note: '',
+            }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            setAlertMsg('Đã thêm vào giỏ hàng!');
+        } catch (error) {
+            console.error(error);
+            setAlertMsg('Lỗi khi thêm vào giỏ hàng.');
+        }
+    };
+
+    const handleBuyNow = () => {
+        if (!requireLoginAndVariant()) return;
+        if (quantity > maxQuantity) {
+            setAlertMsg(`Số lượng tối đa là ${maxQuantity}.`);
+            return;
+        }
+
+        const item = {
+            product_name: product.name,
+            variant_id: selectedVariant.id,
+            product_variant_id: selectedVariant.id,
+            quantity,
+            price: selectedVariant.sale_price ?? selectedVariant.price,
+            image: selectedVariant.img || product.img,
+            size: selectedVariant.size?.name,
+            color: selectedVariant.color?.name,
+            size_id: selectedVariant.size?.id,
+            color_id: selectedVariant.color?.id,
+        };
+
+        localStorage.setItem('buy_now', JSON.stringify(item));
+        navigate('/checkout?buy_now=1');
+    };
 
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (!product) return <Alert variant="danger">Sản phẩm không tồn tại</Alert>;
@@ -184,67 +246,67 @@ export default function ProductDetail() {
           />
         </Col>
 
-        <Col md={6}>
-          <h2>{product.name}</h2>
-          <p className="text-muted">{product.category?.name}</p>
-          <h4 className="text-danger">{product.price_original?.toLocaleString()}₫</h4>
-          <p>{product.description}</p>
+                <Col md={6}>
+                    <h2>{product.name}</h2>
+                    <p className="text-muted">{product.category?.name}</p>
+                    <h4 className="text-danger">{product.price_original?.toLocaleString()}₫</h4>
+                    <p>{product.description}</p>
 
-          <h5 className="mt-4">Chọn kích cỡ:</h5>
-          <ButtonGroup className="mb-3 flex-wrap">
-            {sizes.map(size => (
-              <ToggleButton
-                key={size.id}
-                id={`size-${size.id}`}
-                type="radio"
-                variant={selectedSize === String(size.id) ? 'dark' : 'outline-dark'}
-                name="size"
-                value={size.id}
-                checked={selectedSize === String(size.id)}
-                onChange={e => setSelectedSize(e.currentTarget.value)}
-              >
-                {size.name}
-              </ToggleButton>
-            ))}
-          </ButtonGroup>
+                    <h5 className="mt-4">Chọn kích cỡ:</h5>
+                    <ButtonGroup className="mb-3 flex-wrap">
+                        {sizes.map(size => (
+                            <ToggleButton
+                                key={size.id}
+                                id={`size-${size.id}`}
+                                type="radio"
+                                variant={selectedSize === String(size.id) ? 'dark' : 'outline-dark'}
+                                name="size"
+                                value={size.id}
+                                checked={selectedSize === String(size.id)}
+                                onChange={e => setSelectedSize(e.currentTarget.value)}
+                            >
+                                {size.name}
+                            </ToggleButton>
+                        ))}
+                    </ButtonGroup>
 
-          <h5>Chọn màu sắc:</h5>
-          <ButtonGroup className="mb-3 flex-wrap">
-            {colors.map(color => (
-              <ToggleButton
-                key={color.id}
-                id={`color-${color.id}`}
-                type="radio"
-                variant={selectedColor === String(color.id) ? 'primary' : 'outline-primary'}
-                name="color"
-                value={color.id}
-                checked={selectedColor === String(color.id)}
-                onChange={e => setSelectedColor(e.currentTarget.value)}
-              >
-                {color.name}
-              </ToggleButton>
-            ))}
-          </ButtonGroup>
+                    <h5>Chọn màu sắc:</h5>
+                    <ButtonGroup className="mb-3 flex-wrap">
+                        {colors.map(color => (
+                            <ToggleButton
+                                key={color.id}
+                                id={`color-${color.id}`}
+                                type="radio"
+                                variant={selectedColor === String(color.id) ? 'primary' : 'outline-primary'}
+                                name="color"
+                                value={color.id}
+                                checked={selectedColor === String(color.id)}
+                                onChange={e => setSelectedColor(e.currentTarget.value)}
+                            >
+                                {color.name}
+                            </ToggleButton>
+                        ))}
+                    </ButtonGroup>
 
-          {selectedVariant && (
-            <>
-              <p className="mt-3 text-success fw-bold">
-                Giá: {(selectedVariant.sale_price ?? selectedVariant.price).toLocaleString()}₫
-              </p>
-              <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
+                    {selectedVariant && (
+                        <>
+                            <p className="mt-3 text-success fw-bold">
+                                Giá: {(selectedVariant.sale_price ?? selectedVariant.price).toLocaleString()}₫
+                            </p>
+                            <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
 
-              <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
-                <Form.Label>Số lượng:</Form.Label>
-                <Form.Control
-                  type="number"
-                  min={1}
-                  max={maxQuantity}
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                />
-              </Form.Group>
-            </>
-          )}
+                            <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
+                                <Form.Label>Số lượng:</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    min={1}
+                                    max={maxQuantity}
+                                    value={quantity}
+                                    onChange={handleQuantityChange}
+                                />
+                            </Form.Group>
+                        </>
+                    )}
 
           <div className="mt-4 d-flex gap-3 flex-wrap">
             <Button variant="dark" onClick={handleAddToCart} disabled={!selectedVariant}>
@@ -281,11 +343,7 @@ export default function ProductDetail() {
             return (
               <Col md={3} key={rp.id} className="mb-3">
                 <div className="border p-2 h-100 d-flex flex-column align-items-center">
-                  <img
-                    src={imageUrl}
-                    alt={rp.name}
-                    style={{ maxHeight: 150, objectFit: 'contain' }}
-                  />
+                  <img src={imageUrl} alt={rp.name} style={{ maxHeight: 150, objectFit: 'contain' }} />
                   <p className="fw-bold mt-2 text-center">{rp.name}</p>
                 </div>
               </Col>
