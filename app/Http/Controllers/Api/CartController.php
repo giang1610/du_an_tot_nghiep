@@ -43,6 +43,10 @@ class CartController extends Controller
             return response()->json(['message' => 'Không tìm thấy thông tin tồn kho.'], 404);
         }
 
+        if ($stock <= 0) {
+            return response()->json(['message' => 'Sản phẩm tạm thời hết hàng.'], 400);
+        }
+
         $user = Auth::user();
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
