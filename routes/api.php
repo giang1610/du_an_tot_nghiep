@@ -118,11 +118,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/payment/momo', [MomoPaymentController::class, 'processMomoPayment']);
+        Route::post('/momo/retry-payment', [MomoPaymentController::class, 'retryMomoPayment']);
+
     });
 
     // Payment VNPAY
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vnpay/pay', [VnpayPaymentController::class, 'processVnpayPayment']);
+        Route::post('/vnpay/retry-payment', [OrderController::class, 'retryVnpayPayment']);
     });
 });
 

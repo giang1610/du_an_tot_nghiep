@@ -661,6 +661,7 @@ class OrderController extends Controller
             $inputData = $request->all();
             $vnp_HashSecret = env('VNP_HASH_SECRET');
             $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
+            $vnp_traVe = env('VNP_TRA_VE');
 
             // Bỏ các trường không dùng để tạo chữ ký
             unset($inputData['vnp_SecureHash'], $inputData['vnp_SecureHashType']);
@@ -721,7 +722,7 @@ class OrderController extends Controller
                             }
 
                             // Gửi mail
-                            // Mail::to($order->customer_email)->queue(new OrderPlaced($order, $order->user));
+                            Mail::to($order->customer_email)->queue(new OrderPlaced($order, $order->user));
 
                             DB::commit();
                         } catch (\Exception $e) {
@@ -732,7 +733,7 @@ class OrderController extends Controller
                     }
                     
 
-                    return redirect( 'http://localhost:3000/vnpay-return?' . http_build_query(data: [
+                    return redirect( $vnp_traVe . '?' . http_build_query(data: [
                             'message' => 'Thanh toán thành công',
                             'order_id' => $order->id,
                             'order_number' => $order->order_number,
@@ -752,6 +753,55 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * Cho phép người dùng tiếp tục thanh toán VNPay nếu đơn hàng chưa được thanh toán
+     */
+    public function retryVnpayPayment(Request $request)
+    {
+        $user = Auth::user();
+        $orderId = $request->input('order_id');
+        $maxRetry = 3;
+
+        // Kiểm tra đơn hàng
+        $order = Order::where('id', $orderId)->where('user_id', $user->id)->first();
+
+        if (!$order) {
+            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        if ($order->payment_method !== 'vnpay') {
+            return response()->json(['message' => 'Đơn hàng không dùng cổng thanh toán VNPay'], 400);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json(['message' => 'Đơn hàng đã được thanh toán thành công'], 400);
+        }
+
+        if ($order->vnp_retry_count >= $maxRetry) {
+            return response()->json(['message' => 'Bạn đã vượt quá số lần thanh toán lại bằng VNPay. Hãy tạo đơn hàng khác'], 429);
+        }
+
+        try {
+            // Gọi lại hàm tạo link thanh toán VNPay
+            $vnpResponse = $this->initiateVnpayPayment(order: $order);
+
+            // Tăng số lần retry
+            $order->increment('vnp_retry_count');
+
+            return response()->json([
+                'message' => 'Tạo lại liên kết thanh toán thành công',
+                'data' => [
+                    'payment_url' => $vnpResponse['payment_url'],
+                    'order_id' => $order->id,
+                    'retry_count' => $order->vnp_retry_count + 1,
+                    'total' => $order->total
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Lỗi tạo lại link VNPay: ' . $e->getMessage());
+            return response()->json(['message' => 'Lỗi hệ thống khi tạo lại link thanh toán'], 500);
+        }
+    }
 
     public function checkReceivedProduct(Request $request)  // Kiểm tra xem người dùng đã nhận sản phẩm chưa
     {
