@@ -227,11 +227,6 @@
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
                                 </span>
                                 @break
-                                {{-- @case('delivered')
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i> Hoàn thành
-                                </span>
-                                @break --}}
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành
@@ -371,14 +366,6 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5
-=======
-                                
->>>>>>> 07d2692ccc54961bf57ca6f74b42ec96b2ff8671
                             </div>
                         </div>
                         <div class="card-body">
@@ -430,6 +417,11 @@
                                 @case('momo')
                                 <span class="badge bg-danger">
                                     <i class="fas fa-mobile-alt me-1"></i> Momo
+                                </span>
+                                @break
+                                @case('vnpay')
+                                <span class="badge bg-success">
+                                    <i class="fas fa-credit-card me-1"></i> vnpay
                                 </span>
                                 @break
                                 @default
