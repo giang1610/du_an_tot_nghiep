@@ -227,7 +227,7 @@ export default function Checkout() {
         );
 
         if (data?.data?.payment_url) {
-          localStorage.removeItem('buy_now');
+          
           await removeSelectedItems();
           window.location.href = data.data.payment_url;
         } else {

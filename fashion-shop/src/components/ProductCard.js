@@ -1,4 +1,4 @@
-import { Card, Button, Badge } from 'react-bootstrap';
+import { Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 export default function ProductCard({ product }) {

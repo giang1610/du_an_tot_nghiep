@@ -1,6 +1,6 @@
 import { Toast, ToastContainer } from 'react-bootstrap';
 import { useState } from 'react';
-import { motion, AnimatePresence, styleEffect } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function PaymentToast({ message, status }) {
   const [show, setShow] = useState(true);

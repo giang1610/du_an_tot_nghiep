@@ -120,16 +120,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/payment/momo', [MomoPaymentController::class, 'processMomoPayment']);
-        Route::post('/payment/momo/ipn', [MomoPaymentController::class, 'momoIpn']);
-        Route::get('/payment/momo-return', [MomoPaymentController::class, 'momoReturn']);
     });
-
+    Route::post('/payment/momo/ipn', [MomoPaymentController::class, 'momoIpn']);
+    Route::get('/payment/momo-return', [MomoPaymentController::class, 'momoReturn']);
     // Payment VNPAY
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vnpay/pay', [VnpayPaymentController::class, 'processVnpayPayment']);
-        Route::get('/vnpay-return', [VnpayPaymentController::class, 'vnpayReturn']);
-        Route::get('/vnpay/ipn', [VnpayPaymentController::class, 'vnpayIpn']);
     });
+    Route::get('/vnpay-return', [VnpayPaymentController::class, 'vnpayReturn']);
+    Route::get('/vnpay/ipn', [VnpayPaymentController::class, 'vnpayIpn']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
