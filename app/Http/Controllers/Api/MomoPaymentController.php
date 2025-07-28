@@ -112,7 +112,7 @@ class MomoPaymentController extends Controller
         $secretKey    = env('MOMO_SECRET_KEY');
         $redirectUrl  = env('MOMO_REDIRECT_URL');
         $ipnUrl       = env('MOMO_IPN_URL');
-        $requestType  = env('MOMO_REQUEST_TYPE', 'captureWallet');
+        $requestType  = env('MOMO_REQUEST_TYPE', 'payWithATM');
 
         $extraData = "";
         $requestId = (string) Str::uuid();
