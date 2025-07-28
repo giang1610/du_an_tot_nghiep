@@ -18,6 +18,8 @@ export default function VnpayReturn() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const tax = 20000;
+
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const data = {

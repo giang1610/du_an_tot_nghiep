@@ -85,16 +85,17 @@ export default function ProductDetail() {
       setQuantity(1);
       return;
     }
-    const matched = product.variants.find(
+    const match = product.variants.find(
       v => v.size?.id === Number(selectedSize) && v.color?.id === Number(selectedColor)
     );
-    setSelectedVariantId(matched?.id || null);
+    setSelectedVariantId(match?.id || null);
     setQuantity(1);
   }, [selectedSize, selectedColor, product]);
 
-  const selectedVariant = useMemo(() => {
-    return product?.variants.find(v => v.id === selectedVariantId);
-  }, [selectedVariantId, product]);
+  const selectedVariant = useMemo(
+    () => product?.variants.find(v => v.id === selectedVariantId),
+    [selectedVariantId, product]
+  );
 
   const maxQuantity = selectedVariant?.stock?.quantity ?? 1;
 
@@ -123,11 +124,11 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = async () => {
-    if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
       toast.error(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
+
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/cart/add`, {
         product_variant_id: selectedVariantId,
@@ -146,7 +147,6 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
-    if (!requireLoginAndVariant()) return;
     if (quantity > maxQuantity) {
       toast.warn(`Số lượng tối đa là ${maxQuantity}.`);
       return;
@@ -281,11 +281,7 @@ export default function ProductDetail() {
             return (
               <Col md={3} key={rp.id} className="mb-3">
                 <div className="border p-2 h-100 d-flex flex-column align-items-center">
-                  <img
-                    src={imageUrl}
-                    alt={rp.name}
-                    style={{ maxHeight: 150, objectFit: 'contain' }}
-                  />
+                  <img src={imageUrl} alt={rp.name} style={{ maxHeight: 150, objectFit: 'contain' }} />
                   <p className="fw-bold mt-2 text-center">{rp.name}</p>
                 </div>
               </Col>

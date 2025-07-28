@@ -93,8 +93,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/remove-selected', [CartController::class, 'removeSelectedItems']);
             Route::delete('/clear', [CartController::class, 'clearCart']);
             Route::get('/total', [CartController::class, 'getCartTotal']);
-            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
-
         });
     });
 });
@@ -138,3 +136,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
     Route::post('/vouchers/apply', [VoucherController::class, 'apply']);
 });
+// Không cho vào trong auth:sanctum
+Route::post('/payment/momo/webhook', [MomoPaymentController::class, 'momoIpn']); // IPN
+Route::get('/payment/momo/return', [MomoPaymentController::class, 'momoReturn']);
+
+
+Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
