@@ -1,96 +1,52 @@
-import axios from 'axios';
+// src/pages/MomoReturn.jsx
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Spinner, Alert, Button } from 'react-bootstrap';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
-const MomoReturn = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [message, setMessage] = useState('Đang xác minh kết quả...');
-  const [order, setOrder] = useState(null);
+export default function MomoReturn() {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
-
-    const verifyPayment = async () => {
-      const params = new URLSearchParams(location.search);
-      const orderId = params.get('orderId');
-      const resultCode = params.get('resultCode');
+    const fetchResult = async () => {
+      const orderId = searchParams.get('orderId');
+      const resultCode = searchParams.get('resultCode');
 
       if (!orderId || !resultCode) {
-        if (isMounted) {
-          setMessage('Thông tin không hợp lệ.');
-          setLoading(false);
-        }
+        setError('URL không hợp lệ');
+        setLoading(false);
         return;
       }
 
       try {
-        const url = `http://localhost:8000/api/payment/momo/return?orderId=${encodeURIComponent(orderId)}&resultCode=${encodeURIComponent(resultCode)}`;
-        const res = await axios.get(url);
-        if (isMounted) {
-          setMessage(res.data.message || 'Xác minh thành công.');
-          setOrder(res.data.data); // lưu lại thông tin đơn hàng
-        }
-      } catch {
-        if (isMounted) {
-          setMessage('Không thể xác minh kết quả thanh toán.');
-        }
+        const res = await axios.get(`http://localhost:8000/api/orders/momo/return?orderId=${orderId}&resultCode=${resultCode}`);
+        setResult(res.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Lỗi xác minh thanh toán');
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
 
-    verifyPayment();
+    fetchResult();
+  }, [searchParams]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [location.search]);
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
-  const handleBack = () => {
-    navigate('/orders');
-  };
+  if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
-    <div className="container py-5" style={{maxWidth: 600}}>
-      <h3 className="mb-4 text-center">Kết quả thanh toán MoMo</h3>
-      {loading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{height: 150}}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="alert alert-info text-center">{message}</div>
-          {order ? (
-            <div className="card shadow-sm mb-4">
-              <div className="card-body">
-                <h5 className="card-title mb-3">Thông tin đơn hàng</h5>
-                <p><strong>Mã đơn hàng:</strong> #{order.order_number}</p>
-                <p>
-                  <strong>Trạng thái thanh toán:</strong>{' '}
-                  {order.payment_status === 'paid' ? (
-                    <span className="badge bg-success">Đã thanh toán</span>
-                  ) : (
-                    <span className="badge bg-warning text-dark">Chưa thanh toán</span>
-                  )}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="alert alert-warning">Không tìm thấy thông tin đơn hàng.</div>
-          )}
-          <div className="text-center">
-            <button className="btn btn-primary" onClick={handleBack}>
-              Quay lại trang đơn hàng
-            </button>
-          </div>
-        </>
-      )}
+    <div className="container my-5" style={{ maxWidth: 600 }}>
+      <h4>{result?.message}</h4>
+      <p>Mã đơn hàng: <strong>{result?.data?.order_number}</strong></p>
+      <p>Trạng thái: <strong>{result?.data?.status}</strong></p>
+      <p>Thanh toán: <strong>{result?.data?.payment_status}</strong></p>
+
+      <Button onClick={() => navigate('/')}>Về trang chủ</Button>
     </div>
   );
-};
-
-export default MomoReturn;
+}

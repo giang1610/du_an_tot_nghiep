@@ -1,14 +1,20 @@
 @component('mail::message')
-# Xác minh email mới
+# 📧 Xác minh Email Mới
 
-Bạn đã yêu cầu cập nhật email. Vui lòng nhấn vào nút bên dưới để xác minh địa chỉ email mới:
+Xin chào
+
+Bạn (hoặc ai đó) vừa yêu cầu cập nhật địa chỉ email cho tài khoản tại **{{ config('app.name') }}**.
+
+Để xác minh địa chỉ email mới của bạn, vui lòng nhấn vào nút bên dưới:
 
 @component('mail::button', ['url' => $verificationUrl])
-Xác minh Email Mới
+🔒 Xác Minh Email Mới
 @endcomponent
 
-Nếu bạn không yêu cầu, vui lòng bỏ qua email này.
+> Nếu bạn không yêu cầu thay đổi này, vui lòng **bỏ qua** email này. Không có hành động nào sẽ được thực hiện.
 
-Thanks,<br>
-{{ config('app.name') }}
+Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi!
+
+Trân trọng,  
+**{{ config('app.name') }} Team**
 @endcomponent

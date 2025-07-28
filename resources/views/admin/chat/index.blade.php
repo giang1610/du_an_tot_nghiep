@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 <style>
     .row{
-         background-image: linear-gradient(rgb(148, 114, 87), rgb(198, 210, 223));
+        background-image: url('https://i.pinimg.com/736x/6d/38/13/6d38136429fa84b7f4011209e74bdc8c.jpg');
          border-radius: 10px;
     }
 </style>

@@ -165,40 +165,40 @@ export default function MyOrdersPage() {
     };
 
     const handleRequestReturn = async () => {
-    if (!returnReason.trim()) {
-        alert('Vui lòng nhập lý do hoàn đơn!');
-        return;
-    }
-    const token = localStorage.getItem('token');
-    const formData = new FormData();
-    formData.append('reason', returnReason);
-    returnMedia.forEach(file => formData.append('media[]', file)); // <-- sửa lại
+        if (!returnReason.trim()) {
+            alert('Vui lòng nhập lý do hoàn đơn!');
+            return;
+        }
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('reason', returnReason);
+        returnMedia.forEach(file => formData.append('media[]', file)); // <-- sửa lại
 
-    setReturnLoading(true);
-    try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/orders/${returnOrderId}/request-return`, formData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        alert('Đã gửi yêu cầu hoàn đơn!');
-        setShowReturnModal(false);
-        setReturnReason('');
-        setReturnMedia([]);
-        setReturnOrderId(null);
-        // Reload orders
-        setLoading(true);
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        setOrders(res.data.data?.data || []);
-    } catch {
-        alert('Yêu cầu hoàn đơn thất bại!');
-    } finally {
-        setReturnLoading(false);
-    }
-};
+        setReturnLoading(true);
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${returnOrderId}/request-return`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            alert('Đã gửi yêu cầu hoàn đơn!');
+            setShowReturnModal(false);
+            setReturnReason('');
+            setReturnMedia([]);
+            setReturnOrderId(null);
+            // Reload orders
+            setLoading(true);
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOrders(res.data.data?.data || []);
+        } catch {
+            alert('Yêu cầu hoàn đơn thất bại!');
+        } finally {
+            setReturnLoading(false);
+        }
+    };
 
     const handleConfirmReceived = async (orderId) => {
         if (!window.confirm('Bạn xác nhận đã nhận hàng?')) return;
@@ -238,31 +238,24 @@ export default function MyOrdersPage() {
         }
     };
 
-    // Hoàn đơn
-const handleReturnMediaChange = (e) => {
-    const files = Array.from(e.target.files);
-    setReturnMedia(files);
-    setReturnMediaPreviews(files.map(file => URL.createObjectURL(file)));
-};
+    // const handleReturnOrder = async (orderId) => {
+    //     if (!window.confirm('Bạn xác nhận muốn hoàn hàng đơn này?')) return;
+    //     const token = localStorage.getItem('token');
 
-    const handleReturnOrder = async (orderId) => {
-        if (!window.confirm('Bạn xác nhận muốn hoàn hàng đơn này?')) return;
-        const token = localStorage.getItem('token');
-
-        try {
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/request-return`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setOrders(prev =>
-                prev.map(order =>
-                    order.id === orderId ? { ...order, status: 'return_requested' } : order
-                )
-            );
-            alert('Yêu cầu hoàn hàng đã được gửi!');
-        } catch {
-            alert('Không thể yêu cầu hoàn hàng. Vui lòng thử lại.');
-        }
-    };
+    //     try {
+    //         await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/request-return`, {}, {
+    //             headers: { Authorization: `Bearer ${token}` }
+    //         });
+    //         setOrders(prev =>
+    //             prev.map(order =>
+    //                 order.id === orderId ? { ...order, status: 'return_requested' } : order
+    //             )
+    //         );
+    //         alert('Yêu cầu hoàn hàng đã được gửi!');
+    //     } catch {
+    //         alert('Không thể yêu cầu hoàn hàng. Vui lòng thử lại.');
+    //     }
+    // };
 
     return (
         <>
@@ -350,10 +343,11 @@ const handleReturnMediaChange = (e) => {
                                             </Badge>
                                         </div>
                                         <div className="mt-2"><strong>Thanh toán:</strong>{' '}
-                                            <Badge bg={PAYMENT_STATUS_VARIANTS[order.payment_status] || 'secondary'}>
-                                                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                                            <Badge bg={PAYMENT_STATUS_VARIANTS[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'secondary'}>
+                                                {PAYMENT_STATUS_LABELS[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'Không rõ'}
                                             </Badge>
                                         </div>
+
                                         {order.payment_method && (
                                             <div>Hình thức: {PAYMENT_METHOD_LABELS[order.payment_method]}</div>
                                         )}
@@ -392,7 +386,7 @@ const handleReturnMediaChange = (e) => {
                                         const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                         if (diffDays <= 7) {
                                             return (
-                                                <Button variant="warning" size="sm" onClick={() => handleReturnOrder(order.id)}>
+                                                <Button variant="warning" size="sm" onClick={() => handleShowReturnModal(order.id)}>
                                                     Hoàn hàng
                                                 </Button>
                                             );

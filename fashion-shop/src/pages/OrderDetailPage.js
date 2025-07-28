@@ -68,19 +68,18 @@ export default function OrderDetailPage() {
 
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [returnReason, setReturnReason] = useState('');
+    const [returnMedia, setReturnMedia] = useState([]);
+    const [returnLoading, setReturnLoading] = useState(false);
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewItem, setReviewItem] = useState(null);
     const [reviewContent, setReviewContent] = useState('');
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewLoading, setReviewLoading] = useState(false);
+    const [reviewMedia, setReviewMedia] = useState([]);
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
-    const [reviewMedia, setReviewMedia] = useState([]);
-    const [returnMedia, setReturnMedia] = useState([]);
-    const [returnLoading, setReturnLoading] = useState(false);
-    const [reviewMediaPreviews, setReviewMediaPreviews] = useState([]);
 
     useEffect(() => {
         const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
@@ -388,7 +387,7 @@ const handleReviewMediaChange = (e) => {
                                                                                 /\.(jpg|jpeg|png)$/i.test(path)
                                                                                     ? (
                                                                                         <img
-                                                                                            key={idx}
+                                                                                            key={`review-media-${r.id}-${idx}`}
                                                                                             src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
                                                                                             alt="Ảnh đánh giá"
                                                                                             width={120}
@@ -397,7 +396,7 @@ const handleReviewMediaChange = (e) => {
                                                                                     )
                                                                                     : (
                                                                                         <video
-                                                                                            key={idx}
+                                                                                            key={`review-media-${r.id}-${idx}`}
                                                                                             src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
                                                                                             controls
                                                                                             width={180}
@@ -456,9 +455,10 @@ const handleReviewMediaChange = (e) => {
 
                         <p className="mt-3 mb-0">
                             <strong>Thanh toán:</strong>{' '}
-                            <Badge bg={paymentStatusBadgeVariant[order.payment_status] || 'secondary'}>
-                                {PAYMENT_STATUS_LABELS[order.payment_status] || 'Không rõ'}
+                            <Badge bg={paymentStatusBadgeVariant[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'secondary'}>
+                                {PAYMENT_STATUS_LABELS[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'Không rõ'}
                             </Badge>
+
                         </p>
                         {order.status === 'pending' && (
                             <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)}>

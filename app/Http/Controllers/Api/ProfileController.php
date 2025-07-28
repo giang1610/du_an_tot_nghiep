@@ -15,6 +15,8 @@ class ProfileController extends Controller
         $request->validate([
             'name'  => 'required|string|max:20',
             'email' => 'required|string|email|max:40',
+            'phone' => 'nullable|string|max:15',
+            'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|string', // base64 string
             'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string|max:255',
@@ -37,7 +39,7 @@ class ProfileController extends Controller
             'address' => $request->address,
         ];
 
-        
+
         if ($request->avatar) {
             try {
                 $base64 = $request->avatar;
@@ -54,7 +56,7 @@ class ProfileController extends Controller
                     $fileName = 'avatars/' . Str::uuid() . '.' . $type;
                     Storage::disk('public')->put($fileName, $imageData);
 
-                   
+
                     $updateData['img_thumbnail'] = $fileName;
                 }
             } catch (\Exception $e) {
