@@ -11,7 +11,7 @@
 
     <div class="card-body p-0">
         @if($users->isEmpty())
-            <div class="alert alert-secondary m-3 text-center">Chưa có khách hàng nào nhắn tin.</div>
+            <div class="alert alert-secondary m-3 text-center ">Chưa có khách hàng nào nhắn tin.</div>
         @else
             <div class="chat-list-container list-group list-group-flush">
                 @foreach($users as $item)

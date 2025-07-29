@@ -1,4 +1,6 @@
-
+.card{
+margin: 10px;
+}
 
 .chat-list-container {
         max-height: 75vh;
@@ -8,6 +10,7 @@
     .card-header{
        
         background-image: linear-gradient(rgb(171, 227, 235), rgb(179, 216, 208)) ;
+        
     }
     .chat-list-item {
         display: flex;
@@ -19,6 +22,7 @@
         transition: background-color 0.2s;
         cursor: pointer;
         background-image: linear-gradient(rgb(186, 187, 209), rgb(83, 110, 139)) ;
+       
     }
     .chat-list-item:hover {
         background-color: #f1f3f5;

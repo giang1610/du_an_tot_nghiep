@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaUser, FaShoppingCart } from 'react-icons/fa';
 import SearchBar from './SearchBar';
+import Lottie from 'lottie-react';
+import phiHanhGia from '../animation/phi_hanh_gia.json';
 
 export default function CustomNavbar() {
   const { user, logout } = useAuth();
@@ -18,7 +20,7 @@ export default function CustomNavbar() {
       <Container>
         <Navbar.Brand as={Link} to="/">
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNxJnW1NiZVAaDlLsRqlSZqhEq0juTQShoQg&s"
+            src="https://sdmntpreastus2.oaiusercontent.com/files/00000000-e518-61f6-a87f-a98863a09895/raw?se=2025-07-27T17%3A30%3A27Z&sp=r&sv=2024-08-04&sr=b&scid=840a11b3-d1ce-51a7-84d4-eca160e138fe&skoid=b0fd38cc-3d33-418f-920e-4798de4acdd1&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-07-27T12%3A52%3A28Z&ske=2025-07-28T12%3A52%3A28Z&sks=b&skv=2024-08-04&sig=T%2BwD7DzvfkUhHnXk6vbd7Evj/DMvw4pg/H284P3VNww%3D"
             alt="MG Logo"
             height="30"
             className="d-inline-block align-top"
@@ -34,13 +36,17 @@ export default function CustomNavbar() {
             <Nav.Link as={Link} to="/products">Sản phẩm</Nav.Link>
             <Nav.Link as={Link} to="/about">Giới thiệu</Nav.Link>
             <Nav.Link as={Link} to="/contact">Liên hệ</Nav.Link>
+
           </Nav>
 
           {/* Center search */}
           <SearchBar />
+           <Lottie animationData={phiHanhGia} loop={true} style={{ width: 50, height: 50 }} />
+
 
           {/* Right nav */}
           <Nav className="align-items-center ms-3">
+
             <Nav.Link as={Link} to="/cart" className="me-2">
               <FaShoppingCart size={20} />
             </Nav.Link>
