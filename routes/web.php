@@ -168,6 +168,10 @@ Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('
 
 
 });
+// NÊN ĐẶT NGOÀI group `admin`
+
+
+
 
 Route::get('/thank-you', function () {
     return view('thank-you');
