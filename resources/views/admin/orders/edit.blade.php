@@ -87,14 +87,14 @@
             <!-- Trạng thái đơn hàng -->
             @php
                 $statusOptions = [
-                    'cancelled' => 'Đã hủy',
+                    'cancelled' => 'Hủy đơn hàng',
                     'pending' => 'Chờ xử lý',
                     'processing' => 'Đang xử lý',
                     'picking' => 'Đang lấy hàng',
                     'shipping' => 'Đang giao hàng',
                     'shipped' => 'Đã giao hàng',
-                    'delivered' => 'Đã nhận hàng',
                     'return_requested' => 'Yêu cầu hoàn hàng',
+                    'delivered' => 'Đã nhận hàng',
                     'returned' => 'Hoàn hàng',
                     'completed' => 'Đơn hàng hoàn thành',
                     'failed_1' => 'Giao hàng thất bại lần 1',
@@ -137,11 +137,11 @@
                                 <option value="{{ $currentStatus }}" selected disabled>
                                     {{ $statusOptions[$currentStatus] }} (hiện tại)
                                 </option>
-                                @if ($nextStatus)
+                                {{-- @if ($nextStatus)
                                     <option value="{{ $nextStatus }}">
                                         {{ $statusOptions[$nextStatus] }}
                                     </option>
-                                @endif
+                                @endif --}}
                                 @if (in_array($currentStatus, ['cancelled', 'shipped', 'completed']))
                                 <div class="alert alert-warning mt-2">
                                     <i class="bi bi-exclamation-triangle me-2"></i>
@@ -171,7 +171,7 @@
                 </div>
             </div>
 
-            @if (!in_array($currentStatus, ['shipped','cancelled','completed']) && $order->status !== 'return_requested')
+            @if (!in_array($currentStatus, ['shipped','cancelled','completed','failed']) && $order->status !== 'return_requested')
                 <div class="text-end">
                     <button type="submit" class="btn btn-primary px-4 py-2">
                         <i class="bi bi-check-circle me-2"></i>Cập nhật trạng thái
