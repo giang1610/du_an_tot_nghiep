@@ -97,6 +97,8 @@
                     'return_requested' => 'Yêu cầu hoàn hàng',
                     'returned' => 'Hoàn hàng',
                     'completed' => 'Đơn hàng hoàn thành',
+                    'failed_1' => 'Giao hàng thất bại lần 1',
+                    'failed_2' => 'Giao hàng thất bại lần 2',
                     'failed' => 'Giao hàng thất bại',
                 ];
                 $statusFlow = ['pending', 'processing', 'picking', 'shipping', 'shipped'];
@@ -114,6 +116,7 @@
                         <label class="form-label">Trạng thái hiện tại</label>
                         <input type="text" class="form-control bg-light fw-bold" value="{{ $statusOptions[$currentStatus] }}" readonly>
                     </div>
+
 
                     <div class="mb-3">
                         @if ($currentStatus == 'shipped' && !in_array($order->status, ['return_requested', 'returned']))
@@ -144,6 +147,18 @@
                                     <i class="bi bi-exclamation-triangle me-2"></i>
                                     Đơn hàng đã ở trạng thái <b>{{ $statusOptions[$currentStatus] }}</b>, không thể đổi trạng thái nữa.
                                 </div>
+                                @endif
+                                 @if ($currentStatus === 'shipping')
+                                <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                <option value="failed_1">Giao hàng thất bại lần 1</option>
+                                @elseif ($currentStatus === 'failed_1')
+                                    <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                    <option value="failed_2">Giao hàng thất bại lần 2</option>
+                                @elseif ($currentStatus === 'failed_2')
+                                    <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                    <option value="failed">{{ $statusOptions['failed'] }}</option>
+                                @elseif ($nextStatus)
+                                    <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
                                 @endif
                             </select>
                     </div>
