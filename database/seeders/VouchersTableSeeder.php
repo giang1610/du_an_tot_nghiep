@@ -1,21 +1,19 @@
 <?php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class VouchersTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run()
     {
+        $now = Carbon::now();
+
         DB::table('vouchers')->insert([
-            // 4 voucher giảm giá sản phẩm
             [
-                'name' => 'Giảm 10% cho đơn hàng ',
+                'name' => 'Giảm 10% cho đơn hàng',
                 'code' => 'SAVE10',
                 'type' => 'product',
                 'discount_type' => 'percent',
@@ -25,8 +23,8 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 200,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Giảm 50.000 cho đơn hàng từ 500k',
@@ -39,8 +37,8 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 50,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Giảm 15% cho đơn hàng nữ',
@@ -53,8 +51,8 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 80,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Giảm 100.000 cho đơn hàng từ 1 triệu',
@@ -67,11 +65,9 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 30,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
-            
-            // 5 voucher giảm phí ship
             [
                 'name' => 'Giảm 10.000 cho ship',
                 'code' => 'SHIP10K',
@@ -83,8 +79,8 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 50,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Giảm 20.000 cho ship',
@@ -97,8 +93,8 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 100,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Giảm 50% cho ship',
@@ -111,8 +107,8 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 60,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Miễn phí ship cho đơn từ 200k',
@@ -120,14 +116,13 @@ class VouchersTableSeeder extends Seeder
                 'type' => 'shipping',
                 'discount_type' => 'amount',
                 'discount_amount' => 20000,
-                'min_order_amount' => 200000,
                 'discount_percent' => null,
                 'start_date' => '2025-07-01',
                 'end_date' => '2025-12-31',
                 'quantity' => 40,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Giảm 30.000 cho ship',
@@ -140,8 +135,8 @@ class VouchersTableSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'quantity' => 80,
                 'usage_limit' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
     }

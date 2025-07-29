@@ -230,13 +230,6 @@ export default function OrderDetailPage() {
         }
     };
 
-    // Đánh giá
-const handleReviewMediaChange = (e) => {
-    const files = Array.from(e.target.files);
-    setReviewMedia(files);
-    setReviewMediaPreviews(files.map(file => URL.createObjectURL(file)));
-};
-
     if (loading) return <Spinner />;
     if (error) return <Alert variant="danger">{error}</Alert>;
     if (!order) return <Alert variant="danger">Không tìm thấy đơn hàng.</Alert>;
@@ -506,54 +499,16 @@ const handleReviewMediaChange = (e) => {
                         <InteractiveStarRating rating={reviewRating} onChange={setReviewRating} />
                     </Form.Group>
                     <Form.Group className="mt-2">
-    <Form.Label>Ảnh/Video sản phẩm</Form.Label>
-    <Form.Control
-        type="file"
-        accept="image/*,video/*"
-        multiple
-        onChange={handleReviewMediaChange}
-    />
-    <div className="d-flex flex-wrap gap-2 mt-2">
-    {reviewMediaPreviews.map((url, idx) =>
-        reviewMedia[idx].type.startsWith('image/') ? (
-            <div key={idx} style={{ position: 'relative' }}>
-                <img
-                    src={url}
-                    alt="preview"
-                    style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
-                />
-                <Button
-                    size="sm"
-                    variant="outline-danger"
-                    style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
-                    onClick={() => {
-                        setReviewMedia(prev => prev.filter((_, i) => i !== idx));
-                        setReviewMediaPreviews(prev => prev.filter((_, i) => i !== idx));
-                    }}
-                >X</Button>
-            </div>
-        ) : (
-            <div key={idx} style={{ position: 'relative' }}>
-                <video
-                    src={url}
-                    controls
-                    style={{ width: 120, height: 120, borderRadius: 8, border: '1px solid #ddd' }}
-                />
-                <Button
-                    size="sm"
-                    variant="outline-danger"
-                    style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
-                    onClick={() => {
-                        setReviewMedia(prev => prev.filter((_, i) => i !== idx));
-                        setReviewMediaPreviews(prev => prev.filter((_, i) => i !== idx));
-                    }}
-                >X</Button>
-            </div>
-        )
-    )}
-</div>
-</Form.Group>
-
+                        <Form.Label>Ảnh/Video sản phẩm</Form.Label>
+                        <Form.Control
+                            type="file"
+                            accept="image/*,video/*"
+                            multiple
+                            onChange={e => {
+                                setReviewMedia(prev => [...(Array.isArray(prev) ? prev : []), ...Array.from(e.target.files)]);
+                            }}
+                        />
+                    </Form.Group>
                     <Form.Group className="mt-2">
                         <Form.Label>Nội dung</Form.Label>
                         <Form.Control as="textarea" rows={3} value={reviewContent} onChange={e => setReviewContent(e.target.value)} />
