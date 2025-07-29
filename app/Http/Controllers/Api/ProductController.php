@@ -46,12 +46,10 @@ class ProductController extends Controller
     {
         $query = Product::query()->where('status', 1);
 
-        // Lọc theo danh mục
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
 
-        // Lọc theo giá
         if ($request->filled('price')) {
             $range = explode('-', $request->price);
             if (count($range) === 2) {
@@ -60,17 +58,14 @@ class ProductController extends Controller
             }
         }
 
-        // Lọc theo size
         if ($request->filled('size')) {
             $query->whereHas('variants', fn($q) => $q->where('size_id', $request->size));
         }
 
-        // Tìm kiếm theo tên
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        // Lấy danh sách sản phẩm + quan hệ
         $products = $query->with([
             'variants:id,product_id,price,sale_price,sale_start_date,sale_end_date,size_id,color_id',
             'images:id,product_id,url'
@@ -115,15 +110,27 @@ class ProductController extends Controller
             ->whereHas('productVariant', fn($q) => $q->where('product_id', $product->id))
             ->latest()->get();
 
-        $related = Product::with('images')
+        // ✅ Sửa: chỉ lấy sản phẩm liên quan đang hoạt động, có variant và ảnh
+        $related = Product::with([
+            'variants:id,product_id,price,sale_price,sale_start_date,sale_end_date,size_id,color_id',
+            'images:id,product_id,url'
+        ])
+            ->where('status', 1)
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
+            ->latest()
             ->take(4)
             ->get();
 
         foreach ($related as $rp) {
             $this->processProductPricing($rp);
+
+            // ✅ Thêm dòng xử lý ảnh để không bị mất ảnh
+            $rp->image_urls = $rp->images->map(function ($img) {
+                return asset('storage/' . $img->url);
+            });
         }
+
 
         return response()->json([
             'success' => true,
@@ -140,13 +147,18 @@ class ProductController extends Controller
      */
     public function related($category_id, Request $request)
     {
-        $query = Product::where('category_id', $category_id);
+        $query = Product::where('category_id', $category_id)
+            ->where('status', 1);
 
         if ($request->filled('exclude')) {
             $query->where('id', '!=', $request->exclude);
         }
 
-        $related = $query->with(['variants.color', 'variants.size', 'variants.images'])->get();
+        $related = $query->with([
+            'variants.color',
+            'variants.size',
+            'variants.images'
+        ])->get();
 
         foreach ($related as $product) {
             $this->processProductPricing($product);

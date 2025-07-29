@@ -37,7 +37,6 @@ const statusBadgeVariant = {
     cancelled: 'secondary',
     failed: 'danger',
     processing: 'info',
-    completed: 'primary',
     shipping: 'info',
     shipped: 'success',
     return_requested: 'warning',
@@ -445,9 +444,10 @@ export default function OrderDetailPage() {
                                 const diffDays = Math.floor((now - baseDate) / (1000 * 60 * 60 * 24));
 
                                 return diffDays <= 7 ? (
-                                    <Button variant="warning" size="sm" onClick={() => setShowReturnModal(true)}>
-                                        Yêu cầu hoàn đơn
+                                    <Button disabled={returnLoading}>
+                                        {returnLoading ? 'Đang gửi yêu cầu...' : 'Yêu cầu hoàn đơn'}
                                     </Button>
+
                                 ) : null;
                             })()}
 
