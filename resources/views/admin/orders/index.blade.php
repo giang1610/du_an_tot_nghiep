@@ -183,6 +183,11 @@
                                     <i class="fas fa-mobile-alt me-1"></i> Momo
                                 </span>
                                 @break
+                                @case('vnpay')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                    </span>
+                                    @break
                                 @default
                                 <span class="badge bg-light text-dark">
                                     <i class="fas fa-question me-1"></i> Khác
@@ -227,11 +232,6 @@
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
                                 </span>
                                 @break
-                                {{-- @case('delivered')
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i> Hoàn thành
-                                </span>
-                                @break --}}
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành
@@ -319,7 +319,7 @@
                 </table>
 
                 <!-- Mobile view -->
-                <div class="d-md-none">
+                {{-- <div class="d-md-none">
                     @forelse ($orders as $order)
                     <div class="card mb-3">
                         <div class="card-header bg-light d-flex justify-content-between">
@@ -371,14 +371,6 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5
-=======
-                                
->>>>>>> 07d2692ccc54961bf57ca6f74b42ec96b2ff8671
                             </div>
                         </div>
                         <div class="card-body">
@@ -418,34 +410,31 @@
                                     <div><i class="fas fa-map-marker-alt me-2"></i> {{ $order->shipping_address }}</div>
                                 </div>
                             </div>
-
+                            
                             <div class="mb-2">
                                 <strong>Thanh toán:</strong>
                                 @switch($order->payment_method)
                                 @case('cod')
-                                <span class="badge bg-secondary">
-                                    <i class="fas fa-money-bill-wave me-1"></i> COD
-                                </span>
-                                @break
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-money-bill-wave me-1"></i> COD
+                                    </span>
+                                    @break
                                 @case('momo')
-                                <span class="badge bg-danger">
-                                    <i class="fas fa-mobile-alt me-1"></i> Momo
-                                </span>
-                                @break
+                                    <span style="background-color: #A50064; color: white" class="badge">
+                                        <i class="fas fa-mobile-alt me-1"></i> Momo
+                                    </span>
+                                    @break
+                                   
+                                @case('vnpay')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                    </span>
+                                    @break
                                 @default
-                                <span class="badge bg-light text-dark">
-                                    <i class="fas fa-question me-1"></i> Khác
-                                </span>
-                                @endswitch
-                                @if($order->payment_status == 'paid')
-                                <span class="text-success ms-2">
-                                    <i class="fas fa-check-circle me-1"></i> Đã thanh toán
-                                </span>
-                                @else
-                                <span class="text-warning ms-2">
-                                    <i class="fas fa-clock me-1"></i> Chưa thanh toán
-                                </span>
-                                @endif
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-question me-1"></i> Khác
+                                    </span>
+                            @endswitch
                             </div>
 
                             <div class="mb-3">
@@ -486,7 +475,7 @@
                         </div>
                     </div>
                     @endforelse
-                </div>
+                </div> --}}
             </div>
 
             @if($orders->hasPages())

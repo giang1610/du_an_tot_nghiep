@@ -7,7 +7,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 
-
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
