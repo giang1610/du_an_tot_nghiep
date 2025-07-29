@@ -13,8 +13,8 @@ import { listenToStockUpdates } from '../realtime/stockRealtime';
 import ReviewCard from '../components/ReviewCard';
 
 export default function ProductDetail() {
-    const { slug } = useParams();
-    const navigate = useNavigate();
+  const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
