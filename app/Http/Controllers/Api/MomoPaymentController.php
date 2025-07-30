@@ -240,44 +240,50 @@ class MomoPaymentController extends Controller
         }
     }
 
-    public function momoReturn(Request $request)
-    {
-        $orderId = $request->query('orderId');
-        $resultCode = $request->query('resultCode');
+  public function momoReturn(Request $request)
+{
+    $orderId = $request->query('orderId');
+    $resultCode = $request->query('resultCode');
 
-        if (is_null($orderId) || is_null($resultCode)) {
-            return response()->json(['message' => 'Tham số không hợp lệ'], 400);
-        }
-
-        $orderId = explode('-', $orderId)[0];
-        $order = Order::find($orderId);
-
-        if (!$order) {
-            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
-        }
-
-        if ((int)$resultCode === 0) {
-            return response()->json([
-                'message' => 'Thanh toán thành công',
-                'data' => [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'status' => $order->status,
-                    'payment_status' => $order->payment_status,
-                ]
-            ]);
-        }
-
-        return response()->json([
-            'message' => 'Thanh toán thất bại hoặc đã hủy',
-            'data' => [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'status' => $order->status,
-                'payment_status' => $order->payment_status,
-            ]
-        ], 400);
+    if (is_null($orderId) || is_null($resultCode)) {
+        return response()->json(['message' => 'Tham số không hợp lệ'], 400);
     }
+
+    $orderId = explode('-', $orderId)[0];
+
+    // ✅ Load quan hệ để gửi về React
+    $order = Order::with([
+        'items.productVariant.product',
+        'items.productVariant.color',
+        'items.productVariant.size'
+    ])->find($orderId);
+
+    if (!$order) {
+        return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
+    }
+
+    // ✅ Cập nhật nếu cần
+    if ((int)$resultCode === 0 && $order->payment_status === 'pending') {
+        $order->update([
+            'status' => 'processing',
+            'payment_status' => 'paid',
+        ]);
+    }
+
+    // ✅ Trả về đầy đủ thông tin đơn hàng và sản phẩm
+    return response()->json([
+        'message' => (int)$resultCode === 0 ? 'Thanh toán thành công' : 'Thanh toán thất bại hoặc đã hủy',
+        'data' => [
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'status' => $order->status,
+            'payment_status' => $order->payment_status,
+            'items' => $order->items // => sẽ có đầy đủ product, size, color
+        ]
+    ], (int)$resultCode === 0 ? 200 : 400);
+}
+
+
 
     protected function refundMomoPayment(Order $order, $amount = null)
     {

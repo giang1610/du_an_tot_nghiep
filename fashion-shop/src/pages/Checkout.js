@@ -351,9 +351,13 @@ export default function Checkout() {
             <Form.Group className="mb-3">
               <Form.Label>Phương thức thanh toán</Form.Label>
               <Form.Select
-                name="payment_method"
                 value={form.payment_method}
-                onChange={e => setField('payment_method', e.target.value)}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    payment_method: e.target.value,
+                  }))
+                }
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                 <option value="momo">Thanh toán MoMo</option>
@@ -361,16 +365,21 @@ export default function Checkout() {
               </Form.Select>
             </Form.Group>
 
-            <Button type="submit" variant="dark" className="w-100" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-2" />
                   Đang xử lý...
                 </>
-              ) : form.payment_method === 'momo'
-                ? 'Thanh toán qua MoMo'
-                : 'Xác nhận đặt hàng'}
+              ) : form.payment_method === 'momo' ? (
+                'Thanh toán qua MoMo'
+              ) : form.payment_method === 'vnpay' ? (
+                'Thanh toán qua VNPay'
+              ) : (
+                'Xác nhận đặt hàng'
+              )}
             </Button>
+
           </Form>
         </Col>
 
