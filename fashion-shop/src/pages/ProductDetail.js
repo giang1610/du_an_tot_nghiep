@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form, Card
+  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
 } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -124,6 +124,8 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = async () => {
+    if (!requireLoginAndVariant()) return;
+
     if (quantity > maxQuantity) {
       toast.error(`Số lượng tối đa là ${maxQuantity}.`);
       return;
@@ -147,6 +149,8 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
+    if (!requireLoginAndVariant()) return;
+
     if (quantity > maxQuantity) {
       toast.warn(`Số lượng tối đa là ${maxQuantity}.`);
       return;
@@ -187,7 +191,9 @@ export default function ProductDetail() {
         <Col md={6}>
           <h2>{product.name}</h2>
           <p className="text-muted">{product.category?.name}</p>
-          <h4 className="text-danger">{product.price_original?.toLocaleString()}₫</h4>
+          <h4 className="text-danger">
+            {Number(selectedVariant?.sale_price ?? selectedVariant?.price ?? product.price_original).toLocaleString('vi-VN')}₫
+          </h4>
           <p>{product.description}</p>
 
           <h5 className="mt-4">Chọn kích cỡ:</h5>
@@ -229,7 +235,7 @@ export default function ProductDetail() {
           {selectedVariant && (
             <>
               <p className="mt-3 text-success fw-bold">
-                Giá: {(selectedVariant.sale_price ?? selectedVariant.price).toLocaleString()}₫
+                Giá: {Number(selectedVariant.sale_price ?? selectedVariant.price).toLocaleString('vi-VN')}₫
               </p>
               <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
 
@@ -255,11 +261,9 @@ export default function ProductDetail() {
             </Button>
           </div>
 
-          {/* ĐÁNH GIÁ */}
           <div className="mt-5">
             <h4 className="mb-4">Đánh giá sản phẩm</h4>
             {reviews.length === 0 && <p>Chưa có đánh giá nào.</p>}
-
             {reviews.map(r => (
               <ReviewCard
                 key={r.id}
@@ -267,7 +271,6 @@ export default function ProductDetail() {
                 baseUrl={process.env.REACT_APP_API_URL.replace('/api', '')}
               />
             ))}
-
             <ProductReview productId={product.id} selectedVariantId={selectedVariantId} />
           </div>
         </Col>
@@ -276,13 +279,32 @@ export default function ProductDetail() {
       <div className="mt-5">
         <h4>Sản phẩm liên quan</h4>
         <Row>
-          {relatedProducts.map((rp) => {
-            const imageUrl = rp.variants?.[0]?.thumbnail || 'https://via.placeholder.com/150x150?text=No+Image';
+          {relatedProducts.map(rp => {
+            const imageUrl = rp.img || rp.image_urls?.[0] || 'https://via.placeholder.com/150x150?text=No+Image';
+            const price = rp.variants?.[0]?.sale_price ?? rp.variants?.[0]?.price;
+            const originalPrice = rp.variants?.[0]?.price;
+
             return (
               <Col md={3} key={rp.id} className="mb-3">
-                <div className="border p-2 h-100 d-flex flex-column align-items-center">
+                <div className="border p-2 h-100 d-flex flex-column align-items-center text-center">
                   <img src={imageUrl} alt={rp.name} style={{ maxHeight: 150, objectFit: 'contain' }} />
-                  <p className="fw-bold mt-2 text-center">{rp.name}</p>
+                  <p className="fw-bold mt-2">{rp.name}</p>
+                  <p className="text-danger fw-bold">
+                    {Number(price).toLocaleString('vi-VN')}₫
+                    {rp.variants?.[0]?.sale_price && (
+                      <small className="text-muted ms-2 text-decoration-line-through">
+                        {Number(originalPrice).toLocaleString('vi-VN')}₫
+                      </small>
+                    )}
+                  </p>
+                  <Button
+                    as={Link}
+                    to={`/products/${rp.slug}`}
+                    size="sm"
+                    variant="outline-dark"
+                  >
+                    Xem chi tiết
+                  </Button>
                 </div>
               </Col>
             );

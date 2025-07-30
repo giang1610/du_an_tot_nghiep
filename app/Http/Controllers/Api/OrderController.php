@@ -22,6 +22,7 @@ use App\Models\CartItem;
 use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
 use App\Events\FailProduct;
+use App\Mail\OrderCanceledDueToTimeout;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
 use Carbon\Carbon;
@@ -763,7 +764,8 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         $orderId = $request->input('order_id');
-        $maxRetry = 3;
+        // Giới hạn thời gian có thể thanh toán lại là 20 phút
+        $timeoutMinutes = 20;
 
         // Kiểm tra đơn hàng
         $order = Order::where('id', $orderId)->where('user_id', $user->id)->first();
@@ -780,23 +782,42 @@ class OrderController extends Controller
             return response()->json(['message' => 'Đơn hàng đã được thanh toán thành công'], 400);
         }
 
-        if ($order->vnp_retry_count >= $maxRetry) {
-            return response()->json(['message' => 'Bạn đã vượt quá số lần thanh toán lại bằng VNPay. Hãy tạo đơn hàng khác'], 429);
+        // Kiểm tra thời gian quá hạn
+        if ($order->created_at->diffInMinutes(now()) > $timeoutMinutes && $order->payment_status === 'pending' && $order->payment_method === 'vnpay') {
+            DB::beginTransaction();
+            try {
+                if (method_exists($order, 'items')) {
+                    $order->items()->delete();
+                }
+
+                $order->delete();
+
+                // Gửi email sau khi xóa
+                if ($order->customer_email) {
+                    Mail::to($order->customer_email)->queue(new OrderCanceledDueToTimeout($order));
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Đơn hàng đã quá thời gian thanh toán lại (20 phút) và đã bị hủy.'
+                ], 410);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('❌ Lỗi khi xóa đơn hàng VNPay quá hạn: ' . $e->getMessage());
+                return response()->json(['message' => 'Không thể hủy đơn hàng. Vui lòng thử lại sau.'], 500);
+            }
         }
 
         try {
             // Gọi lại hàm tạo link thanh toán VNPay
             $vnpResponse = $this->initiateVnpayPayment(order: $order);
 
-            // Tăng số lần retry
-            $order->increment('vnp_retry_count');
-
             return response()->json([
                 'message' => 'Tạo lại liên kết thanh toán thành công',
                 'data' => [
                     'payment_url' => $vnpResponse['payment_url'],
                     'order_id' => $order->id,
-                    'retry_count' => $order->vnp_retry_count + 1,
                     'total' => $order->total
                 ]
             ]);

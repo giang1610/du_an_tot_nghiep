@@ -22,7 +22,7 @@
                         <div class="border rounded p-2 bg-light">
                             {{ $order->return_reason ?? '— Không có lý do —' }}
                         </div>
-                       @if($order->return_media)
+                        @if($order->return_media)
                             <div>
                                 <strong>File minh chứng:</strong>
                                 <div class="d-flex flex-wrap gap-2 mt-2">
@@ -87,16 +87,18 @@
             <!-- Trạng thái đơn hàng -->
             @php
                 $statusOptions = [
-                    'cancelled' => 'Đã hủy',
+                    'cancelled' => 'Hủy đơn hàng',
                     'pending' => 'Chờ xử lý',
                     'processing' => 'Đang xử lý',
                     'picking' => 'Đang lấy hàng',
                     'shipping' => 'Đang giao hàng',
                     'shipped' => 'Đã giao hàng',
-                    'delivered' => 'Đã nhận hàng',
                     'return_requested' => 'Yêu cầu hoàn hàng',
+                    'delivered' => 'Đã nhận hàng',
                     'returned' => 'Hoàn hàng',
                     'completed' => 'Đơn hàng hoàn thành',
+                    'failed_1' => 'Giao hàng thất bại lần 1',
+                    'failed_2' => 'Giao hàng thất bại lần 2',
                     'failed' => 'Giao hàng thất bại',
                 ];
                 $statusFlow = ['pending', 'processing', 'picking', 'shipping', 'shipped'];
@@ -115,8 +117,9 @@
                         <input type="text" class="form-control bg-light fw-bold" value="{{ $statusOptions[$currentStatus] }}" readonly>
                     </div>
 
+
                     <div class="mb-3">
-                        @if ($currentStatus == 'delivered' && !in_array($order->status, ['return_requested', 'returned']))
+                        @if ($currentStatus == 'shipped' && !in_array($order->status, ['return_requested', 'returned']))
                             <input type="text" class="form-control bg-light fw-bold" value="{{ $statusOptions[$currentStatus] }}" readonly>
                             <div class="alert alert-info mt-3">
                                 <i class="bi bi-info-circle me-2"></i>
@@ -126,7 +129,7 @@
                         @else
                             <label class="form-label">Chọn trạng thái mới</label>
                             <select name="status" class="form-select" required>
-                                @if (!in_array($currentStatus, ['shipped', 'completed', 'cancelled']))
+                                @if (!in_array($currentStatus, ['shipped', 'completed', 'failed', 'returned', 'return_requested','failed_1', 'failed_2', 'returning']))
                                     <option value="cancelled" {{ $currentStatus == 'cancelled' ? 'selected' : '' }}>
                                         {{ $statusOptions['cancelled'] }}
                                     </option>
@@ -134,22 +137,41 @@
                                 <option value="{{ $currentStatus }}" selected disabled>
                                     {{ $statusOptions[$currentStatus] }} (hiện tại)
                                 </option>
-                                @if ($nextStatus)
+                                {{-- @if ($nextStatus)
                                     <option value="{{ $nextStatus }}">
                                         {{ $statusOptions[$nextStatus] }}
                                     </option>
+                                @endif --}}
+                                @if (in_array($currentStatus, ['cancelled', 'shipped', 'completed']))
+                                <div class="alert alert-warning mt-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Đơn hàng đã ở trạng thái <b>{{ $statusOptions[$currentStatus] }}</b>, không thể đổi trạng thái nữa.
+                                </div>
+                                @endif
+                                 @if ($currentStatus === 'shipping')
+                                <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                <option value="failed_1">Giao hàng thất bại lần 1</option>
+                                @elseif ($currentStatus === 'failed_1')
+                                    <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                    <option value="failed_2">Giao hàng thất bại lần 2</option>
+                                @elseif ($currentStatus === 'failed_2')
+                                    <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                    <option value="failed">{{ $statusOptions['failed'] }}</option>
+                                @elseif ($nextStatus)
+                                    <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
                                 @endif
                             </select>
-                        </div>
+                    </div>
                         <div class="alert alert-info mt-3">
                             <i class="bi bi-info-circle me-2"></i>
                             Chỉ có thể chuyển sang trạng thái kế tiếp trong quy trình hoặc hủy đơn hàng.
                         </div>
                         @endif
+                    
                 </div>
             </div>
 
-            @if (!($currentStatus == 'delivered' && !in_array($order->status, ['return_requested', 'returning', 'returned'])) && $order->status !== 'return_requested')
+            @if (!in_array($currentStatus, ['shipped','cancelled','completed','failed']) && $order->status !== 'return_requested')
                 <div class="text-end">
                     <button type="submit" class="btn btn-primary px-4 py-2">
                         <i class="bi bi-check-circle me-2"></i>Cập nhật trạng thái

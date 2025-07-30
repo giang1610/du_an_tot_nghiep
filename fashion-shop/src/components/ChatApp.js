@@ -179,7 +179,7 @@ export default function ChatApp() {
           </div>
 
           {/* Input */}
-          <div className="border-top p-2 d-flex align-items-center">
+          <div className="border-top p-2 d-flex align-items-center ">
             <img
               src={avatar}
               alt="Avatar người dùng"
