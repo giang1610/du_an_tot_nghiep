@@ -246,7 +246,7 @@ class OrderController extends Controller
         }
 
         // Tạo mảng items từ cartItems
-        $items = $cartItems->map(function($item) {
+        $items = $cartItems->map(function ($item) {
             return [
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => $item->quantity,
@@ -502,9 +502,12 @@ class OrderController extends Controller
             ]);
 
             // Lấy giỏ hàng và chỉ lấy item selected = 1
-            $cart = Cart::with(['items' => function($q) {
-                $q->where('selected', true);
-            }, 'items.variant'])->where('user_id', $user->id)->first();
+            $cart = Cart::with([
+                'items' => function ($q) {
+                    $q->where('selected', true);
+                },
+                'items.variant'
+            ])->where('user_id', $user->id)->first();
 
             if (!$cart || $cart->items->isEmpty()) {
                 return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
@@ -733,14 +736,14 @@ class OrderController extends Controller
                     }
 
 
-                    return redirect( $vnp_traVe . '?' . http_build_query(data: [
-                            'message' => 'Thanh toán thành công',
-                            'order_id' => $order->id,
-                            'order_number' => $order->order_number,
-                            'status' => $order->status,
-                            'payment_status' => $order->payment_status,
-                            'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
-                        ]));
+                    return redirect($vnp_traVe . '?' . http_build_query(data: [
+                        'message' => 'Thanh toán thành công',
+                        'order_id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'status' => $order->status,
+                        'payment_status' => $order->payment_status,
+                        'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
+                    ]));
                 } else {
 
                 }
@@ -928,8 +931,16 @@ class OrderController extends Controller
             'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Tối đa 10MB
         ]);
 
-        if ($order->status !== 'shipped') {
-            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng'], 400);
+        if (!in_array($order->status, ['shipped', 'completed'])) {
+            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng hoặc hoàn thành'], 400);
+        }
+
+        // Nếu là completed thì kiểm tra thời gian hoàn thành
+        if ($order->status === 'completed') {
+            $completedAt = $order->completed_at ?? $order->updated_at ?? $order->created_at;
+            if (now()->diffInDays(\Carbon\Carbon::parse($completedAt)) > 7) {
+                return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn đơn trong vòng 7 ngày sau khi hoàn thành'], 400);
+            }
         }
 
         $order->status = 'return_requested';

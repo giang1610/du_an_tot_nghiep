@@ -17,32 +17,33 @@ class ProductVariantSeeder extends Seeder
         $sizeIds = DB::table('sizes')->pluck('id')->toArray();
 
         $usedCombinations = [];
+        $imageIndex = 1;
+        $maxImages = 20;
 
         foreach ($productIds as $productId) {
-            $variantCount = rand(2, 5); // mỗi sản phẩm có từ 2 đến 5 biến thể
-
-            for ($i = 0; $i < $variantCount; $i++) {
-                $colorId = $faker->randomElement($colorIds);
-                $sizeId = $faker->randomElement($sizeIds);
-                $combinationKey = $productId . '-' . $colorId . '-' . $sizeId;
-
-                // Kiểm tra nếu biến thể đã tồn tại thì bỏ qua
-                if (isset($usedCombinations[$combinationKey])) {
-                    $i--; // lặp lại vòng lặp để bù lại biến thể trùng
-                    continue;
+            $variantColors = $faker->randomElements($colorIds, rand(2, 5)); // mỗi sản phẩm 2-5 màu
+            foreach ($variantColors as $colorId) {
+                $variantSizes = $faker->randomElements($sizeIds, rand(2, 4)); // mỗi màu 2-4 size
+                // Ảnh cho mỗi màu
+                $currentImageNumber = (($imageIndex - 1) % $maxImages) + 1;
+                $imagePath = 'variants/' . $currentImageNumber . '.jpg';
+                foreach ($variantSizes as $sizeId) {
+                    $combinationKey = $productId . '-' . $colorId . '-' . $sizeId;
+                    if (isset($usedCombinations[$combinationKey]))
+                        continue;
+                    $usedCombinations[$combinationKey] = true;
+                    DB::table('product_variants')->insert([
+                        'product_id' => $productId,
+                        'color_id' => $colorId,
+                        'size_id' => $sizeId,
+                        'price' => $faker->randomElement([99000, 199000, 249000, 299000, 349000, 399000]),
+                        'sku' => strtoupper(uniqid('SKU_')),
+                        'image' => $imagePath,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
                 }
-
-                $usedCombinations[$combinationKey] = true;
-
-                DB::table('product_variants')->insert([
-                    'product_id' => $productId,
-                    'color_id' => $colorId,
-                    'size_id' => $sizeId,
-                    'price' => $faker->randomElement([99000, 199000, 249000, 299000, 349000, 399000]),
-                    'sku' => strtoupper(uniqid('SKU_')),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                $imageIndex++;
             }
         }
     }

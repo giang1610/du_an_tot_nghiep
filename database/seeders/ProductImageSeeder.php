@@ -21,7 +21,7 @@ class ProductImageSeeder extends Seeder
             // Chèn dữ liệu vào bảng product_images
             DB::table('product_images')->insert([
                 [
-                    'url' => 'products/ao-kieu-1.jpg',
+                    'url' => 'products/2.jpg',
                     'product_id' => $product->id,
                     'product_variant_id' => null,
                     'is_default' => 1,
@@ -29,7 +29,7 @@ class ProductImageSeeder extends Seeder
                     'updated_at' => now(),
                 ],
                 [
-                    'url' => 'variants/ao-kieu-red.jpg',
+                    'url' => 'variants/1.jpg',
                     'product_id' => $product->id,
                     'product_variant_id' => $variant1?->id,
                     'is_default' => 1,
@@ -37,7 +37,7 @@ class ProductImageSeeder extends Seeder
                     'updated_at' => now(),
                 ],
                 [
-                    'url' => 'variants/ao-kieu-blue.jpg',
+                    'url' => 'variants/2.jpg',
                     'product_id' => $product->id,
                     'product_variant_id' => $variant2?->id,
                     'is_default' => 0,
