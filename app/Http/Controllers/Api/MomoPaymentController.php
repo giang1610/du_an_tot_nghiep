@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrderCanceledDueToTimeout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -318,10 +319,8 @@ class MomoPaymentController extends Controller
     {
         $user = Auth::user();
         $orderId = $request->input('order_id');
-        $amount = $request->input('amount');
-
-        // Số lần tối đa tạo lại link MoMo
-        $maxRetry = 3;
+        // Giới hạn thời gian thanh toán lại là 20 phút
+        $timeoutMinutes = 20;
 
         $order = Order::where('id', $orderId)
             ->where('user_id', $user->id)
@@ -340,23 +339,44 @@ class MomoPaymentController extends Controller
             return response()->json(['message' => 'Đơn hàng đã được thanh toán thành công'], 400);
         }
 
-        if ($order->momo_retry_count >= $maxRetry) {
-            return response()->json(['message' => 'Bạn đã vượt quá số lần thanh toán lại bằng Ví MoMo. Hãy tạo đơn hàng khác'], 429);
+        if ($order->created_at->diffInMinutes(now()) > $timeoutMinutes && $order->payment_status === 'pending' && $order->payment_method === 'momo') {
+            DB::beginTransaction();
+            try {
+                // Xóa các item liên quan (nếu quan hệ items() có)
+                if (method_exists($order, 'items')) {
+                    $order->items()->delete();
+                }
+
+                // Xóa đơn hàng
+                $order->delete();
+
+                // Gửi email sau khi xóa
+                if ($order->customer_email) {
+                    Mail::to($order->customer_email)->queue(new OrderCanceledDueToTimeout($order));
+                    Log:: info('Gửi email đơn hàng bị hủy do hết thời gian thanh toán', ['body' => $order->toArray()]);
+                    Log::error(' ');
+                }
+
+                DB::commit();
+                return response()->json([
+                    'message' => 'Đơn hàng đã quá thời gian thanh toán lại (20 phút) và đã bị hủy.'
+                ], 410); // 410 Gone
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('❌ Lỗi khi xóa đơn hàng MoMo quá hạn: ' . $e->getMessage());
+                return response()->json(['message' => 'Không thể hủy đơn hàng. Vui lòng thử lại sau.'], 500);
+            }
         }
 
         try {
             // Gọi lại hàm tạo link thanh toán MoMo
             $paymentUrl = $this->initiateMomoPayment($order, $order->total);
 
-            // Cập nhật số lần retry
-            $order->increment('momo_retry_count');
-
             return response()->json([
                 'message' => 'Tạo lại liên kết thanh toán MoMo thành công',
                 'data' => [
                     'payment_url' => $paymentUrl,
-                    'order_id' => $order->id,
-                    'retry_count' => $order->momo_retry_count + 1
+                    'order_id' => $order->id
                 ]
             ]);
         } catch (\Exception $e) {
