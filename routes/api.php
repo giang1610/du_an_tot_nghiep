@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
