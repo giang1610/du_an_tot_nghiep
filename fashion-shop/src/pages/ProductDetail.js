@@ -130,7 +130,7 @@ export default function ProductDetail() {
       toast.error(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
-
+    
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/cart/add`, {
         product_variant_id: selectedVariantId,
@@ -144,7 +144,7 @@ export default function ProductDetail() {
       toast.success('Đã thêm vào giỏ hàng!');
     } catch (error) {
       console.error(error);
-      toast.error('Lỗi khi thêm vào giỏ hàng.');
+      toast.error('Lỗi sản phẩm vượt quá số lượng kho.');
     }
   };
 
@@ -155,7 +155,7 @@ export default function ProductDetail() {
       toast.warn(`Số lượng tối đa là ${maxQuantity}.`);
       return;
     }
-
+   
     const item = {
       product_name: product.name,
       variant_id: selectedVariant.id,

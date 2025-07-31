@@ -69,6 +69,9 @@ class UpdateOrderStatus implements ShouldQueue
             case 'failed_2':
                 Mail::to($order->user->email)->queue(new \App\Mail\OrderFailed_2($order));
                 break;
+            case 'shipper_en_route':
+                Mail::to($order->user->email)->queue(new \App\Mail\shipper_en_route($order));
+                break;
             default:
                 // Nếu muốn, có thể gửi mail mặc định hoặc không gửi gì
                 break;

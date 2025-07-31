@@ -1,12 +1,8 @@
-// Hàm định dạng số thành định dạng tiền tệ VNĐ
+// Hàm định dạng số thành tiền tệ VNĐ (ép kiểu về int, bỏ .00)
 export const formatCurrency = (number) => {
-  if (typeof number !== 'number') {
-    number = Number(number);
-    if (isNaN(number)) return '0 ₫';
-  }
+  number = Math.round(number); // hoặc Math.round(number)
 
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  }).format(number);
+  if (isNaN(number)) return '0 đ';
+
+  return number.toLocaleString('vi-VN') + ' đ'; // tự thêm 'đ' nếu cần
 };
