@@ -426,6 +426,7 @@ class OrderController extends Controller
                     'sale_price' => $item->variant->sale_price,
                     'color_id' => $item->variant->color_id,
                     'size_id' => $item->variant->size_id,
+                    
                 ]);
 
                 // Cập nhật tồn kho

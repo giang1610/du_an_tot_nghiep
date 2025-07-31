@@ -75,7 +75,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // 'timezone' => 'UTC',
+    'timezone' => 'Asia/Ho_Chi_Minh',
+    'fotn_timezone' => 'Asia/Ho_Chi_Minh', // Thêm dòng này nếu cần thiết cho frontend
 
     /*
     |--------------------------------------------------------------------------
