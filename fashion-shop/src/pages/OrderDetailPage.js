@@ -438,11 +438,10 @@ export default function OrderDetailPage() {
                                     Đã nhận hàng
                                 </Button>
                             )}
-                            {(order.status === 'completed' || order.status === 'shipped') && (() => {
-                                const baseDate = new Date(order.completed_at || order.shipped_at || order.updated_at || order.created_at);
+                            {order.status === 'completed' && (() => {
+                                const completedAt = new Date(order.completed_at || order.updated_at || order.created_at);
                                 const now = new Date();
-                                const diffDays = Math.floor((now - baseDate) / (1000 * 60 * 60 * 24));
-
+                                const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                 return diffDays <= 7 ? (
                                     <Button disabled={returnLoading}>
                                         {returnLoading ? 'Đang gửi yêu cầu...' : 'Yêu cầu hoàn đơn'}

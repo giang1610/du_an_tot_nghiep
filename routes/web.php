@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -109,9 +110,7 @@ Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDe
 //xóa vĩnh viễn tất cả sản phẩm
 Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
 Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(function () {
-    Route::get('/', function () {
-        return view('admin.dashboard');
-    })->name('admin');
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
     //cập nhật profile
@@ -139,7 +138,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::get('/returned', [OrderController::class, 'returned'])->name('orders.returned');
 
 
-    
+
     // Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
@@ -153,11 +152,11 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::post('/orders/{id}/handle-return', [OrderController::class, 'handleReturn'])->name('orders.handleReturn');
 
     // Admin chat routes
-//     Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
-//     Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
-// Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
-Route::get('/chat/{userId?}', [AdminChatController::class, 'index'])->name('admin.chat');
-Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+    //     Route::get('/chat', [AdminChatController::class, 'listUsers'])->name('admin.chat.list');
+    //     Route::get('/chat/{userId}', [AdminChatController::class, 'index'])->name('admin.chat');
+    // Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
+    Route::get('/chat/{userId?}', [AdminChatController::class, 'index'])->name('admin.chat');
+    Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('admin.chat.send');
 
 
     Route::get('revenue', [ReportController::class, 'revenueReport'])->name('admin.reports.revenue');
@@ -166,9 +165,11 @@ Route::post('/chat/send/{userId}', [AdminChatController::class, 'send'])->name('
     // Route::get('export-revenue', [ReportController::class, 'exportRevenueReport'])->name('admin.reports.export-revenue');
     // Route::get('reports/export-revenue', [ReportController::class, 'exportRevenueReport'])->name('admin.reports.export-revenue');
 
-
+     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+  
 });
 // NÊN ĐẶT NGOÀI group `admin`
+
 
 
 
@@ -177,4 +178,4 @@ Route::get('/thank-you', function () {
     return view('thank-you');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

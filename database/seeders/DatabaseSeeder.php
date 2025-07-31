@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         public function run()
         {
                 $this->call([
-                       AdminUserSeeder::class,
+                        AdminUserSeeder::class,
                         CategorySeeder::class,
                         ColorSeeder::class,
                         SizeSeeder::class,

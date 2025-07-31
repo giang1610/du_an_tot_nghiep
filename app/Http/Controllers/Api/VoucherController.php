@@ -148,7 +148,7 @@ class VoucherController extends Controller
     }
 
 
-    public function calculateDiscountValue($voucher)
+    public function calculateDiscountValue($voucher)  //lấy giá trị giảm giá từ voucher
     {
         if ($voucher->discount_type === 'amount') {
             return $voucher->discount_amount;
@@ -157,7 +157,7 @@ class VoucherController extends Controller
         }
     }
 
-    public function calculateVoucherDiscount($voucher, $subtotal)
+    public function calculateVoucherDiscount($voucher, $subtotal) // Tính toán giá trị giảm giá dựa trên loại voucher
     {
         if ($voucher->discount_type === 'amount') {
             return min($voucher->discount_amount, $subtotal);

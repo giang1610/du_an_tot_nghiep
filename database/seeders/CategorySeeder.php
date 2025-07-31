@@ -30,12 +30,7 @@ class CategorySeeder extends Seeder
                 'slug' => Str::slug('Thời trang nữ'),
                 'status' => 1,
             ],
-            [
-                'id' => 3,
-                'name' => 'Phụ kiện',
-                'slug' => Str::slug('Phụ kiện'),
-                'status' => 0,
-            ],
+            
             [
                 'id' => 4,
                 'name' => 'váy đầm',

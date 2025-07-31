@@ -63,6 +63,7 @@ export default function VnpayReturn() {
   return (
     <Container className="py-5">
       <div className=' text-center text-black'><h3 >Kết quả thanh toán : {urlData.message} </h3> </div>
+
       <PaymentToast message={urlData.message} status={urlData.payment_status} />
 
       <Row className="mt-4">
@@ -92,6 +93,7 @@ export default function VnpayReturn() {
 
         {/* Bên phải: Sản phẩm + người nhận */}
         <Col md={6}>
+
           <h5>Sản phẩm </h5>
           {orderDetail?.items?.map((item, idx) => (
             <div key={idx} className="d-flex justify-content-between border rounded p-2 mb-3">

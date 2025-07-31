@@ -193,10 +193,14 @@ export default function MyOrdersPage() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setOrders(res.data.data?.data || []);
-        } catch {
-            alert('Yêu cầu hoàn đơn thất bại!');
+        } catch (err) {
+            setError('Không thể tải đơn hàng. Vui lòng thử lại.');
+            if (err.response?.status === 401) {
+                localStorage.removeItem('token');
+                navigate('/login');
+            }
         } finally {
-            setReturnLoading(false);
+            setLoading(false);
         }
     };
 

@@ -204,6 +204,14 @@
                                     <span class="text-success">
                                         <i class="fas fa-check-circle me-1"></i> Đã thanh toán
                                     </span>
+                                    @elseif($order->payment_status == 'pending')
+                                    <span class="text-secondary">
+                                        <i class="fas fa-spinner fa-spin me-1"></i> Đang thanh toán
+                                    </span>
+                                    @elseif($order->payment_status == 'failed')
+                                    <span class="text-danger">
+                                        <i class="fas fa-times-circle me-1"></i> Thanh toán thất bại
+                                    </span>
                                     @else
                                     <span class="text-warning">
                                         <i class="fas fa-clock me-1"></i> Chưa thanh toán
