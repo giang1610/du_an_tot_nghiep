@@ -22,6 +22,7 @@ use App\Models\CartItem;
 use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
 use App\Events\FailProduct;
+use App\Mail\OrderCanceledDueToTimeout;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
 use Carbon\Carbon;
@@ -246,7 +247,7 @@ class OrderController extends Controller
         }
 
         // Tạo mảng items từ cartItems
-        $items = $cartItems->map(function($item) {
+        $items = $cartItems->map(function ($item) {
             return [
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => $item->quantity,
@@ -425,6 +426,7 @@ class OrderController extends Controller
                     'sale_price' => $item->variant->sale_price,
                     'color_id' => $item->variant->color_id,
                     'size_id' => $item->variant->size_id,
+                    
                 ]);
 
                 // Cập nhật tồn kho
@@ -502,9 +504,12 @@ class OrderController extends Controller
             ]);
 
             // Lấy giỏ hàng và chỉ lấy item selected = 1
-            $cart = Cart::with(['items' => function($q) {
-                $q->where('selected', true);
-            }, 'items.variant'])->where('user_id', $user->id)->first();
+            $cart = Cart::with([
+                'items' => function ($q) {
+                    $q->where('selected', true);
+                },
+                'items.variant'
+            ])->where('user_id', $user->id)->first();
 
             if (!$cart || $cart->items->isEmpty()) {
                 return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
@@ -731,18 +736,18 @@ class OrderController extends Controller
                             return response()->json(['message' => 'Lỗi xử lý đơn hàng'], 500);
                         }
                     }
-                    
 
-                    return redirect( $vnp_traVe . '?' . http_build_query(data: [
-                            'message' => 'Thanh toán thành công',
-                            'order_id' => $order->id,
-                            'order_number' => $order->order_number,
-                            'status' => $order->status,
-                            'payment_status' => $order->payment_status,
-                            'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
-                        ]));
+
+                    return redirect($vnp_traVe . '?' . http_build_query(data: [
+                        'message' => 'Thanh toán thành công',
+                        'order_id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'status' => $order->status,
+                        'payment_status' => $order->payment_status,
+                        'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
+                    ]));
                 } else {
-                
+
                 }
             } else {
                 return response()->json(['message' => 'Sai checksum'], 400);
@@ -760,7 +765,8 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         $orderId = $request->input('order_id');
-        $maxRetry = 3;
+        // Giới hạn thời gian có thể thanh toán lại là 20 phút
+        $timeoutMinutes = 20;
 
         // Kiểm tra đơn hàng
         $order = Order::where('id', $orderId)->where('user_id', $user->id)->first();
@@ -777,23 +783,42 @@ class OrderController extends Controller
             return response()->json(['message' => 'Đơn hàng đã được thanh toán thành công'], 400);
         }
 
-        if ($order->vnp_retry_count >= $maxRetry) {
-            return response()->json(['message' => 'Bạn đã vượt quá số lần thanh toán lại bằng VNPay. Hãy tạo đơn hàng khác'], 429);
+        // Kiểm tra thời gian quá hạn
+        if ($order->created_at->diffInMinutes(now()) > $timeoutMinutes && $order->payment_status === 'pending' && $order->payment_method === 'vnpay') {
+            DB::beginTransaction();
+            try {
+                if (method_exists($order, 'items')) {
+                    $order->items()->delete();
+                }
+
+                $order->delete();
+
+                // Gửi email sau khi xóa
+                if ($order->customer_email) {
+                    Mail::to($order->customer_email)->queue(new OrderCanceledDueToTimeout($order));
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Đơn hàng đã quá thời gian thanh toán lại (20 phút) và đã bị hủy.'
+                ], 410);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('❌ Lỗi khi xóa đơn hàng VNPay quá hạn: ' . $e->getMessage());
+                return response()->json(['message' => 'Không thể hủy đơn hàng. Vui lòng thử lại sau.'], 500);
+            }
         }
 
         try {
             // Gọi lại hàm tạo link thanh toán VNPay
             $vnpResponse = $this->initiateVnpayPayment(order: $order);
 
-            // Tăng số lần retry
-            $order->increment('vnp_retry_count');
-
             return response()->json([
                 'message' => 'Tạo lại liên kết thanh toán thành công',
                 'data' => [
                     'payment_url' => $vnpResponse['payment_url'],
                     'order_id' => $order->id,
-                    'retry_count' => $order->vnp_retry_count + 1,
                     'total' => $order->total
                 ]
             ]);
@@ -928,8 +953,16 @@ class OrderController extends Controller
             'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Tối đa 10MB
         ]);
 
-        if ($order->status !== 'shipped') {
-            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng'], 400);
+        if (!in_array($order->status, ['shipped', 'completed'])) {
+            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng hoặc hoàn thành'], 400);
+        }
+
+        // Nếu là completed thì kiểm tra thời gian hoàn thành
+        if ($order->status === 'completed') {
+            $completedAt = $order->completed_at ?? $order->updated_at ?? $order->created_at;
+            if (now()->diffInDays(\Carbon\Carbon::parse($completedAt)) > 7) {
+                return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn đơn trong vòng 7 ngày sau khi hoàn thành'], 400);
+            }
         }
 
         $order->status = 'return_requested';

@@ -411,7 +411,7 @@ class OrderController extends Controller
                     });
             });
         }
-
+        
         // Lọc theo ngày bắt đầu (created_at >= from_date)
         if ($request->filled('from_date')) {
             $query->whereDate('created_at', '>=', $request->from_date);

@@ -168,6 +168,10 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
      Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
   
 });
+// NÊN ĐẶT NGOÀI group `admin`
+
+
+
 
 
 Route::get('/thank-you', function () {

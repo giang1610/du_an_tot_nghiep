@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.Echo.channel('admin-orders')
         .listen('.order.fail', function (data) {
-            console.log('[Realtime] Đơn hàng mới:', data);
+            // console.log('[Realtime] Đơn hàng mới:', data);
 
             const orderIdStr = data.id.toString();
             if (readOrderIds.has(orderIdStr)) return;

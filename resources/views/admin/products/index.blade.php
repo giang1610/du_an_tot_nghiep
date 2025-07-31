@@ -79,8 +79,8 @@
                                 @foreach ($p->variants as $variant)
                                 <span
                                     id="stock-badge-{{ $variant->id }}"
-                                    class="badge {{ $variant->stock->quantity > 0 ? 'bg-success' : 'bg-danger' }} mb-1">
-                                    {{ $variant->stock->quantity > 0 ? $variant->stock->quantity : 'Hết' }}
+                                    class="badge {{ optional($variant->stock)->quantity > 0 ? 'bg-success' : 'bg-danger' }} mb-1">
+                                    {{ optional($variant->stock)->quantity > 0 ? optional($variant->stock)->quantity : 'Hết' }}
                                 </span>
                                 <br>
                                 @endforeach
@@ -147,9 +147,16 @@
                 </table>
             </div>
 
-            <div class="d-flex justify-content-center mt-3">
-                {{ $products->links() }}
-            </div>
+            @if($products->hasPages())
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted small">
+                        Hiển thị {{ $products->firstItem() }} đến {{ $products->lastItem() }} trong tổng số {{ $products->total() }} sản phẩm
+                    </div>
+                    <div class="">
+                        {{ $products->links('pagination::bootstrap-5') }}
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>
@@ -193,20 +200,15 @@
 @endsection
 
 @php
-function getContrastColor($hexColor) {
-// Remove # if present
-$hexColor = ltrim($hexColor, '#');
-
-// Convert to RGB
-$r = hexdec(substr($hexColor, 0, 2));
-$g = hexdec(substr($hexColor, 2, 2));
-$b = hexdec(substr($hexColor, 4, 2));
-
-// Calculate luminance
-$luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
-
-// Return black or white depending on luminance
-return ($luminance > 0.5) ? '#000000' : '#ffffff';
+if (!function_exists('getContrastColor')) {
+    function getContrastColor($hexColor) {
+        $hexColor = ltrim($hexColor, '#');
+        $r = hexdec(substr($hexColor, 0, 2));
+        $g = hexdec(substr($hexColor, 2, 2));
+        $b = hexdec(substr($hexColor, 4, 2));
+        $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+        return ($luminance > 0.5) ? '#000000' : '#ffffff';
+    }
 }
 @endphp
 

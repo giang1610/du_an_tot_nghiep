@@ -1,7 +1,6 @@
 @component('mail::message')
-
 <div style="text-align: center; margin-bottom: 20px;">
-    <img src="" alt="MG Fashion Store" style="max-height: 80px;">
+    <img src="{{ asset('storage/app/public/logo/logoMG.png') }} " alt="MG Fashion Store" style="max-height: 80px;">
     <h1 style="color: #2d3748; margin-top: 10px;">Cảm ơn bạn đã đặt hàng!</h1>
 </div>
 

@@ -7,40 +7,44 @@ use Illuminate\Support\Facades\DB;
 
 class ProductImageSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
-        DB::table('product_images')->insert([
-            // Ảnh cho sản phẩm ID = 1
-            [
-                'url' => 'products/ao-thun-1.jpg',
-                'product_id' => 2,
-                'product_variant_id' => null,
-                'is_default' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+        // Lấy sản phẩm theo tên
+        $product = DB::table('products')->where('name', 'Áo kiểu nữ tay lỡ')->first();
 
-            // Ảnh cho biến thể sản phẩm ID = 1
-            [
-                'url' => 'variants/ao-thun-red-m.jpg',
+        // Chỉ chạy nếu tìm thấy sản phẩm
+        if ($product) {
+            // Lấy 2 biến thể đầu tiên của sản phẩm này
+            $variant1 = DB::table('product_variants')->where('product_id', $product->id)->first();
+            $variant2 = DB::table('product_variants')->where('product_id', $product->id)->skip(1)->first();
 
-                'product_id' => 2,
-                'product_variant_id' => 1,
-                'is_default' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-
-            // Ảnh cho biến thể sản phẩm ID = 2
-
-            [
-                'url' => 'variants/ao-thun-blue-l.jpg',
-                'product_id' => 2,
-                'product_variant_id' => 2,
-                'is_default' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+            // Chèn dữ liệu vào bảng product_images
+            DB::table('product_images')->insert([
+                [
+                    'url' => 'products/2.jpg',
+                    'product_id' => $product->id,
+                    'product_variant_id' => null,
+                    'is_default' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'url' => 'variants/1.jpg',
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variant1?->id,
+                    'is_default' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'url' => 'variants/2.jpg',
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variant2?->id,
+                    'is_default' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ]);
+        }
     }
 }

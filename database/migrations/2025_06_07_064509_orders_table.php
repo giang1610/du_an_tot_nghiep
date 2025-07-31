@@ -34,6 +34,7 @@ return new class extends Migration
             $table->foreignId('voucher_id')->nullable()->constrained('vouchers');
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->text('notes')->nullable();
+            $table->timestamp('shipped_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('return_requested_at')->nullable();
             $table->text('return_reason')->nullable();

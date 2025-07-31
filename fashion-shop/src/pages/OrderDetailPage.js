@@ -37,7 +37,6 @@ const statusBadgeVariant = {
     cancelled: 'secondary',
     failed: 'danger',
     processing: 'info',
-    completed: 'primary',
     shipping: 'info',
     shipped: 'success',
     return_requested: 'warning',
@@ -77,6 +76,7 @@ export default function OrderDetailPage() {
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewLoading, setReviewLoading] = useState(false);
     const [reviewMedia, setReviewMedia] = useState([]);
+    const [reviewMediaPreviews, setReviewMediaPreviews] = useState([]);
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
 
@@ -228,6 +228,12 @@ export default function OrderDetailPage() {
         } finally {
             setReviewLoading(false);
         }
+    };
+
+    const handleReviewMediaChange = (e) => {
+        const files = Array.from(e.target.files);
+        setReviewMedia(files);
+        setReviewMediaPreviews(files.map(file => URL.createObjectURL(file)));
     };
 
     if (loading) return <Spinner />;
@@ -432,15 +438,15 @@ export default function OrderDetailPage() {
                                     Đã nhận hàng
                                 </Button>
                             )}
-                            {(order.status === 'completed' || order.status === 'shipped') && (() => {
-                                const baseDate = new Date(order.completed_at || order.shipped_at || order.updated_at || order.created_at);
+                            {order.status === 'completed' && (() => {
+                                const completedAt = new Date(order.completed_at || order.updated_at || order.created_at);
                                 const now = new Date();
-                                const diffDays = Math.floor((now - baseDate) / (1000 * 60 * 60 * 24));
-
+                                const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                 return diffDays <= 7 ? (
-                                    <Button variant="warning" size="sm" onClick={() => setShowReturnModal(true)}>
-                                        Yêu cầu hoàn đơn
+                                    <Button disabled={returnLoading}>
+                                        {returnLoading ? 'Đang gửi yêu cầu...' : 'Yêu cầu hoàn đơn'}
                                     </Button>
+
                                 ) : null;
                             })()}
 
@@ -504,10 +510,51 @@ export default function OrderDetailPage() {
                             type="file"
                             accept="image/*,video/*"
                             multiple
-                            onChange={e => {
-                                setReviewMedia(prev => [...(Array.isArray(prev) ? prev : []), ...Array.from(e.target.files)]);
-                            }}
+                            onChange={handleReviewMediaChange}
                         />
+                        <div className="d-flex flex-wrap gap-2 mt-2">
+                            {reviewMediaPreviews.map((url, idx) => {
+                                const file = reviewMedia[idx];
+                                if (!file) return null; // Fix lỗi undefined
+                                return file.type && file.type.startsWith('image/')
+                                    ? (
+                                        <div key={idx} style={{ position: 'relative' }}>
+                                            <img
+                                                src={url}
+                                                alt="preview"
+                                                style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                variant="outline-danger"
+                                                style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                                                onClick={() => {
+                                                    setReviewMedia(prev => prev.filter((_, i) => i !== idx));
+                                                    setReviewMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                                                }}
+                                            >X</Button>
+                                        </div>
+                                    )
+                                    : (
+                                        <div key={idx} style={{ position: 'relative' }}>
+                                            <video
+                                                src={url}
+                                                controls
+                                                style={{ width: 120, height: 120, borderRadius: 8, border: '1px solid #ddd' }}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                variant="outline-danger"
+                                                style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                                                onClick={() => {
+                                                    setReviewMedia(prev => prev.filter((_, i) => i !== idx));
+                                                    setReviewMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                                                }}
+                                            >X</Button>
+                                        </div>
+                                    );
+                            })}
+                        </div>
                     </Form.Group>
                     <Form.Group className="mt-2">
                         <Form.Label>Nội dung</Form.Label>
