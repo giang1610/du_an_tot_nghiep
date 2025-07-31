@@ -201,7 +201,7 @@ class ReportController extends Controller
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',
             'processing' => 'Đang xử lý',
-            'pending' => 'Chờ xác nhận',
+            'pending' => 'Chờ xử lý',
             'shipped' => 'Đã giao hàng',
             'picking' => 'Đang lấy hàng',
             'shipping' => 'Đang vận chuyển',

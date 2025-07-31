@@ -15,6 +15,9 @@
   <!-- linkcss Notification -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
 
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root{--full:260px;--mini:72px;--radius:10px;--primary:#2563eb;--active-dark:#1e2a48}
 
@@ -92,6 +95,7 @@
     .dark-mode .btn-icon{background:#1f2937;border-color:#3b3f63;color:#cbd5e1}
     .dark-mode .admin-name{color:#fff}
   </style>
+  @stack('styles')
 </head>
 <body>
 
@@ -107,7 +111,7 @@
   <ul class="nav flex-column px-2" id="menuList">
     <!-- Dashboard -->
 <li class="nav-item menu-item" data-title="dashboard">
-  <a href="{{ route('admin') }}" class="nav-link {{ request()->routeIs('admin') ? 'active' : '' }}">
+  <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
     <i class="bi bi-grid"></i><span class="menu-text">Dashboard</span>
   </a>
 </li>
@@ -142,7 +146,7 @@
   <div id="ordersMenu" class="collapse ps-3">
         <a href="{{ route('orders.index') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Danh sách</a>
         <a href="{{ route('orders.cancelled') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Đơn đã huỷ</a>
-        <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lí</a>
+        <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lý</a>
         <a href="{{ route('orders.processing') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn đang xử lý</a>
         <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
         <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
@@ -243,6 +247,7 @@
       </div>
     </div>
   </header>
+  
 
   <!-- MAIN CONTENT -->
   <main class="pt-1" id="mainContent">
@@ -334,6 +339,7 @@
 
 
 @yield('scripts')
+@stack('scripts')
 
 </body>
 </html>
