@@ -30,6 +30,9 @@ use Carbon\Carbon;
 class OrderController extends Controller
 {
     protected $orderValidationRules = [
+        'voucher_code' => 'nullable|string|exists:vouchers,code',
+        'voucher_discount' => 'nullable|numeric|min:0',
+        'discount_amount' => 'nullable|numeric|min:0',
         'shipping_address' => 'required|string|max:255',
         'billing_address' => 'nullable|string|max:255',
         'customer_phone' => 'required|string|max:20',
@@ -38,12 +41,14 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        // \Log::info('Order request data:', $request->all());
         $validator = Validator::make($request->all(), [
             'subtotal' => 'required|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'shipping' => 'nullable|numeric|min:0',
             'total' => 'required|numeric|min:0',
             'status' => 'nullable|string|in:pending,processing,completed,cancelled,failed',
+            'voucher_code' => 'nullable|string|exists:vouchers,code',
             'payment_method' => 'nullable|string|in:cod,momo,vnpay',
             'payment_status' => 'nullable|string|in:pending,paid,unpaid,failed',
             'shipping_address' => 'required|string|max:255',
@@ -73,13 +78,38 @@ class OrderController extends Controller
                 }
             }
 
+            $voucherData = null;
+            $discountAmount = 0;
+
+            // Xử lý voucher nếu có
+            if ($request->voucher_code) {
+                $voucherResponse = $this->validateAndApplyVoucher(
+                    $request->voucher_code,
+                    auth()->user(),
+                    $request->subtotal
+                );
+
+                if (!$voucherResponse['success']) {
+                    return response()->json(['message' => $voucherResponse['message']], 400);
+                }
+
+                $voucherData = $voucherResponse['voucher'];
+                $discountAmount = $voucherResponse['discount_amount'];
+            }
+
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'order_number' => 'ORD-' . strtoupper(Str::random(8)),
                 'subtotal' => $request->subtotal,
                 'tax' => $request->tax ?? 0,
                 'shipping' => $request->shipping ?? 0,
-                'total' => $request->total,
+                'voucher_code' => $request->voucher_code ?? null,
+                'voucher_discount' => $discountAmount ?? null,
+                'voucher_type' => $voucherData->type ?? null,
+                'voucher_id' => $voucherData->id ?? null,
+                'discount_amount' => $discountAmount ?? null,
+                'total' => $request->total - $discountAmount,
+                // 'total' => $request->total,
                 'status' => $request->status ?? 'pending',
                 'payment_method' => $request->payment_method ?? 'cod',
                 'payment_status' => $request->payment_status ?? ($request->payment_method === 'cod' ? 'unpaid' : 'pending'),
@@ -104,10 +134,14 @@ class OrderController extends Controller
                 ]);
 
                 $variant->stock()->decrement('quantity', $item['quantity']);
-
             }
 
             Mail::to($request->customer_email)->queue(new OrderPlaced($order, $order->items()->with(['productVariant.product', 'productVariant.color', 'productVariant.size'])->get()));
+
+            // Cập nhật số lần sử dụng voucher
+            if ($request->voucher_code && isset($voucherData)) {
+                $this->updateVoucherUsage($voucherData, auth()->user());
+            }
 
             DB::commit();
 
@@ -228,6 +262,7 @@ class OrderController extends Controller
      */
     public function checkout(Request $request)
     {
+        // \Log::info('Checkout request data:', $request->all());
         $user = auth()->user();
 
         // Lấy cart của user
@@ -263,6 +298,8 @@ class OrderController extends Controller
             'shipping_address' => 'required|string',
             'customer_phone' => 'required|string',
             'customer_email' => 'required|email',
+            'voucher_code' => 'nullable|string|exists:vouchers,code',
+            'discount_amount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -290,6 +327,25 @@ class OrderController extends Controller
                 }
             }
 
+            // Xử lý voucher
+            $voucherData = null;
+            $discountAmount = 0;
+
+            if ($request->voucher_code) {
+                $voucherResponse = $this->validateAndApplyVoucher(
+                    $request->voucher_code,
+                    $user,
+                    $request->subtotal
+                );
+
+                if (!$voucherResponse['success']) {
+                    return response()->json(['message' => $voucherResponse['message']], 400);
+                }
+
+                $voucherData = $voucherResponse['voucher'];
+                $discountAmount = $voucherResponse['discount_amount'];
+            }
+
             // Tạo đơn hàng
             $order = Order::create([
                 'user_id' => $user->id,
@@ -301,7 +357,13 @@ class OrderController extends Controller
                 'subtotal' => $request->subtotal,
                 'tax' => $request->tax,
                 'shipping' => $request->shipping,
-                'total' => $request->total,
+                'voucher_code' => $request->voucher_code ?? null,
+                'voucher_discount' => $discountAmount ?? null,
+                'voucher_type' => $voucherData->type ?? null,
+                'voucher_id' => $voucherData->id ?? null,
+                'discount_amount' => $discountAmount ?? null,
+                'total' => $request->total - $discountAmount,
+                // 'total' => $request->total,
                 'status' => 'pending',
             ]);
 
@@ -328,6 +390,9 @@ class OrderController extends Controller
                         $variant->fresh()->stock->quantity
                     ));
                 }
+            }
+            if ($request->voucher_code && isset($voucherData)) {
+                $this->updateVoucherUsage($voucherData, $user);
             }
 
             // Gửi event
@@ -371,7 +436,6 @@ class OrderController extends Controller
                         ]
                     ]);
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
@@ -382,6 +446,7 @@ class OrderController extends Controller
             ], 400);
         }
     }
+
 
 
 
@@ -426,7 +491,7 @@ class OrderController extends Controller
                     'sale_price' => $item->variant->sale_price,
                     'color_id' => $item->variant->color_id,
                     'size_id' => $item->variant->size_id,
-                    
+
                 ]);
 
                 // Cập nhật tồn kho
@@ -525,11 +590,37 @@ class OrderController extends Controller
             $tax = $subtotal * 0.1;
             $total = $subtotal + $shipping + $tax;
 
+
+            // Xử lý voucher
+            $voucherData = null;
+            $discountAmount = 0;
+
+            if ($request->voucher_code) {
+                $voucherResponse = $this->validateAndApplyVoucher(
+                    $request->voucher_code,
+                    $user,
+                    $request->subtotal
+                );
+
+                if (!$voucherResponse['success']) {
+                    return response()->json(['message' => $voucherResponse['message']], 400);
+                }
+
+                $voucherData = $voucherResponse['voucher'];
+                $discountAmount = $voucherResponse['discount_amount'];
+            }
+
             $order = $user->orders()->create([
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
+                'voucher_code' => $request->voucher_code,
+                'voucher_discount' => $discountAmount,
+                'voucher_type' => $voucherData->type ?? null,
+                'voucher_id' => $voucherData->id ?? null,
+                'discount_amount' => $discountAmount,
+                'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
-                'total' => $total,
+                // 'total' => $total,
                 'status' => 'pending',
                 'payment_method' => 'vnpay',
                 'payment_status' => 'pending',
@@ -650,7 +741,6 @@ class OrderController extends Controller
             return [
                 'payment_url' => $vnp_Url,
             ];
-
         } catch (\Exception $e) {
             Log::error('Lỗi tạo link thanh toán VNPay: ' . $e->getMessage(), ['exception' => $e]);
             throw $e;
@@ -747,7 +837,6 @@ class OrderController extends Controller
                         'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
                     ]));
                 } else {
-
                 }
             } else {
                 return response()->json(['message' => 'Sai checksum'], 400);
@@ -1029,7 +1118,6 @@ class OrderController extends Controller
                 'voucher' => $voucher,
                 'discount_amount' => $discountAmount
             ];
-
         } catch (\Exception $e) {
             Log::error('Voucher validation error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Lỗi khi kiểm tra voucher'];
@@ -1043,11 +1131,13 @@ class OrderController extends Controller
     {
         if ($voucher->discount_type === 'amount') {
             return min($voucher->discount_amount, $subtotal);
-        } else {
+        } elseif ($voucher->discount_type === 'percent') {
             $discount = $subtotal * ($voucher->discount_percent / 100);
             return isset($voucher->max_discount) ? min($discount, $voucher->max_discount) : $discount;
         }
+        return 0;
     }
+
 
     /**
      * Cập nhật số lần sử dụng voucher
@@ -1070,5 +1160,4 @@ class OrderController extends Controller
             $voucherUser->save();
         });
     }
-
 }

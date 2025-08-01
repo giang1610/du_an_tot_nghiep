@@ -195,13 +195,16 @@ export default function Checkout() {
       subtotal: totals.subtotal,
       tax: totals.tax,
       shipping: totals.shipping,
-      discount: totals.discount,
+      discount_amount: totals.discount,
       total: totals.total,
-      voucher_codes: {
-        product: productVoucherInfo?.code ?? null,
-        shipping: shippingVoucherInfo?.code ?? null
-      }
+      // voucher_code: {
+      //   product: productVoucherInfo?.code ?? null,
+      //   shipping: shippingVoucherInfo?.code ?? null
+      // }
+      voucher_code: productVoucherInfo?.code || shippingVoucherInfo?.code || null,
     };
+
+    // console.log('Order payload:', JSON.stringify(payload, null, 2));
 
     try {
       setLoading(true);
@@ -448,3 +451,4 @@ export default function Checkout() {
     </Container>
   );
 }
+

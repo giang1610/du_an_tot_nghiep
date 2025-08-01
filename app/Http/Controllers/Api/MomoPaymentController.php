@@ -54,12 +54,37 @@ class MomoPaymentController extends Controller
             $tax = $subtotal * 0.1;
             $total = $subtotal + $shipping + $tax;
 
+            // Xử lý voucher
+            $voucherData = null;
+            $discountAmount = 0;
+
+            if ($request->voucher_code) {
+                $voucherResponse = $this->validateAndApplyVoucher(
+                    $request->voucher_code,
+                    $user,
+                    $request->subtotal
+                );
+
+                if (!$voucherResponse['success']) {
+                    return response()->json(['message' => $voucherResponse['message']], 400);
+                }
+
+                $voucherData = $voucherResponse['voucher'];
+                $discountAmount = $voucherResponse['discount_amount'];
+            }
+
             $order = $user->orders()->create([
                 'order_number' => 'ORDER' . now()->format('Ymd') . '-' . rand(1000, 9999),
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
+                 'voucher_code' => $request->voucher_code,
+                'voucher_discount' => $discountAmount,
+                'voucher_type' => $voucherData->type ?? null,
+                'voucher_id' => $voucherData->id ?? null,
+                'discount_amount' => $discountAmount,
+                'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
-                'total' => $total,
+                // 'total' => $total,
                 'status' => 'pending',
                 'payment_method' => 'momo',
                 'payment_status' => 'pending',
