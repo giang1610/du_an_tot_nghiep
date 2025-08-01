@@ -510,6 +510,17 @@ class OrderController extends Controller
             }
         }
 
+         if ($oldStatus === 'failed' && $order->status === 'restocked') {
+            foreach ($order->items as $item) {
+                $stock = \App\Models\Stock::where('product_variant_id', $item->product_variant_id)->first();
+                if ($stock) {
+                    $stock->quantity += $item->quantity;
+                    $stock->save();
+                }
+            }
+        }
+
+
         // Nếu trạng thái thay đổi và là "cancelled" thì cộng lại số lượng vào kho của từng variant
             if ($order->status === 'cancelled' && $oldStatus !== 'cancelled') {
                 foreach ($order->items as $item) {

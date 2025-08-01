@@ -30,7 +30,7 @@ const ProductSummary = ({ items }) => {
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
                 Số lượng: {item.quantity} <br />
-                Giá: {formatCurrency(parseInt(item.price, 10))}đ<br />
+                Giá: {formatCurrency(item.price)} đ <br />
                 {item.color && <>Màu: {item.color}<br /></>}
                 {item.size && <>Size: {item.size}<br /></>}
 
@@ -108,7 +108,7 @@ export default function Checkout() {
     }
 
     const total = subtotal + tax + shipping - discount;
-    return { subtotal, tax, shipping, discount, total: Math.max(0, total), };
+    return { subtotal, tax, shipping, discount, total };
   }, [selectedItems, productVoucherInfo, shippingVoucherInfo]);
 
   const setField = (name, value) => {
@@ -195,13 +195,16 @@ export default function Checkout() {
       subtotal: totals.subtotal,
       tax: totals.tax,
       shipping: totals.shipping,
-      discount: totals.discount,
+      discount_amount: totals.discount,
       total: totals.total,
-      voucher_codes: {
-        product: productVoucherInfo?.code ?? null,
-        shipping: shippingVoucherInfo?.code ?? null
-      }
+      // voucher_code: {
+      //   product: productVoucherInfo?.code ?? null,
+      //   shipping: shippingVoucherInfo?.code ?? null
+      // }
+      voucher_code: productVoucherInfo?.code || shippingVoucherInfo?.code || null,
     };
+
+    // console.log('Order payload:', JSON.stringify(payload, null, 2));
 
     try {
       setLoading(true);
@@ -227,7 +230,7 @@ export default function Checkout() {
         );
 
         if (data?.data?.payment_url) {
-          
+
           await removeSelectedItems();
           window.location.href = data.data.payment_url;
         } else {
@@ -447,11 +450,9 @@ export default function Checkout() {
               <p>Phí vận chuyển: {formatCurrency(totals.shipping)} đ</p>
               <p>Thuế: {formatCurrency(totals.tax)} đ</p>
               {totals.discount > 0 && (
-                <p className="text-success"> Giảm giá: -{formatCurrency(parseInt(totals.discount, 10))} đ</p>
+                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} đ</p>
               )}
-
               <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} đ</h5>
-
             </>
           )}
         </Col>

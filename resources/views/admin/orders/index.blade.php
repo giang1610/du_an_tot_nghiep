@@ -300,7 +300,7 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
 
-                                    @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
+                                    @if (!in_array($order->status, ['completed', 'cancelled', 'restocked']))
                                     <a href="{{ route('orders.edit', $order->id) }}"
                                         class="btn btn-sm btn-outline-success"
                                         data-bs-toggle="tooltip"
