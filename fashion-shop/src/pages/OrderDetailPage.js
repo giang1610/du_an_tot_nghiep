@@ -443,11 +443,11 @@ export default function OrderDetailPage() {
                                 const now = new Date();
                                 const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                 return diffDays <= 7 ? (
-                                    <Button disabled={returnLoading}>
+                                    <Button disabled={returnLoading} onClick={() => setShowReturnModal(true)}>
                                         {returnLoading ? 'Đang gửi yêu cầu...' : 'Yêu cầu hoàn đơn'}
                                     </Button>
-
                                 ) : null;
+
                             })()}
 
                         </div>
