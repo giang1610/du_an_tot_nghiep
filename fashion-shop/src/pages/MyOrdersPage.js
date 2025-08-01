@@ -56,7 +56,8 @@ const PAYMENT_STATUS_VARIANTS = {
 
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
-    momo: 'Ví Momo',
+    momo: 'Thanh toán Momo',
+    vnpay: 'Thanh toán VNPay',
 };
 
 export default function MyOrdersPage() {
@@ -409,6 +410,17 @@ export default function MyOrdersPage() {
                                             Đã nhận hàng
                                         </Button>
                                     )}
+                                    {order.status === 'pending' && (
+                                        <Button
+                                            variant="warning"
+                                            size="sm"
+                                            className="me-2"
+                                            onClick={() => navigate(`/continue-payment/${order.payment_method}/${order.id}`)}
+                                        >
+                                            Tiếp tục thanh toán
+                                        </Button>
+                                    )}
+
                                     {(order.status === 'pending' || order.status === 'processing') && (
                                         <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>
                                             Hủy đơn

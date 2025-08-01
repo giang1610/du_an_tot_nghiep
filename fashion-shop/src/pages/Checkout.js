@@ -30,7 +30,7 @@ const ProductSummary = ({ items }) => {
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
                 Số lượng: {item.quantity} <br />
-                Giá: {formatCurrency(item.price)} đ <br />
+                Giá: {formatCurrency(parseInt(item.price, 10))}đ<br />
                 {item.color && <>Màu: {item.color}<br /></>}
                 {item.size && <>Size: {item.size}<br /></>}
 
@@ -108,7 +108,7 @@ export default function Checkout() {
     }
 
     const total = subtotal + tax + shipping - discount;
-    return { subtotal, tax, shipping, discount, total };
+    return { subtotal, tax, shipping, discount, total: Math.max(0, total), };
   }, [selectedItems, productVoucherInfo, shippingVoucherInfo]);
 
   const setField = (name, value) => {
@@ -351,9 +351,13 @@ export default function Checkout() {
             <Form.Group className="mb-3">
               <Form.Label>Phương thức thanh toán</Form.Label>
               <Form.Select
-                name="payment_method"
                 value={form.payment_method}
-                onChange={e => setField('payment_method', e.target.value)}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    payment_method: e.target.value,
+                  }))
+                }
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                 <option value="momo">Thanh toán MoMo</option>
@@ -361,16 +365,21 @@ export default function Checkout() {
               </Form.Select>
             </Form.Group>
 
-            <Button type="submit" variant="dark" className="w-100" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-2" />
                   Đang xử lý...
                 </>
-              ) : form.payment_method === 'momo'
-                ? 'Thanh toán qua MoMo'
-                : 'Xác nhận đặt hàng'}
+              ) : form.payment_method === 'momo' ? (
+                'Thanh toán qua MoMo'
+              ) : form.payment_method === 'vnpay' ? (
+                'Thanh toán qua VNPay'
+              ) : (
+                'Xác nhận đặt hàng'
+              )}
             </Button>
+
           </Form>
         </Col>
 
@@ -438,9 +447,11 @@ export default function Checkout() {
               <p>Phí vận chuyển: {formatCurrency(totals.shipping)} đ</p>
               <p>Thuế: {formatCurrency(totals.tax)} đ</p>
               {totals.discount > 0 && (
-                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} đ</p>
+                <p className="text-success"> Giảm giá: -{formatCurrency(parseInt(totals.discount, 10))} đ</p>
               )}
+
               <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} đ</h5>
+
             </>
           )}
         </Col>

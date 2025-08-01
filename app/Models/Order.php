@@ -83,7 +83,9 @@ class Order extends Model
         'return_status',
         'note_admin',
     ];
-
+    protected $casts = [
+        'expired_at' => 'datetime',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -162,6 +162,12 @@
                                     Đơn hàng đã ở trạng thái <b>{{ $statusOptions[$currentStatus] }}</b>, không thể đổi trạng thái nữa.
                                 </div>
                                 @endif
+                                 @if ($currentStatus === 'failed')
+                                     <option value="restocked">Hàng đã trả về kho</option>
+                                @else
+                                <option value="{{ $currentStatus }}" selected disabled>
+                                    {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                </option>
                                  @if ($currentStatus === 'shipping')
                                 <option value="shipped">{{ $statusOptions['shipped'] }}</option>
                                 <option value="failed_1">Giao hàng thất bại lần 1</option>
@@ -174,6 +180,7 @@
                                 @elseif ($nextStatus)
                                     <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
                                 @endif
+                                
                                 @if ($currentStatus === 'returned')
                                     <option value="shipper_en_route">Shipped đang lấy hàng</option>
                                 @endif
@@ -181,7 +188,8 @@
                                     <option value="restocked">Hàng đã trả về kho</option>
                                 @endif
                             @endif
-                                
+
+                                 @endif
                             </select>
                     </div>
                         <div class="alert alert-info mt-3">
