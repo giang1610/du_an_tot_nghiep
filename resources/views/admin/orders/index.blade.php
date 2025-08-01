@@ -43,16 +43,15 @@
                         <option value="picking" {{ request('status') == 'picking' ? 'selected' : '' }}>Đang lấy hàng</option>
                         <option value="shipping" {{ request('status') == 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
                         <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đã giao hàng</option>
-                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Đã nhận hàng</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
                         <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Giao hàng thất bại</option>
                         <option value="failed_1" {{ request('status') == 'failed_1' ? 'selected' : '' }}>Giao hàng thất bại lần 1</option>
                         <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
                         <option value="returning" {{ request('status') == 'returning' ? 'selected' : '' }}>Đang trả hàng</option>
                         <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Yêu cầu trả hàng</option>
                         <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                        <option value="failed_1" {{ request('status') == 'failed_1' ? 'selected' : '' }}>Giao hàng thất bại lần 1</option>
-                        <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
+                        
+                        
                     </select>
                 </div>
 
@@ -116,7 +115,7 @@
                             <th>Sản phẩm</th>
                             <th>Địa chỉ</th>
                             <th>Tổng tiền</th>
-                            <th>Phương thức & Trạng thái</th>
+                            <th>PTTT & TTTT</th>
                             <th>TT giao hàng</th>
                             <th>Thao tác</th>
                         </tr>
@@ -164,7 +163,7 @@
                                     <div><i class="fas fa-map-marker-alt me-2"></i> {{ Str::limit($order->shipping_address, 10) }}</div>
                                 </div>
                             </td>
-                              <td>
+                              <td >
                                 <strong>{{ number_format($order->total) }} VNĐ</strong>
                                 @if($order->discount > 0)
                                 <div class="text-danger small">
@@ -184,6 +183,11 @@
                                     <i class="fas fa-mobile-alt me-1"></i> Momo
                                 </span>
                                 @break
+                                @case('vnpay')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                    </span>
+                                    @break
                                 @default
                                 <span class="badge bg-light text-dark">
                                     <i class="fas fa-question me-1"></i> Khác
@@ -193,6 +197,14 @@
                                     @if($order->payment_status == 'paid')
                                     <span class="text-success">
                                         <i class="fas fa-check-circle me-1"></i> Đã thanh toán
+                                    </span>
+                                    @elseif($order->payment_status == 'pending')
+                                    <span class="text-secondary">
+                                        <i class="fas fa-spinner fa-spin me-1"></i> Đang thanh toán
+                                    </span>
+                                    @elseif($order->payment_status == 'failed')
+                                    <span class="text-danger">
+                                        <i class="fas fa-times-circle me-1"></i> Thanh toán thất bại
                                     </span>
                                     @else
                                     <span class="text-warning">
@@ -226,11 +238,6 @@
                                 @case('shipped')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
-                                </span>
-                                @break
-                                @case('delivered')
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i> Đã nhận hàng
                                 </span>
                                 @break
                                 @case('completed')
@@ -320,7 +327,7 @@
                 </table>
 
                 <!-- Mobile view -->
-                <div class="d-md-none">
+                {{-- <div class="d-md-none">
                     @forelse ($orders as $order)
                     <div class="card mb-3">
                         <div class="card-header bg-light d-flex justify-content-between">
@@ -372,7 +379,6 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
-
                             </div>
                         </div>
                         <div class="card-body">
@@ -412,34 +418,31 @@
                                     <div><i class="fas fa-map-marker-alt me-2"></i> {{ $order->shipping_address }}</div>
                                 </div>
                             </div>
-
+                            
                             <div class="mb-2">
                                 <strong>Thanh toán:</strong>
                                 @switch($order->payment_method)
                                 @case('cod')
-                                <span class="badge bg-secondary">
-                                    <i class="fas fa-money-bill-wave me-1"></i> COD
-                                </span>
-                                @break
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-money-bill-wave me-1"></i> COD
+                                    </span>
+                                    @break
                                 @case('momo')
-                                <span class="badge bg-danger">
-                                    <i class="fas fa-mobile-alt me-1"></i> Momo
-                                </span>
-                                @break
+                                    <span style="background-color: #A50064; color: white" class="badge">
+                                        <i class="fas fa-mobile-alt me-1"></i> Momo
+                                    </span>
+                                    @break
+                                   
+                                @case('vnpay')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                    </span>
+                                    @break
                                 @default
-                                <span class="badge bg-light text-dark">
-                                    <i class="fas fa-question me-1"></i> Khác
-                                </span>
-                                @endswitch
-                                @if($order->payment_status == 'paid')
-                                <span class="text-success ms-2">
-                                    <i class="fas fa-check-circle me-1"></i> Đã thanh toán
-                                </span>
-                                @else
-                                <span class="text-warning ms-2">
-                                    <i class="fas fa-clock me-1"></i> Chưa thanh toán
-                                </span>
-                                @endif
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-question me-1"></i> Khác
+                                    </span>
+                            @endswitch
                             </div>
 
                             <div class="mb-3">
@@ -457,6 +460,7 @@
                                     class="btn btn-sm btn-outline-primary flex-grow-1">
                                     <i class="fas fa-eye me-1"></i> Chi tiết
                                 </a>
+                                
                                 @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
                                 <a href="{{ route('orders.edit', $order->id) }}"
                                     class="btn btn-sm btn-outline-success flex-grow-1">
@@ -479,7 +483,7 @@
                         </div>
                     </div>
                     @endforelse
-                </div>
+                </div> --}}
             </div>
 
             @if($orders->hasPages())

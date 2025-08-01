@@ -46,6 +46,8 @@ export default function ProductReview({ productId, selectedVariantId }) {
   const [content, setContent] = useState('');
   const [debouncedContent, setDebouncedContent] = useState('');
   const [reviews, setReviews] = useState([]);
+  const [reviewMedia, setReviewMedia] = useState(null);
+
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedContent(content), 300);
@@ -87,6 +89,7 @@ export default function ProductReview({ productId, selectedVariantId }) {
         console.error(err);
         setCanReview(false);
         setReviews([]);
+
       })
       .finally(() => setLoading(false));
   }, [productId, selectedVariantId]);
@@ -125,6 +128,7 @@ export default function ProductReview({ productId, selectedVariantId }) {
           product_variant_id: selectedVariantId,
           rating,
           content: debouncedContent,
+          media: reviewMedia ? reviewMedia.name : null,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -134,6 +138,7 @@ export default function ProductReview({ productId, selectedVariantId }) {
       setMessage({ type: 'success', text: res.data.message || 'Đánh giá thành công!' });
       setRating(0);
       setContent('');
+      setReviewMedia(null);
 
       const refreshed = await axios.get(`${process.env.REACT_APP_API_URL}/reviews`, {
         params: { product_id: productId },

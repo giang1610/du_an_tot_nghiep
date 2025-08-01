@@ -9,7 +9,7 @@
   <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3"
       id="notiList"
       style="max-height: 400px; overflow-y: auto; width: 340px; background: #ffffff;">
-    
+
     <li class="dropdown-header px-3 py-2 fw-bold text-dark border-bottom bg-light">
       <i class="bi bi-bell-fill me-1 text-warning"></i> Thông báo
     </li>
@@ -35,7 +35,7 @@
 <style>
   .noti-item.unread {
     font-weight: 600;
-    background-color: #f8fafc;
+    background-color: #77e286ff;
     position: relative;
   }
 

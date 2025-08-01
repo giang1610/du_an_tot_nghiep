@@ -1,13 +1,16 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Order;
+use App\Models\vouchers;
+
+
+
 
 /**
  * 
@@ -63,6 +66,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         // cần thêm dòng dưới nếu chưa có:
+        'phone',
+        'address',
+        
         'img_thumbnail',
         'role',
     ];
@@ -91,6 +97,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Cart::class);
     }
 
+    public function vouchers()
+    {
+        return $this->belongsToMany(Voucher::class, 'voucher_user')  ->using(VoucherUser::class) 
+            ->withPivot('used')
+            ->withTimestamps();
+    }
     public function orders()
     {
         return $this->hasMany(Order::class, 'user_id');
@@ -100,4 +112,6 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->role == 1; // Giả sử role 1 là admin
     }
+
+    
 }

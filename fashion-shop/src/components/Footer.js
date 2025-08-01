@@ -5,6 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-dark text-white pt-5 pb-3">
       <Container>
+        
         <Row className="mb-4">
           <Col md={4}>
             <h5 className="fw-bold mb-3">ToranoStyle</h5>
@@ -25,6 +26,7 @@ export default function Footer() {
             <FaFacebook size={24} className="me-3" />
             <FaInstagram size={24} />
             <p className="mt-3"><small>© 2025 Torano.vn – All rights reserved</small></p>
+
           </Col>
         </Row>
       </Container>

@@ -257,6 +257,176 @@ class OrderController extends Controller
         return view('admin.orders.shipped', compact('orders'));
     }
 
+     public function completed(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'completed')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return view('admin.orders.completed', compact('orders'));
+    }
+
+    public function failed(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'failed')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return view('admin.orders.failed', compact('orders'));
+    }
+
+    public function returning(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'returning')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return view('admin.orders.returning', compact('orders'));
+    }
+
+    public function return_requested(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'return_requested')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return view('admin.orders.return_requested', compact('orders'));
+    }
+
+        public function returned(Request $request)
+    {
+        $query = Order::with(['user', 'items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->where('status', 'returned')
+            ->orderBy('created_at', 'desc');
+
+        // Tìm kiếm theo từ khóa (mã đơn hàng, tên user, email, số điện thoại khách hàng)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%") // Thêm tìm kiếm theo số điện thoại
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+        
+        // Lọc theo ngày bắt đầu (created_at >= from_date)
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Lọc theo ngày kết thúc (created_at <= to_date)
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return view('admin.orders.returned', compact('orders'));
+    }
+
     public function show($id)
     {
         $order = Order::with([
@@ -300,7 +470,7 @@ class OrderController extends Controller
     $order->status = $newStatus;
 
     // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
-    if (in_array($newStatus, ['shipped', 'delivered', 'completed']) && $order->payment_status !== 'paid') {
+    if (in_array($newStatus, ['shipped', 'completed']) && $order->payment_status !== 'paid') {
         $order->payment_status = 'paid';
     }
 
@@ -367,8 +537,8 @@ class OrderController extends Controller
         $order->save();
         Mail::to($order->customer_email)->queue(new \App\Mail\ReturnAccepted($order));
     } else {
-        $order->status = 'delivered';
-        $order->delivered_at = now();
+        $order->status = 'completed';
+        $order->completed_at = now();
         $order->save();
         Mail::to($order->customer_email)->queue(new \App\Mail\ReturnRejected($order));
     }

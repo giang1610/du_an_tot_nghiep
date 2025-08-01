@@ -59,7 +59,7 @@
                     
                     <div class="col-6">
                         <label for="price_products" class="form-label fw-medium">Giá sản phẩm</label>
-                        <input type="number" name="price_products" id="price_products" class="form-control" placeholder="Nhập giá sản phẩm" value="{{ old('price_products', $product->price_products) }}">
+                        <input type="number" name="price_products" id="price_products" class="form-control" placeholder="Nhập giá sản phẩm" value="{{ old('price_products', (int)$product->price_products) }}">
                         @error('price_products')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -218,7 +218,7 @@
                             <div class="col-md-6">
                                 <label class="form-label small">Giá</label>
                                 <input type="number" name="variants[{{ $i }}][price]" class="form-control form-control-sm" 
-                                       value="{{ old('variants.'.$i.'.price', $variant['price'] ?? '') }}">
+                                       value="{{ old('variants.'.$i.'.price', (int)$variant['price'] ?? '') }}">
                                 @error('variants.'.$i.'.price')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -227,7 +227,7 @@
                             <div class="col-md-6">
                                 <label class="form-label small">Giá khuyến mãi</label>
                                 <input type="number" name="variants[{{ $i }}][sale_price]" class="form-control form-control-sm" 
-                                       id="sale_price_{{ $i }}" value="{{ old('variants.'.$i.'.sale_price', $variant['sale_price'] ?? '') }}">
+                                       id="sale_price_{{ $i }}" value="{{ old('variants.'.$i.'.sale_price', isset($variant['sale_price']) && $variant['sale_price'] !== null ? (is_numeric($variant['sale_price']) ? rtrim(rtrim($variant['sale_price'], '0'), '.') : $variant['sale_price']) : '') }}">
                                 @error('variants.'.$i.'.sale_price')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror

@@ -1,28 +1,33 @@
-import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
+import { Navbar, Nav, Container, NavDropdown, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaUser, FaShoppingCart } from 'react-icons/fa';
+import { FaUser, FaShoppingBag } from 'react-icons/fa';
 import SearchBar from './SearchBar';
+import Lottie from 'lottie-react';
+import phiHanhGia from '../animation/phi_hanh_gia.json';
+import MGLogo from './MGLogo';
+import { useCart } from '../context/CartContext';
 
 export default function CustomNavbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { cart = [] } = useCart();
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  // Tổng số lượng sản phẩm trong giỏ (ví dụ: 2 áo + 1 quần = 3)
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <Navbar bg="light" expand="lg" className="shadow-sm">
       <Container>
         <Navbar.Brand as={Link} to="/">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNxJnW1NiZVAaDlLsRqlSZqhEq0juTQShoQg&s"
-            alt="MG Logo"
-            height="30"
-            className="d-inline-block align-top"
-          />
+          <div style={{ width: 80, height: 80 }}>
+            <MGLogo />
+          </div>
         </Navbar.Brand>
 
         <Navbar.Toggle />
@@ -38,13 +43,25 @@ export default function CustomNavbar() {
 
           {/* Center search */}
           <SearchBar />
+          <Lottie animationData={phiHanhGia} loop={true} style={{ width: 50, height: 50 }} />
 
           {/* Right nav */}
           <Nav className="align-items-center ms-3">
-            <Nav.Link as={Link} to="/cart" className="me-2">
-              <FaShoppingCart size={20} />
+            {/* Giỏ hàng với badge */}
+            <Nav.Link as={Link} to="/cart" className="position-relative me-2 cart-icon">
+              <FaShoppingBag size={22} />
+              {totalItems > 0 && (
+                <Badge
+                  bg="danger"
+                  pill
+                  className="position-absolute top-0 start-100 translate-middle cart-badge"
+                >
+                  {totalItems}
+                </Badge>
+              )}
             </Nav.Link>
 
+            {/* Dropdown tài khoản */}
             <NavDropdown
               align="end"
               id="account-dropdown"
@@ -68,8 +85,6 @@ export default function CustomNavbar() {
                   <FaUser size={20} />
                 )
               }
-
-
             >
               {user ? (
                 <>

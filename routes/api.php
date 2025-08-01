@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,26 +15,23 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SizeController;
 
+
 use App\Http\Controllers\Api\Auth\TokenEmailVerificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\Auth\ChangePasswordController;
 
+use App\Http\Controllers\Api\Auth\GetUserController;
+
+
 // route chat
 use App\Http\Controllers\Api\Chat\ChatController;
-
-
-
-
-// User info
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+use App\Http\Controllers\Api\MomoPaymentController;
+use App\Http\Controllers\Api\VnpayPaymentController;
 
 // ========== PUBLIC ROUTES ========== //
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1');
-
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:5,1');
 
 
@@ -67,12 +65,14 @@ Route::get('/sizes', [SizeController::class, 'index']);
 // Public reviews (view only)
 Route::get('/products/{id}/reviews', [ReviewController::class, 'listByProduct']);
 
-
 // ========== PROTECTED ROUTES (auth:sanctum) ========== //
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', fn(Request $request) => $request->user());
+    // Route::get('user', [GetUserController::class, 'getUser']);
+
+    Route::get('user', [GetUserController::class, 'getUser']);
 
     // Reviews
     // Gửi đánh giá
@@ -93,8 +93,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/remove-selected', [CartController::class, 'removeSelectedItems']);
             Route::delete('/clear', [CartController::class, 'clearCart']);
             Route::get('/total', [CartController::class, 'getCartTotal']);
-            Route::post('/checkout', [CartController::class, 'checkout']); // Đừng quên checkout!
-
         });
     });
 });
@@ -107,26 +105,40 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [OrderController::class, 'index']);
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/checkout', [OrderController::class, 'checkout']);
-        Route::put('/{order}/cancel', [OrderController::class, 'cancel']);
+        Route::post('/checkout/validate-voucher', [OrderController::class, 'validateVoucher']);
+        Route::post('/{order}/cancel', [OrderController::class, 'cancel']);
         Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
         Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
         // Gửi yêu cầu hoàn đơn
         Route::post('/{id}/request-return', [OrderController::class, 'requestReturn']);
-
     });
 
     // Payment Momo
-    Route::prefix('payment')->group(function () {
-        Route::post('/momo', [OrderController::class, 'processMomoPayment']); 
+
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/payment/momo', [MomoPaymentController::class, 'processMomoPayment']);
+        Route::post('/momo/retry-payment', [MomoPaymentController::class, 'retryMomoPayment']);
+
     });
 
-    // Các route khác: logout, cart, review...
-    
+    // Payment VNPAY
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/vnpay/pay', [VnpayPaymentController::class, 'processVnpayPayment']);
+        Route::post('/vnpay/retry-payment', [OrderController::class, 'retryVnpayPayment']);
+    });
 });
 
-Route::post('/payment/momo/webhook', [OrderController::class, 'momoWebhook']); // IPN
-Route::get('/payment/momo/return', [OrderController::class, 'momoReturn']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/vouchers', [VoucherController::class, 'index']);
+    Route::post('/vouchers/validate', [VoucherController::class, 'validateVoucher']);
+    Route::get('/vouchers/my', [VoucherController::class, 'getUserVouchers']);  // Lấy danh sách voucher của người dùng
+    Route::post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
+    Route::post('/vouchers/apply', [VoucherController::class, 'apply']);
+});
+// Không cho vào trong auth:sanctum
+Route::post('/payment/momo/webhook', [MomoPaymentController::class, 'momoIpn']); // IPN
+Route::get('/payment/momo/return', [MomoPaymentController::class, 'momoReturn']);
 
-// VNPay payment
-Route::post('/payment/vnpay/webhook', [OrderController::class, 'vnpayIpn']);
+
 Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
