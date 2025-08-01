@@ -95,11 +95,14 @@
                     'shipped' => 'Đã giao hàng',
                     'return_requested' => 'Yêu cầu hoàn hàng',
                     'delivered' => 'Đã nhận hàng',
-                    'returned' => 'Hoàn hàng',
+                    'returned' => 'Đồng ý hoàn hàng',
+                    'restocked' => 'Hàng đã trả về kho',
                     'completed' => 'Đơn hàng hoàn thành',
                     'failed_1' => 'Giao hàng thất bại lần 1',
                     'failed_2' => 'Giao hàng thất bại lần 2',
                     'failed' => 'Giao hàng thất bại',
+                    'shipper_en_route' => 'Shipper đang đến lấy hàng',
+
                 ];
                 $statusFlow = ['pending', 'processing', 'picking', 'shipping', 'shipped'];
                 $currentStatus = old('status', $order->status ?? 'pending');
@@ -129,6 +132,17 @@
                         @else
                             <label class="form-label">Chọn trạng thái mới</label>
                             <select name="status" class="form-select" required>
+                                 @if ($currentStatus === 'returned')
+                                     <option value="{{ $currentStatus }}" selected disabled>
+                                    {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                     </option>
+                                    <option value="shipper_en_route">{{ $statusOptions['shipper_en_route'] }}</option>
+                                @elseif ($currentStatus === 'shipper_en_route')
+                                    <option value="{{ $currentStatus }}" selected disabled>
+                                        {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                    </option>
+                                    <option value="restocked">{{ $statusOptions['restocked'] }}</option>
+                                @else
                                 @if (!in_array($currentStatus, ['shipped', 'completed', 'failed', 'returned', 'return_requested','failed_1', 'failed_2', 'returning']))
                                     <option value="cancelled" {{ $currentStatus == 'cancelled' ? 'selected' : '' }}>
                                         {{ $statusOptions['cancelled'] }}
@@ -160,6 +174,14 @@
                                 @elseif ($nextStatus)
                                     <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
                                 @endif
+                                @if ($currentStatus === 'returned')
+                                    <option value="shipper_en_route">Shipped đang lấy hàng</option>
+                                @endif
+                                 @if ($currentStatus === 'shipper_en_route')
+                                    <option value="restocked">Hàng đã trả về kho</option>
+                                @endif
+                            @endif
+
                             </select>
                     </div>
                         <div class="alert alert-info mt-3">
@@ -167,11 +189,11 @@
                             Chỉ có thể chuyển sang trạng thái kế tiếp trong quy trình hoặc hủy đơn hàng.
                         </div>
                         @endif
-                    
+
                 </div>
             </div>
 
-            @if (!in_array($currentStatus, ['shipped','cancelled','completed','failed']) && $order->status !== 'return_requested')
+            @if (!in_array($currentStatus, ['shipped','cancelled','completed','restocked']) && $order->status !== 'return_requested')
                 <div class="text-end">
                     <button type="submit" class="btn btn-primary px-4 py-2">
                         <i class="bi bi-check-circle me-2"></i>Cập nhật trạng thái

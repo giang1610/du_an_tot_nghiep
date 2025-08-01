@@ -620,7 +620,7 @@ class OrderController extends Controller
                 'discount_amount' => $discountAmount,
                 'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
-                // 'total' => $total,
+                // 'total' => (int) $total,
                 'status' => 'pending',
                 'payment_method' => 'vnpay',
                 'payment_status' => 'pending',
@@ -683,7 +683,7 @@ class OrderController extends Controller
             $vnp_TxnRef = $order->id . '_' . time();
             $vnp_OrderInfo = 'Thanh toan hoa don ' . $order->order_number;
             $vnp_OrderType = 'other';
-            $vnp_Amount = $order->total * 100; // Nhân 100 theo yêu cầu VNPay
+            $vnp_Amount = (int) ($order->total * 100); // Nhân 100 theo yêu cầu VNPay
             $vnp_Locale = 'vn';
             $vnp_BankCode = 'VNBANK'; // Có thể để rỗng nếu không ép chọn ngân hàng
             $vnp_IpAddr = request()->ip(); // IP khách hàng
