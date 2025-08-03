@@ -124,7 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payment VNPAY
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/vnpay/pay', [VnpayPaymentController::class, 'processVnpayPayment']);
+        Route::post('/vnpay/pay', [OrderController::class, 'processVnpayPayment']);
         Route::post('/vnpay/retry-payment', [OrderController::class, 'retryVnpayPayment']);
     });
 });
