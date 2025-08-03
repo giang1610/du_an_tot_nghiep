@@ -54,7 +54,7 @@ export default function AllProductsPage() {
 
       let result = res.data.data;
 
-   
+
       switch (filters.sort) {
         case 'latest':
           result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -147,9 +147,11 @@ export default function AllProductsPage() {
             />
 
             <div className="d-grid gap-2">
-              <Button type="submit" variant="dark">Lọc</Button>
-              <Button variant="outline-secondary" onClick={handleResetFilters}>
-                Đặt lại bộ lọc
+              <Button type="submit" variant="primary">
+                🔍 Lọc
+              </Button>
+              <Button variant="outline-primary" onClick={handleResetFilters}>
+                🔄 Đặt lại
               </Button>
             </div>
           </Form>
