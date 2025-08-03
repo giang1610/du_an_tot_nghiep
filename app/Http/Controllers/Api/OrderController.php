@@ -600,9 +600,7 @@ class OrderController extends Controller
                 $subtotal += ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
             }
 
-            $shipping = 20000;
-            $tax = $subtotal * 0.1;
-            // $total = $subtotal + $shipping + $tax;
+        
 
             // Xử lý voucher nếu có
             $voucherData = null;
@@ -622,14 +620,23 @@ class OrderController extends Controller
                 $voucherData = $voucherResponse['voucher'];
                 $discountAmount = $voucherResponse['discount_amount'];
             }
+                $shipping = 20000;
+            $tax = $subtotal * 0.1;
+            $total = ($subtotal + $shipping + $tax) - $discountAmount;
 
             // Tính toán lại total sau khi áp dụng voucher
-            $totalAfterDiscount = $request->total - $discountAmount;
+            // $totalAfterDiscount = $request->total - $discountAmount;
             $order = $user->orders()->create([
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
+                'voucher_code' => $request->voucher_code,
+                'voucher_discount' => $discountAmount,
+                'voucher_type' => $voucherData->type ?? null,
+                'voucher_id' => $voucherData->id ?? null,
+                'discount_amount' => $discountAmount,
+                // 'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
-                'total' => $totalAfterDiscount,
+                'total' => $total,
                 'status' => 'pending',
                 'payment_method' => 'vnpay',
                 'payment_status' => 'pending',
