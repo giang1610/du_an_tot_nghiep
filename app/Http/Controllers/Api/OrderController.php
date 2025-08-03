@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\newOder;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -366,6 +367,10 @@ class OrderController extends Controller
                 // 'total' => $request->total,
                 'status' => 'pending',
             ]);
+            
+            broadcast(new newOder($order));
+
+             
 
             // Tạo các order items
             foreach ($request->items as $item) {
