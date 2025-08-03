@@ -17,7 +17,7 @@ class AutoCompleteOrders extends Command
         $completedOr = Order::where('status', 'shipped')
             ->whereNotNull('shipped_at')
             ->where('shipped_at', '<=', Carbon::now()->subDays(3))
-            ->whereNotIn('status', ['return_requested', 'returning', 'returned'])
+            ->whereNotIn('status', ['return_requested', 'returned'])
             ->get();
 
         // Đơn hàng returned > 3 ngày

@@ -14,6 +14,7 @@ use App\Mail\OrderShipped;
 use Illuminate\Support\Facades\Mail;
 use App\Jobs\UpdateOrderStatus;
 use App\Mail\OrderCancelledMail;
+use App\Models\Stock;
 
 class OrderController extends Controller
 {
@@ -411,7 +412,7 @@ class OrderController extends Controller
                     });
             });
         }
-        
+
         // Lọc theo ngày bắt đầu (created_at >= from_date)
         if ($request->filled('from_date')) {
             $query->whereDate('created_at', '>=', $request->from_date);
@@ -467,6 +468,7 @@ class OrderController extends Controller
     $order = Order::findOrFail($id);
     $newStatus = $request->input('status');
 
+
     $order->status = $newStatus;
 
     // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
@@ -494,29 +496,46 @@ class OrderController extends Controller
        // Nếu trạng thái giao hàng là "shipped" và chưa thanh toán thì tự động chuyển sang "paid"
         if ($order->status === 'shipped' && $order->payment_status !== 'paid') {
             $order->payment_status = 'paid';
+            $order->shipped_at = now(); // Cập nhật thời gian giao hàng
             $order->save();
 
         }
+        // Nếu trạng thái thay đổi từ "shipper_en_route" sang "restocked" thì cập nhật lại số lượng kho
+        if ($oldStatus === 'shipper_en_route' && $order->status === 'restocked') {
+            foreach ($order->items as $item) {
+                $stock = \App\Models\Stock::where('product_variant_id', $item->product_variant_id)->first();
+                if ($stock) {
+                    $stock->quantity += $item->quantity;
+                    $stock->save();
+                }
+            }
+        }
+
+        if ($oldStatus === 'failed' && $order->status === 'restocked') {
+            foreach ($order->items as $item) {
+                $stock = \App\Models\Stock::where('product_variant_id', $item->product_variant_id)->first();
+                if ($stock) {
+                    $stock->quantity += $item->quantity;
+                    $stock->save();
+                }
+            }
+        }
+
+        // Nếu trạng thái thay đổi và là "cancelled" thì cộng lại số lượng vào kho của từng variant
+            if ($order->status === 'cancelled' && $oldStatus !== 'cancelled') {
+                foreach ($order->items as $item) {
+                    // Tìm bản ghi stock của variant
+                    $stock = \App\Models\Stock::where('product_variant_id', $item->product_variant_id)->first();
+                    if ($stock) {
+                        $stock->quantity += $item->quantity;
+                        $stock->save();
+                    }
+                }
+            }
+
         if ($order->status !== $oldStatus) {
         \App\Jobs\UpdateOrderStatus::dispatch($order->id);
     }
-
-    // // Nếu trạng thái thay đổi và là "shipping" thì gửi mail
-    // if ($order->status !== $oldStatus && $order->status === 'shipping') {
-    //     Mail::to($order->user->email)->queue(new OrderGiao($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'cancelled') {
-    //     Mail::to($order->user->email)->queue(new OrderErrors($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'picking') {
-    //     Mail::to($order->user->email)->queue(new OrderPicking($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'processing') {
-    //     Mail::to($order->user->email)->queue(new OrderProcessing($order));
-    // }
-    // if ($order->status !== $oldStatus && $order->status === 'shipped') {
-    //     Mail::to($order->user->email)->queue(new OrderShipped($order));
-    // }
         return redirect()->route('orders.index', $order->id)->with('success', 'Cập nhật đơn hàng thành công.');
     }
 
