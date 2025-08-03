@@ -586,39 +586,40 @@ class OrderController extends Controller
                 $subtotal += ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
             }
 
-            $shipping = 20000;
-            $tax = $subtotal * 0.1;
-            $total = $subtotal + $shipping + $tax;
+        
 
 
             // Xử lý voucher
-            // $voucherData = null;
-            // $discountAmount = 0;
+            $voucherData = null;
+            $discountAmount = 0;
 
-            // if ($request->voucher_code) {
-            //     $voucherResponse = $this->validateAndApplyVoucher(
-            //         $request->voucher_code,
-            //         $user,
-            //         $request->subtotal
-            //     );
+            if ($request->voucher_code) {
+                $voucherResponse = $this->validateAndApplyVoucher(
+                    $request->voucher_code,
+                    $user,
+                    $request->subtotal
+                );
 
-            //     if (!$voucherResponse['success']) {
-            //         return response()->json(['message' => $voucherResponse['message']], 400);
-            //     }
+                if (!$voucherResponse['success']) {
+                    return response()->json(['message' => $voucherResponse['message']], 400);
+                }
 
-            //     $voucherData = $voucherResponse['voucher'];
-            //     $discountAmount = $voucherResponse['discount_amount'];
-            // }
+                $voucherData = $voucherResponse['voucher'];
+                $discountAmount = $voucherResponse['discount_amount'];
+            }
+                $shipping = 20000;
+            $tax = $subtotal * 0.1;
+            $total = ($subtotal + $shipping + $tax) - $discountAmount;
 
             $order = $user->orders()->create([
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
-                // 'voucher_code' => $request->voucher_code,
-                // 'voucher_discount' => $discountAmount,
-                // 'voucher_type' => $voucherData->type ?? null,
-                // 'voucher_id' => $voucherData->id ?? null,
-                // 'discount_amount' => $discountAmount,
-                // // 'total' => $request->$total - $discountAmount,
+                'voucher_code' => $request->voucher_code,
+                'voucher_discount' => $discountAmount,
+                'voucher_type' => $voucherData->type ?? null,
+                'voucher_id' => $voucherData->id ?? null,
+                'discount_amount' => $discountAmount,
+                // 'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
                 'total' => $total,
                 'status' => 'pending',
