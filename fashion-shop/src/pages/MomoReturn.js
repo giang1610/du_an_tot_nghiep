@@ -5,6 +5,8 @@ import { Spinner, Alert, Button, Card, Row, Col, Image } from 'react-bootstrap';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
+const formatCurrency = (num) => (num ?? 0).toLocaleString();
+
 export default function MomoReturn() {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -55,8 +57,12 @@ export default function MomoReturn() {
         <Card.Body>
           <p>Mã đơn hàng: <strong>{result?.data?.order_number}</strong></p>
           <p>Trạng thái đơn hàng: <strong className="text-primary">{result?.data?.status}</strong></p>
-          <p>Trạng thái thanh toán: <strong className={result?.data?.payment_status === 'paid' ? 'text-success' : 'text-danger'}>
-            {result?.data?.payment_status}
+          <p>Trạng thái thanh toán: <strong>
+            {result?.data?.payment_status === 'paid' ? (
+              <span className="text-success">Đã thanh toán</span>
+            ) : (
+              <span className="text-danger">Chưa thanh toán</span>
+            )}
           </strong></p>
         </Card.Body>
       </Card>
@@ -83,7 +89,7 @@ export default function MomoReturn() {
                     <p className="mb-1">Màu: {item?.product_variant?.color?.name} | Size: {item?.product_variant?.size?.name}</p>
                     <p className="mb-1">Số lượng: {item.quantity}</p>
                     <p className="mb-0 text-danger">
-                      Giá: {(item.sale_price ?? item.price).toLocaleString()}₫
+                      Giá: {formatCurrency(item.sale_price ?? item.price)}₫
                     </p>
                   </Col>
                 </Row>

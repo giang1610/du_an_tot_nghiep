@@ -57,6 +57,7 @@ const PAYMENT_STATUS_VARIANTS = {
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
     momo: 'Ví Momo',
+    vnpay: 'Vnpay'
 };
 
 export default function MyOrdersPage() {

@@ -46,6 +46,7 @@ const statusBadgeVariant = {
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
     momo: 'Ví Momo',
+    vnpay: 'Vnpay',
 };
 
 const paymentStatusBadgeVariant = {
