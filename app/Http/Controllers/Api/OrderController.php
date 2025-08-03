@@ -953,7 +953,7 @@ class OrderController extends Controller
         }
 
         // Chỉ cho phép hoàn trả đơn hàng đã giao
-        if ($order->status !== 'completed') {
+        if ($order->status !== 'shipped') {
             return response()->json(['message' => 'Chỉ có thể hoàn trả đơn hàng đã giao'], 400);
         }
 
@@ -1014,8 +1014,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'completed'; // Đã nhận hàng (coi là hoàn thành)
-        $order->completed_at = now();
+        $order->status = 'completed';
+        $order->shipped_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {
@@ -1042,15 +1042,15 @@ class OrderController extends Controller
             'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Tối đa 10MB
         ]);
 
-        if (!in_array($order->status, ['shipped', 'completed'])) {
-            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng hoặc hoàn thành'], 400);
+        if (!in_array($order->status, ['shipped'])) {
+            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng'], 400);
         }
 
-        // Nếu là completed thì kiểm tra thời gian hoàn thành
-        if ($order->status === 'completed') {
-            $completedAt = $order->completed_at ?? $order->updated_at ?? $order->created_at;
-            if (now()->diffInDays(\Carbon\Carbon::parse($completedAt)) > 7) {
-                return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn đơn trong vòng 7 ngày sau khi hoàn thành'], 400);
+        // Nếu là shipped thì kiểm tra thời gian giao hàng
+        if ($order->status === 'shipped') {
+            $shippedAt = $order->shipped_at ?? $order->updated_at ?? $order->created_at;
+            if (now()->diffInDays(\Carbon\Carbon::parse($shippedAt)) > 7) {
+                return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn đơn trong vòng 7 ngày sau khi giao hàng'], 400);
             }
         }
 

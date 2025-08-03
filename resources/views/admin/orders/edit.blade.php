@@ -171,6 +171,8 @@
                                 @elseif ($currentStatus === 'failed_2')
                                     <option value="shipped">{{ $statusOptions['shipped'] }}</option>
                                     <option value="failed">{{ $statusOptions['failed'] }}</option>
+                                @elseif ($currentStatus === 'failed')
+                                     <option value="restocked">Hàng đã trả về kho</option>
                                 @elseif ($nextStatus)
                                     <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
                                 @endif
@@ -180,6 +182,7 @@
                                  @if ($currentStatus === 'shipper_en_route')
                                     <option value="restocked">Hàng đã trả về kho</option>
                                 @endif
+
                             @endif
 
                             </select>
