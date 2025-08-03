@@ -80,6 +80,7 @@ export default function OrderDetailPage() {
     const [reviewMediaPreviews, setReviewMediaPreviews] = useState([]);
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
+    const [returnMediaPreviews, setReturnMediaPreviews] = useState([]);
 
 
     useEffect(() => {
@@ -235,6 +236,12 @@ export default function OrderDetailPage() {
         const files = Array.from(e.target.files);
         setReviewMedia(files);
         setReviewMediaPreviews(files.map(file => URL.createObjectURL(file)));
+    };
+
+        const handleReturnMediaChange = (e) => {
+        const files = Array.from(e.target.files);
+        setReturnMedia(files);
+        setReturnMediaPreviews(files.map(file => URL.createObjectURL(file)));
     };
 
     if (loading) return <Spinner />;
@@ -439,10 +446,10 @@ export default function OrderDetailPage() {
                                     Đã nhận hàng
                                 </Button>
                             )}
-                            {order.status === 'completed' && (() => {
-                                const completedAt = new Date(order.completed_at || order.updated_at || order.created_at);
+                            {order.status === 'shipped' && (() => {
+                                const shippedAt = new Date(order.shipped_at || order.updated_at || order.created_at);
                                 const now = new Date();
-                                const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+                                const diffDays = Math.floor((now - shippedAt) / (1000 * 60 * 60 * 24));
                                 return diffDays <= 7 ? (
                                     <Button disabled={returnLoading} onClick={() => setShowReturnModal(true)}>
                                         {returnLoading ? 'Đang gửi yêu cầu...' : 'Yêu cầu hoàn đơn'}
@@ -487,6 +494,58 @@ export default function OrderDetailPage() {
             <Modal show={showReturnModal} onHide={() => setShowReturnModal(false)} centered>
                 <Modal.Header closeButton><Modal.Title>Yêu cầu hoàn đơn</Modal.Title></Modal.Header>
                 <Modal.Body>
+                    <Form.Group className="mt-2">
+                        <Form.Label>Ảnh/Video sản phẩm lỗi</Form.Label>
+                        <Form.Control
+                            type="file"
+                            accept="image/*,video/*"
+                            multiple
+                            onChange={handleReturnMediaChange}
+                        />
+                        <div className="d-flex flex-wrap gap-2 mt-2">
+                            {returnMediaPreviews.map((url, idx) => {
+                                const file = returnMedia[idx];
+                                if (!file) return null; // Fix lỗi undefined
+                                return file.type && file.type.startsWith('image/')
+                                    ? (
+                                        <div key={idx} style={{ position: 'relative' }}>
+                                            <img
+                                                src={url}
+                                                alt="preview"
+                                                style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                variant="outline-danger"
+                                                style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                                                onClick={() => {
+                                                    setReturnMedia(prev => prev.filter((_, i) => i !== idx));
+                                                    setReturnMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                                                }}
+                                            >X</Button>
+                                        </div>
+                                    )
+                                    : (
+                                        <div key={idx} style={{ position: 'relative' }}>
+                                            <video
+                                                src={url}
+                                                controls
+                                                style={{ width: 120, height: 120, borderRadius: 8, border: '1px solid #ddd' }}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                variant="outline-danger"
+                                                style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                                                onClick={() => {
+                                                    setReturnMedia(prev => prev.filter((_, i) => i !== idx));
+                                                    setReturnMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                                                }}
+                                            >X</Button>
+                                        </div>
+                                    );
+                            })}
+                        </div>
+                    </Form.Group>
                     <Form.Group>
                         <Form.Label>Lý do hoàn đơn</Form.Label>
                         <Form.Control as="textarea" rows={4} value={returnReason} onChange={(e) => setReturnReason(e.target.value)} placeholder="Nhập lý do chi tiết..." />

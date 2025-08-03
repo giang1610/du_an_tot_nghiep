@@ -412,7 +412,7 @@ class OrderController extends Controller
                     });
             });
         }
-        
+
         // Lọc theo ngày bắt đầu (created_at >= from_date)
         if ($request->filled('from_date')) {
             $query->whereDate('created_at', '>=', $request->from_date);
@@ -469,6 +469,7 @@ class OrderController extends Controller
     $newStatus = $request->input('status');
     
 
+
     $order->status = $newStatus;
 
     // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
@@ -496,11 +497,22 @@ class OrderController extends Controller
        // Nếu trạng thái giao hàng là "shipped" và chưa thanh toán thì tự động chuyển sang "paid"
         if ($order->status === 'shipped' && $order->payment_status !== 'paid') {
             $order->payment_status = 'paid';
+            $order->shipped_at = now(); // Cập nhật thời gian giao hàng
             $order->save();
 
         }
         // Nếu trạng thái thay đổi từ "shipper_en_route" sang "restocked" thì cập nhật lại số lượng kho
         if ($oldStatus === 'shipper_en_route' && $order->status === 'restocked') {
+            foreach ($order->items as $item) {
+                $stock = \App\Models\Stock::where('product_variant_id', $item->product_variant_id)->first();
+                if ($stock) {
+                    $stock->quantity += $item->quantity;
+                    $stock->save();
+                }
+            }
+        }
+
+        if ($oldStatus === 'failed' && $order->status === 'restocked') {
             foreach ($order->items as $item) {
                 $stock = \App\Models\Stock::where('product_variant_id', $item->product_variant_id)->first();
                 if ($stock) {

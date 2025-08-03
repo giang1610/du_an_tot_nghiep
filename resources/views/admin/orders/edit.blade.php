@@ -177,19 +177,20 @@
                                 @elseif ($currentStatus === 'failed_2')
                                     <option value="shipped">{{ $statusOptions['shipped'] }}</option>
                                     <option value="failed">{{ $statusOptions['failed'] }}</option>
+                                @elseif ($currentStatus === 'failed')
+                                     <option value="restocked">Hàng đã trả về kho</option>
                                 @elseif ($nextStatus)
                                     <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
                                 @endif
-                                
                                 @if ($currentStatus === 'returned')
                                     <option value="shipper_en_route">Shipped đang lấy hàng</option>
                                 @endif
                                  @if ($currentStatus === 'shipper_en_route')
                                     <option value="restocked">Hàng đã trả về kho</option>
                                 @endif
+
                             @endif
 
-                                 @endif
                             </select>
                     </div>
                         <div class="alert alert-info mt-3">
@@ -197,7 +198,7 @@
                             Chỉ có thể chuyển sang trạng thái kế tiếp trong quy trình hoặc hủy đơn hàng.
                         </div>
                         @endif
-                    
+
                 </div>
             </div>
 
