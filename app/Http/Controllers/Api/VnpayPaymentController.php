@@ -22,6 +22,7 @@ class VnpayPaymentController extends Controller
      */
     public function processVnpayPayment(Request $request)
     {
+                Log::info('📦 Request gửi tới VNPay:', $request); // Add log để dễ debug
         $user = Auth::user();
 
         DB::beginTransaction();
@@ -55,35 +56,35 @@ class VnpayPaymentController extends Controller
             $total = $subtotal + $shipping + $tax;
 
             // Xử lý voucher
-            $voucherData = null;
-            $discountAmount = 0;
+            // $voucherData = null;
+            // $discountAmount = 0;
 
-            if ($request->voucher_code) {
-                $voucherResponse = $this->validateAndApplyVoucher(
-                    $request->voucher_code,
-                    $user,
-                    $request->subtotal
-                );
+            // if ($request->voucher_code) {
+            //     $voucherResponse = $this->validateAndApplyVoucher(
+            //         $request->voucher_code,
+            //         $user,
+            //         $request->subtotal
+            //     );
 
-                if (!$voucherResponse['success']) {
-                    return response()->json(['message' => $voucherResponse['message']], 400);
-                }
+            //     if (!$voucherResponse['success']) {
+            //         return response()->json(['message' => $voucherResponse['message']], 400);
+            //     }
 
-                $voucherData = $voucherResponse['voucher'];
-                $discountAmount = $voucherResponse['discount_amount'];
-            }
+            //     $voucherData = $voucherResponse['voucher'];
+            //     $discountAmount = $voucherResponse['discount_amount'];
+            // }
 
             $order = $user->orders()->create([
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
-                'voucher_code' => $request->voucher_code,
-                'voucher_discount' => $discountAmount,
-                'voucher_type' => $voucherData->type ?? null,
-                'voucher_id' => $voucherData->id ?? null,
-                'discount_amount' => $discountAmount,
-                'total' => $request->$total - $discountAmount,
+                // 'voucher_code' => $request->voucher_code,
+                // 'voucher_discount' => $discountAmount,
+                // 'voucher_type' => $voucherData->type ?? null,
+                // 'voucher_id' => $voucherData->id ?? null,
+                // 'discount_amount' => $discountAmount,
+                // 'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
-                // 'total' => $total,
+                'total' => $total,
                 'status' => 'pending',
                 'payment_method' => 'vnpay',
                 'payment_status' => 'pending',

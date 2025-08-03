@@ -21,6 +21,6 @@ class MessageSent implements ShouldBroadcast
 
     public function broadcastAs()
     {
-        return 'MessageSent'; // 👈 BẮT BUỘC để React nhận đúng tên
+        return 'MessageSent'; 
     }
 }
