@@ -117,7 +117,7 @@ public function store(ProductRequest $request)
                         'size_id' => $variantData['size_id'] ?? null,
                         'image' => $variantImagePath, // Lưu đường dẫn ảnh biến thể
                     ]);
-                    
+
 
                     $product->variants()->save($variant);
                     // Lưu tồn kho
@@ -125,8 +125,8 @@ public function store(ProductRequest $request)
                     $variant->stock()->create(['quantity' => $quantity]);
                 }
             }
-           
-  
+
+
 
             broadcast(new ProductChanged);
             DB::commit(); // Hoàn tất transaction nếu mọi thứ thành công
@@ -181,10 +181,10 @@ public function store(ProductRequest $request)
     }
 
     return view('admin.products.edit', compact(
-        'product', 
-        'categories', 
-        'colors', 
-        'sizes', 
+        'product',
+        'categories',
+        'colors',
+        'sizes',
         'variantsToDisplay'
     ));
 }
@@ -490,10 +490,10 @@ public function update(ProductRequest $request, $id)
     {
         $products = Product::onlyTrashed()->with('category')->paginate(10);
         //realTimeProduct
-       
+
         return view('admin.products.trash', compact('products'));
     }
-    
+
     // Khôi phục sản phẩm đã xóa mềm
     public function restore($id)
     {

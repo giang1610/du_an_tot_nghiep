@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Spinner, Alert, Button } from 'react-bootstrap';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 export default function MomoReturn() {
   const [searchParams] = useSearchParams();
@@ -10,7 +11,7 @@ export default function MomoReturn() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
+  const { removeSelectedItems } = useCart();
   useEffect(() => {
     const fetchResult = async () => {
       const orderId = searchParams.get('orderId');
@@ -25,6 +26,10 @@ export default function MomoReturn() {
       try {
         const res = await axios.get(`http://localhost:8000/api/payment/momo/return?orderId=${orderId}&resultCode=${resultCode}`);
         setResult(res.data);
+          if (res.data?.data?.payment_status === 'paid') {
+          await removeSelectedItems();
+          localStorage.removeItem('buy_now');
+        }
       } catch (err) {
         setError(err.response?.data?.message || 'Lỗi xác minh thanh toán');
       } finally {

@@ -731,7 +731,7 @@ class OrderController extends Controller
                             return response()->json(['message' => 'Lỗi xử lý đơn hàng'], 500);
                         }
                     }
-                    
+
 
                     return redirect( $vnp_traVe . '?' . http_build_query(data: [
                             'message' => 'Thanh toán thành công',
@@ -742,7 +742,7 @@ class OrderController extends Controller
                             'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
                         ]));
                 } else {
-                
+
                 }
             } else {
                 return response()->json(['message' => 'Sai checksum'], 400);
