@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class DashboardController extends Controller
         $userStats = $this->getUserStats();
         $latestOrders = $this->getLatestOrders();
         $lowStockProducts = $this->getLowStockProducts();
+        $topProducts = $this->getTopProducts();
         $statusColors = $this->getStatusColors();
         $statusNames = $this->getStatusNames();
 
@@ -29,6 +31,7 @@ class DashboardController extends Controller
             'userStats',
             'latestOrders',
             'lowStockProducts',
+            'topProducts',
             'statusColors',
             'statusNames'
         ));
@@ -38,74 +41,120 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
         $yesterday = Carbon::yesterday();
+        $thisWeek = Carbon::now()->startOfWeek();
+        $lastWeek = Carbon::now()->subWeek()->startOfWeek();
         $thisMonth = Carbon::now()->startOfMonth();
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
 
+        $todayOrders = Order::whereDate('created_at', $today);
+        $yesterdayOrders = Order::whereDate('created_at', $yesterday);
+        $thisWeekOrders = Order::where('created_at', '>=', $thisWeek);
+        $lastWeekOrders = Order::whereBetween('created_at', [$lastWeek, $thisWeek]);
+        $thisMonthOrders = Order::where('created_at', '>=', $thisMonth);
+        $lastMonthOrders = Order::whereBetween('created_at', [$lastMonth, $thisMonth]);
+
+        $completedOrders = Order::where('status', 'completed');
+        $cancelledOrders = Order::where('status', 'cancelled');
+        $pendingOrders = Order::where('status', 'pending');
+        $overdueOrders = Order::where('status', 'pending')
+            ->where('created_at', '<=', Carbon::now()->subDay());
+
         return [
             'today' => [
-                'total' => Order::whereDate('created_at', $today)->count(),
-                'completed' => Order::whereDate('created_at', $today)
-                    ->where('status', 'completed')
-                    ->count(),
-                'revenue' => Order::whereDate('created_at', $today)
-                    ->where('status', 'completed')
-                    ->sum('total'),
+                'total' => $todayOrders->count(),
+                'completed' => $todayOrders->clone()->where('status', 'completed')->count(),
+                'revenue' => $todayOrders->clone()->where('status', 'completed')->sum('total'),
             ],
             'yesterday' => [
-                'total' => Order::whereDate('created_at', $yesterday)->count(),
-                'completed' => Order::whereDate('created_at', $yesterday)
-                    ->where('status', 'completed')
-                    ->count(),
-                'revenue' => Order::whereDate('created_at', $yesterday)
-                    ->where('status', 'completed')
-                    ->sum('total'),
+                'total' => $yesterdayOrders->count(),
+                'completed' => $yesterdayOrders->clone()->where('status', 'completed')->count(),
+                'revenue' => $yesterdayOrders->clone()->where('status', 'completed')->sum('total'),
+            ],
+            'this_week' => [
+                'total' => $thisWeekOrders->clone()->count(),
+                'completed' => $thisWeekOrders->clone()->where('status', 'completed')->count(),
+                'revenue' => $thisWeekOrders->clone()->where('status', 'completed')->sum('total'),
+            ],
+            'last_week' => [
+                'total' => $lastWeekOrders->clone()->count(),
+                'completed' => $lastWeekOrders->clone()->where('status', 'completed')->count(),
+                'revenue' => $lastWeekOrders->clone()->where('status', 'completed')->sum('total'),
             ],
             'this_month' => [
-                'total' => Order::where('created_at', '>=', $thisMonth)->count(),
-                'completed' => Order::where('created_at', '>=', $thisMonth)
-                    ->where('status', 'completed')
-                    ->count(),
-                'revenue' => Order::where('created_at', '>=', $thisMonth)
-                    ->where('status', 'completed')
-                    ->sum('total'),
+                'total' => $thisMonthOrders->clone()->count(),
+                'completed' => $thisMonthOrders->clone()->where('status', 'completed')->count(),
+                'revenue' => $thisMonthOrders->clone()->where('status', 'completed')->sum('total'),
             ],
             'last_month' => [
-                'total' => Order::whereBetween('created_at', [$lastMonth, $thisMonth])->count(),
-                'completed' => Order::whereBetween('created_at', [$lastMonth, $thisMonth])
-                    ->where('status', 'completed')
-                    ->count(),
-                'revenue' => Order::whereBetween('created_at', [$lastMonth, $thisMonth])
-                    ->where('status', 'completed')
-                    ->sum('total'),
+                'total' => $lastMonthOrders->clone()->count(),
+                'completed' => $lastMonthOrders->clone()->where('status', 'completed')->count(),
+                'revenue' => $lastMonthOrders->clone()->where('status', 'completed')->sum('total'),
             ],
             'status_counts' => Order::selectRaw('status, count(*) as count')
                 ->groupBy('status')
                 ->pluck('count', 'status')
                 ->toArray(),
+            'completed_count' => $completedOrders->count(),
+            'cancelled_count' => $cancelledOrders->count(),
+            'pending_count' => $pendingOrders->count(),
+            'overdue_count' => $overdueOrders->count(),
+            'completed_percentage' => $this->calculatePercentage($completedOrders->count(), Order::count()),
+            'cancelled_percentage' => $this->calculatePercentage($cancelledOrders->count(), Order::count()),
+            'pending_percentage' => $this->calculatePercentage($pendingOrders->count(), Order::count()),
+            'cancellation_increase' => $this->calculateCancellationIncrease(),
         ];
     }
 
     protected function getRevenueStats(): array
     {
         $today = Carbon::today();
+        $yesterday = Carbon::yesterday();
         $thisWeek = Carbon::now()->startOfWeek();
+        $lastWeek = Carbon::now()->subWeek()->startOfWeek();
         $thisMonth = Carbon::now()->startOfMonth();
+        $lastMonth = Carbon::now()->subMonth()->startOfMonth();
         $thisYear = Carbon::now()->startOfYear();
+        $lastYear = Carbon::now()->subYear()->startOfYear();
+
+        $todayRevenue = Order::whereDate('created_at', $today)
+            ->where('status', 'completed')
+            ->sum('total');
+        $yesterdayRevenue = Order::whereDate('created_at', $yesterday)
+            ->where('status', 'completed')
+            ->sum('total');
+        $thisWeekRevenue = Order::where('created_at', '>=', $thisWeek)
+            ->where('status', 'completed')
+            ->sum('total');
+        $lastWeekRevenue = Order::whereBetween('created_at', [$lastWeek, $thisWeek])
+            ->where('status', 'completed')
+            ->sum('total');
+        $thisMonthRevenue = Order::where('created_at', '>=', $thisMonth)
+            ->where('status', 'completed')
+            ->sum('total');
+        $lastMonthRevenue = Order::whereBetween('created_at', [$lastMonth, $thisMonth])
+            ->where('status', 'completed')
+            ->sum('total');
+        $thisYearRevenue = Order::where('created_at', '>=', $thisYear)
+            ->where('status', 'completed')
+            ->sum('total');
+        $lastYearRevenue = Order::whereBetween('created_at', [$lastYear, $thisYear])
+            ->where('status', 'completed')
+            ->sum('total');
 
         return [
-            'today' => Order::whereDate('created_at', $today)
-                ->where('status', 'completed')
-                ->sum('total'),
-            'this_week' => Order::where('created_at', '>=', $thisWeek)
-                ->where('status', 'completed')
-                ->sum('total'),
-            'this_month' => Order::where('created_at', '>=', $thisMonth)
-                ->where('status', 'completed')
-                ->sum('total'),
-            'this_year' => Order::where('created_at', '>=', $thisYear)
-                ->where('status', 'completed')
-                ->sum('total'),
+            'today' => $todayRevenue,
+            'yesterday' => $yesterdayRevenue,
+            'this_week' => $thisWeekRevenue,
+            'last_week' => $lastWeekRevenue,
+            'this_month' => $thisMonthRevenue,
+            'last_month' => $lastMonthRevenue,
+            'this_year' => $thisYearRevenue,
+            'last_year' => $lastYearRevenue,
             'daily' => $this->getDailyRevenue(),
+            'today_percent_change' => $this->calculatePercentageChange($todayRevenue, $yesterdayRevenue),
+            'weekly_percent_change' => $this->calculatePercentageChange($thisWeekRevenue, $lastWeekRevenue),
+            'monthly_percent_change' => $this->calculatePercentageChange($thisMonthRevenue, $lastMonthRevenue),
+            'yearly_percent_change' => $this->calculatePercentageChange($thisYearRevenue, $lastYearRevenue),
         ];
     }
 
@@ -159,12 +208,50 @@ class DashboardController extends Controller
     protected function getUserStats(): array
     {
         $today = Carbon::today();
+        $yesterday = Carbon::yesterday();
+        $thisWeek = Carbon::now()->startOfWeek();
+        $lastWeek = Carbon::now()->subWeek()->startOfWeek();
         $thisMonth = Carbon::now()->startOfMonth();
+        $lastMonth = Carbon::now()->subMonth()->startOfMonth();
+        $thisYear = Carbon::now()->startOfYear();
+
+        $todayUsers = User::whereDate('created_at', $today)->count();
+        $yesterdayUsers = User::whereDate('created_at', $yesterday)->count();
+        $thisWeekUsers = User::where('created_at', '>=', $thisWeek)->count();
+        $lastWeekUsers = User::whereBetween('created_at', [$lastWeek, $thisWeek])->count();
+        $thisMonthUsers = User::where('created_at', '>=', $thisMonth)->count();
+        $lastMonthUsers = User::whereBetween('created_at', [$lastMonth, $thisMonth])->count();
+        $thisYearUsers = User::where('created_at', '>=', $thisYear)->count();
+
+        // Lấy dữ liệu 7 ngày gần nhất cho biểu đồ
+        $last7DaysLabels = [];
+        $last7DaysData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $last7DaysLabels[] = $date->format('d/m');
+            $last7DaysData[] = User::whereDate('created_at', $date)->count();
+        }
+
+        // Tính tỉ lệ quay lại (khách hàng có ít nhất 2 đơn hàng)
+        $returningCustomers = User::has('orders', '>=', 2)->count();
+        $totalCustomers = User::count();
+        $retentionRate = $totalCustomers > 0 ? round(($returningCustomers / $totalCustomers) * 100) : 0;
 
         return [
-            'total' => User::count(),
-            'today' => User::whereDate('created_at', $today)->count(),
-            'this_month' => User::where('created_at', '>=', $thisMonth)->count(),
+            'total' => $totalCustomers,
+            'today' => $todayUsers,
+            'yesterday' => $yesterdayUsers,
+            'this_week' => $thisWeekUsers,
+            'last_week' => $lastWeekUsers,
+            'this_month' => $thisMonthUsers,
+            'last_month' => $lastMonthUsers,
+            'this_year' => $thisYearUsers,
+            'today_percent_change' => $this->calculatePercentageChange($todayUsers, $yesterdayUsers),
+            'weekly_percent_change' => $this->calculatePercentageChange($thisWeekUsers, $lastWeekUsers),
+            'monthly_percent_change' => $this->calculatePercentageChange($thisMonthUsers, $lastMonthUsers),
+            'last_7_days_labels' => $last7DaysLabels,
+            'last_7_days_data' => $last7DaysData,
+            'retention_rate' => $retentionRate,
         ];
     }
 
@@ -191,6 +278,19 @@ class DashboardController extends Controller
                     $q->where('quantity', '<', 10);
                 })->with(['stock', 'color', 'size']);
             }, 'category'])
+            ->limit(5)
+            ->get();
+    }
+
+    protected function getTopProducts()
+    {
+        return ProductVariant::withCount(['orderItems as sold_count' => function($query) {
+                $query->selectRaw('COALESCE(SUM(quantity), 0)')
+                    ->whereHas('order', function($q) {
+                        $q->where('status', 'completed');
+                    });
+            }])
+            ->orderBy('sold_count', 'desc')
             ->limit(5)
             ->get();
     }
@@ -257,5 +357,34 @@ class DashboardController extends Controller
             'shipping' => '#4e73df',
             'returned' => '#5a5c69',
         ];
+    }
+
+    protected function calculatePercentage($part, $total): float
+    {
+        return $total > 0 ? round(($part / $total) * 100, 1) : 0;
+    }
+
+    protected function calculatePercentageChange($current, $previous): float
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+        return round((($current - $previous) / $previous) * 100, 1);
+    }
+
+    protected function calculateCancellationIncrease(): float
+    {
+        $thisWeekCancellations = Order::where('status', 'cancelled')
+            ->where('created_at', '>=', Carbon::now()->startOfWeek())
+            ->count();
+            
+        $lastWeekCancellations = Order::where('status', 'cancelled')
+            ->whereBetween('created_at', [
+                Carbon::now()->subWeek()->startOfWeek(),
+                Carbon::now()->subWeek()->endOfWeek()
+            ])
+            ->count();
+
+        return $this->calculatePercentageChange($thisWeekCancellations, $lastWeekCancellations);
     }
 }
