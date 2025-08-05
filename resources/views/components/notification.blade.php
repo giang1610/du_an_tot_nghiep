@@ -8,7 +8,7 @@
 
   <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3"
       id="notiList"
-      style="max-height: 400px; overflow-y: auto; width: 340px; background: #ffffff;">
+      style="max-height: 400px; overflow-y: auto; width: 39 0px; background: #ffffff;">
 
     <li class="dropdown-header px-3 py-2 fw-bold text-dark border-bottom bg-light">
       <i class="bi bi-bell-fill me-1 text-warning"></i> Thông báo
@@ -21,8 +21,17 @@
                 <i class="bi bi-receipt text-primary fs-5"></i>
                 <div class="flex-grow-1">
                     <div>Đơn hàng: <strong>{{ $order->order_number }}</strong></div>
-                    <small class="text-muted">Đơn hàng mới</small>
+                    @switch($order->status)
+                        @case('pending')
+                            <span class="badge bg-info">đơn hàng mới</span>
+                            @break
+                        @case('cancelled')
+                            <small class="text-white badge bg-danger">Đơn hàng hủy</small>
+                            @break
+                        @endswitch
+                        
                 </div>
+
                 <span class="dot-unread d-none"></span>
             </a>
         </li>

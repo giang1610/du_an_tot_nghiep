@@ -30,7 +30,7 @@ const ProductSummary = ({ items }) => {
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
                 Số lượng: {item.quantity} <br />
-                Giá: {formatCurrency(item.price)} đ <br />
+                Giá: {formatCurrency(item.price)} VNĐ <br />
                 {item.color && <>Màu: {item.color}<br /></>}
                 {item.size && <>Size: {item.size}<br /></>}
 
@@ -405,7 +405,7 @@ export default function Checkout() {
                     <option key={voucher.code} value={voucher.code}>
                       {voucher.code} - {voucher.type === 'percent'
                         ? `${voucher.value ?? 0}%`
-                        : `${formatCurrency(voucher.value)} đ`}
+                        : `${formatCurrency(voucher.value)} VNĐ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -431,7 +431,7 @@ export default function Checkout() {
                     <option key={voucher.code} value={voucher.code}>
                       {voucher.code} - {voucher.type === 'percent'
                         ? `${voucher.value ?? 0}%`
-                        : `${formatCurrency(voucher.value)} đ`}
+                        : `${formatCurrency(voucher.value)} VNĐ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -446,13 +446,13 @@ export default function Checkout() {
                 )}
               </Form.Group>
 
-              <p>Tạm tính: {formatCurrency(totals.subtotal)} đ</p>
-              <p>Phí vận chuyển: {formatCurrency(totals.shipping)} đ</p>
-              <p>Thuế: {formatCurrency(totals.tax)} đ</p>
+              <p>Tạm tính: {formatCurrency(totals.subtotal)} VNĐ</p>
+              <p>Phí vận chuyển: {formatCurrency(totals.shipping)} VNĐ</p>
+              <p>Thuế: {formatCurrency(totals.tax)} VNĐ</p>
               {totals.discount > 0 && (
-                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} đ</p>
+                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} VNĐ</p>
               )}
-              <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} đ</h5>
+              <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} VNĐ</h5>
             </>
           )}
         </Col>

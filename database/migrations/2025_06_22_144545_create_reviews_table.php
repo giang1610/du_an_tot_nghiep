@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->tinyInteger('review_round'); // 1 hoặc 2
             $table->tinyInteger('rating')->checkBetween(1, 5); // Laravel 10+ hỗ trợ checkBetween
             $table->text('content')->nullable();
-
+            $table->boolean('status')->default(true); // Trạng thái đánh giá: true - hiển thị, false - ẩn đánh giá
             $table->timestamps();
 
             $table->unique(['user_id', 'order_id', 'product_variant_id', 'review_round']);

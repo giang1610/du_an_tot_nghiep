@@ -17,6 +17,9 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Mail\OrderPlaced;
+use App\Models\Voucher;
+use App\Models\VoucherUser;
+use Carbon\Carbon;
 
 class MomoPaymentController extends Controller
 {
@@ -50,41 +53,41 @@ class MomoPaymentController extends Controller
                 $subtotal += ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
             }
 
-            $shipping = 20000;
+            // Xử lý voucher
+            // $voucherData = null;
+            // $discountAmount = 0;
+
+            // if ($request->voucher_code) {
+            //     $voucherResponse = $this->validateAndApplyVoucher(
+            //         $request->voucher_code,
+            //         $user,
+            //         $request->subtotal
+            //     );
+
+            //     if (!$voucherResponse['success']) {
+            //         return response()->json(['message' => $voucherResponse['message']], 400);
+            //     }
+
+            //     $voucherData = $voucherResponse['voucher'];
+            //     $discountAmount = $voucherResponse['discount_amount'];
+            // }
+
+               $shipping = 20000;
             $tax = $subtotal * 0.1;
             $total = $subtotal + $shipping + $tax;
-
-            // Xử lý voucher
-            $voucherData = null;
-            $discountAmount = 0;
-
-            if ($request->voucher_code) {
-                $voucherResponse = $this->validateAndApplyVoucher(
-                    $request->voucher_code,
-                    $user,
-                    $request->subtotal
-                );
-
-                if (!$voucherResponse['success']) {
-                    return response()->json(['message' => $voucherResponse['message']], 400);
-                }
-
-                $voucherData = $voucherResponse['voucher'];
-                $discountAmount = $voucherResponse['discount_amount'];
-            }
 
             $order = $user->orders()->create([
                 'order_number' => 'ORDER' . now()->format('Ymd') . '-' . rand(1000, 9999),
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
-                 'voucher_code' => $request->voucher_code,
-                'voucher_discount' => $discountAmount,
-                'voucher_type' => $voucherData->type ?? null,
-                'voucher_id' => $voucherData->id ?? null,
-                'discount_amount' => $discountAmount,
-                'total' => $request->$total - $discountAmount,
+                //  'voucher_code' => $request->voucher_code,
+                // 'voucher_discount' => $discountAmount,
+                // 'voucher_type' => $voucherData->type ?? null,
+                // 'voucher_id' => $voucherData->id ?? null,
+                // 'discount_amount' => $discountAmount,
+                // 'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
-                // 'total' => $total,
+                'total' => $total,
                 'status' => 'pending',
                 'payment_method' => 'momo',
                 'payment_status' => 'pending',
@@ -164,7 +167,7 @@ class MomoPaymentController extends Controller
             'signature' => $signature
         ];
 
-        Log::info('📦 Request gửi tới MoMo:', $requestData); // Add log để dễ debug
+        // Log::info('📦 Request gửi tới MoMo:', $requestData); // Add log để dễ debug
 
         $response = Http::timeout(30)
             ->withHeaders([
@@ -408,5 +411,90 @@ class MomoPaymentController extends Controller
             Log::error('Lỗi tạo lại thanh toán MoMo: ' . $e->getMessage());
             return response()->json(['message' => 'Lỗi khi tạo lại link thanh toán MoMo'], 500);
         }
+    }
+        protected function validateAndApplyVoucher($voucherCode, $user, $subtotal)
+    {
+        try {
+            $voucher = Voucher::where('code', $voucherCode)->first();
+
+            if (!$voucher) {
+                return ['success' => false, 'message' => 'Voucher không tồn tại'];
+            }
+
+            // Kiểm tra thời gian hiệu lực
+            $now = now();
+            if ($voucher->start_date && $now->lt($voucher->start_date)) {
+                return ['success' => false, 'message' => 'Voucher chưa có hiệu lực'];
+            }
+
+            if ($voucher->end_date && $now->gt($voucher->end_date)) {
+                return ['success' => false, 'message' => 'Voucher đã hết hạn'];
+            }
+
+            // Kiểm tra số lượng
+            if ($voucher->quantity !== null && $voucher->quantity <= 0) {
+                return ['success' => false, 'message' => 'Voucher đã hết lượt sử dụng'];
+            }
+
+            // Kiểm tra giới hạn sử dụng
+            if ($voucher->usage_limit) {
+                $userUsage = VoucherUser::where('voucher_id', $voucher->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($userUsage && $userUsage->used >= $voucher->usage_limit) {
+                    return ['success' => false, 'message' => 'Bạn đã sử dụng hết lượt cho voucher này'];
+                }
+            }
+
+            // Tính toán giá trị giảm giá
+            $discountAmount = $this->calculateVoucherDiscount($voucher, $subtotal);
+
+            return [
+                'success' => true,
+                'voucher' => $voucher,
+                'discount_amount' => $discountAmount
+            ];
+        } catch (\Exception $e) {
+            Log::error('Voucher validation error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Lỗi khi kiểm tra voucher'];
+        }
+    }
+
+    /**
+     * Tính toán giá trị giảm giá từ voucher
+     */
+    protected function calculateVoucherDiscount($voucher, $subtotal)
+    {
+        if ($voucher->discount_type === 'amount') {
+            return min($voucher->discount_amount, $subtotal);
+        } elseif ($voucher->discount_type === 'percent') {
+            $discount = $subtotal * ($voucher->discount_percent / 100);
+            return isset($voucher->max_discount) ? min($discount, $voucher->max_discount) : $discount;
+        }
+        return 0;
+    }
+
+
+    /**
+     * Cập nhật số lần sử dụng voucher
+     */
+    protected function updateVoucherUsage($voucher, $user)
+    {
+        DB::transaction(function () use ($voucher, $user) {
+            // Giảm số lượng voucher
+            if ($voucher->quantity !== null) {
+                $voucher->decrement('quantity');
+            }
+
+            // Cập nhật số lần sử dụng của user
+            $voucherUser = VoucherUser::firstOrNew([
+                'voucher_id' => $voucher->id,
+                'user_id' => $user->id
+            ]);
+
+            $voucherUser->used = ($voucherUser->used ?? 0) + 1;
+            $voucherUser->save();
+        });
     }
 }
