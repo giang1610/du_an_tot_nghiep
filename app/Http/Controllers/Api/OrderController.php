@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\newOder;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -23,6 +22,7 @@ use App\Models\CartItem;
 use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
 use App\Events\FailProduct;
+use App\Events\newOder;
 use App\Mail\OrderCanceledDueToTimeout;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
@@ -369,10 +369,8 @@ class OrderController extends Controller
             ]);
 
             broadcast(new newOder($order));
-
-
-
             // Tạo các order items
+
             foreach ($request->items as $item) {
                 $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
 
@@ -591,41 +589,42 @@ class OrderController extends Controller
                 $subtotal += ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
             }
 
-            $shipping = 20000;
-            $tax = $subtotal * 0.1;
-            $total = $subtotal + $shipping + $tax;
+        
 
 
             // Xử lý voucher
-            // $voucherData = null;
-            // $discountAmount = 0;
+            $voucherData = null;
+            $discountAmount = 0;
 
-            // if ($request->voucher_code) {
-            //     $voucherResponse = $this->validateAndApplyVoucher(
-            //         $request->voucher_code,
-            //         $user,
-            //         $request->subtotal
-            //     );
+            if ($request->voucher_code) {
+                $voucherResponse = $this->validateAndApplyVoucher(
+                    $request->voucher_code,
+                    $user,
+                    $request->subtotal
+                );
 
-            //     if (!$voucherResponse['success']) {
-            //         return response()->json(['message' => $voucherResponse['message']], 400);
-            //     }
+                if (!$voucherResponse['success']) {
+                    return response()->json(['message' => $voucherResponse['message']], 400);
+                }
 
-            //     $voucherData = $voucherResponse['voucher'];
-            //     $discountAmount = $voucherResponse['discount_amount'];
-            // }
+                $voucherData = $voucherResponse['voucher'];
+                $discountAmount = $voucherResponse['discount_amount'];
+            }
+                $shipping = 20000;
+            $tax = $subtotal * 0.1;
+            $total = ($subtotal + $shipping + $tax) - $discountAmount;
 
             $order = $user->orders()->create([
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
-                // 'voucher_code' => $request->voucher_code,
-                // 'voucher_discount' => $discountAmount,
-                // 'voucher_type' => $voucherData->type ?? null,
-                // 'voucher_id' => $voucherData->id ?? null,
-                // 'discount_amount' => $discountAmount,
-                // // 'total' => $request->$total - $discountAmount,
+                'voucher_code' => $request->voucher_code,
+                'voucher_discount' => $discountAmount,
+                'voucher_type' => $voucherData->type ?? null,
+                'voucher_id' => $voucherData->id ?? null,
+                'discount_amount' => $discountAmount,
+                // 'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
-                // 'total' => (int) $total,
+                'total' => $total,
                 'status' => 'pending',
                 'payment_method' => 'vnpay',
                 'payment_status' => 'pending',
@@ -688,7 +687,7 @@ class OrderController extends Controller
             $vnp_TxnRef = $order->id . '_' . time();
             $vnp_OrderInfo = 'Thanh toan hoa don ' . $order->order_number;
             $vnp_OrderType = 'other';
-            $vnp_Amount = (int) ($order->total * 100); // Nhân 100 theo yêu cầu VNPay
+            $vnp_Amount = $order->total * 100; // Nhân 100 theo yêu cầu VNPay
             $vnp_Locale = 'vn';
             $vnp_BankCode = 'VNBANK'; // Có thể để rỗng nếu không ép chọn ngân hàng
             $vnp_IpAddr = request()->ip(); // IP khách hàng
@@ -958,7 +957,7 @@ class OrderController extends Controller
         }
 
         // Chỉ cho phép hoàn trả đơn hàng đã giao
-        if ($order->status !== 'shipped') {
+        if ($order->status !== 'completed') {
             return response()->json(['message' => 'Chỉ có thể hoàn trả đơn hàng đã giao'], 400);
         }
 
@@ -1019,8 +1018,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'completed';
-        $order->shipped_at = now();
+        $order->status = 'completed'; // Đã nhận hàng (coi là hoàn thành)
+        $order->completed_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {
@@ -1047,15 +1046,15 @@ class OrderController extends Controller
             'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Tối đa 10MB
         ]);
 
-        if (!in_array($order->status, ['shipped'])) {
-            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng'], 400);
+        if (!in_array($order->status, ['shipped', 'completed'])) {
+            return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn hàng khi đơn đã giao hàng hoặc hoàn thành'], 400);
         }
 
-        // Nếu là shipped thì kiểm tra thời gian giao hàng
-        if ($order->status === 'shipped') {
-            $shippedAt = $order->shipped_at ?? $order->updated_at ?? $order->created_at;
-            if (now()->diffInDays(\Carbon\Carbon::parse($shippedAt)) > 7) {
-                return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn đơn trong vòng 7 ngày sau khi giao hàng'], 400);
+        // Nếu là completed thì kiểm tra thời gian hoàn thành
+        if ($order->status === 'completed') {
+            $completedAt = $order->completed_at ?? $order->updated_at ?? $order->created_at;
+            if (now()->diffInDays(\Carbon\Carbon::parse($completedAt)) > 7) {
+                return response()->json(['message' => 'Chỉ có thể yêu cầu hoàn đơn trong vòng 7 ngày sau khi hoàn thành'], 400);
             }
         }
 

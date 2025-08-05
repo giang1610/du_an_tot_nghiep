@@ -26,6 +26,7 @@ const STATUS_LABELS = {
     failed: 'Giao hàng thất bại',
     failed_1: 'Giao hàng thất bại lần 1',
     failed_2: 'Giao hàng thất bại lần 2',
+    
 };
 
 const STATUS_VARIANTS = {
@@ -56,7 +57,8 @@ const PAYMENT_STATUS_VARIANTS = {
 
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
-    momo: 'Ví Momo',
+    momo: 'Thanh toán Momo',
+    vnpay: 'Thanh toán VNPay',
 };
 
 export default function MyOrdersPage() {
@@ -390,10 +392,10 @@ export default function MyOrdersPage() {
                                             </Link>
                                         )}
 
-                                    {(order.status === 'shipped') && (() => {
-                                        const shippedAt = new Date(order.shipped_at || order.updated_at);
+                                    {(order.status === 'completed') && (() => {
+                                        const completedAt = new Date(order.completed_at || order.updated_at);
                                         const now = new Date();
-                                        const diffDays = Math.floor((now - shippedAt) / (1000 * 60 * 60 * 24));
+                                        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                         if (diffDays <= 7) {
                                             return (
                                                 <Button variant="warning" size="sm" onClick={() => handleShowReturnModal(order.id)}>
@@ -409,6 +411,17 @@ export default function MyOrdersPage() {
                                             Đã nhận hàng
                                         </Button>
                                     )}
+                                    {order.status === 'pending' && (
+                                        <Button
+                                            variant="warning"
+                                            size="sm"
+                                            className="me-2"
+                                            onClick={() => navigate(`/continue-payment/${order.payment_method}/${order.id}`)}
+                                        >
+                                            Tiếp tục thanh toán
+                                        </Button>
+                                    )}
+
                                     {(order.status === 'pending' || order.status === 'processing') && (
                                         <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>
                                             Hủy đơn
@@ -417,11 +430,11 @@ export default function MyOrdersPage() {
                                     )}
 
                                     {/* Nút hoàn đơn */}
-                                    {/* {order.status === 'shipped' && (
+                                    {order.status === 'shipped' && (
                                         <Button variant="warning" size="sm" className="ms-2" onClick={() => handleShowReturnModal(order.id)}>
                                             Hoàn đơn
                                         </Button>
-                                    )} */}
+                                    )}
                                 </div>
                             </Card.Footer>
                         </Card>
