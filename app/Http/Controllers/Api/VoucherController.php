@@ -14,17 +14,17 @@ use Log;
 class VoucherController extends Controller
 {
     public function index(Request $request)
-{
-    $type = $request->query('type'); // e.g., 'product'
+    {
+        $type = $request->query('type'); // e.g., 'product'
 
-    $vouchers = Voucher::query();
+        $vouchers = Voucher::query();
 
-    if ($type) {
-        $vouchers->where('type', $type);
+        if ($type) {
+            $vouchers->where('type', $type);
+        }
+
+        return response()->json($vouchers->get());
     }
-
-    return response()->json($vouchers->get());
-}
 
     /**
      * Kiểm tra tính hợp lệ của voucher
@@ -148,7 +148,7 @@ class VoucherController extends Controller
     }
 
 
-    public function calculateDiscountValue($voucher)
+    public function calculateDiscountValue($voucher)  //lấy giá trị giảm giá từ voucher
     {
         if ($voucher->discount_type === 'amount') {
             return $voucher->discount_amount;
@@ -157,7 +157,7 @@ class VoucherController extends Controller
         }
     }
 
-    public function calculateVoucherDiscount($voucher, $subtotal)
+    public function calculateVoucherDiscount($voucher, $subtotal) // Tính toán giá trị giảm giá dựa trên loại voucher
     {
         if ($voucher->discount_type === 'amount') {
             return min($voucher->discount_amount, $subtotal);
@@ -224,55 +224,54 @@ class VoucherController extends Controller
         ]);
     }
     public function apply(Request $request)
-{
-    $user = $request->user();
-    $code = $request->input('code');
-    $subtotal = $request->input('total');
+    {
+        $user = $request->user();
+        $code = $request->input('code');
+        $subtotal = $request->input('total');
 
-    if (!$code || !$subtotal) {
-        return response()->json(['success' => false, 'message' => 'Thiếu thông tin'], 422);
+        if (!$code || !$subtotal) {
+            return response()->json(['success' => false, 'message' => 'Thiếu thông tin'], 422);
+        }
+
+        $result = $this->validateAndApplyVoucher($code, $user, $subtotal);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'code' => $result['voucher']->code,
+                'type' => $result['voucher']->discount_type === 'percent' ? 'percent' : 'fixed',
+                'value' => $result['voucher']->discount_type === 'percent'
+                    ? $result['voucher']->discount_percent
+                    : $result['voucher']->discount_amount,
+                'discount_amount' => $result['discount_amount']
+            ]);
+        } else {
+            return response()->json(['success' => false, 'message' => $result['message']], 400);
+        }
     }
+    public function suggest(Request $request)
+    {
+        $total = $request->input('total');
+        $userId = auth()->id();
 
-    $result = $this->validateAndApplyVoucher($code, $user, $subtotal);
+        $now = now();
 
-    if ($result['success']) {
-        return response()->json([
-            'success' => true,
-            'code' => $result['voucher']->code,
-            'type' => $result['voucher']->discount_type === 'percent' ? 'percent' : 'fixed',
-            'value' => $result['voucher']->discount_type === 'percent'
-                ? $result['voucher']->discount_percent
-                : $result['voucher']->discount_amount,
-            'discount_amount' => $result['discount_amount']
-        ]);
-    } else {
-        return response()->json(['success' => false, 'message' => $result['message']], 400);
+        $vouchers = DB::table('vouchers')
+            ->whereDate('start_date', '<=', $now)
+            ->whereDate('end_date', '>=', $now)
+            ->where('quantity', '>', 0)
+            ->get()
+            ->filter(function ($voucher) use ($userId) {
+                // Đếm số lần user đã sử dụng
+                $usedCount = DB::table('orders')
+                    ->where('user_id', $userId)
+                    ->where('voucher_code', $voucher->code)
+                    ->count();
+
+                return !$voucher->usage_limit || $usedCount < $voucher->usage_limit;
+            })
+            ->values();
+
+        return response()->json($vouchers);
     }
-}
-public function suggest(Request $request)
-{
-    $total = $request->input('total');
-    $userId = auth()->id();
-
-    $now = now();
-
-    $vouchers = DB::table('vouchers')
-        ->whereDate('start_date', '<=', $now)
-        ->whereDate('end_date', '>=', $now)
-        ->where('quantity', '>', 0)
-        ->get()
-        ->filter(function ($voucher) use ($userId) {
-            // Đếm số lần user đã sử dụng
-            $usedCount = DB::table('orders')
-                ->where('user_id', $userId)
-                ->where('voucher_code', $voucher->code)
-                ->count();
-
-            return !$voucher->usage_limit || $usedCount < $voucher->usage_limit;
-        })
-        ->values();
-
-    return response()->json($vouchers);
-}
-
 }

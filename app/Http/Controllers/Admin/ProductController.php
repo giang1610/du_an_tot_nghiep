@@ -145,7 +145,40 @@ public function store(ProductRequest $request)
      */
     public function show(string $id)
     {
-        //
+       $product = Product::with(['category', 'variants.stock', 'colors', 'sizes'])->findOrFail($id);
+    $categories = Category::where('status', 1)->get();
+    $colors = Color::all();
+    $sizes = Size::all();
+
+    // Chuẩn bị dữ liệu variants với stock status chính xác
+    $variantsToDisplay = $product->variants->map(function($variant) {
+        return [
+            'id' => $variant->id,
+            'sku' => $variant->sku,
+            'price' => $variant->price,
+            'sale_price' => $variant->sale_price,
+            'sale_start_date' => $variant->sale_start_date,
+            'sale_end_date' => $variant->sale_end_date,
+            'color_id' => $variant->color_id,
+            'size_id' => $variant->size_id,
+            'image' => $variant->image,
+            'stock_quantity' => $variant->stock ? $variant->stock->quantity : 0,
+            'stock_status' => $variant->stock && $variant->stock->quantity > 0 ? '1' : '0',
+        ];
+    })->toArray();
+
+    // Ưu tiên dùng dữ liệu cũ nếu có (khi validate lỗi)
+    if (old('variants')) {
+        $variantsToDisplay = old('variants');
+    }
+
+    return view('admin.products.show', compact(
+        'product',
+        'categories',
+        'colors',
+        'sizes',
+        'variantsToDisplay'
+    ));
     }
 
     /**

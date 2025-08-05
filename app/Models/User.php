@@ -68,7 +68,6 @@ class User extends Authenticatable implements MustVerifyEmail
         // cần thêm dòng dưới nếu chưa có:
         'phone',
         'address',
-        
         'img_thumbnail',
         'role',
     ];

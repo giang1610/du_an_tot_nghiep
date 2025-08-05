@@ -129,6 +129,11 @@
                                         title="Chỉnh sửa">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
+                                    <a href="{{ route('products.show', $p->id) }}"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <form action="{{ route('products.destroy', $p->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')

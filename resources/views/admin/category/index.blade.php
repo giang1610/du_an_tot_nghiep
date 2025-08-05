@@ -87,6 +87,11 @@
                                        title="Chỉnh sửa">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
+                                    <a href="{{ route('categories.show', $c->id) }}" 
+                                       class="btn btn-sm btn-outline-info me-2"
+                                       title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <form action="{{ route('categories.destroy', $c->id) }}" method="POST">
                                         @csrf
                                         @method('DELETE')

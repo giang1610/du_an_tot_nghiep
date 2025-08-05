@@ -32,9 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const orderIdStr = data.id.toString();
             if (readOrderIds.has(orderIdStr)) return;
 
-            // Rung chuông nhẹ
-            bell.classList.add('bell-animate');
-            setTimeout(() => bell.classList.remove('bell-animate'), 1000);
+         
 
             // Toast đẹp hơn
             iziToast.show({

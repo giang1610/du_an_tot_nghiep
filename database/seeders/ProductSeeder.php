@@ -32,16 +32,6 @@ class ProductSeeder extends Seeder
                 'thumbnail' => 'products/2.jpg',
             ],
             [
-                'category_id' => 3,
-                'name' => 'Thắt lưng da bò',
-                'slug' => Str::slug('Thắt lưng da bò'),
-                'price_products' => 150000,
-                'status' => 1,
-                'short_description' => 'Thắt lưng da bền chắc.',
-                'description' => 'Sản phẩm phụ kiện nam cao cấp.',
-                'thumbnail' => 'products/3.jpg',
-            ],
-            [
                 'category_id' => 4,
                 'name' => 'Đầm suông họa tiết hoa',
                 'slug' => Str::slug('Đầm suông họa tiết hoa'),

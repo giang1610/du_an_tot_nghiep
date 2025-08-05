@@ -1,6 +1,6 @@
 @component('mail::message')
 <div style="text-align: center; margin-bottom: 20px;">
-    <img src="{{ asset('images/logo.png') }}" alt="MG Fashion Store" style="max-height: 80px;">
+    <img src="{{ asset('storage/app/public/logo/logoMG.png') }} " alt="MG Fashion Store" style="max-height: 80px;">
     <h1 style="color: #2d3748; margin-top: 10px;">Cảm ơn bạn đã đặt hàng!</h1>
 </div>
 
@@ -81,8 +81,12 @@
             <td style="text-align: right; padding: 8px 0;">{{ number_format($order->shipping, 0, ',', '.') }} VND</td>
         </tr>
         <tr>
-            <td style="padding: 8px 0;">Thuế:</td>
+            <td style="padding: 8px 0;">Thuế (VAT):</td>
             <td style="text-align: right; padding: 8px 0;">{{ number_format($order->tax, 0, ',', '.') }} VND</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px 0;">Mã giảm giá({{ $order->voucher_code }}):</td>
+            <td style="text-align: right; padding: 8px 0;">-{{ number_format($order->voucher_discount, 0, ',', '.') }} VND</td>
         </tr>
         <tr style="font-weight: bold; border-top: 1px solid #e2e8f0;">
             <td style="padding: 12px 0;">Tổng cộng:</td>

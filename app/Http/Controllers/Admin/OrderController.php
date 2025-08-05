@@ -412,7 +412,7 @@ class OrderController extends Controller
                     });
             });
         }
-        
+
         // Lọc theo ngày bắt đầu (created_at >= from_date)
         if ($request->filled('from_date')) {
             $query->whereDate('created_at', '>=', $request->from_date);
@@ -428,59 +428,79 @@ class OrderController extends Controller
         return view('admin.orders.returned', compact('orders'));
     }
 
-    public function show($id)
+    /**
+     * Cập nhật thông tin khách hàng (số điện thoại và địa chỉ giao hàng)
+     */
+    public function changePhoneAddress(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $validated = $request->validate([ 'customer_phone' => [
+            'required',
+            'string',
+            'regex:/^0[0-9]+$/'
+        ],
+            'shipping_address' => 'required|string|min:5|max:255',
+        ],
+            [
+                'customer_phone.required' => 'Số điện thoại không được để trống.',
+                
+                'customer_phone.regex' => 'Số điện thoại phải bắt đầu bằng số 0, 10 kí tự và chỉ chứa các chữ số.',
+                
+                'shipping_address.required' => 'Địa chỉ giao hàng không được để trống.',
+                'shipping_address.max' => 'Địa chỉ giao hàng không được vượt quá 255 ký tự.',
+                'shipping_address.min' => 'Địa chỉ giao hàng phải ít nhất 5 ký tự.',
+            ]
+    );
+
+        $order->customer_phone = $validated['customer_phone'];
+        $order->shipping_address = $validated['shipping_address'];
+        $order->save();
+
+        return redirect()->route('orders.show', $order->id)
+            ->with('success', 'Cập nhật thông tin khách hàng thành công!');
+    }
+
+    public function show(Request $request, $id)
     {
         $order = Order::with([
             'items.variant.product',    // tên sản phẩm
             'items.variant.color',      // màu sắc
             'items.variant.size'        // size
         ])->findOrFail($id);
+        $order = Order::findOrFail($id);
+    $oldStatus = $order->status;
+
+    // Cập nhật thông tin khách hàng nếu có
+    if ($request->has('customer_phone')) {
+        $order->customer_phone = $request->input('customer_phone');
+    }
+    if ($request->has('shipping_address')) {
+        $order->shipping_address = $request->input('shipping_address');
+    }
 
         return view('admin.orders.show', compact('order'));
     }
-    // public function updateStatus(Request $request, $id)
-    // {
-    //     // $order = Order::findOrFail($id);
-    //     // $this->authorize('update', $order); // Kiểm tra quyền cập nhật
-
-    //     // $request->validate([
-    //     //     'status' => 'required|in:pending,processing,completed,cancelled',
-    //     // ]);
-
-    //     // $order->status = $request->status;
-    //     // $order->save();
-
-    //     // // Phát sự kiện cập nhật trạng thái đơn hàng
-    //     // broadcast(new \App\Events\OrderStatusUpdated($order->id, $order->status))->toOthers();
-
-    //     // return redirect()->route('admin.orders.show', $order->id)->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
-    //     $order = Order::findOrFail($id);
-    //     $order->status = $request->input('status');
-    //     $order->save();
-
-    //     // Gửi sự kiện WebSocket tới client
-    //     broadcast(new OrderStatusUpdated($order->id, $order->status))->toOthers();
-
-    //     return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
-    // }
+   
     public function updateStatus(Request $request, $id)
-{
-    $order = Order::findOrFail($id);
-    $newStatus = $request->input('status');
-    
-
-    $order->status = $newStatus;
-
-    // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
-    if (in_array($newStatus, ['shipped', 'completed']) && $order->payment_status !== 'paid') {
-        $order->payment_status = 'paid';
-    }
-
-    $order->save();
+    {
+        $order = Order::findOrFail($id);
+        $newStatus = $request->input('status');
+        
 
 
-    return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
-}
+        $order->status = $newStatus;
+
+        // Nếu trạng thái là đã giao hàng / hoàn thành → đánh dấu đã thanh toán
+        if (in_array($newStatus, ['shipped', 'completed']) && $order->payment_status !== 'paid') {
+            $order->payment_status = 'paid';
+        }
+
+        $order->save();
+
+
+        return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công']);
+   }
 
     public function edit(Request $request, $id)
     {
@@ -492,10 +512,14 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
         $oldStatus = $order->status;
         $order->update($request->all());
-         UpdateOrderStatus::dispatch($order->id);
+        UpdateOrderStatus::dispatch($order->id);
+
+        
+
        // Nếu trạng thái giao hàng là "shipped" và chưa thanh toán thì tự động chuyển sang "paid"
         if ($order->status === 'shipped' && $order->payment_status !== 'paid') {
             $order->payment_status = 'paid';
+            $order->shipped_at = now(); // Cập nhật thời gian giao hàng
             $order->save();
 
         }
@@ -563,5 +587,23 @@ class OrderController extends Controller
     return redirect()->route('orders.edit', $order->id)
         ->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
 }
+
+    public function destroy($id)
+{
+    $order = Order::findOrFail($id);
+
+    // kiểm tra điều kiện xóa
+    if ($order->status !== 'completed' || !$order->completed_at || $order->completed_at->addDays(7)->isFuture()) {
+        return redirect()->route('orders.index')
+            ->with('error', 'Không thể xóa: đơn hàng phải ở trạng thái hoàn thành và đã quá 7 ngày kể từ khi hoàn thành.');
+    }
+
+    // (tuỳ: nếu dùng soft delete thì giữ như này, nếu muốn xóa cứng thì ->forceDelete())
+    $order->delete();
+
+    return redirect()->route('orders.index')
+        ->with('success', 'Đơn hàng đã được xóa thành công.');
+}
+
 
 }

@@ -90,9 +90,9 @@ class LoginRequest extends FormRequest
         }
 
         // Kiểm tra quyền nếu cần (ví dụ ở đây chỉ cho user có ID = 1 đăng nhập)
-        // if (Auth::id() !== 1) {
-        //     Auth::logout();
-        //     RateLimiter::hit($this->throttleKey());
+        // if (Auth::id() !== ) {
+        //     Auth::logout(); 
+        //     RateLimiter::hit($this->throttleKey()); 
         //     throw ValidationException::withMessages([
         //         'email' => 'Bạn không có quyền đăng nhập vào hệ thống',
         //     ]);

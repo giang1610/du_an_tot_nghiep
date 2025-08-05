@@ -144,7 +144,7 @@ export default function ProductDetail() {
       toast.success('Đã thêm vào giỏ hàng!');
     } catch (error) {
       console.error(error);
-      toast.error('Lỗi khi thêm vào giỏ hàng.');
+      toast.error('Sản phẩm vượt quá số lượng tồn kho .');
     }
   };
 

@@ -4,9 +4,7 @@ import { Container, Spinner, Row, Col, Image, Badge, Button } from 'react-bootst
 import axios from 'axios';
 import PaymentToast from '../alert/Vnpay';
 import { ArrowLeft } from 'react-bootstrap-icons';
-import Lottie from 'lottie-react';
-import { useCart } from '../context/CartContext'; // Thêm dòng này
-
+import { useCart } from '../context/CartContext';
 
 export default function VnpayReturn() {
   const location = useLocation();
@@ -18,7 +16,7 @@ export default function VnpayReturn() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const tax = 20000;
+  const { removeSelectedItems } = useCart();
 
   useEffect(() => {
     const query = new URLSearchParams(location.search);
@@ -32,7 +30,7 @@ export default function VnpayReturn() {
     };
     setUrlData(data);
   }, [location]);
-  const { removeSelectedItems } = useCart();
+
   const fetchOrder = useCallback(async () => {
     if (!token) return setError('Bạn chưa đăng nhập');
     if (!urlData.order_id) return;
@@ -42,16 +40,13 @@ export default function VnpayReturn() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrderDetail(res.data.data);
-      if (urlData.payment_status === 'paid') {
-        await removeSelectedItems();
-        localStorage.removeItem('buy_now');
-      }
+      
     } catch {
       setError('Không thể tải chi tiết đơn hàng.');
     } finally {
       setLoading(false);
     }
-  }, [urlData.order_id, token]);
+  });
 
   useEffect(() => {
     fetchOrder();
@@ -62,11 +57,13 @@ export default function VnpayReturn() {
 
   return (
     <Container className="py-5">
-      <div className=' text-center text-black'><h3 >Kết quả thanh toán : {urlData.message} </h3> </div>
+      <div className="text-center text-black">
+        <h3>Kết quả thanh toán : {urlData.message}</h3>
+      </div>
       <PaymentToast message={urlData.message} status={urlData.payment_status} />
 
       <Row className="mt-4">
-        {/* Bên trái: Thông tin đơn hàng */}
+        {/* Thông tin đơn hàng */}
         <Col md={6}>
           <ul className="list-group shadow-sm">
             <li className="list-group-item d-flex justify-content-between">
@@ -90,45 +87,51 @@ export default function VnpayReturn() {
           </ul>
         </Col>
 
-        {/* Bên phải: Sản phẩm + người nhận */}
+        {/* Sản phẩm và người nhận */}
         <Col md={6}>
-          <h5>Sản phẩm </h5>
-          {orderDetail?.items?.map((item, idx) => (
-            <div key={idx} className="d-flex justify-content-between border rounded p-2 mb-3">
-              {/* Trái: Thông tin sản phẩm */}
-              <div className="d-flex">
-                <Image
-                  src={item.product_variant.thumbnail}
-                  rounded
-                  width={80}
-                  height={80}
-                  style={{ objectFit: 'cover' }}
-                />
-                <div className="ms-3">
-                  <div>{item.product_variant.product.name}</div>
-                  <div className="text-muted">Màu: {item.product_variant.color.name}</div>
-                  <div className="text-muted">Size: {item.product_variant.size.name}</div>
-                  <div className="text-muted">SL: {item.quantity}</div>
+          <h5>Sản phẩm</h5>
+          {orderDetail?.items?.map((item, idx) => {
+            const price = item.price * item.quantity;
+            const tax = price * 0.1;
+            const total = price + tax;
+
+            return (
+              <div key={idx} className="d-flex justify-content-between border rounded p-2 mb-3">
+                <div className="d-flex">
+                  <Image
+                    src={item.product_variant.thumbnail}
+                    rounded
+                    width={80}
+                    height={80}
+                    style={{ objectFit: 'cover' }}
+                  />
+                  <div className="ms-3">
+                    <div>{item.product_variant.product.name}</div>
+                    <div className="text-muted">Màu: {item.product_variant.color.name}</div>
+                    <div className="text-muted">Size: {item.product_variant.size.name}</div>
+                    <div className="text-muted">SL: {item.quantity}</div>
+                  </div>
+                </div>
+
+                <div className="text-end ms-3" style={{ minWidth: 200 }}>
+                  <div><strong>Người nhận</strong></div>
+                  <div>{orderDetail.customer_name}</div>
+                  <div><strong>SDT:</strong> {orderDetail.customer_phone}</div>
+                  <div><strong>Địa chỉ:</strong> {orderDetail.shipping_address}</div>
+
+                  <div className="text-white m-1 bg-success p-2 rounded" style={{ fontSize: '14px', maxWidth: '220px', wordWrap: 'break-word' }}>
+                    <div className="mb-1">Giá gốc: {price.toLocaleString()} ₫</div>
+                    <div className="mb-1">Thuế (10%): {tax.toLocaleString()} ₫</div>
+                    <div><strong>Tổng: {total.toLocaleString()} ₫</strong></div>
+                  </div>
                 </div>
               </div>
+            );
+          })}
 
-              {/* Phải: Thông tin người nhận */}
-              <div className="text-end ms-3" style={{ minWidth: 180 }}>
-                <div><strong>Người nhận</strong></div>
-                <div>{orderDetail.customer_name}</div>
-                <div><strong>SDT: </strong> {orderDetail.customer_phone}</div>
-                <div><strong>Địa chỉ: </strong>{orderDetail.shipping_address}</div>
-
-                <div className="text-white m-1 bg-success p-1 rounded" style={{ fontSize: '14px', maxWidth: '200px', wordWrap: 'break-word' }}>
-                  <div className=' m-1'> Giá Tiền : {(item.price * item.quantity).toLocaleString()}  ₫</div>
-                </div>
-              </div>
-            </div>
-          ))}
         </Col>
       </Row>
 
-      {/* Nút quay về */}
       <div className="text-center mt-4">
         <Button variant="outline-primary" onClick={() => navigate('../orders')}>
           <ArrowLeft className="me-2" />

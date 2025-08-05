@@ -30,7 +30,7 @@ const ProductSummary = ({ items }) => {
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
                 Số lượng: {item.quantity} <br />
-                Giá: {formatCurrency(item.price)} đ <br />
+                Giá: {formatCurrency(item.price)} VNĐ <br />
                 {item.color && <>Màu: {item.color}<br /></>}
                 {item.size && <>Size: {item.size}<br /></>}
 
@@ -195,13 +195,16 @@ export default function Checkout() {
       subtotal: totals.subtotal,
       tax: totals.tax,
       shipping: totals.shipping,
-      discount: totals.discount,
+      discount_amount: totals.discount,
       total: totals.total,
-      voucher_codes: {
-        product: productVoucherInfo?.code ?? null,
-        shipping: shippingVoucherInfo?.code ?? null
-      }
+      // voucher_code: {
+      //   product: productVoucherInfo?.code ?? null,
+      //   shipping: shippingVoucherInfo?.code ?? null
+      // }
+      voucher_code: productVoucherInfo?.code || shippingVoucherInfo?.code || null,
     };
+
+    // console.log('Order payload:', JSON.stringify(payload, null, 2));
 
     try {
       setLoading(true);
@@ -351,9 +354,13 @@ export default function Checkout() {
             <Form.Group className="mb-3">
               <Form.Label>Phương thức thanh toán</Form.Label>
               <Form.Select
-                name="payment_method"
                 value={form.payment_method}
-                onChange={e => setField('payment_method', e.target.value)}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    payment_method: e.target.value,
+                  }))
+                }
               >
                 <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                 <option value="momo">Thanh toán MoMo</option>
@@ -361,16 +368,21 @@ export default function Checkout() {
               </Form.Select>
             </Form.Group>
 
-            <Button type="submit" variant="dark" className="w-100" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-2" />
                   Đang xử lý...
                 </>
-              ) : form.payment_method === 'momo'
-                ? 'Thanh toán qua MoMo'
-                : 'Xác nhận đặt hàng'}
+              ) : form.payment_method === 'momo' ? (
+                'Thanh toán qua MoMo'
+              ) : form.payment_method === 'vnpay' ? (
+                'Thanh toán qua VNPay'
+              ) : (
+                'Xác nhận đặt hàng'
+              )}
             </Button>
+
           </Form>
         </Col>
 
@@ -393,7 +405,7 @@ export default function Checkout() {
                     <option key={voucher.code} value={voucher.code}>
                       {voucher.code} - {voucher.type === 'percent'
                         ? `${voucher.value ?? 0}%`
-                        : `${formatCurrency(voucher.value)} đ`}
+                        : `${formatCurrency(voucher.value)} VNĐ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -419,7 +431,7 @@ export default function Checkout() {
                     <option key={voucher.code} value={voucher.code}>
                       {voucher.code} - {voucher.type === 'percent'
                         ? `${voucher.value ?? 0}%`
-                        : `${formatCurrency(voucher.value)} đ`}
+                        : `${formatCurrency(voucher.value)} VNĐ`}
                     </option>
                   ))}
                 </Form.Select>
@@ -434,13 +446,13 @@ export default function Checkout() {
                 )}
               </Form.Group>
 
-              <p>Tạm tính: {formatCurrency(totals.subtotal)} đ</p>
-              <p>Phí vận chuyển: {formatCurrency(totals.shipping)} đ</p>
-              <p>Thuế: {formatCurrency(totals.tax)} đ</p>
+              <p>Tạm tính: {formatCurrency(totals.subtotal)} VNĐ</p>
+              <p>Phí vận chuyển: {formatCurrency(totals.shipping)} VNĐ</p>
+              <p>Thuế: {formatCurrency(totals.tax)} VNĐ</p>
               {totals.discount > 0 && (
-                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} đ</p>
+                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount).replace(/\.00$/, '')} VNĐ</p>
               )}
-              <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} đ</h5>
+              <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} VNĐ</h5>
             </>
           )}
         </Col>
