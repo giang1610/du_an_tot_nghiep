@@ -94,6 +94,16 @@
                 </tbody>
             </table>
         </div>
+        @if($reviews->hasPages())
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted small">
+                        Hiển thị {{ $reviews->firstItem() }} đến {{ $reviews->lastItem() }} trong tổng số {{ $reviews->total() }} sản phẩm
+                    </div>
+                    <div class="">
+                        {{ $reviews->links('pagination::bootstrap-5') }}
+                    </div>
+                </div>
+            @endif
     </div>
 </div>
 @endsection

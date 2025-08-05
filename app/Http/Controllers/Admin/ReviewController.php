@@ -10,7 +10,8 @@ class ReviewController extends Controller
 {
     public function index(Request $request)
     {
-       $reviews = Review::with(['user','product'])->get();
+        $query = Review::with(['user','product']);
+       $reviews = $query->orderBy('id','desc')->paginate(5);
        return view('admin.reviews.index', compact('reviews'));
     }
 
