@@ -191,7 +191,7 @@
                                 @break
                                 @case('vnpay')
                                     <span class="badge bg-success">
-                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                        <i class="fas fa-credit-card me-1"></i> Vnpay
                                     </span>
                                     @break
                                 @default
