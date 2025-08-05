@@ -131,7 +131,7 @@
                             </td>
                             <td>
                                 {{ $order->user->name ?? 'Khách vãng lai' }}
-                                <div class="text-muted small">
+                                        <div class="text-muted small">
                                     {{ $order->customer_phone }}
                                 </div>
                             </td>
@@ -541,82 +541,10 @@
         });
     });
 </script>
+
+<script src="{{ asset('js/new_product.js') }}"></script>
 <script src="{{ asset('js/admin_status.js') }}"></script>
 <script src="{{ asset('js/admin.js') }}"></script>
-<!-- thêm đơn hàng mới  -->
-<script>
-function prependNewOrderRow(order) {
-    const newRow = document.createElement('tr');
-    newRow.innerHTML = `
-        <td>
-            <strong>${order.order_number ?? 'ORD-' + order.id}</strong>
-            <div class="text-muted small">
-                ${new Date(order.created_at).toLocaleString('vi-VN')}
-            </div>
-        </td>
-        <td>
-            {{ $order->user->name ?? 'Khách vãng lai' }}    
-            <div class="text-muted small">
-                ${order.customer_phone ?? ''}
-            </div>
-        </td>
-        <td>
-        @foreach($order->items as $item)
-        <div class="d-flex align-items-center mb-2">
-            @if($item->variant->product->image)
-            <img src="{{ asset($item->variant->product->image) }}"
-                class="img-thumbnail me-2"
-                width="40"
-                alt="{{ $item->variant->product->name }}">
-            @endif
-            <div>
-                {{ $item->variant->product->name ?? 'N/A' }}
-                @if($item->variant->color || $item->variant->size)
-                <div class="text-muted small">
-                    {{ $item->variant->color->name ?? '' }} |
-                    {{ $item->variant->size->name ?? '' }}
-                    x{{ $item->quantity }}
-                </div>
-                @endif
-            </div>
-        </div>
-        @endforeach                
-        </td>
-        <td>
-            <div class="small">
-                <div><i class="fas fa-truck me-2"></i> ${order.shipping_method ?? ''}</div>
-                <div><i class="fas fa-map-marker-alt me-2"></i> ${order.shipping_address ?? ''}</div>
-            </div>
-        </td>
-        <td>
-            <strong>${Number(order.total).toLocaleString()} VNĐ</strong>
-        </td>
-        <td>
-            <span class="badge bg-info"><i class="fas fa-money-bill-wave me-1"></i> ${order.payment_method ?? 'cod'}</span>
-            <div class="small mt-1 text-warning"><i class="fas fa-clock me-1"></i> ${order.payment_status}</div>
-        </td>
-        <td id="order-status-${order.id}">
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> ${order.status}</span>
-        </td>
-        <td>
-            <div class="d-flex flex-column gap-2">
-                <a href="/admin/orders/${order.id}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
-                    <span class="d-none d-md-inline">Xem chi tiết</span>
-                    <i class="fas fa-eye"></i>
-                </a>
-                <a href="/admin/orders/${order.id}/edit" class="btn btn-sm btn-outline-success" title="Cập nhật">
-                    <span class="d-none d-md-inline">Cập nhật</span>
-                    <i class="fas fa-edit"></i>
-                </a>
-            </div>
-        </td>
-    `;
 
-    const tbody = document.querySelector("tbody");
-    if (tbody) {
-        tbody.prepend(newRow);
-    }
-}
-</script>
 
 @endpush

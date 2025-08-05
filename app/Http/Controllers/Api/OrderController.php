@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\User;
 
 // RealTime
 use App\Events\ProductStockUpdated;
@@ -27,6 +28,7 @@ use App\Mail\OrderCanceledDueToTimeout;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
 use Carbon\Carbon;
+
 
 class OrderController extends Controller
 {
@@ -368,7 +370,9 @@ class OrderController extends Controller
                 'status' => 'pending',
             ]);
             
+         
             broadcast(new newOder($order));
+
 
              
 
@@ -409,7 +413,7 @@ class OrderController extends Controller
             switch ($request->payment_method) {
                 case 'momo':
                     $momoResponse = $this->initiateMomoPayment($order, $order->total);
-                    return response()->json([
+                    return response()->json(data: [
                         'message' => 'Đã khởi tạo thanh toán MOMO',
                         'data' => [
                             'order_id' => $order->id,
