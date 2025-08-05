@@ -28,6 +28,7 @@ const STATUS_LABELS = {
     failed: 'Giao hàng thất bại',
     failed_1: 'Giao hàng thất bại lần 1',
     failed_2: 'Giao hàng thất bại lần 2',
+    restocked: 'Hàng đã trả kho',
 };
 
 const STATUS_VARIANTS = {
@@ -103,8 +104,8 @@ export default function MyOrdersPage() {
         try {
             const formData = new FormData();
             formData.append('order_id', reviewItem.order_id);
-            formData.append('product_id', reviewItem.product_variant?.product?.id);
-            formData.append('product_variant_id', reviewItem.product_variant?.id);
+            formData.append('product_id', reviewItem.product_variant?.product?.id || reviewItem.product_id);
+            formData.append('product_variant_id', reviewItem.product_variant?.id || reviewItem.product_variant_id);
             formData.append('rating', reviewRating);
             formData.append('content', reviewContent);
             reviewMedia.forEach(file => formData.append('media[]', file));

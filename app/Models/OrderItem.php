@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property int $order_id
@@ -103,4 +103,6 @@ class OrderItem extends Model
             'size_id'
         );
     }
+
+
 }
