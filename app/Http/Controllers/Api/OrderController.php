@@ -1020,7 +1020,7 @@ class OrderController extends Controller
         }
 
         $order->status = 'completed';
-        $order->shipped_at = now();
+        $order->completed_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
         if ($order->payment_method === 'cod') {

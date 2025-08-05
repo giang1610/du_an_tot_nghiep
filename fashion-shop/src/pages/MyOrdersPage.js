@@ -83,8 +83,8 @@ export default function MyOrdersPage() {
     const [reviewMediaPreviews, setReviewMediaPreviews] = useState([]);
     const [reviewLoading, setReviewLoading] = useState(false);
 
-    const handleShowReviewModal = (item, orderId) => {
-        setReviewItem({ ...item, order_id: orderId });
+    const handleShowReviewModal = (item, orderId, completedAt) => {
+        setReviewItem({ ...item, order_id: orderId, completed_at: completedAt });
         setReviewContent('');
         setReviewRating(5);
         setReviewMedia([]);
@@ -100,6 +100,20 @@ export default function MyOrdersPage() {
 
     const handleSubmitReview = async () => {
         if (!reviewItem) return;
+        const reviews = reviewItem.reviews || [];
+        const count = reviews.length;
+        const completedAt = new Date(reviewItem.completed_at);
+        const now = new Date();
+        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+
+        if (count === 1 && diffDays < 7) {
+            alert('Bạn chỉ có thể đánh giá lần 2 sau khi đủ 7 ngày kể từ lần đánh giá đầu tiên.');
+            return;
+        }
+        if (reviewMedia.length > 5) {
+            alert("Chỉ được chọn tối đa 5 file ảnh/video!");
+            return;
+        }
         setReviewLoading(true);
         try {
             const formData = new FormData();
@@ -126,7 +140,11 @@ export default function MyOrdersPage() {
             });
             setOrders(res.data.data?.data || []);
         } catch (err) {
-            alert('Gửi đánh giá thất bại.');
+            if (err.response?.data?.message) {
+                alert(err.response.data.message);
+            } else {
+                alert('Gửi đánh giá thất bại.');
+            }
             console.error(err);
         } finally {
             setReviewLoading(false);
@@ -482,12 +500,14 @@ export default function MyOrdersPage() {
                                         const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                         const canReview = (count === 0 || (count === 1 && diffDays >= 7)) && order.status === 'completed';
 
+                                        if (count >= 2) return null; // Đã đủ 2 lần đánh giá, không hiển thị nút
+
                                         return canReview ? (
                                             <Button
                                                 key={`review-btn-${item.id}`}
                                                 variant="primary"
                                                 size="sm"
-                                                onClick={() => handleShowReviewModal(item, order.id)}
+                                                onClick={() => handleShowReviewModal(item, order.id, order.completed_at)}
                                             >
                                                 Đánh giá
                                             </Button>
