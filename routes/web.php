@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\CartController;
@@ -112,6 +113,7 @@ Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->
 Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    
 
     //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -121,6 +123,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
     Route::resource('products', ProductController::class);
     Route::resource('vouchers', VoucherController::class);
+    Route::resource('reviews', ReviewController::class);
 
     Route::resource('orders', OrderController::class);
     // Route::resource('pending', OrderController::class);

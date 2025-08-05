@@ -291,25 +291,27 @@
                                 @endswitch
                             </td>
                             <td>
-                                <div class="d-flex flex-column gap-2">
-                                    <a href="{{ route('orders.show', $order->id) }}"
-                                        class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="tooltip"
-                                        title="Xem chi tiết">
-                                        <span class="d-none d-md-inline">Xem chi tiết</span>
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                               
+                                    <div class="d-flex flex-row gap-2">
+                                        <a href="{{ route('orders.show', $order->id) }}"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="tooltip"
+                                            title="Xem chi tiết">
+                                            <span class="d-none d-md-inline"></span>
+                                            <i class="fas fa-eye"></i>
+                                        </a>
 
-                                    @if (!in_array($order->status, ['completed', 'cancelled', 'restocked','shipped']))
-                                    <a href="{{ route('orders.edit', $order->id) }}"
-                                        class="btn btn-sm btn-outline-success"
-                                        data-bs-toggle="tooltip"
-                                        title="Cập nhật trạng thái">
-                                        <span class="d-none d-md-inline">Cập nhật</span>
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @endif
-                                </div>
+                                        @if (!in_array($order->status, ['completed', 'cancelled', 'restocked','shipped']))
+                                        <a href="{{ route('orders.edit', $order->id) }}"
+                                            class="btn btn-sm btn-outline-success"
+                                            data-bs-toggle="tooltip"
+                                            title="Cập nhật trạng thái">
+                                            <span class="d-none d-md-inline"></span>
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                            @endif
+                                        </div>
+                                
                             </td>
                         </tr>
                         @endif
@@ -566,26 +568,18 @@ function prependNewOrderRow(order) {
             </div>
         </td>
         <td>
-        @foreach($order->items as $item)
-        <div class="d-flex align-items-center mb-2">
-            @if($item->variant->product->image)
-            <img src="{{ asset($item->variant->product->image) }}"
-                class="img-thumbnail me-2"
-                width="40"
-                alt="{{ $item->variant->product->name }}">
-            @endif
-            <div>
-                {{ $item->variant->product->name ?? 'N/A' }}
-                @if($item->variant->color || $item->variant->size)
-                <div class="text-muted small">
-                    {{ $item->variant->color->name ?? '' }} |
-                    {{ $item->variant->size->name ?? '' }}
-                    x{{ $item->quantity }}
+        ${order.items.map(item => `
+                <div class="d-flex align-items-center mb-2">
+                    ${item.variant.product.image ? `<img src="${item.variant.product.image}" class="img-thumbnail me-2" width="40" alt="${item.variant.product.name}">` : ''}
+                    <div>
+                        ${item.variant.product.name ?? 'N/A'}
+                        ${(item.variant.color || item.variant.size) ? `<div class="text-muted small">
+                            ${item.variant.color?.name ?? ''} |
+                            ${item.variant.size?.name ?? ''} x${item.quantity}
+                        </div>` : ''}
+                    </div>
                 </div>
-                @endif
-            </div>
-        </div>
-        @endforeach
+            `).join('')}
         </td>
         <td>
             <div class="small">

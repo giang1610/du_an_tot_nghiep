@@ -54,10 +54,24 @@ class Review extends Model
     public function order() {
         return $this->belongsTo(Order::class);
     }
+   
+    public function product()
+    {
+    // Lấy product thông qua productVariant
+    return $this->hasOneThrough(
+        \App\Models\Product::class,
+        \App\Models\ProductVariant::class,
+        'id', // Khóa chính của ProductVariant
+        'id', // Khóa chính của Product
+        'product_variant_id', // Khóa ngoại trên Review
+        'product_id' // Khóa ngoại trên ProductVariant
+    );
+    }
+  
 
     public function productVariant()
-{
-    return $this->belongsTo(ProductVariant::class)->with(['product', 'size', 'color']);
-}
+    {
+        return $this->belongsTo(ProductVariant::class)->with(['product', 'size', 'color']);
+    }
 
 }
