@@ -492,7 +492,7 @@ export default function Checkout() {
               <p>Phí vận chuyển: {formatCurrency(totals.shipping)} VNĐ</p>
               <p>Thuế: {formatCurrency(totals.tax)} VNĐ</p>
               {totals.discount > 0 && (
-                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount)} VNĐ</p>
+                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount).replace(/\.00$/, '')} VNĐ</p>
               )}
               <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} VNĐ</h5>
             </>
