@@ -81,7 +81,19 @@ export default function OrderDetailPage() {
     const [showConfirmReceived, setShowConfirmReceived] = useState(false);
     const [confirmReceivedLoading, setConfirmReceivedLoading] = useState(false);
     const [returnMediaPreviews, setReturnMediaPreviews] = useState([]);
+    const [currentUserId, setCurrentUserId] = useState(null);
 
+    useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setCurrentUserId(payload.sub || payload.id); // Tuỳ JWT bạn
+        } catch (err) {
+        console.error('Decode JWT thất bại:', err);
+        }
+    }
+    }, []);
 
     useEffect(() => {
         const channel = listenToOrderStatusRealtime((orderIdFromSocket, newStatus) => {
@@ -378,7 +390,7 @@ export default function OrderDetailPage() {
                                                 <td>{(item.price * item.quantity).toLocaleString()}₫</td>
                                                 <td>
                                                     <div>
-                                                        {reviews.map(r => (
+                                                        {reviews.filter(r => r.status || r.user_id === currentUserId).map(r => (
                                                             <div key={r.id} className="border rounded mb-1 p-1">
                                                                 {'★'.repeat(r.rating)} - {r.content}
                                                                 {r.media && (() => {

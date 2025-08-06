@@ -103,4 +103,6 @@ class OrderItem extends Model
             'size_id'
         );
     }
+
+    
 }
