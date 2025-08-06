@@ -165,6 +165,9 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
          ->name('reports.revenue.export');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+    Route::get('/admin/dashboard/export-excel', [DashboardController::class, 'exportExcelDashboard'])->name('dashboard.exportExcel');
+
 });
 // NÊN ĐẶT NGOÀI group `admin`
 
