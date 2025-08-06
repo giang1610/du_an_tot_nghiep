@@ -144,11 +144,12 @@ export default function ProductDetail() {
       toast.success('Đã thêm vào giỏ hàng!');
     } catch (error) {
       console.error(error);
-      toast.error('Lỗi khi thêm vào giỏ hàng.');
+      toast.error('Lỗi sản phẩm vượt quá số lượng kho.');
     }
   };
 
   const handleBuyNow = () => {
+     if (!selectedVariant) return;
     if (!requireLoginAndVariant()) return;
 
     if (quantity > maxQuantity) {
@@ -197,25 +198,28 @@ export default function ProductDetail() {
           <p>{product.description}</p>
 
           <h5 className="mt-4">Chọn kích cỡ:</h5>
-          <ButtonGroup className="mb-3 flex-wrap">
+          <ButtonGroup className="mb-3 d-flex flex-wrap gap-2">
             {sizes.map(size => (
               <ToggleButton
                 key={size.id}
                 id={`size-${size.id}`}
                 type="radio"
-                variant={selectedSize === String(size.id) ? 'dark' : 'outline-dark'}
                 name="size"
                 value={size.id}
                 checked={selectedSize === String(size.id)}
                 onChange={e => setSelectedSize(e.currentTarget.value)}
+                variant={selectedSize === String(size.id) ? 'primary' : 'outline-primary'}
+                className="rounded-pill px-3 py-2 fw-semibold text-uppercase shadow-sm"
+                style={{ minWidth: '60px', textAlign: 'center' }}
               >
                 {size.name}
               </ToggleButton>
             ))}
           </ButtonGroup>
 
-          <h5>Chọn màu sắc:</h5>
-          <ButtonGroup className="mb-3 flex-wrap">
+
+          <h5 className="mt-4">Chọn màu sắc:</h5>
+          <ButtonGroup className="mb-3 d-flex flex-wrap gap-2">
             {colors.map(color => (
               <ToggleButton
                 key={color.id}
@@ -226,17 +230,21 @@ export default function ProductDetail() {
                 value={color.id}
                 checked={selectedColor === String(color.id)}
                 onChange={e => setSelectedColor(e.currentTarget.value)}
+                className="rounded-pill px-3 py-2 fw-semibold text-capitalize shadow-sm"
+                style={{ minWidth: '80px', textAlign: 'center' }}
               >
                 {color.name}
               </ToggleButton>
             ))}
           </ButtonGroup>
 
+
+
           {selectedVariant && (
             <>
-              <p className="mt-3 text-success fw-bold">
-                Giá: {Number(selectedVariant.sale_price ?? selectedVariant.price).toLocaleString('vi-VN')}₫
-              </p>
+              <h4 className="text-primary">
+                {Number(selectedVariant?.sale_price ?? selectedVariant?.price ?? product.price_original).toLocaleString('vi-VN')}₫
+              </h4>
               <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
 
               <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
@@ -253,18 +261,19 @@ export default function ProductDetail() {
           )}
 
           <div className="mt-4 d-flex gap-3 flex-wrap">
-            <Button variant="dark" onClick={handleAddToCart} disabled={!selectedVariant}>
+            <Button variant="primary" onClick={handleAddToCart} disabled={!selectedVariant}>
               🛒 Thêm vào giỏ
             </Button>
-            <Button variant="danger" onClick={handleBuyNow} disabled={!selectedVariant}>
+            <Button variant="primary" onClick={handleBuyNow} disabled={!selectedVariant}>
               ⚡ Mua ngay
             </Button>
           </div>
 
+
           <div className="mt-5">
             <h4 className="mb-4">Đánh giá sản phẩm</h4>
             {reviews.length === 0 && <p>Chưa có đánh giá nào.</p>}
-            {reviews.map(r => (
+            {reviews.filter(r => r.status).map(r => (
               <ReviewCard
                 key={r.id}
                 review={r}
@@ -289,7 +298,7 @@ export default function ProductDetail() {
                 <div className="border p-2 h-100 d-flex flex-column align-items-center text-center">
                   <img src={imageUrl} alt={rp.name} style={{ maxHeight: 150, objectFit: 'contain' }} />
                   <p className="fw-bold mt-2">{rp.name}</p>
-                  <p className="text-danger fw-bold">
+                  <p className="text-primary fw-bold">
                     {Number(price).toLocaleString('vi-VN')}₫
                     {rp.variants?.[0]?.sale_price && (
                       <small className="text-muted ms-2 text-decoration-line-through">
@@ -297,6 +306,7 @@ export default function ProductDetail() {
                       </small>
                     )}
                   </p>
+
                   <Button
                     as={Link}
                     to={`/products/${rp.slug}`}

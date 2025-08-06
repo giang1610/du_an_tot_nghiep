@@ -17,6 +17,8 @@ const STATUS_LABELS = {
     pending: 'Chờ xử lý',
     processing: 'Đang xử lý',
     picking: 'Đang lấy hàng',
+    shipper_arrived: 'Shipper đến lấy hàng', // ← thêm
+    in_warehouse: 'Hàng về kho',             // ← thêm
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
     completed: 'Hoàn thành',
@@ -32,6 +34,8 @@ const STATUS_VARIANTS = {
     pending: 'warning',
     processing: 'info',
     picking: 'primary',
+    shipper_arrived: 'secondary', // ← thêm (bạn đổi variant nếu muốn)
+    in_warehouse: 'dark',         // ← thêm (bạn đổi variant nếu muốn)
     shipping: 'primary',
     shipped: 'info',
     completed: 'success',
@@ -39,6 +43,7 @@ const STATUS_VARIANTS = {
     failed: 'danger',
     returned: 'success',
 };
+
 
 const PAYMENT_STATUS_LABELS = {
     paid: 'Đã thanh toán',
@@ -56,8 +61,8 @@ const PAYMENT_STATUS_VARIANTS = {
 
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
-    momo: 'Ví Momo',
-    vnpay: 'Vnpay'
+    momo: 'Thanh toán Momo',
+    vnpay: 'Thanh toán VNPay',
 };
 
 export default function MyOrdersPage() {
@@ -391,10 +396,10 @@ export default function MyOrdersPage() {
                                             </Link>
                                         )}
 
-                                    {(order.status === 'shipped') && (() => {
-                                        const shippedAt = new Date(order.shipped_at || order.updated_at);
+                                    {/* {(order.status === 'completed') && (() => {
+                                        const completedAt = new Date(order.completed_at || order.updated_at);
                                         const now = new Date();
-                                        const diffDays = Math.floor((now - shippedAt) / (1000 * 60 * 60 * 24));
+                                        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
                                         if (diffDays <= 7) {
                                             return (
                                                 <Button variant="warning" size="sm" onClick={() => handleShowReturnModal(order.id)}>
@@ -403,13 +408,42 @@ export default function MyOrdersPage() {
                                             );
                                         }
                                         return null;
-                                    })()}
+                                    })()} */}
 
                                     {order.status === 'shipped' && (
                                         <Button variant="success" size="sm" onClick={() => handleConfirmReceived(order.id)}>
                                             Đã nhận hàng
                                         </Button>
                                     )}
+                                    {order.status === 'pending' && order.payment_method !== 'cod' && (
+                                        <Button
+                                            variant="warning"
+                                            size="sm"
+                                            className="me-2"
+                                            onClick={() => {
+                                                let method = order.payment_method;
+                                                if (method && typeof method === 'object') {
+                                                    method = method.code || method.name || '';
+                                                }
+                                                method = String(method).toLowerCase().trim();
+
+                                                const orderId = String(order.id ?? order.order_id ?? '').trim();
+
+                                                if (!method || !orderId || ['momo', 'vnpay'].indexOf(method) === -1) {
+                                                    console.error("❌ Lỗi: Không có method hoặc orderId hợp lệ", { method, orderId });
+                                                    alert("Không thể tiếp tục thanh toán. Dữ liệu đơn hàng không hợp lệ.");
+                                                    return;
+                                                }
+
+                                                navigate(`/continue-payment/${method}/${orderId}`);
+                                            }}
+                                        >
+                                            Tiếp tục thanh toán
+                                        </Button>
+                                    )}
+
+
+
                                     {(order.status === 'pending' || order.status === 'processing') && (
                                         <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>
                                             Hủy đơn
@@ -418,11 +452,11 @@ export default function MyOrdersPage() {
                                     )}
 
                                     {/* Nút hoàn đơn */}
-                                    {/* {order.status === 'shipped' && (
+                                    {order.status === 'shipped' && (
                                         <Button variant="warning" size="sm" className="ms-2" onClick={() => handleShowReturnModal(order.id)}>
                                             Hoàn đơn
                                         </Button>
-                                    )} */}
+                                    )}
                                 </div>
                             </Card.Footer>
                         </Card>

@@ -23,7 +23,7 @@ export default function HomePage() {
         throw new Error('Dữ liệu sản phẩm không hợp lệ');
       }
 
-      setData(json.data); 
+      setData(json.data);
     } catch (err) {
       console.error('❌ Lỗi khi fetch sản phẩm:', err);
       setError(err.message || 'Lỗi khi tải sản phẩm');
@@ -58,14 +58,14 @@ export default function HomePage() {
   const renderSection = (title, products) => (
     <>
       <div className="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h4>{title}</h4>
-        <Link to="/products" className="text-decoration-none fw-semibold text-dark">
+        <h4 className="text-primary">{title}</h4>
+        <Link to="/products" className="text-decoration-none fw-semibold text-primary">
           Xem tất cả &raquo;
         </Link>
       </div>
 
       {products.length === 0 ? (
-        <p>Không có sản phẩm nào phù hợp.</p>
+        <p className="text-secondary">Không có sản phẩm nào phù hợp.</p>
       ) : (
         <Swiper
           spaceBetween={20}
@@ -92,7 +92,7 @@ export default function HomePage() {
         <HeroBanner />
         <ServiceBar />
         <Container className="py-5 text-center">
-          <div className="spinner-border" role="status" />
+          <div className="spinner-border text-primary" role="status" />
           <span className="visually-hidden">Đang tải...</span>
         </Container>
       </>
