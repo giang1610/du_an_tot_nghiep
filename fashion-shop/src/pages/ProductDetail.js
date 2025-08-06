@@ -264,7 +264,7 @@ export default function ProductDetail() {
           <div className="mt-5">
             <h4 className="mb-4">Đánh giá sản phẩm</h4>
             {reviews.length === 0 && <p>Chưa có đánh giá nào.</p>}
-            {reviews.map(r => (
+            {reviews.filter(r => r.status).map(r => (
               <ReviewCard
                 key={r.id}
                 review={r}

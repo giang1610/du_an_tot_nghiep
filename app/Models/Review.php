@@ -45,6 +45,7 @@ class Review extends Model
         'rating',
         'content',
         'media',
+        'status',
     ];
 
     public function user() {
