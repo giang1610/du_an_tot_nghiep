@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Mail\OrderPlaced;
+use Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
 use App\Events\FailProduct;
 use App\Events\newOder;
+use App\Events\oderStatus;
 use App\Mail\OrderCanceledDueToTimeout;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
@@ -246,6 +248,7 @@ class OrderController extends Controller
                 'payment_status' => ($order->payment_status === 'paid') ? 'refunded' : 'cancelled',
             ]);
             event(new FailProduct($order->order_number, $order->id));
+            broadcast( new oderStatus($order->order_number,$order->id, $order->status ));
 
 
             DB::commit();
@@ -692,6 +695,7 @@ class OrderController extends Controller
                 'notes' => $request->notes,
             ]);
 
+
             // Tạo OrderItem dựa trên $cartItems (hoạt động cho stdClass hoặc Eloquent)
             $variantIdsForOrder = [];
             foreach ($cartItems as $ci) {
@@ -876,11 +880,15 @@ class OrderController extends Controller
                     if ($order->payment_status !== 'paid') {
                         DB::beginTransaction();
                         try {
+                             
+
                             $order->update([
                                 'payment_status' => 'paid',
                                 'status' => 'processing',
                                 'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
                             ]);
+                            broadcast(new  newOder($order));
+                            event(new NewOrderCreated($order->order_number, $order->id));
 
                             // Giảm số lượng tồn kho
                             foreach ($order->items as $item) {
@@ -918,7 +926,6 @@ class OrderController extends Controller
                         'payment_status' => $order->payment_status,
                         'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
                     ]));
-                } else {
                 }
             } else {
                 return response()->json(['message' => 'Sai checksum'], 400);
@@ -1137,6 +1144,8 @@ class OrderController extends Controller
         }
 
         $order->status = 'return_requested';
+        // realTime Hoàn Hàng
+        broadcast( new oderStatus($order->order_number,$order->id, $order->status ));
         $order->return_reason = $request->input('reason');
         $order->return_requested_at = now();
 

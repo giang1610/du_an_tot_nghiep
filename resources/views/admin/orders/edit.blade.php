@@ -164,7 +164,7 @@
         <!-- Nút submit -->
         @if (!($currentStatus == 'delivered' && !in_array($order->status, ['return_requested', 'returning', 'returned'])))
             <div class="text-end">
-                <button type="submit" class="btn btn-primary px-4 py-2">
+                <button type="submit" class="btn btn-primary px-4 py-2" id="submit-button-container">
                     <i class="bi bi-check-circle me-2"></i>Cập nhật trạng thái
                 </button>
             </div>
@@ -185,3 +185,7 @@
     }
 </style>
 @endsection
+@push('scripts')
+<!-- cập nhật nút bấm edit  -->
+<script src="{{ asset('js/order/edit.js') }}"></script>
+@endpush

@@ -1,3 +1,11 @@
+window.Echo.channel('orders')
+    .listen('.order.status', (data) => {
+        console.log('Dữ liệu nhận:', data);
+        prependNewOrderRow(data); 
+    });
+
+
+
 window.prependNewOrderRow = function (payload) {
     const order = payload.data;
     const product_name = payload.product_name;
