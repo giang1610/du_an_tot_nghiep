@@ -367,12 +367,20 @@
                         <div style="height: 250px;">
                             <canvas id="orderStatusChart"></canvas>
                         </div>
-                        <div class="mt-3 d-flex flex-wrap gap-3">
+                            @php
+                                $totalOrders = $orderStats['total_orders'] ?? array_sum($orderStats['status_counts']);
+                            @endphp
                             @foreach($orderStats['status_counts'] as $status => $count)
+                                @php
+                                    $percent = $totalOrders > 0 ? round($count / $totalOrders * 100, 1) : 0;
+                                @endphp
                                 <span class="d-flex align-items-center gap-2">
                                     <span
                                         style="display:inline-block;width:16px;height:16px;border-radius:3px;background:{{ $statusColors[$status] ?? '#858796' }};"></span>
-                                    <span>{{ $statusNames[$status] ?? ucfirst($status) }}</span>
+                                    <span>
+                                        {{ $statusNames[$status] ?? ucfirst($status) }}
+                                        <span class="text-muted">({{ $percent }}%)</span>
+                                    </span>
                                 </span>
                             @endforeach
                         </div>
@@ -754,7 +762,6 @@
             var statusColors = {!! json_encode(array_map(function ($status) use ($statusColors) {
         return $statusColors[$status] ?? '#858796';
     }, array_keys($orderStats['status_counts']))) !!};
-
             new Chart(
                 document.getElementById('orderStatusChart'),
                 {

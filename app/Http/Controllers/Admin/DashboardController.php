@@ -59,6 +59,19 @@ class DashboardController extends Controller
         $overdueOrders = Order::where('status', 'pending')
             ->where('created_at', '<=', Carbon::now()->subDay());
 
+        $allStatuses = array_keys($this->getStatusNames());
+        $statusCounts = Order::selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        // Đảm bảo đủ tất cả trạng thái
+        $statusCountsFull = [];
+        foreach ($allStatuses as $status) {
+            $statusCountsFull[$status] = isset($statusCounts[$status]) ? $statusCounts[$status] : 0;
+        }
+        $totalOrders = array_sum($statusCountsFull);
+
         return [
             'today' => [
                 'total' => $todayOrders->count(),
@@ -96,12 +109,15 @@ class DashboardController extends Controller
                 ->toArray(),
             'completed_count' => $completedOrders->count(),
             'cancelled_count' => $cancelledOrders->count(),
+            'status_counts' => $statusCountsFull,
+            'total_orders' => $totalOrders,
             'pending_count' => $pendingOrders->count(),
             'overdue_count' => $overdueOrders->count(),
             'completed_percentage' => $this->calculatePercentage($completedOrders->count(), Order::count()),
             'cancelled_percentage' => $this->calculatePercentage($cancelledOrders->count(), Order::count()),
             'pending_percentage' => $this->calculatePercentage($pendingOrders->count(), Order::count()),
             'cancellation_increase' => $this->calculateCancellationIncrease(),
+
         ];
     }
 
