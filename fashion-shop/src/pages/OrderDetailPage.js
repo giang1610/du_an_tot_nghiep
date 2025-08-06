@@ -518,49 +518,47 @@ export default function OrderDetailPage() {
                             })()}
 
                         </div>
-                        {/* Tiếp tục thanh toán — show khi chưa thanh toán và đơn chưa hủy */}
-                        {order.payment_status !== 'paid' && order.status !== 'cancelled' && (
-                            <Button
-                                 variant="btn btn-outline-warning"
-                                size="sm"
-                                className="me-2"
-                                onClick={() => {
-                                    // Nếu đã hết hạn thanh toán thì show thông báo và không điều hướng
-                                    if (isPaymentExpired(order)) {
-                                        alert('Đơn hàng đã hết thời gian thanh toán. Vui lòng tạo đơn mới hoặc liên hệ hỗ trợ.');
-                                        return;
-                                    }
+                        {/* Tiếp tục thanh toán — show khi chưa thanh toán, chưa hủy và là momo/vnpay */}
+                        {order.payment_status !== 'paid' &&
+                            order.status !== 'cancelled' &&
+                            (() => {
+                                let method = order.payment_method;
+                                if (method && typeof method === 'object') {
+                                    method = method.code || method.name || '';
+                                }
+                                method = String(method ?? '').toLowerCase().trim();
 
-                                    // Lấy method (hỗ trợ khi backend trả object)
-                                    let method = order.payment_method;
-                                    if (method && typeof method === 'object') {
-                                        method = method.code || method.name || '';
-                                    }
-                                    method = String(method ?? '').toLowerCase().trim();
+                                return ['momo', 'vnpay'].includes(method);
+                            })() && (
+                                <Button
+                                    variant="btn btn-outline-warning"
+                                    size="sm"
+                                    className="me-2"
+                                    onClick={() => {
+                                        if (isPaymentExpired(order)) {
+                                            alert('Đơn hàng đã hết thời gian thanh toán. Vui lòng tạo đơn mới hoặc liên hệ hỗ trợ.');
+                                            return;
+                                        }
 
-                                    // Lấy id đơn
-                                    const orderId = String(order.id ?? order.order_id ?? '').trim();
+                                        let method = order.payment_method;
+                                        if (method && typeof method === 'object') {
+                                            method = method.code || method.name || '';
+                                        }
+                                        method = String(method ?? '').toLowerCase().trim();
 
-                                    // Nếu bạn muốn chỉ allow momo/vnpay (như file trước) thì dùng check dưới,
-                                    // nếu muốn redirect chung sang /checkout/:orderId thì bỏ check.
-                                    const allowed = ['momo', 'vnpay'];
-                                    if (!orderId) {
-                                        alert('ID đơn hàng không hợp lệ.');
-                                        return;
-                                    }
+                                        const orderId = String(order.id ?? order.order_id ?? '').trim();
+                                        if (!orderId) {
+                                            alert('ID đơn hàng không hợp lệ.');
+                                            return;
+                                        }
 
-                                    if (method && allowed.includes(method)) {
-                                        // route theo method (ví dụ /continue-payment/momo/123)
                                         navigate(`/continue-payment/${method}/${orderId}`);
-                                    } else {
-                                        // fallback: tới trang checkout chung của frontend (bạn tùy chỉnh)
-                                        navigate(`/checkout/${orderId}`);
-                                    }
-                                }}
-                            >
-                                Tiếp tục thanh toán
-                            </Button>
-                        )}
+                                    }}
+                                >
+                                    Tiếp tục thanh toán
+                                </Button>
+                            )}
+
 
                         <p className="mt-3 mb-0">
                             <strong>Thanh toán:</strong>{' '}
