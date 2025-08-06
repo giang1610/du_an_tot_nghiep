@@ -692,6 +692,7 @@ class OrderController extends Controller
                 'notes' => $request->notes,
             ]);
 
+
             // Tạo OrderItem dựa trên $cartItems (hoạt động cho stdClass hoặc Eloquent)
             $variantIdsForOrder = [];
             foreach ($cartItems as $ci) {
@@ -876,6 +877,7 @@ class OrderController extends Controller
                     if ($order->payment_status !== 'paid') {
                         DB::beginTransaction();
                         try {
+                             broadcast(new  newOder($order));
                             $order->update([
                                 'payment_status' => 'paid',
                                 'status' => 'processing',
@@ -918,7 +920,6 @@ class OrderController extends Controller
                         'payment_status' => $order->payment_status,
                         'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
                     ]));
-                } else {
                 }
             } else {
                 return response()->json(['message' => 'Sai checksum'], 400);

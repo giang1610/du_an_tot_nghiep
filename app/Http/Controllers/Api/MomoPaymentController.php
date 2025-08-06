@@ -21,6 +21,9 @@ use App\Models\Voucher;
 use App\Models\VoucherUser;
 use Carbon\Carbon;
 
+// realTime
+use App\Events\newOder;
+
 class MomoPaymentController extends Controller
 {
     public function processMomoPayment(Request $request)
@@ -315,6 +318,8 @@ class MomoPaymentController extends Controller
                     'payment_status' => 'paid',
                     'transaction_id' => $data['transId'],
                 ]);
+                broadcast(new  newOder($order));
+
 
                 // Giảm tồn kho an toàn
                 foreach ($order->items as $item) {

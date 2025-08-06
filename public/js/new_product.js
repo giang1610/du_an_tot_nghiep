@@ -23,7 +23,7 @@ window.prependNewOrderRow = function (payload) {
                 </span>`;
             orderStatusHTML = `
                 <span class="badge bg-warning text-dark">
-                    <i class="fas fa-clock me-1"></i> Chờ xử lý
+                    <i class="fas fa-clock me-1"></i> Đang xử lý
                 </span>`;
             break;
 
@@ -38,7 +38,7 @@ window.prependNewOrderRow = function (payload) {
                 </span>`;
             orderStatusHTML = `
                 <span class="badge bg-primary">
-                    <i class="fas fa-check-circle me-1"></i> Chờ xử lý
+                    <i class="fas fa-check-circle me-1"></i> Đang xử lý
                 </span>`;
             break;
 
@@ -53,7 +53,7 @@ window.prependNewOrderRow = function (payload) {
                 </span>`;
             orderStatusHTML = `
                 <span class="badge bg-primary">
-                    <i class="fas fa-check-circle me-1"></i> Chờ xử lý
+                    <i class="fas fa-check-circle me-1"></i> Đang xử lý
                 </span>`;
             break;
 
