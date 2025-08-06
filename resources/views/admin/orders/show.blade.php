@@ -15,7 +15,7 @@
                 <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách </a>
             <div class="btn-group">
                 @if (!in_array($order->status, ['completed', 'cancelled']))
-                    <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-primary">
+                    <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-primary" id="text">
                         <i class="bi bi-pencil-square me-2"></i>Cập nhật trạng thái
                     </a>
                 @endif
@@ -27,7 +27,7 @@
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h3 class="mb-0"> Đơn hàng #{{ $order->order_number }}
-                    <span
+                    <span id="order-status-badge"
                         class="badge
                 @switch($order->status)
                 @case('pending') bg-warning text-dark @break
@@ -389,4 +389,8 @@
             }, 500);
         }
     </script>
+
+@endsection
+@section('scripts')
+ <script src="{{ asset('js/order/show.js') }}"></script>
 @endsection

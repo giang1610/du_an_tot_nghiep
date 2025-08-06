@@ -25,7 +25,8 @@ import ProductReview from './components/ProductReview';
 import ChatApp from './components/ChatApp';
 import MyVouchers from './pages/MyVouchers';
 import VnpayReturn from './pages/VnpayReturnPage';
-import ContinuePayment from './components/ContinuePayment';
+import ContinuePaymentMomo from './components/ContinuePaymentMomo';
+import ContinuePaymentVnpay from './components/ContinuePaymentVnpay';
 
 
 
@@ -50,12 +51,12 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
 
-        
+
         {/* Đăng ký,đăng nhập */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-          {/* Đơn hàng */}
+        {/* Đơn hàng */}
         <Route path="/orders" element={<MyOrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />
 
@@ -66,9 +67,9 @@ function App() {
 
         {/* Tài khoản khách hàng */}
         <Route path="/profile" element={<Profile />} />
-         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
-        
+
         {/* anhkato */}
         {/* <Route path="/test" element={<Test />} /> */}
         {/* route ResetPassword anhkato vieêt */}
@@ -81,14 +82,15 @@ function App() {
         {/* Thanh toán momo */}
         <Route path="/momo-return" element={<MomoReturn />} />
         {/* Tiếp tục thanh toán */}
-       <Route path="/continue-payment/:method/:orderId" element={<ContinuePayment />} />
+        <Route path="/continue-payment/momo/:orderId" element={<ContinuePaymentMomo />} />
+        <Route path="/continue-payment/vnpay/:orderId" element={<ContinuePaymentVnpay />} />
         {/* Các trang không tìm thấy */}
         <Route path="*" element={<h1 className="text-center mt-5">Trang không tìm thấy</h1>} />
 
-       
+
 
       </Routes>
-       <ChatApp />
+      <ChatApp />
       <Footer />
     </Router>
   );

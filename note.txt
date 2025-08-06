@@ -1,13 +1,25 @@
-Thanh toán momo
-Số thẻ: 9704 0000 0000 0018 
-Tên chủ thẻ: NGUYEN VAN A 
-Ngày phát hành: 03/07
-Mã xác minh: OTP
+VNPay:9704198526191432198
+NCB
+
+9704198526191432198
+
+NGUYEN VAN A
+
+07/15
+
+123456
+
+----------------------------------------
 
 
+Ngân hàng MOMO
 
-Thanh toán vnpay
-Số thẻ: 9704198526191432198
-Tên chủ thẻ: NGUYEN VAN A 
-Ngày phát hành: 07/15
-Mã xác minh: 123456
+9704 0000 0000 0018
+
+NGUYEN VAN A
+
+03/07
+
+OTP
+
+

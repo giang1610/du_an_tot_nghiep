@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property int $category_id

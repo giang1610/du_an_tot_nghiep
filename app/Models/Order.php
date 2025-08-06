@@ -74,7 +74,7 @@ class Order extends Model
         'voucher_discount',
         'voucher_type',
          'voucher_id',
-    'discount_amount',
+        'discount_amount',
         'notes',
         'delivered_at',
         'completed_at',
