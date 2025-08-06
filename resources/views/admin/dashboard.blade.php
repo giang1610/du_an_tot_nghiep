@@ -367,24 +367,24 @@
                         <div style="height: 250px;">
                             <canvas id="orderStatusChart"></canvas>
                         </div>
-                            @php
-                                $totalOrders = $orderStats['total_orders'] ?? array_sum($orderStats['status_counts']);
-                            @endphp
-                            @foreach($orderStats['status_counts'] as $status => $count)
+                           <div class="mt-3 d-flex flex-wrap justify-content-center gap-3">
                                 @php
-                                    $percent = $totalOrders > 0 ? round($count / $totalOrders * 100, 1) : 0;
+                                    $totalOrders = $orderStats['total_orders'] ?? array_sum($orderStats['status_counts']);
                                 @endphp
-                                <span class="d-flex align-items-center gap-2">
-                                    <span
-                                        style="display:inline-block;width:16px;height:16px;border-radius:3px;background:{{ $statusColors[$status] ?? '#858796' }};"></span>
-                                    <span>
-                                        {{ $statusNames[$status] ?? ucfirst($status) }}
-                                        <span class="text-muted">({{ $percent }}%)</span>
+                                @foreach($orderStats['status_counts'] as $status => $count)
+                                    @php
+                                        $percent = $totalOrders > 0 ? round($count / $totalOrders * 100, 1) : 0;
+                                    @endphp
+                                    <span class="d-flex align-items-center gap-1" style="min-width: 140px;">
+                                        <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:{{ $statusColors[$status] ?? '#858796' }};"></span>
+                                        <span style="font-size: 14px;">
+                                            {{ $statusNames[$status] ?? ucfirst($status) }}
+                                            <span class="text-muted" style="font-size: 13px;">({{ $percent }}%)</span>
+                                        </span>
                                     </span>
-                                </span>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -595,6 +595,7 @@
             background-color: var(--primary-color);
             color: #fff;
         }
+    
     </style>
 @endpush
 
