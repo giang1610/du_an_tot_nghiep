@@ -23,6 +23,7 @@ use Carbon\Carbon;
 
 // realTime
 use App\Events\newOder;
+use App\Events\NewOrderCreated;
 
 class MomoPaymentController extends Controller
 {
@@ -319,6 +320,8 @@ class MomoPaymentController extends Controller
                     'transaction_id' => $data['transId'],
                 ]);
                 broadcast(new  newOder($order));
+                event(new NewOrderCreated($order->order_number, $order->id));
+
 
 
                 // Giảm tồn kho an toàn

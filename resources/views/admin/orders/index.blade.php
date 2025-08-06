@@ -548,8 +548,9 @@
 </script>
 
 <script src="{{ asset('js/new_product.js') }}"></script>
+<script src="{{ asset('js/order/index.js') }}"></script>
 <script src="{{ asset('js/admin_status.js') }}"></script>
-<script src="{{ asset('js/admin.js') }}"></script>
+
 
 
 @endpush

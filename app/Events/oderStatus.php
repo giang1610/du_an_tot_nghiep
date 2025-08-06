@@ -10,27 +10,29 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class oderStatus
+class oderStatus implements ShouldBroadcast
 {
-    use SerializesModels;
+    use SerializesModels ,InteractsWithSockets, Dispatchable;
 
     public string $orderNumber;
     public int $id;
+    public string $status;
 
-    public function __construct( string $orderNumber,int $id)
+    public function __construct( string $orderNumber,int $id, string $status)
     {  
-        $this->id = $id;
         $this->orderNumber = $orderNumber;
+        $this->id = $id;
+        $this->status = $status;
     }
 
     public function broadcastOn(): Channel
     {
-        return new Channel('admin-orders'); 
+        return new Channel('admin_status'); 
     }
 
     public function broadcastAs(): string
     {
-        return 'order.fail';
+        return 'order.status';
     }
 
     public function broadcastWith(): array
@@ -38,6 +40,7 @@ class oderStatus
         return [
             'order_number' => $this->orderNumber,
             'id' => $this->id,
+            'status' => $this->status
         ];
     }
 }
