@@ -22,6 +22,7 @@ use App\Models\CartItem;
 use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
 use App\Events\FailProduct;
+use App\Events\newOder;
 use App\Mail\OrderCanceledDueToTimeout;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
@@ -262,37 +263,57 @@ class OrderController extends Controller
      */
     public function checkout(Request $request)
     {
-        // \Log::info('Checkout request data:', $request->all());
         $user = auth()->user();
 
-        // Lấy cart của user
-        $cart = Cart::where('user_id', $user->id)->first();
-        if (!$cart) {
-            return response()->json(['message' => 'Không tìm thấy giỏ hàng.'], 404);
+        // Nếu client gửi items (buy_now) -> dùng trực tiếp, không cần lấy từ cart
+        $requestItems = $request->input('items', null);
+
+        if ($requestItems && is_array($requestItems) && count($requestItems) > 0) {
+            // Chuẩn hoá items nếu cần, đảm bảo key product_variant_id tồn tại
+            $items = array_map(function ($it) {
+                return [
+                    'product_variant_id' => $it['product_variant_id'] ?? $it['variant_id'] ?? $it['id'] ?? null,
+                    'quantity' => $it['quantity'] ?? 1,
+                ];
+            }, $requestItems);
+
+            // Nếu không có product_variant_id hợp lệ thì trả lỗi
+            foreach ($items as $it) {
+                if (empty($it['product_variant_id'])) {
+                    return response()->json(['message' => 'Dữ liệu sản phẩm không hợp lệ.'], 400);
+                }
+            }
+
+            // Merge items vào request để validate tiếp như trước
+            $request->merge(['items' => $items]);
+        } else {
+            // Không có items gửi lên -> lấy từ cart (selected = true)
+            $cart = Cart::where('user_id', $user->id)->first();
+            if (!$cart) {
+                return response()->json(['message' => 'Không tìm thấy giỏ hàng.'], 404);
+            }
+
+            $cartItems = CartItem::with('productVariant')
+                ->where('cart_id', $cart->id)
+                ->where('selected', true)
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
+            }
+
+            // Tạo array items từ cartItems như cũ
+            $items = $cartItems->map(function ($item) {
+                return [
+                    'product_variant_id' => $item->product_variant_id,
+                    'quantity' => $item->quantity,
+                ];
+            })->toArray();
+
+            $request->merge(['items' => $items]);
         }
 
-        // Lấy các sản phẩm được chọn để mua (selected = true)
-        $cartItems = CartItem::with('productVariant')
-            ->where('cart_id', $cart->id)
-            ->where('selected', true)
-            ->get();
-
-        if ($cartItems->isEmpty()) {
-            return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
-        }
-
-        // Tạo mảng items từ cartItems
-        $items = $cartItems->map(function ($item) {
-            return [
-                'product_variant_id' => $item->product_variant_id,
-                'quantity' => $item->quantity,
-            ];
-        })->toArray();
-
-        // Gộp vào request để validate
-        $request->merge(['items' => $items]);
-
-        // Validate dữ liệu
+        // Continue: validate dữ liệu (giữ nguyên validator cũ)
         $validator = Validator::make($request->all(), [
             'payment_method' => 'required|string|in:cod,vnpay,momo',
             'shipping_address' => 'required|string',
@@ -315,6 +336,7 @@ class OrderController extends Controller
                 'errors' => $validator->errors()
             ], 400);
         }
+
 
         DB::beginTransaction();
 
@@ -367,7 +389,9 @@ class OrderController extends Controller
                 'status' => 'pending',
             ]);
 
+            broadcast(new newOder($order));
             // Tạo các order items
+
             foreach ($request->items as $item) {
                 $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
 
@@ -560,44 +584,78 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // Validate đầu vào
+            // Validate cơ bản và cho phép items nếu frontend gửi (buy-now)
             $validated = $request->validate([
                 'shipping_address' => 'required|string',
                 'billing_address' => 'nullable|string',
                 'customer_phone' => 'required|string',
                 'notes' => 'nullable|string',
+                'items' => 'nullable|array',
+                'items.*.product_variant_id' => 'required_with:items|integer',
+                'items.*.quantity' => 'required_with:items|integer|min:1',
+                'voucher_code' => 'nullable|string',
+                'subtotal' => 'nullable|numeric',
             ]);
 
-            // Lấy giỏ hàng và chỉ lấy item selected = 1
-            $cart = Cart::with([
-                'items' => function ($q) {
+            // Nếu frontend gửi items => xử lý buy-now
+            if ($request->has('items') && is_array($request->items) && count($request->items) > 0) {
+                $itemsFromRequest = collect($request->items)->map(function ($it) {
+                    return (object) [
+                        'product_variant_id' => isset($it['product_variant_id']) ? (int)$it['product_variant_id'] : (isset($it['variant_id']) ? (int)$it['variant_id'] : null),
+                        'quantity' => isset($it['quantity']) ? (int)$it['quantity'] : 1,
+                    ];
+                })->filter(function ($it) {
+                    return !empty($it->product_variant_id);
+                })->values();
+
+                if ($itemsFromRequest->isEmpty()) {
+                    return response()->json(['message' => 'Không có sản phẩm hợp lệ trong payload.'], 400);
+                }
+
+                // Lấy variants từ DB để tính subtotal/giá thực tế
+                $variantIds = $itemsFromRequest->pluck('product_variant_id')->toArray();
+                $variants = \App\Models\ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
+
+                $subtotal = 0;
+                foreach ($itemsFromRequest as $it) {
+                    $variant = $variants->get($it->product_variant_id);
+                    if (!$variant) {
+                        return response()->json(['message' => "Biến thể (id={$it->product_variant_id}) không tồn tại."], 400);
+                    }
+                    $price = $variant->sale_price ?? $variant->price;
+                    $subtotal += $price * $it->quantity;
+                }
+
+                $cartItems = $itemsFromRequest; // dùng để tạo OrderItem
+            } else {
+                // Fallback: lấy from Cart DB (chỉ các item selected = true)
+                $cart = Cart::with(['items' => function ($q) {
                     $q->where('selected', true);
-                },
-                'items.variant'
-            ])->where('user_id', $user->id)->first();
+                }, 'items.variant'])->where('user_id', $user->id)->first();
 
-            if (!$cart || $cart->items->isEmpty()) {
-                return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
+                if (!$cart || $cart->items->isEmpty()) {
+                    return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
+                }
+
+                $subtotal = 0;
+                foreach ($cart->items as $item) {
+                    if (!$item->variant) {
+                        throw new \Exception("Sản phẩm không tồn tại hoặc bị lỗi biến thể.");
+                    }
+                    $subtotal += ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
+                }
+
+                $cartItems = $cart->items;
             }
 
-            // Tính tổng
-            $subtotal = 0;
-            foreach ($cart->items as $item) {
-                $subtotal += ($item->variant->sale_price ?? $item->variant->price) * $item->quantity;
-            }
-
-        
-
-
-            // Xử lý voucher
+            // Xử lý voucher dựa trên subtotal tính bởi server (bảo mật)
             $voucherData = null;
             $discountAmount = 0;
-
             if ($request->voucher_code) {
                 $voucherResponse = $this->validateAndApplyVoucher(
                     $request->voucher_code,
                     $user,
-                    $request->subtotal
+                    $subtotal
                 );
 
                 if (!$voucherResponse['success']) {
@@ -607,10 +665,13 @@ class OrderController extends Controller
                 $voucherData = $voucherResponse['voucher'];
                 $discountAmount = $voucherResponse['discount_amount'];
             }
-                $shipping = 20000;
+
+            $shipping = 20000;
             $tax = $subtotal * 0.1;
             $total = ($subtotal + $shipping + $tax) - $discountAmount;
+            $total = max(0, $total);
 
+            // Tạo Order
             $order = $user->orders()->create([
                 'subtotal' => $subtotal,
                 'shipping' => $shipping,
@@ -619,7 +680,6 @@ class OrderController extends Controller
                 'voucher_type' => $voucherData->type ?? null,
                 'voucher_id' => $voucherData->id ?? null,
                 'discount_amount' => $discountAmount,
-                // 'total' => $request->$total - $discountAmount,
                 'tax' => $tax,
                 'total' => $total,
                 'status' => 'pending',
@@ -632,20 +692,40 @@ class OrderController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            foreach ($cart->items as $item) {
+            // Tạo OrderItem dựa trên $cartItems (hoạt động cho stdClass hoặc Eloquent)
+            $variantIdsForOrder = [];
+            foreach ($cartItems as $ci) {
+                $variantIdsForOrder[] = $ci->product_variant_id ?? $ci->product_variant_id ?? null;
+            }
+            $variantIdsForOrder = array_filter($variantIdsForOrder);
+            $variantsMap = \App\Models\ProductVariant::whereIn('id', $variantIdsForOrder)->get()->keyBy('id');
+
+            foreach ($cartItems as $item) {
+                $productVariantId = $item->product_variant_id ?? ($item->product_variant_id ?? null);
+                if (!$productVariantId) continue;
+
+                $variant = $variantsMap->get($productVariantId);
+                if (!$variant) {
+                    throw new \Exception("Biến thể (id={$productVariantId}) không tồn tại khi tạo đơn.");
+                }
+
+                $quantity = $item->quantity ?? 1;
+                $price = $variant->price;
+                $salePrice = $variant->sale_price;
+
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'product_variant_id' => $item->product_variant_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->variant->price,
-                    'sale_price' => $item->variant->sale_price,
-                    'color_id' => $item->variant->color_id,
-                    'size_id' => $item->variant->size_id,
+                    'product_variant_id' => $productVariantId,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                    'sale_price' => $salePrice,
+                    'color_id' => $variant->color_id ?? null,
+                    'size_id' => $variant->size_id ?? null,
                 ]);
             }
 
-            // Gọi API VNPay
-            $vnpResponse = $this->initiateVnpayPayment(order: $order);
+            // Gọi VNPay để khởi tạo link
+            $vnpResponse = $this->initiateVnpayPayment($order);
 
             DB::commit();
 
@@ -653,13 +733,13 @@ class OrderController extends Controller
                 'message' => 'Đã khởi tạo thanh toán VNPay',
                 'data' => [
                     'order' => $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']),
-                    'payment_url' => $vnpResponse['payment_url'],
+                    'payment_url' => $vnpResponse['payment_url'] ?? null,
                     'order_id' => $order->id,
                 ]
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Lỗi khởi tạo VNPay: ' . $e->getMessage());
+            Log::error('Lỗi khởi tạo VNPay: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json([
                 'message' => 'Lỗi khởi tạo thanh toán VNPay',
@@ -667,6 +747,7 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Khởi tạo thanh toán VNPay

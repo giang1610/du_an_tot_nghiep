@@ -46,6 +46,7 @@ const statusBadgeVariant = {
 const PAYMENT_METHOD_LABELS = {
     cod: 'Thanh toán khi nhận hàng',
     momo: 'Ví Momo',
+    vnpay: 'VNPay',
 };
 
 const paymentStatusBadgeVariant = {
@@ -476,13 +477,24 @@ export default function OrderDetailPage() {
                             <Badge bg={paymentStatusBadgeVariant[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'secondary'}>
                                 {PAYMENT_STATUS_LABELS[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'Không rõ'}
                             </Badge>
-
+                            {order.payment_status !== 'paid' && order.payment_method === 'vnpay' && (
+                                <div className="mt-2">
+                                    <Link
+                                        to={`/vnpay-continue/${order.id}`}
+                                        className="btn btn-outline-warning btn-sm"
+                                    >
+                                        Tiếp tục thanh toán
+                                    </Link>
+                                </div>
+                            )}
                         </p>
                         {order.status === 'pending' && (
-                            <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)}>
+                            <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)} className='mt-2'>
                                 Hủy đơn
                             </Button>
                         )}
+
+
                     </div>
                     <Link to="/orders">
                         <Button variant="secondary" size="sm" className="mt-3 mt-md-0">← Trở lại</Button>

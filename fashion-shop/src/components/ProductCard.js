@@ -17,11 +17,12 @@ export default function ProductCard({ product }) {
     <Card className="h-100 border-0 shadow-sm rounded-4 position-relative hover-scale">
       {/* Badge giảm giá */}
       {discountPercent > 0 && (
-        <span className="position-absolute top-0 start-0 badge bg-danger rounded-0 px-2 py-1">
+        <span className="position-absolute top-0 start-0 badge bg-danger rounded-end px-2 py-1 z-1">
           -{discountPercent}%
         </span>
       )}
 
+      {/* Ảnh sản phẩm */}
       <Card.Img
         variant="top"
         src={thumbnailUrl}
@@ -31,13 +32,16 @@ export default function ProductCard({ product }) {
           objectFit: 'contain',
           backgroundColor: '#fff',
         }}
-        className="p-3"
+        className="p-3 border-bottom"
       />
 
-      <Card.Body className="text-center d-flex flex-column">
-        <Card.Title className="fs-6 text-truncate">{product.name}</Card.Title>
+      {/* Thông tin */}
+      <Card.Body className="text-center d-flex flex-column px-3">
+        <Card.Title className="fs-6 fw-semibold text-truncate">
+          {product.name}
+        </Card.Title>
 
-        <Card.Text className="text-danger fw-bold mb-1">
+        <Card.Text className="text-primary fw-bold mb-1">
           {price.toLocaleString('vi-VN')}₫{' '}
           {variant?.sale_price && (
             <small className="text-muted text-decoration-line-through ms-1">
@@ -49,9 +53,9 @@ export default function ProductCard({ product }) {
         <Button
           as={Link}
           to={`/products/${product.slug}`}
-          variant="dark"
+          variant="primary"
           size="sm"
-          className="mt-auto"
+          className="mt-auto rounded-pill px-3"
         >
           Xem chi tiết
         </Button>
