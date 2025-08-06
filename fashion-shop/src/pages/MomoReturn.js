@@ -1,19 +1,20 @@
 // src/pages/MomoReturn.jsx
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Container, Spinner, Alert, Row, Col, Card, Button, Badge, Image } from 'react-bootstrap';
 import axios from 'axios';
+import { Spinner, Alert, Button, Card, Row, Col, Image } from 'react-bootstrap';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft } from 'react-bootstrap-icons';
+import { number } from 'framer-motion';
+ const formatCurrency = (num) => (num ?? 0).toLocaleString();
 
 export default function MomoReturn() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { removeSelectedItems } = useCart();
-
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { removeSelectedItems } = useCart();
+
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -28,8 +29,8 @@ export default function MomoReturn() {
 
       try {
         const res = await axios.get(`http://localhost:8000/api/payment/momo/return?orderId=${orderId}&resultCode=${resultCode}`);
+        console.log('Kết quả API:', res.data);
         setResult(res.data);
-
         if (res.data?.data?.payment_status === 'paid') {
           await removeSelectedItems();
           localStorage.removeItem('buy_now');
@@ -44,88 +45,65 @@ export default function MomoReturn() {
     fetchResult();
   }, [searchParams]);
 
-  if (loading) {
-    return <div className="text-center mt-5"><Spinner animation="border" /></div>;
-  }
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
-  if (error) {
-    return <Alert variant="danger" className="mt-4 text-center">{error}</Alert>;
-  }
+  if (error) return <Alert variant="danger">{error}</Alert>;
 
-  const order = result?.data;
-  const items = order?.items || [];
+  const items = result?.data?.items || [];
+  const total = parseInt(result?.data?.total || 0);
 
   return (
-    <Container className="py-5">
-      <div className="text-center">
-        <h3 className={order?.payment_status === 'paid' ? 'text-success' : 'text-danger'}>
-          {result?.message}
-        </h3>
-      </div>
+    <div className="container my-5" style={{ maxWidth: '800px' }}>
+      <h4 className="mb-4 text-success">{result?.message}</h4>
+      <Card className="mb-4">
+        <Card.Body>
+          <p>Mã đơn hàng: <strong>{result?.data?.order_number}</strong></p>
+          <p>Trạng thái đơn hàng: <strong className="text-primary">{result?.data?.status}</strong></p>
+         <p>Trạng thái thanh toán: <strong>
+            {result?.data?.payment_status === 'paid' ? (
+              <span className="text-success">Đã thanh toán</span>
+            ) : (
+              <span className="text-danger">Chưa thanh toán</span>
+            )}
+          </strong></p>
+        </Card.Body>
+      </Card>
 
-      <Row className="mt-4">
-        <Col md={6}>
-          <ul className="list-group shadow-sm">
-            <li className="list-group-item d-flex justify-content-between">
-              <strong>Mã đơn hàng:</strong><span>{order?.order_number}</span>
-            </li>
-            <li className="list-group-item d-flex justify-content-between">
-              <strong>Trạng thái:</strong>
-              <Badge bg={order?.status === 'processing' ? 'primary' : 'secondary'}>
-                {order?.status}
-              </Badge>
-            </li>
-            <li className="list-group-item d-flex justify-content-between">
-              <strong>Thanh toán:</strong>
-              <Badge bg={order?.payment_status === 'paid' ? 'success' : 'danger'}>
-                {order?.payment_status}
-              </Badge>
-            </li>
-          </ul>
-        </Col>
-
-        <Col md={6}>
-          <h5 className="mb-3">Sản phẩm</h5>
-          {items.length === 0 ? (
-            <p>Không có sản phẩm nào trong đơn hàng.</p>
-          ) : (
-            items.map((item, idx) => {
-              const price = (item.sale_price ?? item.price) * item.quantity;
-              return (
-                <Card key={idx} className="mb-3 shadow-sm">
-                  <Card.Body>
-                    <Row>
-                      <Col xs={3}>
-                        <Image
-                          src={item?.product_variant?.product?.img || '/placeholder.png'}
-                          alt={item?.product_variant?.product?.name}
-                          fluid
-                          rounded
-                        />
-                      </Col>
-                      <Col xs={9}>
-                        <h6>{item?.product_variant?.product?.name}</h6>
-                        <p className="mb-1">Màu: {item?.product_variant?.color?.name} | Size: {item?.product_variant?.size?.name}</p>
-                        <p className="mb-1">Số lượng: {item.quantity}</p>
-                        <p className="text-danger mb-0">
-                          Giá: {price.toLocaleString()} ₫
-                        </p>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              );
-            })
-          )}
-        </Col>
-      </Row>
+      <h5>Sản phẩm trong đơn hàng</h5>
+      {items.length === 0 ? (
+        <p>Không có sản phẩm.</p>
+      ) : (
+        <div>
+          {items.map((item, idx) => (
+            <Card key={idx} className="mb-3 shadow-sm">
+              <Card.Body>
+                <Row>
+                  <Col xs={3} md={2}>
+                    <Image
+                      src={item?.product_variant?.product?.img || '/placeholder.png'}
+                      alt={item?.product_variant?.product?.name}
+                      fluid
+                      rounded
+                    />
+                  </Col>
+                  <Col xs={9} md={10}>
+                    <h6>{item?.product_variant?.product?.name}</h6>
+                    <p className="mb-1">Màu: {item?.product_variant?.color?.name} | Size: {item?.product_variant?.size?.name}</p>
+                    <p className="mb-1">Số lượng: {item.quantity}</p>
+                    <p className="mb-0 text-danger">
+                      Giá: {(total)}₫
+                    </p>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="text-center mt-4">
-        <Button variant="outline-primary" onClick={() => navigate('/orders')}>
-          <ArrowLeft className="me-2" />
-          Quay về đơn hàng của tôi
-        </Button>
+        <Button variant="primary" onClick={() => navigate('/')}>Về trang chủ</Button>
       </div>
-    </Container>
+    </div>
   );
 }

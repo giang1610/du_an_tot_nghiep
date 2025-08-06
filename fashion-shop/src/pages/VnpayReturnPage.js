@@ -122,11 +122,11 @@ export default function VnpayReturn() {
                   <div><strong>SDT:</strong> {orderDetail.customer_phone}</div>
                   <div><strong>Địa chỉ:</strong> {orderDetail.shipping_address}</div>
 
-                  <div className="text-white m-1 bg-success p-2 rounded" style={{ fontSize: '14px', maxWidth: '220px', wordWrap: 'break-word' }}>
+                  {/* <div className="text-white m-1 bg-success p-2 rounded" style={{ fontSize: '14px', maxWidth: '220px', wordWrap: 'break-word' }}>
                     <div className="mb-1">Giá gốc: {price.toLocaleString()} ₫</div>
                     <div className="mb-1">Thuế (10%): {tax.toLocaleString()} ₫</div>
                     <div><strong>Tổng: {total.toLocaleString()} ₫</strong></div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             );

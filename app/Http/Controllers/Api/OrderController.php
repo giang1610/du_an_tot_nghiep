@@ -577,7 +577,7 @@ class OrderController extends Controller
     /**
      * Xử lý thanh toán VNPay
      */
-    public function processVnpayPayment(Request $request)
+   public function processVnpayPayment(Request $request)
     {
         $user = Auth::user();
 
@@ -1096,7 +1096,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'completed'; // Đã nhận hàng (coi là hoàn thành)
+        $order->status = 'completed';
         $order->completed_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán

@@ -414,17 +414,18 @@ class MomoPaymentController extends Controller
         }
 
         return response()->json([
-            'message' => (int)$resultCode === 0 ? 'Thanh toán thành công' : 'Thanh toán thất bại hoặc đã hủy',
-            'data' => [
-                'total' => $order->total,
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'status' => $order->status,
-                'payment_status' => $order->payment_status,
-                'items' => $order->items
-            ]
-        ], (int)$resultCode === 0 ? 200 : 400);
-    }
+        'message' => (int)$resultCode === 0 ? 'Thanh toán thành công' : 'Thanh toán thất bại hoặc đã hủy',
+        'data' => [
+
+            'total' => $order->total,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'status' => $order->status,
+            'payment_status' => $order->payment_status,
+            'items' => $order->items // => sẽ có đầy đủ product, size, color
+        ]
+    ], (int)$resultCode === 0 ? 200 : 400);
+}
 
     protected function refundMomoPayment(Order $order, $amount = null)
     {
