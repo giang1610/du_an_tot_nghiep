@@ -11,6 +11,9 @@ class ReviewController extends Controller
     public function index(Request $request)
     {
         $query = Review::with(['user','product']);
+        if($request->has('search')){
+            $query->where('content','like','%' . $request->search .'%');
+        }
        $reviews = $query->orderBy('id','desc')->paginate(5);
        return view('admin.reviews.index', compact('reviews'));
     }

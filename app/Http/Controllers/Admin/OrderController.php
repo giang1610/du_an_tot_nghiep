@@ -49,7 +49,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(10)->withQueryString(); // Trả về danh sách đơn hàng với 10 bản ghi/trang
+        $orders = $query->paginate(5)->withQueryString(); // Trả về danh sách đơn hàng với 10 bản ghi/trang
 
 
         return view('admin.orders.index', compact('orders'));

@@ -46,13 +46,21 @@
                 @case('cancelled') bg-danger @break
                 @default bg-light text-dark @endswitch ms-2">
                         {{ match ($order->status) {
+                             'cancelled' => 'Hủy đơn hàng',
                             'pending' => 'Chờ xử lý',
                             'processing' => 'Đang xử lý',
                             'picking' => 'Đang lấy hàng',
                             'shipping' => 'Đang giao hàng',
                             'shipped' => 'Đã giao hàng',
-                            'completed' => 'Hoàn thành',
-                            'cancelled' => 'Đã hủy',
+                            'return_requested' => 'Yêu cầu hoàn hàng',
+                            'delivered' => 'Đã nhận hàng',
+                            'returned' => 'Đồng ý hoàn hàng',
+                            'restocked' => 'Hàng đã trả về kho',
+                            'completed' => 'Đơn hàng hoàn thành',
+                            'failed_1' => 'Giao hàng thất bại lần 1',
+                            'failed_2' => 'Giao hàng thất bại lần 2',
+                            'failed' => 'Giao hàng thất bại',
+                            'shipper_en_route' => 'Shipper đang đến lấy hàng',
                             default => ucfirst($order->status),
                         } }}
                     </span>

@@ -7,6 +7,12 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 @endif
+@if (session('error'))
+<div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
 
 <div class="container-fluid px-3 px-md-4 px-lg-5">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
@@ -17,9 +23,9 @@
             <a href="{{ route('products.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Thêm mới
             </a>
-            <a href="{{ route('products.trash') }}" class="btn btn-outline-secondary">
+            {{-- <a href="{{ route('products.trash') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-trash3-fill me-1"></i> Thùng rác
-            </a>
+            </a> --}}
         </div>
     </div>
 
@@ -140,7 +146,7 @@
                                         <button type="submit"
                                             class="btn btn-sm btn-outline-danger"
                                             title="Xóa"
-                                            onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác?')">
+                                            onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm này không ?')">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>

@@ -6,7 +6,7 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
                 <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Cập nhật trạng thái đơn hàng</li>
+                <li class="breadcrumb-item active" aria-current="page">xử lý các đơn yêu cầu hoàn hàng</li>
             </ol>
         </nav>
 
@@ -67,7 +67,7 @@
         @endif
 
         {{-- Form cập nhật trạng thái đơn hàng --}}
-        <form action="{{ route('orders.update', $order->id) }}" method="POST" class="bg-white rounded-3 shadow p-4">
+        {{-- <form action="{{ route('orders.update', $order->id) }}" method="POST" class="bg-white rounded-3 shadow p-4">
             @csrf
             @method('PUT')
 
@@ -156,7 +156,7 @@
                                         {{ $statusOptions[$nextStatus] }}
                                     </option>
                                 @endif --}}
-                                @if (in_array($currentStatus, ['cancelled', 'shipped', 'completed']))
+                                {{-- @if (in_array($currentStatus, ['cancelled', 'shipped', 'completed']))
                                 <div class="alert alert-warning mt-2">
                                     <i class="bi bi-exclamation-triangle me-2"></i>
                                     Đơn hàng đã ở trạng thái <b>{{ $statusOptions[$currentStatus] }}</b>, không thể đổi trạng thái nữa.
@@ -203,7 +203,7 @@
                     </button>
                 </div>
             @endif
-        </form>
+        </form> --}} 
     </div>
 
     <style>
