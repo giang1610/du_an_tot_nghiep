@@ -16,6 +16,7 @@
     <li><hr class="dropdown-divider my-1"></li>
 
     @forelse($latestOrders as $order)
+      @continue(in_array($order->payment_method, ['vnpay', 'momo']) && $order->payment_status === 'pending')
         <li>
             <a class="dropdown-item noti-item d-flex align-items-start gap-2 px-3 py-2" href="{{ route('orders.show', $order->id) }}">
                 <i class="bi bi-receipt text-primary fs-5"></i>

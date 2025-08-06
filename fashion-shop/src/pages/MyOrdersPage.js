@@ -28,6 +28,7 @@ const STATUS_LABELS = {
     failed: 'Giao hàng thất bại',
     failed_1: 'Giao hàng thất bại lần 1',
     failed_2: 'Giao hàng thất bại lần 2',
+    restocked: 'Hàng đã trả kho',
 };
 
 const STATUS_VARIANTS = {
@@ -76,6 +77,96 @@ export default function MyOrdersPage() {
     const [returnOrderId, setReturnOrderId] = useState(null);
     const [returnLoading, setReturnLoading] = useState(false);
     const [returnMediaPreviews, setReturnMediaPreviews] = useState([]);
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewItem, setReviewItem] = useState(null);
+    const [reviewContent, setReviewContent] = useState('');
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewMedia, setReviewMedia] = useState([]);
+    const [reviewMediaPreviews, setReviewMediaPreviews] = useState([]);
+    const [reviewLoading, setReviewLoading] = useState(false);
+
+    const handleShowReviewModal = (item, orderId, completedAt) => {
+        setReviewItem({ ...item, order_id: orderId, completed_at: completedAt });
+        setReviewContent('');
+        setReviewRating(5);
+        setReviewMedia([]);
+        setReviewMediaPreviews([]);
+        setShowReviewModal(true);
+    };
+
+    const handleReviewMediaChange = (e) => {
+        const files = Array.from(e.target.files);
+        setReviewMedia(files);
+        setReviewMediaPreviews(files.map(file => URL.createObjectURL(file)));
+    };
+
+    const handleSubmitReview = async () => {
+        if (!reviewItem) return;
+        const reviews = reviewItem.reviews || [];
+        const count = reviews.length;
+        const completedAt = new Date(reviewItem.completed_at);
+        const now = new Date();
+        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+
+        if (count === 1 && diffDays < 7) {
+            alert('Bạn chỉ có thể đánh giá lần 2 sau khi đủ 7 ngày kể từ lần đánh giá đầu tiên.');
+            return;
+        }
+        if (reviewMedia.length > 5) {
+            alert("Chỉ được chọn tối đa 5 file ảnh/video!");
+            return;
+        }
+        setReviewLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('order_id', reviewItem.order_id);
+            formData.append('product_id', reviewItem.product_variant?.product?.id || reviewItem.product_id);
+            formData.append('product_variant_id', reviewItem.product_variant?.id || reviewItem.product_variant_id);
+            formData.append('rating', reviewRating);
+            formData.append('content', reviewContent);
+            reviewMedia.forEach(file => formData.append('media[]', file));
+
+            await axios.post(`${process.env.REACT_APP_API_URL}/reviews`, formData, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            alert('Đánh giá thành công!');
+            setShowReviewModal(false);
+            setReviewMedia([]);
+            // Reload lại đơn hàng
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setOrders(res.data.data?.data || []);
+        } catch (err) {
+            if (err.response?.data?.message) {
+                alert(err.response.data.message);
+            } else {
+                alert('Gửi đánh giá thất bại.');
+            }
+            console.error(err);
+        } finally {
+            setReviewLoading(false);
+        }
+    };
+
+
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setCurrentUserId(payload.sub || payload.id);
+            } catch (err) {
+                console.error('Decode JWT thất bại:', err);
+            }
+        }
+    }, []);
 
     // === Helper kiểm tra hết hạn thanh toán ===
     const parseDate = (v) => {
