@@ -25,7 +25,8 @@ import ProductReview from './components/ProductReview';
 import ChatApp from './components/ChatApp';
 import MyVouchers from './pages/MyVouchers';
 import VnpayReturn from './pages/VnpayReturnPage';
-import ContinuePayment from './components/ContinuePayment';
+import ContinuePaymentMomo from './components/ContinuePaymentMomo';
+import ContinuePaymentVnpay from './components/ContinuePaymentVnpay';
 
 
 
@@ -81,7 +82,8 @@ function App() {
         {/* Thanh toán momo */}
         <Route path="/momo-return" element={<MomoReturn />} />
         {/* Tiếp tục thanh toán */}
-        <Route path="/continue-payment/:method/:orderId" element={<ContinuePayment />} />
+        <Route path="/continue-payment/momo/:orderId" element={<ContinuePaymentMomo />} />
+        <Route path="/continue-payment/vnpay/:orderId" element={<ContinuePaymentVnpay />} />
         {/* Các trang không tìm thấy */}
         <Route path="*" element={<h1 className="text-center mt-5">Trang không tìm thấy</h1>} />
 

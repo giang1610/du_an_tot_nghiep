@@ -3,15 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Spinner } from 'react-bootstrap';
 
-const ContinuePayment = () => {
-    const { method, orderId } = useParams(); // 'momo' hoặc 'vnpay'
+const ContinuePaymentVnpay = () => {
+    const { orderId } = useParams();
     const navigate = useNavigate();
-    const [message, setMessage] = useState('Đang chuyển hướng đến cổng thanh toán...');
+    const [message, setMessage] = useState('Đang chuyển hướng đến VnPay...');
     const [error, setError] = useState(false);
     const [gone, setGone] = useState(false);
 
     useEffect(() => {
-        const continuePayment = async () => {
+        const retryPayment = async () => {
             try {
                 const token = localStorage.getItem('token');
                 const config = {
@@ -21,29 +21,18 @@ const ContinuePayment = () => {
                     },
                 };
 
-                let endpoint = '';
-                if (method === 'momo') {
-                    endpoint = '/momo/retry-payment';
-                } else if (method === 'vnpay') {
-                    endpoint = '/vnpay/retry-payment';
-                } else {
-                    setError(true);
-                    setMessage('Phương thức thanh toán không hợp lệ.');
-                    return;
-                }
-
-                const response = await axios.post(
-                    `${process.env.REACT_APP_API_URL}${endpoint}`,
+                const res = await axios.post(
+                    `${process.env.REACT_APP_API_URL}/vnpay/retry-payment`,
                     { order_id: orderId },
                     config
                 );
 
-                const paymentUrl = response.data?.data?.payment_url;
+                const paymentUrl = res.data?.data?.payment_url;
                 if (paymentUrl) {
                     window.location.href = paymentUrl;
                 } else {
                     setError(true);
-                    setMessage('Không thể tạo lại liên kết thanh toán.');
+                    setMessage('Không thể tạo liên kết thanh toán VnPay.');
                 }
             } catch (err) {
                 if (err.response?.status === 410) {
@@ -59,19 +48,13 @@ const ContinuePayment = () => {
             }
         };
 
-        continuePayment();
-    }, [method, orderId]);
+        retryPayment();
+    }, [orderId]);
 
     return (
         <div className="container mt-5 text-center">
             <h4>{message}</h4>
-
-            {!error && !gone && (
-                <div className="mt-3">
-                    <Spinner animation="border" variant="primary" />
-                </div>
-            )}
-
+            {!error && !gone && <Spinner animation="border" variant="primary" />}
             {(error || gone) && (
                 <button onClick={() => navigate('/orders')} className="btn btn-primary mt-3">
                     Quay lại danh sách đơn hàng
@@ -81,4 +64,4 @@ const ContinuePayment = () => {
     );
 };
 
-export default ContinuePayment;
+export default ContinuePaymentVnpay;
