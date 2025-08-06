@@ -160,13 +160,11 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
 
 
     Route::get('revenue', [ReportController::class, 'revenueReport'])->name('admin.reports.revenue');
-    // Route::get('inventory', [ReportController::class, 'inventoryReport'])->name('admin.reports.inventory');
-    // Route::get('customers', [ReportController::class, 'customerReport'])->name('admin.reports.customers');
-    // Route::get('export-revenue', [ReportController::class, 'exportRevenueReport'])->name('admin.reports.export-revenue');
-    // Route::get('reports/export-revenue', [ReportController::class, 'exportRevenueReport'])->name('admin.reports.export-revenue');
+    // Route::get('/revenue', [ReportController::class, 'advancedReport'])->name('admin.reports.revenue');
+     Route::get('reports/revenue/export', [ReportController::class, 'exportRevenueReport'])
+         ->name('reports.revenue.export');
 
-     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-  
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 });
 // NÊN ĐẶT NGOÀI group `admin`
 
