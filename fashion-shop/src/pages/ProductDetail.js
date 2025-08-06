@@ -149,6 +149,7 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
+     if (!selectedVariant) return;
     if (!requireLoginAndVariant()) return;
 
     if (quantity > maxQuantity) {

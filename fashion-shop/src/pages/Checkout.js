@@ -53,7 +53,7 @@ const ProductSummary = ({ items }) => {
 };
 
 export default function Checkout() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { cart, removeSelectedItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,24 +91,27 @@ export default function Checkout() {
   const [availableProductVouchers, setAvailableProductVouchers] = useState([]);
   const [availableShippingVouchers, setAvailableShippingVouchers] = useState([]);
 
+  // base shipping fee - keep in sync with backend default
+  const BASE_SHIPPING = 20000;
+
   const totals = useMemo(() => {
     const subtotal = selectedItems.reduce((sum, item) => sum + item.quantity * (item.price ?? 0), 0);
     const tax = subtotal * 0.1;
-    let shipping = 20000;
-    let discount = 0;
+    let shipping = BASE_SHIPPING;
+    let productDiscount = 0;
 
     if (productVoucherInfo) {
-      if (productVoucherInfo.type === 'percent') discount = (subtotal * productVoucherInfo.value) / 100;
-      else if (productVoucherInfo.type === 'fixed') discount = productVoucherInfo.value;
+      if (productVoucherInfo.type === 'percent') productDiscount = (subtotal * productVoucherInfo.value) / 100;
+      else if (productVoucherInfo.type === 'fixed') productDiscount = productVoucherInfo.value;
     }
 
     if (shippingVoucherInfo) {
       if (shippingVoucherInfo.type === 'fixed') shipping = Math.max(0, shipping - shippingVoucherInfo.value);
-      else if (shippingVoucherInfo.type === 'percent') shipping = shipping * (1 - shippingVoucherInfo.value / 100);
+      else if (shippingVoucherInfo.type === 'percent') shipping = shipping * (1 - (shippingVoucherInfo.value ?? 0) / 100);
     }
 
-    const total = subtotal + tax + shipping - discount;
-    return { subtotal, tax, shipping, discount, total: Math.max(0, total), };
+    const total = subtotal + tax + shipping - productDiscount;
+    return { subtotal, tax, shipping, discount: productDiscount, total: Math.max(0, total) };
   }, [selectedItems, productVoucherInfo, shippingVoucherInfo]);
 
   const setField = (name, value) => {
@@ -127,32 +130,61 @@ export default function Checkout() {
     return Object.keys(errors).length === 0;
   };
 
+  // Reset applied vouchers when cart/buy-now items change (to avoid stale vouchers)
+  useEffect(() => {
+    setProductVoucherCode('');
+    setShippingVoucherCode('');
+    setProductVoucherInfo(null);
+    setShippingVoucherInfo(null);
+  }, [isBuyNow, buyNowItem, cart?.length]);
+
   const applyVoucher = async (type) => {
-    if (type === 'remove_product') return setProductVoucherInfo(null);
-    if (type === 'remove_shipping') return setShippingVoucherInfo(null);
-
     setError('');
-    const code = type === 'product' ? productVoucherCode : shippingVoucherCode;
-    if (!code.trim()) return setError('Vui lòng chọn mã giảm giá.');
+    setSuccess('');
 
-    const totalAmount = selectedItems.reduce((sum, item) => sum + item.quantity * (item.price ?? 0), 0);
+    if (type === 'remove_product') {
+      setProductVoucherCode('');
+      setProductVoucherInfo(null);
+      return;
+    }
+    if (type === 'remove_shipping') {
+      setShippingVoucherCode('');
+      setShippingVoucherInfo(null);
+      return;
+    }
+
+    const code = type === 'product' ? productVoucherCode : shippingVoucherCode;
+    if (!code || !code.trim()) {
+      return setError('Vui lòng chọn mã giảm giá.');
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) return setError('Bạn cần đăng nhập để áp dụng mã giảm giá.');
+
+    // total to send to /vouchers/apply
+    const amountContext = type === 'product' ? totals.subtotal : totals.shipping;
 
     try {
+      // We send type so backend can validate (product/shipping)
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL}/vouchers/apply`,
-        { code, total: totalAmount },
+        { code: code.trim(), total: amountContext, type },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      // Expect backend to return voucher object: { code, type: 'percent'|'fixed', value, applies_to }
       const voucher = res.data;
-      if (!voucher || !voucher.value) return setError('Mã giảm giá không hợp lệ.');
 
-      if (voucher.applies_to === 'shipping') {
-        setShippingVoucherInfo(voucher);
-        setSuccess('Áp dụng mã miễn phí vận chuyển thành công!');
-      } else {
+      if (!voucher || (!voucher.type && !voucher.applies_to && voucher.value == null)) {
+        return setError('Mã giảm giá không hợp lệ.');
+      }
+
+      if (type === 'product') {
         setProductVoucherInfo(voucher);
         setSuccess('Áp dụng mã giảm giá sản phẩm thành công!');
+      } else {
+        setShippingVoucherInfo(voucher);
+        setSuccess('Áp dụng mã miễn phí vận chuyển thành công!');
       }
     } catch (err) {
       console.error('❌ Voucher Error:', err);
@@ -197,14 +229,12 @@ export default function Checkout() {
       shipping: totals.shipping,
       discount_amount: totals.discount,
       total: totals.total,
-      // voucher_code: {
-      //   product: productVoucherInfo?.code ?? null,
-      //   shipping: shippingVoucherInfo?.code ?? null
-      // }
-      voucher_code: productVoucherInfo?.code || shippingVoucherInfo?.code || null,
+      // send both voucher codes to backend (null if none)
+      product_voucher_code: productVoucherInfo?.code ?? null,
+      shipping_voucher_code: shippingVoucherInfo?.code ?? null,
+      // helpful flag so backend knows if it's buy-now (optional)
+      buy_now: isBuyNow ? 1 : 0,
     };
-
-    // console.log('Order payload:', JSON.stringify(payload, null, 2));
 
     try {
       setLoading(true);
@@ -216,7 +246,10 @@ export default function Checkout() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (data?.data?.payment_url) {
+          // remove buy_now local and selected cart items *before* redirect to avoid leftover state
           localStorage.removeItem('buy_now');
+          // Only remove cart items when not buy-now (removeSelectedItems likely handles selected items)
+          if (!isBuyNow) await removeSelectedItems();
           window.location.href = data.data.payment_url;
           return;
         } else {
@@ -230,14 +263,14 @@ export default function Checkout() {
         );
 
         if (data?.data?.payment_url) {
-
-          await removeSelectedItems();
+          localStorage.removeItem('buy_now');
+          if (!isBuyNow) await removeSelectedItems();
           window.location.href = data.data.payment_url;
         } else {
           toast.error("Không nhận được liên kết thanh toán VNPay");
         }
-      }
-      else {
+      } else {
+        // COD / orders/checkout
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
@@ -245,12 +278,14 @@ export default function Checkout() {
         );
         setSuccess(data.message || 'Đặt hàng thành công!');
         localStorage.removeItem('buy_now');
-        await removeSelectedItems();
+        if (!isBuyNow) await removeSelectedItems();
         setTimeout(() => navigate('/orders'), 3000);
       }
     } catch (error) {
-      console.error('❌ Lỗi:', error);
-      setError('Đặt hàng thất bại. Vui lòng thử lại.');
+      console.error('❌ Lỗi khi gọi API:', error);
+      console.error('Status:', error.response?.status);
+      console.error('Response data:', error.response?.data);
+      setError(error.response?.data?.message || error.message || 'Đặt hàng thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -282,6 +317,9 @@ export default function Checkout() {
   }, [user]);
 
   useEffect(() => {
+    const token = localStorage.getItem('token') || user?.token;
+    if (!token) return;
+
     const fetchVouchers = async () => {
       try {
         const res1 = await axios.get(`${process.env.REACT_APP_API_URL}/vouchers?type=product`, {
@@ -298,8 +336,8 @@ export default function Checkout() {
       }
     };
 
-    if (token) fetchVouchers();
-  }, [token]);
+    fetchVouchers();
+  }, [user]);
 
   return (
     <Container className="py-5">
@@ -409,15 +447,17 @@ export default function Checkout() {
                     </option>
                   ))}
                 </Form.Select>
-                <Button className="mt-2" variant="success" size="sm" onClick={() => applyVoucher('product')}>
-                  Áp dụng
-                </Button>
-                {productVoucherInfo && (
-                  <div className="mt-2 text-success">
-                    ✅ Đã áp dụng: {productVoucherInfo.code}
-                    <Button variant="link" size="sm" onClick={() => applyVoucher('remove_product')}>[Hủy]</Button>
-                  </div>
-                )}
+                <div className="d-flex gap-2 mt-2">
+                  <Button variant="success" size="sm" onClick={() => applyVoucher('product')} disabled={!productVoucherCode || loading}>
+                    Áp dụng
+                  </Button>
+                  {productVoucherInfo && (
+                    <div className="mt-1 text-success">
+                      ✅ {productVoucherInfo.code}
+                      <Button variant="link" size="sm" onClick={() => applyVoucher('remove_product')}>[Hủy]</Button>
+                    </div>
+                  )}
+                </div>
               </Form.Group>
 
               <Form.Group className="mb-3">
@@ -435,15 +475,17 @@ export default function Checkout() {
                     </option>
                   ))}
                 </Form.Select>
-                <Button className="mt-2" variant="info" size="sm" onClick={() => applyVoucher('shipping')}>
-                  Áp dụng
-                </Button>
-                {shippingVoucherInfo && (
-                  <div className="mt-2 text-info">
-                    ✅ Đã áp dụng: {shippingVoucherInfo.code}
-                    <Button variant="link" size="sm" onClick={() => applyVoucher('remove_shipping')}>[Hủy]</Button>
-                  </div>
-                )}
+                <div className="d-flex gap-2 mt-2">
+                  <Button variant="info" size="sm" onClick={() => applyVoucher('shipping')} disabled={!shippingVoucherCode || loading}>
+                    Áp dụng
+                  </Button>
+                  {shippingVoucherInfo && (
+                    <div className="mt-1 text-info">
+                      ✅ {shippingVoucherInfo.code}
+                      <Button variant="link" size="sm" onClick={() => applyVoucher('remove_shipping')}>[Hủy]</Button>
+                    </div>
+                  )}
+                </div>
               </Form.Group>
 
               <p>Tạm tính: {formatCurrency(totals.subtotal)} VNĐ</p>
@@ -460,4 +502,3 @@ export default function Checkout() {
     </Container>
   );
 }
-
