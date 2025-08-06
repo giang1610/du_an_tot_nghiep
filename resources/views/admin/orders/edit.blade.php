@@ -162,6 +162,12 @@
                                     Đơn hàng đã ở trạng thái <b>{{ $statusOptions[$currentStatus] }}</b>, không thể đổi trạng thái nữa.
                                 </div>
                                 @endif
+                                 @if ($currentStatus === 'failed')
+                                     <option value="restocked">Hàng đã trả về kho</option>
+                                @else
+                                <option value="{{ $currentStatus }}" selected disabled>
+                                    {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                </option>
                                  @if ($currentStatus === 'shipping')
                                 <option value="shipped">{{ $statusOptions['shipped'] }}</option>
                                 <option value="failed_1">Giao hàng thất bại lần 1</option>

@@ -29,3 +29,9 @@ code {
   height: auto;
   max-height: unset; /* bỏ giới hạn */
 }
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.03);
+}

@@ -52,27 +52,81 @@ export default function AllProductsPage() {
         params: { ...filters, page, limit: LIMIT }
       });
 
-      let result = res.data.data;
+      // Lấy mảng data an toàn
+      let result = Array.isArray(res.data.data) ? res.data.data : [];
 
-   
+      // --- Client-side filtering (nếu backend chưa filter hoặc bạn muốn chắc chắn) ---
+      // Lưu ý: các field id có thể là string, convert khi so sánh nếu cần
+      if (filters.category) {
+        // nếu category id lưu là number trong product, chuyển filters.category sang number
+        const cat = isNaN(Number(filters.category)) ? filters.category : Number(filters.category);
+        result = result.filter(p => {
+          // tùy cấu trúc product: thử các trường thường gặp
+          return p.category_id === cat || p.category === cat || p.category?.id === cat;
+        });
+      }
+
+      if (filters.size) {
+        const size = isNaN(Number(filters.size)) ? filters.size : Number(filters.size);
+        result = result.filter(p => {
+          return p.size_id === size || p.size === size || p.sizes?.some(s => s.id === size);
+        });
+      }
+
+      if (filters.price) {
+        // kỳ vọng filters.price dạng "min-max" như "0-200000"
+        const [minStr, maxStr] = String(filters.price).split('-');
+        const min = Number(minStr ?? 0);
+        const max = Number(maxStr ?? Infinity);
+        result = result.filter(p => {
+          const price = Number(p.price_original ?? p.price ?? 0);
+          return price >= min && price <= max;
+        });
+      }
+
+      if (filters.search && filters.search.trim() !== '') {
+        const q = filters.search.trim().toLowerCase();
+        result = result.filter(p => {
+          // search vào tên, mô tả, mã sản phẩm nếu có
+          const name = String(p.name ?? p.title ?? '').toLowerCase();
+          const desc = String(p.description ?? '').toLowerCase();
+          const sku = String(p.sku ?? '').toLowerCase();
+          return name.includes(q) || desc.includes(q) || sku.includes(q);
+        });
+      }
+
+      // --- Sorting (client-side) ---
       switch (filters.sort) {
         case 'latest':
           result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           break;
         case 'price_asc':
-          result.sort((a, b) => a.price_original - b.price_original);
+          result.sort((a, b) => (Number(a.price_original ?? a.price ?? 0)) - (Number(b.price_original ?? b.price ?? 0)));
           break;
         case 'price_desc':
-          result.sort((a, b) => b.price_original - a.price_original);
+          result.sort((a, b) => (Number(b.price_original ?? b.price ?? 0)) - (Number(a.price_original ?? a.price ?? 0)));
           break;
         default:
           break;
       }
 
-      setProducts(prev =>
-        page === 1 ? result : [...prev, ...result]
-      );
-      setTotal(res.data.total || 0);
+      // --- Cập nhật products (ghi đè khi page === 1, nối khi load more) ---
+      setProducts(prev => (page === 1 ? result : [...prev, ...result]));
+
+      // --- Cập nhật total (ưu tiên API trả tổng) ---
+      const apiTotal = res.data.total;
+      if (typeof apiTotal === 'number') {
+        setTotal(apiTotal);
+      } else {
+        // fallback: nếu API không trả total, tính tạm từ kết quả hiện tại
+        if (page === 1) {
+          setTotal(result.length);
+        } else {
+          setTotal(prevTotal => prevTotal + result.length);
+        }
+      }
+
+      // hasMore dựa trên số item trả về so với LIMIT
       setHasMore(result.length === LIMIT);
     } catch (err) {
       console.error("Lỗi khi tải sản phẩm:", err);
@@ -80,6 +134,7 @@ export default function AllProductsPage() {
       setLoading(false);
     }
   }, [filters, page]);
+
 
   useEffect(() => {
     fetchProducts();
@@ -110,6 +165,15 @@ export default function AllProductsPage() {
   const handleLoadMore = () => {
     setPage(prev => prev + 1);
   };
+
+  // ✅ Nếu người dùng chưa chọn filter/search nào thì anyFilterSelected = false
+  const anyFilterSelected = Boolean(
+    filters.category ||
+    filters.price ||
+    filters.size ||
+    filters.sort ||
+    (filters.search && filters.search.trim() !== '')
+  );
 
   return (
     <Container className="py-5">
@@ -147,9 +211,11 @@ export default function AllProductsPage() {
             />
 
             <div className="d-grid gap-2">
-              <Button type="submit" variant="dark">Lọc</Button>
-              <Button variant="outline-secondary" onClick={handleResetFilters}>
-                Đặt lại bộ lọc
+              <Button type="submit" variant="primary">
+                🔍 Lọc
+              </Button>
+              <Button variant="outline-primary" onClick={handleResetFilters}>
+                🔄 Đặt lại
               </Button>
             </div>
           </Form>
@@ -158,7 +224,14 @@ export default function AllProductsPage() {
         {/* DANH SÁCH SẢN PHẨM */}
         <Col md={9}>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <div><strong>{total}</strong> sản phẩm được tìm thấy</div>
+            <div>
+              {anyFilterSelected ? (
+                <span><strong>{total}</strong> sản phẩm được tìm thấy</span>
+              ) : (
+                <span className="text-muted">Tất cả sản phẩm</span>
+              )}
+            </div>
+
             <Form.Select
               style={{ width: '200px' }}
               value={filters.sort}
@@ -175,7 +248,7 @@ export default function AllProductsPage() {
             <div className="text-center py-5">
               <Spinner animation="border" />
             </div>
-          ) : products.length === 0 ? (
+          ) : products.length === 0 && anyFilterSelected ? (
             <Alert variant="warning">Không tìm thấy sản phẩm phù hợp</Alert>
           ) : (
             <>

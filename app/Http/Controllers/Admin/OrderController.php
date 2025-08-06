@@ -467,6 +467,7 @@ class OrderController extends Controller
 {
     $order = Order::findOrFail($id);
     $newStatus = $request->input('status');
+    
 
 
     $order->status = $newStatus;
