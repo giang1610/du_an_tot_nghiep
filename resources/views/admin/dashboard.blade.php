@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Dashboard Tổng Quan')
+@section('title', 'Dashboard')
 
 @section('content')
     <div class="container-fluid px-0 px-md-3">
@@ -8,12 +8,15 @@
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Dashboard Tổng Quan</h1>
             <div class="d-flex">
-                <button class="btn btn-sm btn-outline-success me-2">
+                {{-- <button class="btn btn-sm btn-outline-success me-2">
                     <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel
-                </button>
-                <button class="btn btn-sm btn-outline-danger me-2">
+                </button> --}}
+                <a href="{{ route('dashboard.exportExcel') }}" class="btn btn-success mb-3">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
+                </a>
+                {{-- <button class="btn btn-sm btn-outline-danger me-2">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Xuất PDF
-                </button>
+                </button> --}}
             </div>
         </div>
 

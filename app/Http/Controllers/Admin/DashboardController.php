@@ -4,11 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 
 class DashboardController extends Controller
 {
@@ -424,5 +431,123 @@ class DashboardController extends Controller
             ->count();
 
         return $this->calculatePercentageChange($thisWeekCancellations, $lastWeekCancellations);
+    }
+
+    public function exportExcelDashboard()
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Dashboard Report');
+
+        // Set style mặc định
+        $defaultStyle = [
+            'font' => ['name' => 'Arial', 'size' => 11],
+            'alignment' => ['vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+        ];
+        $spreadsheet->getDefaultStyle()->applyFromArray($defaultStyle);
+
+        // Lấy dữ liệu
+        $totalOrders = Order::count();
+        $totalRevenue = Order::where('status', 'completed')->sum('total'); // Đã sửa lại đúng tên cột
+        $totalProductsSold = OrderItem::sum('quantity');
+        $totalUsers = User::count();
+
+        $topSellingProducts = Product::withSum('orderItems', 'quantity')
+            ->orderByDesc('order_items_sum_quantity')
+            ->take(5)
+            ->get();
+
+        $monthlyRevenue = Order::selectRaw('MONTH(created_at) as month, SUM(total) as revenue')
+            ->where('status', 'completed')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        $orderStatusCounts = Order::select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        // Tổng quan
+        $sheet->setCellValue('A1', 'TỔNG QUAN');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        $sheet->fromArray([
+            ['Tổng đơn hàng', $totalOrders],
+            ['Tổng doanh thu', number_format($totalRevenue, 0, ',', '.') . ' đ'],
+            ['Sản phẩm đã bán', $totalProductsSold],
+            ['Người dùng', $totalUsers],
+        ], null, 'A2');
+
+        $sheet->getStyle('A2:B5')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+        // Top 5 sản phẩm bán chạy
+        $startRow = 7;
+        $sheet->setCellValue("A{$startRow}", 'TOP 5 SẢN PHẨM BÁN CHẠY');
+        $sheet->getStyle("A{$startRow}")->getFont()->setBold(true)->setSize(14);
+
+        $startRow++;
+        $sheet->setCellValue("A{$startRow}", 'Tên sản phẩm');
+        $sheet->setCellValue("B{$startRow}", 'Số lượng đã bán');
+        $sheet->getStyle("A{$startRow}:B{$startRow}")->getFont()->setBold(true);
+
+        $row = $startRow + 1;
+        foreach ($topSellingProducts as $product) {
+            $sheet->setCellValue("A{$row}", $product->name);
+            $sheet->setCellValue("B{$row}", $product->order_items_sum_quantity);
+            $row++;
+        }
+        $sheet->getStyle("A" . ($startRow) . ":B" . ($row - 1))
+            ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+        // Doanh thu theo tháng
+        $col = 'D';
+        $sheet->setCellValue("{$col}1", 'DOANH THU THEO THÁNG');
+        $sheet->getStyle("{$col}1")->getFont()->setBold(true)->setSize(14);
+
+        $sheet->setCellValue("{$col}2", 'Tháng');
+        $sheet->setCellValue("E2", 'Doanh thu');
+        $sheet->getStyle("{$col}2:E2")->getFont()->setBold(true);
+
+        $r = 3;
+        foreach ($monthlyRevenue as $item) {
+            $sheet->setCellValue("{$col}{$r}", 'Tháng ' . $item->month);
+            $sheet->setCellValue("E{$r}", number_format($item->revenue, 0, ',', '.') . ' đ');
+            $r++;
+        }
+        $sheet->getStyle("{$col}2:E" . ($r - 1))
+            ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+        // Trạng thái đơn hàng
+        $rowStatus = $row + 2;
+        $sheet->setCellValue("D{$rowStatus}", 'SỐ ĐƠN THEO TRẠNG THÁI');
+        $sheet->getStyle("D{$rowStatus}")->getFont()->setBold(true)->setSize(14);
+
+        $rowStatus++;
+        $sheet->setCellValue("D{$rowStatus}", 'Trạng thái');
+        $sheet->setCellValue("E{$rowStatus}", 'Số lượng');
+        $sheet->getStyle("D{$rowStatus}:E{$rowStatus}")->getFont()->setBold(true);
+
+        $rowStatus++;
+        foreach ($orderStatusCounts as $status => $count) {
+            $sheet->setCellValue("D{$rowStatus}", ucfirst($status));
+            $sheet->setCellValue("E{$rowStatus}", $count);
+            $rowStatus++;
+        }
+        $sheet->getStyle("D" . ($row + 3) . ":E" . ($rowStatus - 1))
+            ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+        // Auto-size tất cả cột từ A -> E
+        foreach (range('A', 'E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Xuất file
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'dashboard_export_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename);
     }
 }
