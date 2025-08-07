@@ -27,9 +27,9 @@
             <a href="{{ route('categories.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Thêm mới
             </a>
-            <a href="{{ route('categories.trash') }}" class="btn btn-outline-secondary me-2">
+            {{-- <a href="{{ route('categories.trash') }}" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-trash3-fill me-1"></i> Thùng rác
-            </a>
+            </a> --}}
         </div>
     </div>
 
@@ -86,6 +86,11 @@
                                        class="btn btn-sm btn-outline-primary me-2"
                                        title="Chỉnh sửa">
                                         <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="{{ route('categories.show', $c->id) }}" 
+                                       class="btn btn-sm btn-outline-info me-2"
+                                       title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
                                     </a>
                                     <form action="{{ route('categories.destroy', $c->id) }}" method="POST">
                                         @csrf

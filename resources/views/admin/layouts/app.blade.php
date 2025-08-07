@@ -163,6 +163,16 @@
   </div>
 </li>
 
+<!-- Bình luận -->
+<li class="nav-item menu-parent" data-title="reviews">
+  <a class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catMenu2" aria-expanded="{{ request()->routeIs('reviews.*') ? 'true' : 'false' }}">
+    <i class="bi bi-chat-dots"></i><span class="menu-text">Bình luận</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <div id="catMenu2" class="collapse ps-3 {{ request()->routeIs('reviews.*') ? 'show' : '' }}">
+    <a href="{{ route('reviews.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('reviews.index') ? 'active' : '' }}" data-title="danh sách bình luận">Danh sách</a>
+  </div>
+</li>
+
 <!-- Sản phẩm -->
 <li class="nav-item menu-parent" data-title="products">
   <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#prodMenu" aria-expanded="{{ request()->routeIs('products.*') ? 'true' : 'false' }}">
@@ -179,7 +189,7 @@
   <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#ordersMenu" aria-expanded="{{ request()->routeIs('orders.*') ? 'true' : 'false' }}">
     <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
-  <div id="ordersMenu" class="collapse ps-3">
+  <div id="ordersMenu" class="collapse ps-3 overflow-auto " style="max-height: 300px;">
         <a href="{{ route('orders.index') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Danh sách</a>
         <a href="{{ route('orders.cancelled') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Đơn đã huỷ</a>
         <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lý</a>
@@ -271,8 +281,8 @@
         <ul class="dropdown-menu dropdown-menu-end shadow">
           <li class="dropdown-header">{{ Auth::user()->name ?? 'Admin' }}<br><small class="text-muted">{{ Auth::user()->email ?? 'admin@example.com' }}</small></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li>
+          {{-- <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
+          <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li> --}}
           <li><hr class="dropdown-divider"></li>
           <li>
             <form action="{{ route('logout') }}" method="POST">@csrf
@@ -308,7 +318,7 @@
     window.currentUserId = {!! json_encode(Auth::id()) !!};
 </script>
 
-<script src="{{ asset('js/typing.js') }}"></script>
+<script src="{{ asset('js/chat/typing.js') }}"></script>
 
 
 {{-- chatbox --}}

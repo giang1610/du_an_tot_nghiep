@@ -99,5 +99,5 @@
         window.currentSender = 'admin';
     </script>
 
-    <script src="{{ asset('js/chat-realtime.js') }}"></script>
+    <script src="{{ asset('js/chat/chat-realtime.js') }}"></script>
 @endif

@@ -22,6 +22,7 @@ const STATUS_LABELS = {
     returned: 'Hoàn hàng',
     failed_1: 'Giao hàng thất bại lần 1',
     failed_2: 'Giao hàng thất bại lần 2',
+    restocked: 'Hàng đã trả kho',
 };
 
 const PAYMENT_STATUS_LABELS = {
@@ -212,12 +213,28 @@ export default function OrderDetailPage() {
 
     const handleSubmitReview = async () => {
         if (!reviewItem) return;
+        // Lấy danh sách review của sản phẩm này
+        const reviews = reviewItem.reviews || [];
+        const count = reviews.length;
+        const completedAt = new Date(order.completed_at);
+        const now = new Date();
+        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+
+        // Nếu đã có 1 đánh giá và chưa đủ 7 ngày thì không cho đánh giá lần 2
+        if (count === 1 && diffDays < 7) {
+            alert('Bạn chỉ có thể đánh giá lần 2 sau khi đủ 7 ngày kể từ lần đánh giá đầu tiên.');
+            return;
+        }
+        if (reviewMedia.length > 5) {
+            alert("Chỉ được chọn tối đa 5 file ảnh/video!");
+            return;
+        }
         setReviewLoading(true);
         try {
             const formData = new FormData();
             formData.append('order_id', order.id);
-            formData.append('product_id', reviewItem.product_variant.product_id);
-            formData.append('product_variant_id', reviewItem.product_variant_id);
+            formData.append('product_id', reviewItem.product_variant?.product_id || reviewItem.product_variant?.product?.id);
+            formData.append('product_variant_id', reviewItem.product_variant?.id || reviewItem.product_variant_id);
             formData.append('rating', reviewRating);
             formData.append('content', reviewContent);
             reviewMedia.forEach(file => formData.append('media[]', file));
@@ -233,12 +250,12 @@ export default function OrderDetailPage() {
             setReviewMedia([]);
             fetchOrder();
         } catch (err) {
-            alert('Gửi đánh giá thất bại.');
-            if (err.response) {
-                console.error('Lỗi API:', err.response.data);
+             if (err.response?.data?.message) {
+                alert(err.response.data.message);
             } else {
-                console.error('Lỗi:', err);
+                alert('Gửi đánh giá thất bại.');
             }
+            console.error(err);
         } finally {
             setReviewLoading(false);
         }

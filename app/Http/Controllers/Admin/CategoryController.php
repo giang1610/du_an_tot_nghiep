@@ -48,7 +48,8 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $category = Category::findOrFail($id);
+        return view('admin.category.show', compact('category'));
     }
 
     /**
@@ -76,53 +77,53 @@ class CategoryController extends Controller
     //     //
     // }
     public function destroy($id)
-{
-    $category = Category::findOrFail($id);
+    {
+        $category = Category::findOrFail($id);
 
-    // Kiểm tra nếu danh mục có sản phẩm liên quan
-    if ($category->products()->count() > 0) {
+        // Kiểm tra nếu danh mục có sản phẩm liên quan
+        if ($category->products()->count() > 0) {
+            return redirect()->route('categories.index')
+                ->with('error', 'Không thể xóa danh mục vì đang chứa sản phẩm.');
+        }
+
+        // Nếu không có sản phẩm thì xóa
+        $category->delete();
+
         return redirect()->route('categories.index')
-            ->with('error', 'Không thể xóa danh mục vì đang chứa sản phẩm.');
+            ->with('success', 'Danh mục đã bị xóa vĩnh viễn.');
     }
 
-    // Nếu không có sản phẩm thì xóa
-    $category->delete();
+    // public function trash()
+    // {
+    //     $categories = Category::onlyTrashed()->get();
+    // return view('admin.category.trash', compact('categories'));
+    // }
 
-    return redirect()->route('categories.index')
-        ->with('success', 'Đã chuyển vào thùng rác');
-}
+    // // Khôi phục
+    // public function restore($id)
+    // {
+    //     Category::onlyTrashed()->findOrFail($id)->restore();
+    //     return redirect()->back()->with('success', 'Khôi phục thành công');
+    // }
 
-    public function trash()
-    {
-        $categories = Category::onlyTrashed()->get();
-    return view('admin.category.trash', compact('categories'));
-    }
+    // // Xóa vĩnh viễn
+    // public function forceDelete($id)
+    // {
+    //     Category::onlyTrashed()->findOrFail($id)->forceDelete();
+    //     return redirect()->back()->with('success', 'Xóa vĩnh viễn thành công');
+    // }
+    // //xóa tất cả
+    // public function deleteAll()
+    // {
+    //     Category::onlyTrashed()->forceDelete();
 
-    // Khôi phục
-    public function restore($id)
-    {
-        Category::onlyTrashed()->findOrFail($id)->restore();
-        return redirect()->back()->with('success', 'Khôi phục thành công');
-    }
+    //     return redirect()->back()->with('success', 'Đã xóa tất cả danh mục.');
+    // }
 
-    // Xóa vĩnh viễn
-    public function forceDelete($id)
-    {
-        Category::onlyTrashed()->findOrFail($id)->forceDelete();
-        return redirect()->back()->with('success', 'Xóa vĩnh viễn thành công');
-    }
-    //xóa tất cả
-    public function deleteAll()
-    {
-        Category::onlyTrashed()->forceDelete();
+    // public function restoreAll()
+    // {
+    //     Category::onlyTrashed()->restore();
 
-        return redirect()->back()->with('success', 'Đã xóa tất cả danh mục.');
-    }
-
-    public function restoreAll()
-    {
-        Category::onlyTrashed()->restore();
-
-        return redirect()->back()->with('success', 'Đã khôi phục tất cả danh mục.');
-    }
+    //     return redirect()->back()->with('success', 'Đã khôi phục tất cả danh mục.');
+    // }
 }

@@ -137,7 +137,7 @@
                             </td>
                             <td>
                                 {{ $order->user->name ?? 'Khách vãng lai' }}
-                                        <div class="text-muted small">
+                                <div class="text-muted small">
                                     {{ $order->customer_phone }}
                                 </div>
                             </td>
@@ -191,7 +191,7 @@
                                 @break
                                 @case('vnpay')
                                     <span class="badge bg-success">
-                                        <i class="fas fa-credit-card me-1"></i> Vnpay
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
                                     </span>
                                     @break
                                 @default
@@ -291,25 +291,106 @@
                                 @endswitch
                             </td>
                             <td>
-                                <div class="d-flex flex-column gap-2">
-                                    <a href="{{ route('orders.show', $order->id) }}"
-                                        class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="tooltip"
-                                        title="Xem chi tiết">
-                                        <span class="d-none d-md-inline">Xem chi tiết</span>
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                               {{-- xem chi tiết --}}
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <a href="{{ route('orders.show', $order->id) }}"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="tooltip"
+                                            title="Xem chi tiết">
+                                            
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {{-- chỉnh sửa trạng thái --}}
+                                        @if (!in_array($order->status, ['completed', 'cancelled', 'restocked','shipped','return_requested']))
+                                            
+                                           
+                                            <!-- Nút đổi trạng thái -->
+                                            <a href="javascript:void(0);"
+                                            class="btn btn-sm btn-outline-warning show-status-select"
+                                            data-order-id="{{ $order->id }}"
+                                            title="Đổi trạng thái đơn hàng">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </a>
+                                            
+                                                {{-- Form đổi trạng thái, ẩn mặc định --}}
+                                                <form action="{{ route('orders.update', $order->id) }}" method="POST"
+                                                    class="status-select-form position-absolute bg-white p-2 rounded shadow d-none"
+                                                    id="status-form-{{ $order->id }}"
+                                                    style="top: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; width: max-content;">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    @php
+                                                        $statusOptions = [
+                                                            'cancelled' => 'Hủy đơn hàng',
+                                                            'pending' => 'Chờ xử lý',
+                                                            'processing' => 'Đang xử lý',
+                                                            'picking' => 'Đang lấy hàng',
+                                                            'shipping' => 'Đang giao hàng',
+                                                            'shipped' => 'Đã giao hàng',
+                                                            'return_requested' => 'Yêu cầu hoàn hàng',
+                                                            'delivered' => 'Đã nhận hàng',
+                                                            'returned' => 'Đồng ý hoàn hàng',
+                                                            'restocked' => 'Hàng đã trả về kho',
+                                                            'completed' => 'Đơn hàng hoàn thành',
+                                                            'failed_1' => 'Giao hàng thất bại lần 1',
+                                                            'failed_2' => 'Giao hàng thất bại lần 2',
+                                                            'failed' => 'Giao hàng thất bại',
+                                                            'shipper_en_route' => 'Shipper đang đến lấy hàng',
+                                                        ];
+                                                        $statusFlow = ['pending', 'processing', 'picking', 'shipping', 'shipped'];
+                                                        $currentStatus = $order->status;
+                                                        $currentIndex = array_search($currentStatus, $statusFlow);
+                                                        $nextStatus = $statusFlow[$currentIndex + 1] ?? null;
+                                                    @endphp
 
-                                    @if (!in_array($order->status, ['completed', 'cancelled', 'restocked','shipped']))
-                                    <a href="{{ route('orders.edit', $order->id) }}"
-                                        class="btn btn-sm btn-outline-success"
-                                        data-bs-toggle="tooltip"
-                                        title="Cập nhật trạng thái">
-                                        <span class="d-none d-md-inline">Cập nhật</span>
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @endif
-                                </div>
+                                                    <select name="status" class="form-select form-select-sm" required onchange="this.form.submit()">
+                                                        <option value="{{ $currentStatus }}" selected disabled>
+                                                            {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                                        </option>
+                                                        {{-- Trạng thái tiếp theo trong flow --}}
+                                                        @if(in_array($currentStatus, $statusFlow) && $nextStatus)
+                                                            <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
+                                                        @endif
+
+                                                        {{-- Các trạng thái đặc biệt --}}
+                                                        @if ($currentStatus === 'shipping')
+                                                            {{-- <option value="shipped">{{ $statusOptions['shipped'] }}</option> --}}
+                                                            <option value="failed_1">{{ $statusOptions['failed_1'] }}</option>
+                                                        @elseif ($currentStatus === 'failed_1')
+                                                            <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                                            <option value="failed_2">{{ $statusOptions['failed_2'] }}</option>
+                                                        @elseif ($currentStatus === 'failed_2')
+                                                            <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                                            <option value="failed">{{ $statusOptions['failed'] }}</option>
+                                                        @elseif ($currentStatus === 'failed')
+                                                            <option value="restocked">{{ $statusOptions['restocked'] }}</option>
+                                                        @elseif ($currentStatus === 'returned')
+                                                            <option value="shipper_en_route">{{ $statusOptions['shipper_en_route'] }}</option>
+                                                        @elseif ($currentStatus === 'shipper_en_route')
+                                                            <option value="restocked">{{ $statusOptions['restocked'] }}</option>
+                                                        @endif
+
+                                                        {{-- Luôn cho phép hủy nếu chưa hoàn thành/hủy --}}
+                                                        @if (!in_array($currentStatus, ['cancelled', 'completed', 'shipped', 'shipping', 'restocked','failed','failed_1', 'failed_2','shipper_en_route','returned']))
+                                                            <option value="cancelled">{{ $statusOptions['cancelled'] }}</option>
+                                                        @endif
+                                                    </select>
+                                                    </form>
+                                            
+                                        @endif
+
+                                        {{-- xử lý hoàn hàng --}}
+                                        @if (in_array($order->status, ['return_requested']))
+                                        <a href="{{ route('orders.edit', $order->id) }}"
+                                            class="btn btn-sm btn-outline-success"
+                                            data-bs-toggle="tooltip"
+                                            title="Yêu cầu hoàn hàng">
+                                            <span class="d-none d-md-inline"></span>
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        @endif
+                                        </div>
+                                
                             </td>
                         </tr>
                         @endif
@@ -546,10 +627,46 @@
         });
     });
 </script>
-
 <script src="{{ asset('js/new_product.js') }}"></script>
+<script src="{{ asset('js/order/index.js') }}"></script>
 <script src="{{ asset('js/admin_status.js') }}"></script>
-<script src="{{ asset('js/admin.js') }}"></script>
+
+
+
+<style>
+      .status-select-form {
+        min-width: 200px;
+        max-width: 250px;
+        animation: fadeIn 0.15s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+
+{{-- xử lý chuyển trạng thái --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.show-status-select').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var orderId = btn.getAttribute('data-order-id');
+            var form = document.getElementById('status-form-' + orderId);
+            if (form) {
+                form.classList.toggle('d-none');
+            }
+        });
+    });
+});
+</script>
 
 
 @endpush
