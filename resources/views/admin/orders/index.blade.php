@@ -307,6 +307,7 @@
                                             <!-- Nút đổi trạng thái -->
                                             <a href="javascript:void(0);"
                                             class="btn btn-sm btn-outline-warning show-status-select"
+                                            id="button-remove-{{$order->id}}"
                                             data-order-id="{{ $order->id }}"
                                             title="Đổi trạng thái đơn hàng">
                                                 <i class="fas fa-exchange-alt"></i>
@@ -384,6 +385,7 @@
                                         <a href="{{ route('orders.edit', $order->id) }}"
                                             class="btn btn-sm btn-outline-success"
                                             data-bs-toggle="tooltip"
+                                            id="order-actions-{{ $order->id }}"
                                             title="Yêu cầu hoàn hàng">
                                             <span class="d-none d-md-inline"></span>
                                             <i class="fas fa-edit"></i>
@@ -628,7 +630,6 @@
     });
 </script>
 <script src="{{ asset('js/new_product.js') }}"></script>
-<script src="{{ asset('js/order/index.js') }}"></script>
 <script src="{{ asset('js/admin_status.js') }}"></script>
 
 
