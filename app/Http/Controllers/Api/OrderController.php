@@ -319,6 +319,7 @@ class OrderController extends Controller
             'shipping_address' => 'required|string',
             'customer_phone' => 'required|string',
             'customer_email' => 'required|email',
+            'notes' => 'nullable|string',
             'voucher_code' => 'nullable|string|exists:vouchers,code',
             'discount_amount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
@@ -376,6 +377,7 @@ class OrderController extends Controller
                 'shipping_address' => $request->shipping_address,
                 'customer_phone' => $request->customer_phone,
                 'customer_email' => $request->customer_email,
+
                 'subtotal' => $request->subtotal,
                 'tax' => $request->tax,
                 'shipping' => $request->shipping,
@@ -384,6 +386,7 @@ class OrderController extends Controller
                 'voucher_type' => $voucherData->type ?? null,
                 'voucher_id' => $voucherData->id ?? null,
                 'discount_amount' => $discountAmount ?? null,
+                'notes' => $request->notes ?? null,
                 'total' => $request->total - $discountAmount,
                 // 'total' => $request->total,
                 'status' => 'pending',
