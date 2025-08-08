@@ -70,14 +70,21 @@ export default function CustomNavbar() {
                   <span className="d-flex align-items-center">
                     <img
                       src={
-                        user.img_thumbnail
-                          ? `${process.env.REACT_APP_IMAGE_BASE_URL}/storage/${user.img_thumbnail}`
+                        user?.img_thumbnail
+                          ? `${process.env.REACT_APP_IMAGE_BASE_URL || ''}/storage/${encodeURIComponent(user.img_thumbnail)}`
                           : '/default-avatar.png'
                       }
                       alt="avatar"
-                      width="30"
-                      height="30"
                       className="rounded-circle me-2"
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-avatar.png';
+                      }}
                     />
                     {user.name}
                   </span>

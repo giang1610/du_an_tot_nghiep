@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Row, Col, Image, Modal, Carousel } from 'react-bootstrap';
 
-export default function ProductImageGallery({ images = [], productName, mainImage }) {
+export default function ProductImageGallery({ images = [], productName, mainImage, onClickMain }) {
   const [mainIndex, setMainIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
-  // Cập nhật ảnh chính theo mainImage nếu nó tồn tại trong images
+  // Cập nhật mainIndex khi mainImage thay đổi
   useEffect(() => {
     const index = images.findIndex(img => img.url === mainImage);
-    if (index !== -1) {
-      setMainIndex(index);
-    } else {
-      setMainIndex(0); // fallback nếu không tìm thấy
-    }
+    if (index !== -1) setMainIndex(index);
+    else setMainIndex(0);
   }, [mainImage, images]);
 
   const displayImage = images[mainIndex]?.url || 'https://via.placeholder.com/500x500?text=No+Image';
@@ -20,8 +17,17 @@ export default function ProductImageGallery({ images = [], productName, mainImag
   return (
     <>
       <Row>
-        {/* Thumbnail bên trái */}
-        <Col xs={2} className="d-flex flex-column gap-2">
+        {/* Cột ảnh phụ bên trái */}
+        <Col
+          xs={2}
+          className="d-flex flex-column gap-2"
+          style={{
+            maxHeight: 500,
+            overflowY: 'auto',
+            overflowX: 'hidden', //  <-- Ẩn thanh cuộn ngang
+            paddingRight: '0.5rem', // tùy chọn cho khoảng cách
+          }}
+        >
           {images.map((img, index) => (
             <Image
               key={img.id || index}
@@ -32,50 +38,54 @@ export default function ProductImageGallery({ images = [], productName, mainImag
                 objectFit: 'cover',
                 border: index === mainIndex ? '2px solid #000' : '1px solid #ddd',
                 cursor: 'pointer',
-                borderRadius: 4
+                borderRadius: 4,
+                flexShrink: 0,
+                display: 'block', // tránh inline-block margin overflow
               }}
               onClick={() => setMainIndex(index)}
               alt={productName}
+              thumbnail
+              draggable={false}
             />
           ))}
         </Col>
 
-        {/* Ảnh chính */}
+        {/* Cột ảnh chính bên phải */}
         <Col xs={10}>
           <Image
             src={displayImage}
             fluid
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setShowModal(true);
+              if (onClickMain) onClickMain(); 
+            }}
             style={{
               border: '1px solid #ccc',
               maxHeight: 500,
               objectFit: 'contain',
-              cursor: 'zoom-in'
+              cursor: 'zoom-in',
+              width: '100%',
             }}
             alt={productName}
           />
         </Col>
       </Row>
 
-      {/* Modal xem lớn */}
-      <Modal
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        size="lg"
-        centered
-      >
+      {/* Modal xem ảnh lớn */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>{productName}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Carousel activeIndex={mainIndex} onSelect={setMainIndex} interval={null}>
+          <Carousel activeIndex={mainIndex} onSelect={setMainIndex} interval={null} indicators={images.length > 1}>
             {images.map((img, idx) => (
               <Carousel.Item key={img.id || idx}>
                 <img
                   src={img.url}
-                  className="d-block w-100"
                   alt={productName}
+                  className="d-block w-100"
                   style={{ maxHeight: '80vh', objectFit: 'contain' }}
+                  draggable={false}
                 />
               </Carousel.Item>
             ))}
