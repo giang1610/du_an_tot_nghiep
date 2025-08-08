@@ -68,7 +68,6 @@ class User extends Authenticatable implements MustVerifyEmail
         // cần thêm dòng dưới nếu chưa có:
         'phone',
         'address',
-        
         'img_thumbnail',
         'role',
     ];
@@ -103,7 +102,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot('used')
             ->withTimestamps();
     }
-    
+
     public function orders()
     {
         return $this->hasMany(Order::class, 'user_id');

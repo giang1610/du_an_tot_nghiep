@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     window.Echo.connector.pusher.connection.bind('connected', function () {
-        console.log('[Pusher] ✅ Kết nối thành công!');
+        console.log(' Kết nối thành công! fail');
     });
 
     window.Echo.channel('admin-orders')
@@ -32,9 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const orderIdStr = data.id.toString();
             if (readOrderIds.has(orderIdStr)) return;
 
-            // Rung chuông nhẹ
-            bell.classList.add('bell-animate');
-            setTimeout(() => bell.classList.remove('bell-animate'), 1000);
+         
 
             // Toast đẹp hơn
             iziToast.show({
@@ -63,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <i class="bi bi-receipt text-primary fs-5"></i>
                 <div class="flex-grow-1">
                     <div>Đơn hàng: <strong>${orderNumber}</strong></div>
-                    <small class="text-muted">Đơn hàng mới hủy </small>
+                    <small class="text-muted text-light">Đơn hàng mới hủy </small>
                 </div>
                 <span class="dot-unread"></span>
             </a>

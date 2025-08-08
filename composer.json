@@ -2,7 +2,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.1",
@@ -16,6 +19,7 @@
         "laravel/tinker": "^2.8",
         "maatwebsite/excel": "^3.1",
         "phpoffice/phpspreadsheet": "^1.29",
+        "predis/predis": "^3.1",
         "pusher/pusher-php-server": "^7.2"
     },
     "require-dev": {
@@ -34,7 +38,11 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "classmap": [
+            "database/seeders",
+            "app/Services"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

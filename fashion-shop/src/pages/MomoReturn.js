@@ -1,133 +1,119 @@
-import axios from 'axios';
+// src/pages/MomoReturn.jsx
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Spinner, Alert, Button, Card, Row, Col, Image } from 'react-bootstrap';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
-const MomoReturn = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [message, setMessage] = useState('Đang xác minh kết quả...');
-  const [order, setOrder] = useState(null); // ✅ đúng
+const formatCurrency = (num) => (num ?? 0).toLocaleString();
+
+export default function MomoReturn() {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { removeSelectedItems } = useCart();
 
- useEffect(() => {
-  let isMounted = true;
+  useEffect(() => {
+    const fetchResult = async () => {
+      const orderId = searchParams.get('orderId');
+      const resultCode = searchParams.get('resultCode');
 
-  const verifyPayment = async () => {
-    const params = new URLSearchParams(location.search);
-    const orderId = params.get('orderId');
-    const resultCode = params.get('resultCode');
+      if (!orderId || !resultCode) {
+        setError('URL không hợp lệ');
+        setLoading(false);
+        return;
+      }
 
-    if (!orderId || !resultCode) {
-      if (isMounted) {
-        setMessage('Thông tin không hợp lệ.');
+      try {
+        const res = await axios.get(`http://localhost:8000/api/payment/momo/return?orderId=${orderId}&resultCode=${resultCode}`);
+        console.log('Kết quả API:', res.data);
+        setResult(res.data);
+        if (res.data?.data?.payment_status === 'paid') {
+          await removeSelectedItems();
+          localStorage.removeItem('buy_now');
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Lỗi xác minh thanh toán');
+      } finally {
         setLoading(false);
       }
-      return;
-    }
+    };
 
-    try {
-      const url = `http://localhost:8000/api/payment/momo-return?orderId=${encodeURIComponent(orderId)}&resultCode=${encodeURIComponent(resultCode)}`;
-      const res = await axios.get(url);
+    fetchResult();
+  }, [searchParams]);
 
-      if (isMounted) {
-        const msg = res.data.message || 'Xác minh thành công.';
-        setMessage(msg);
-        setOrder(res.data.order); 
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
-        if (res.data.success && resultCode === '0') {
-          // Đợi 2s rồi chuyển hướng
-          setTimeout(() => {
-            window.location.href = '/orders';
-          }, 2000);
-        }
-      }
-    } catch {
-      if (isMounted) {
-        setMessage('Không thể xác minh kết quả thanh toán.');
-      }
-    } finally {
-      if (isMounted) setLoading(false);
-    }
-  };
+  if (error) return <Alert variant="danger">{error}</Alert>;
 
-  verifyPayment();
-
-  return () => {
-    isMounted = false;
-  };
-}, [location.search]);
-
-
-  const handleBack = () => {
-    navigate('/orders');
-  };
+  const items = result?.data?.items || [];
+  const total = parseInt(result?.data?.total || 0);
 
   return (
-    <div className="container py-5" style={{maxWidth: 600}}>
-      <h3 className="mb-4 text-center">Kết quả thanh toán MoMo</h3>
-      {loading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{height: 150}}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="alert alert-info text-center">{message}</div>
-          {order ? (
-            <div className="card shadow-sm mb-4">
-              <div className="card-body">
-                <h5 className="card-title mb-3">Thông tin đơn hàng</h5>
-                <p><strong>Mã đơn hàng:</strong> #{order.order_number}</p>
-                <p><strong>Ngày đặt:</strong> {order.created_at ? new Date(order.created_at).toLocaleString() : '-'}</p>
-                <p><strong>Khách hàng:</strong> {order.customer_name || order.user?.name || '-'}</p>
-                <p><strong>Trạng thái đơn hàng:</strong> {order.status}</p>
-                <p>
-                  <strong>Trạng thái thanh toán:</strong>{' '}
-                  {order.payment_status === 'paid' ? (
-                    <span className="badge bg-success">Đã thanh toán</span>
-                  ) : (
-                    <span className="badge bg-warning text-dark">Chưa thanh toán</span>
-                  )}
-                </p>
-                <hr />
-                <h6>Danh sách sản phẩm:</h6>
-                <ul className="list-group mb-3">
-                  {order.items && order.items.length > 0 ? (
-                    order.items.map((item, idx) => (
-                      <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>{item.product_variant?.product?.name}</strong>
-                          <div className="text-muted" style={{fontSize: '0.95em'}}>
-                            {item.variant_name && <span>Phân loại: {item.variant_name}</span>}
-                          </div>
-                        </div>
-                        <span>
-                          {item.quantity} x {item.price?.toLocaleString()}₫
-                        </span>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="list-group-item">Không có sản phẩm nào.</li>
-                  )}
-                </ul>
-                <p className="text-end">
-                  <strong>Tổng tiền:</strong> {order.total_amount?.toLocaleString()}₫
-                </p>
-              </div>
-            </div>
+    <div className="container my-5" style={{ maxWidth: '1100px' }}>
+      <h4 className="mb-4 text-success">{result?.message}</h4>
+      <Row>
+        {/* Cột trái - Sản phẩm */}
+        <Col md={8} className="text-start">
+          <h5>Sản phẩm trong đơn hàng</h5>
+          {items.length === 0 ? (
+            <p>Không có sản phẩm.</p>
           ) : (
-            <div className="alert alert-warning">Không tìm thấy thông tin đơn hàng.</div>
+            <div>
+              {items.map((item, idx) => (
+                <Card key={idx} className="mb-3 shadow-sm">
+                  <Card.Body>
+                    <Row>
+                      <Col xs={3} md={2}>
+                        <Image
+                          src={item?.product_variant?.product?.img || '/placeholder.png'}
+                          alt={item?.product_variant?.product?.name}
+                          fluid
+                          rounded
+                        />
+                      </Col>
+                      <Col xs={9} md={10}>
+                        <h6>{item?.product_variant?.product?.name}</h6>
+                        <p className="mb-1">
+                          Màu: {item?.product_variant?.color?.name} | Size: {item?.product_variant?.size?.name}
+                        </p>
+                        <p className="mb-1">Số lượng: {item.quantity}</p>
+                        <p className="mb-0 text-danger">
+                          Giá: {formatCurrency(total)}₫
+                        </p>
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
           )}
-          <div className="text-center">
-            <button className="btn btn-primary" onClick={handleBack}>
-              Quay lại trang đơn hàng
-            </button>
-          </div>
-        </>
-      )}
+        </Col>
+
+        {/* Cột phải - Thông tin đơn hàng */}
+        <Col md={4}>
+          <Card className="mb-4">
+            <Card.Body>
+              <p>Mã đơn hàng: <strong>{result?.data?.order_number}</strong></p>
+              <p>Trạng thái đơn hàng: <strong className="text-primary">{result?.data?.status}</strong></p>
+              <p>Trạng thái thanh toán: <strong>
+                {result?.data?.payment_status === 'paid' ? (
+                  <span className="text-success">Đã thanh toán</span>
+                ) : (
+                  <span className="text-danger">Chưa thanh toán</span>
+                )}
+              </strong></p>
+              <hr />
+              <p><strong>Tổng cộng:</strong> {formatCurrency(total)}₫</p>
+              <div className="text-center mt-3">
+                <Button variant="primary" onClick={() => navigate('/')}>Về trang chủ</Button>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
-};
-
-export default MomoReturn;
+}

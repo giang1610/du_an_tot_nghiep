@@ -13,5 +13,10 @@ class VoucherUser extends Pivot
         'user_id',
         'used'
     ];
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
+    }
 }
 

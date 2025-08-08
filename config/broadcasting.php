@@ -40,6 +40,12 @@ return [
             ],
         ],
 
+        // 'redis' => [
+        //     'driver' => 'redis',
+        //     'connection' => 'default', // Sử dụng connection Redis mặc định
+        //     'client' => env('REDIS_CLIENT', 'phpredis'), // hoặc 'predis'
+        // ],
+        
         'log' => [
             'driver' => 'log',
         ],

@@ -1,0 +1,46 @@
+.text_chat {
+  background-color: rgba(7, 7, 7, 0.959);
+  border-radius: 16px;
+  color: white;
+  text-rendering: optimizeLegibility;
+  margin: 2px;
+  padding: 1px 10px;
+
+}
+ .chat {
+  content: "";
+  background-image: url('https://image.dienthoaivui.com.vn/x,webp,q90/https://dashboard.dienthoaivui.com.vn/uploads/wp-content/uploads/2023/02/hinh-nen-phi-hanh-gia-01.jpg');
+  background-size: cover;
+}
+.text_long{
+    max-width: 190px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.container-relative {
+  position: relative;
+}
+
+
+.icon_chat {
+  position: fixed;
+  bottom: 2%;
+  right: 2%;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  z-index: 1050;
+  cursor: pointer;
+}
+
+
+
+
+.user-message {
+  background-color: #ade7ba;
+  border-bottom-right-radius: 0;
+  color: black;
+  margin-left: 5%;
+
+}

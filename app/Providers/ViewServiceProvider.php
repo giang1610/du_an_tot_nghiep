@@ -24,7 +24,7 @@ class ViewServiceProvider extends ServiceProvider
     public function boot()
     {
         View::composer('components.notification', function ($view) {
-            $latestOrders = Order::latest()->take(10)->get(['id', 'order_number']);
+            $latestOrders = Order::latest()->take(10)->get(['id', 'order_number','status','payment_method','payment_status']);
             $view->with('latestOrders', $latestOrders);
         });
     }

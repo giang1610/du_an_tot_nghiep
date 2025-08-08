@@ -6,7 +6,7 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
                 <li class="breadcrumb-item"><a href="{{ route('orders.index') }}" style="text-decoration: none">Danh sách đơn hàng</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Cập nhật trạng thái đơn hàng</li>
+                <li class="breadcrumb-item active" aria-current="page">xử lý các đơn yêu cầu hoàn hàng</li>
             </ol>
         </nav>
 
@@ -25,11 +25,25 @@
                         @if($order->return_media)
                             <div>
                                 <strong>File minh chứng:</strong>
-                                @if(Str::endsWith($order->return_media, ['.jpg','.jpeg','.png']))
-                                    <img src="{{ asset('storage/' . $order->return_media) }}" alt="Ảnh lỗi" width="200" />
-                                @else
-                                    <video src="{{ asset('storage/' . $order->return_media) }}" controls width="300"></video>
-                                @endif
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    @php
+                                        $mediaList = [];
+                                        try {
+                                            $mediaList = is_array($order->return_media)
+                                                ? $order->return_media
+                                                : json_decode($order->return_media, true) ?? [];
+                                        } catch (\Throwable $e) {
+                                            $mediaList = [];
+                                        }
+                                    @endphp
+                                    @foreach($mediaList as $media)
+                                        @if(Str::endsWith($media, ['.jpg','.jpeg','.png']))
+                                            <img src="{{ asset('storage/' . $media) }}" alt="Ảnh lỗi" width="150" class="rounded border" />
+                                        @elseif(Str::endsWith($media, ['.mp4','.mov']))
+                                            <video src="{{ asset('storage/' . $media) }}" controls width="200" class="rounded border"></video>
+                                        @endif
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -53,7 +67,7 @@
         @endif
 
         {{-- Form cập nhật trạng thái đơn hàng --}}
-        <form action="{{ route('orders.update', $order->id) }}" method="POST" class="bg-white rounded-3 shadow p-4">
+        {{-- <form action="{{ route('orders.update', $order->id) }}" method="POST" class="bg-white rounded-3 shadow p-4">
             @csrf
             @method('PUT')
 
@@ -73,17 +87,22 @@
             <!-- Trạng thái đơn hàng -->
             @php
                 $statusOptions = [
-                    'cancelled' => 'Đã hủy',
+                    'cancelled' => 'Hủy đơn hàng',
                     'pending' => 'Chờ xử lý',
                     'processing' => 'Đang xử lý',
                     'picking' => 'Đang lấy hàng',
                     'shipping' => 'Đang giao hàng',
                     'shipped' => 'Đã giao hàng',
-                    'delivered' => 'Đã nhận hàng',
                     'return_requested' => 'Yêu cầu hoàn hàng',
-                    'returned' => 'Hoàn hàng',
+                    'delivered' => 'Đã nhận hàng',
+                    'returned' => 'Đồng ý hoàn hàng',
+                    'restocked' => 'Hàng đã trả về kho',
                     'completed' => 'Đơn hàng hoàn thành',
+                    'failed_1' => 'Giao hàng thất bại lần 1',
+                    'failed_2' => 'Giao hàng thất bại lần 2',
                     'failed' => 'Giao hàng thất bại',
+                    'shipper_en_route' => 'Shipper đang đến lấy hàng',
+
                 ];
                 $statusFlow = ['pending', 'processing', 'picking', 'shipping', 'shipped'];
                 $currentStatus = old('status', $order->status ?? 'pending');
@@ -101,8 +120,9 @@
                         <input type="text" class="form-control bg-light fw-bold" value="{{ $statusOptions[$currentStatus] }}" readonly>
                     </div>
 
+
                     <div class="mb-3">
-                        @if ($currentStatus == 'delivered' && !in_array($order->status, ['return_requested', 'returned']))
+                        @if ($currentStatus == 'shipped' && !in_array($order->status, ['return_requested', 'returned']))
                             <input type="text" class="form-control bg-light fw-bold" value="{{ $statusOptions[$currentStatus] }}" readonly>
                             <div class="alert alert-info mt-3">
                                 <i class="bi bi-info-circle me-2"></i>
@@ -112,7 +132,18 @@
                         @else
                             <label class="form-label">Chọn trạng thái mới</label>
                             <select name="status" class="form-select" required>
-                                @if (!in_array($currentStatus, ['shipped', 'completed', 'cancelled']))
+                                 @if ($currentStatus === 'returned')
+                                     <option value="{{ $currentStatus }}" selected disabled>
+                                    {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                     </option>
+                                    <option value="shipper_en_route">{{ $statusOptions['shipper_en_route'] }}</option>
+                                @elseif ($currentStatus === 'shipper_en_route')
+                                    <option value="{{ $currentStatus }}" selected disabled>
+                                        {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                    </option>
+                                    <option value="restocked">{{ $statusOptions['restocked'] }}</option>
+                                @else
+                                @if (!in_array($currentStatus, ['shipped', 'completed', 'failed', 'returned', 'return_requested','failed_1', 'failed_2', 'returning']))
                                     <option value="cancelled" {{ $currentStatus == 'cancelled' ? 'selected' : '' }}>
                                         {{ $statusOptions['cancelled'] }}
                                     </option>
@@ -120,29 +151,59 @@
                                 <option value="{{ $currentStatus }}" selected disabled>
                                     {{ $statusOptions[$currentStatus] }} (hiện tại)
                                 </option>
-                                @if ($nextStatus)
+                                {{-- @if ($nextStatus)
                                     <option value="{{ $nextStatus }}">
                                         {{ $statusOptions[$nextStatus] }}
                                     </option>
+                                @endif --}}
+                                {{-- @if (in_array($currentStatus, ['cancelled', 'shipped', 'completed']))
+                                <div class="alert alert-warning mt-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Đơn hàng đã ở trạng thái <b>{{ $statusOptions[$currentStatus] }}</b>, không thể đổi trạng thái nữa.
+                                </div>
                                 @endif
+                                 @if ($currentStatus === 'shipping')
+                                <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                <option value="failed_1">Giao hàng thất bại lần 1</option>
+                                @elseif ($currentStatus === 'failed_1')
+                                    <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                    <option value="failed_2">Giao hàng thất bại lần 2</option>
+                                @elseif ($currentStatus === 'failed_2')
+                                    <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                    <option value="failed">{{ $statusOptions['failed'] }}</option>
+                                @elseif ($currentStatus === 'failed')
+                                     <option value="restocked">Hàng đã trả về kho</option>
+                                @elseif ($nextStatus)
+                                    <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
+                                @endif
+                                @if ($currentStatus === 'returned')
+                                    <option value="shipper_en_route">Shipped đang lấy hàng</option>
+                                @endif
+                                 @if ($currentStatus === 'shipper_en_route')
+                                    <option value="restocked">Hàng đã trả về kho</option>
+                                @endif
+
+                            @endif
+
                             </select>
-                        </div>
+                    </div>
                         <div class="alert alert-info mt-3">
                             <i class="bi bi-info-circle me-2"></i>
                             Chỉ có thể chuyển sang trạng thái kế tiếp trong quy trình hoặc hủy đơn hàng.
                         </div>
                         @endif
+
                 </div>
             </div>
 
-            @if (!($currentStatus == 'delivered' && !in_array($order->status, ['return_requested', 'returning', 'returned'])) && $order->status !== 'return_requested')
+            @if (!in_array($currentStatus, ['shipped','cancelled','completed','restocked']) && $order->status !== 'return_requested')
                 <div class="text-end">
                     <button type="submit" class="btn btn-primary px-4 py-2">
                         <i class="bi bi-check-circle me-2"></i>Cập nhật trạng thái
                     </button>
                 </div>
             @endif
-        </form>
+        </form> --}} 
     </div>
 
     <style>

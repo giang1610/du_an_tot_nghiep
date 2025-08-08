@@ -13,10 +13,11 @@ class AutoCompleteOrders extends Command
 
     public function handle()
     {
-        // Đơn hàng completed > 3 ngày, không có yêu cầu hoàn hàng
-        $completedOr = Order::where('status', 'completed')
-            ->whereNotNull('completed_at')
-            ->where('completed_at', '<=', Carbon::now()->subDays(3))
+        // Đơn hàng đã giao (shipped) > 3 ngày, chưa có yêu cầu hoàn hàng
+        $completedOr = Order::where('status', 'shipped')
+            ->whereNotNull('shipped_at')
+            ->where('shipped_at', '<=', Carbon::now()->subDays(3))
+            ->whereNotIn('status', ['return_requested', 'returned'])
             ->get();
 
         // Đơn hàng returned > 3 ngày

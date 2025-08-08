@@ -117,7 +117,7 @@ public function store(ProductRequest $request)
                         'size_id' => $variantData['size_id'] ?? null,
                         'image' => $variantImagePath, // Lưu đường dẫn ảnh biến thể
                     ]);
-                    
+
 
                     $product->variants()->save($variant);
                     // Lưu tồn kho
@@ -125,8 +125,8 @@ public function store(ProductRequest $request)
                     $variant->stock()->create(['quantity' => $quantity]);
                 }
             }
-           
-  
+
+
 
             broadcast(new ProductChanged);
             DB::commit(); // Hoàn tất transaction nếu mọi thứ thành công
@@ -145,7 +145,40 @@ public function store(ProductRequest $request)
      */
     public function show(string $id)
     {
-        //
+       $product = Product::with(['category', 'variants.stock', 'colors', 'sizes'])->findOrFail($id);
+    $categories = Category::where('status', 1)->get();
+    $colors = Color::all();
+    $sizes = Size::all();
+
+    // Chuẩn bị dữ liệu variants với stock status chính xác
+    $variantsToDisplay = $product->variants->map(function($variant) {
+        return [
+            'id' => $variant->id,
+            'sku' => $variant->sku,
+            'price' => $variant->price,
+            'sale_price' => $variant->sale_price,
+            'sale_start_date' => $variant->sale_start_date,
+            'sale_end_date' => $variant->sale_end_date,
+            'color_id' => $variant->color_id,
+            'size_id' => $variant->size_id,
+            'image' => $variant->image,
+            'stock_quantity' => $variant->stock ? $variant->stock->quantity : 0,
+            'stock_status' => $variant->stock && $variant->stock->quantity > 0 ? '1' : '0',
+        ];
+    })->toArray();
+
+    // Ưu tiên dùng dữ liệu cũ nếu có (khi validate lỗi)
+    if (old('variants')) {
+        $variantsToDisplay = old('variants');
+    }
+
+    return view('admin.products.show', compact(
+        'product',
+        'categories',
+        'colors',
+        'sizes',
+        'variantsToDisplay'
+    ));
     }
 
     /**
@@ -181,10 +214,10 @@ public function store(ProductRequest $request)
     }
 
     return view('admin.products.edit', compact(
-        'product', 
-        'categories', 
-        'colors', 
-        'sizes', 
+        'product',
+        'categories',
+        'colors',
+        'sizes',
         'variantsToDisplay'
     ));
 }
@@ -472,96 +505,128 @@ public function update(ProductRequest $request, $id)
     //     }
     // }
 
-   public function destroy($id)
+  
+public function destroy($id)
 {
     try {
-        $product = Product::findOrFail($id);
-        $product->delete(); // XÓA MỀM
-        //realTime
-         broadcast(new ProductChanged);
-        return redirect()->route('products.index')->with('success', 'Sản phẩm đã được đưa vào thùng rác!');
+        $product = Product::with('variants')->findOrFail($id);
+
+        // Lấy tất cả id biến thể của sản phẩm
+        $variantIds = $product->variants->pluck('id')->toArray();
+
+        // Kiểm tra xem có đơn hàng nào liên quan không
+        $orderItemCount = \DB::table('order_items')
+            ->whereIn('product_variant_id', $variantIds)
+            ->count();
+
+        if ($orderItemCount > 0) {
+            return back()->with('error', 'Không thể xóa sản phẩm vì đã có đơn hàng liên quan!');
+        }
+
+        // Xóa ảnh đại diện nếu có
+        if ($product->thumbnail && \Storage::disk('public')->exists($product->thumbnail)) {
+            \Storage::disk('public')->delete($product->thumbnail);
+        }
+
+        // Xóa tất cả biến thể và ảnh của chúng
+        foreach ($product->variants as $variant) {
+            if ($variant->image && \Storage::disk('public')->exists($variant->image)) {
+                \Storage::disk('public')->delete($variant->image);
+            }
+            // Xóa stock nếu có
+            if (method_exists($variant, 'stock')) {
+                $variant->stock()->delete();
+            }
+            $variant->delete();
+        }
+
+        // Xóa sản phẩm (xóa cứng)
+        $product->forceDelete();
+
+        broadcast(new ProductChanged);
+        return redirect()->route('products.index')->with('success', 'Sản phẩm đã được xóa vĩnh viễn!');
     } catch (\Exception $e) {
         return back()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
     }
 }
     //xóa mềm sản phẩm
     //thùng rác sản phẩm
-    public function trash()
-    {
-        $products = Product::onlyTrashed()->with('category')->paginate(10);
-        //realTimeProduct
-       
-        return view('admin.products.trash', compact('products'));
-    }
-    
-    // Khôi phục sản phẩm đã xóa mềm
-    public function restore($id)
-    {
-        Product::withTrashed()->findOrFail($id)->restore();
-         //realTimeProduct
-        broadcast(new ProductChanged);
-        return back()->with('success', 'Khôi phục sản phẩm thành công!');
-    }
-    // Khôi phục tất cả sản phẩm đã xóa mềm
-    public function restoreAll()
-    {
-        Product::onlyTrashed()->restore();
-         //realTimeProduct
-        broadcast(new ProductChanged);
-        return back()->with('success', 'Khôi phục tất cả sản phẩm thành công!');
-    }
+    // public function trash()
+    // {
+    //     $products = Product::onlyTrashed()->with('category')->paginate(10);
+    //     //realTimeProduct
 
-    // Xóa vĩnh viễn sản phẩm
-    public function forceDelete($id)
-    {
-        $product = Product::onlyTrashed()->with('variants')->findOrFail($id);
+    //     return view('admin.products.trash', compact('products'));
+    // }
 
-        // Xóa tất cả biến thể (và stock nếu có)
-        foreach ($product->variants as $variant) {
-            // Xóa stock nếu có
-            if (method_exists($variant, 'stock')) {
-                $variant->stock()->delete();
-            }
-            // Xóa ảnh biến thể nếu cần
-            if ($variant->image && Storage::disk('public')->exists($variant->image)) {
-                Storage::disk('public')->delete($variant->image);
-            }
-            $variant->forceDelete();
-        }
+    // // Khôi phục sản phẩm đã xóa mềm
+    // public function restore($id)
+    // {
+    //     Product::withTrashed()->findOrFail($id)->restore();
+    //      //realTimeProduct
+    //     broadcast(new ProductChanged);
+    //     return back()->with('success', 'Khôi phục sản phẩm thành công!');
+    // }
+    // // Khôi phục tất cả sản phẩm đã xóa mềm
+    // public function restoreAll()
+    // {
+    //     Product::onlyTrashed()->restore();
+    //      //realTimeProduct
+    //     broadcast(new ProductChanged);
+    //     return back()->with('success', 'Khôi phục tất cả sản phẩm thành công!');
+    // }
 
-        // Xóa ảnh đại diện nếu cần
-        if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
-            Storage::disk('public')->delete($product->thumbnail);
-        }
+    // // Xóa vĩnh viễn sản phẩm
+    // public function forceDelete($id)
+    // {
+    //     $product = Product::onlyTrashed()->with('variants')->findOrFail($id);
 
-        $product->forceDelete();
+    //     // Xóa tất cả biến thể (và stock nếu có)
+    //     foreach ($product->variants as $variant) {
+    //         // Xóa stock nếu có
+    //         if (method_exists($variant, 'stock')) {
+    //             $variant->stock()->delete();
+    //         }
+    //         // Xóa ảnh biến thể nếu cần
+    //         if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+    //             Storage::disk('public')->delete($variant->image);
+    //         }
+    //         $variant->forceDelete();
+    //     }
 
-        return redirect()->back()->with('success', 'Xóa vĩnh viễn thành công');
-    }
+    //     // Xóa ảnh đại diện nếu cần
+    //     if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+    //         Storage::disk('public')->delete($product->thumbnail);
+    //     }
 
-    // Xóa vĩnh viễn tất cả sản phẩm đã xóa mềm
+    //     $product->forceDelete();
 
-    public function deleteAll()
-    {
-        $products = Product::onlyTrashed()->with('variants')->get();
+    //     return redirect()->back()->with('success', 'Xóa vĩnh viễn thành công');
+    // }
 
-        foreach ($products as $product) {
-            foreach ($product->variants as $variant) {
-                if (method_exists($variant, 'stock')) {
-                    $variant->stock()->delete();
-                }
-                if ($variant->image && Storage::disk('public')->exists($variant->image)) {
-                    Storage::disk('public')->delete($variant->image);
-                }
-                $variant->forceDelete();
-            }
-            if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
-                Storage::disk('public')->delete($product->thumbnail);
-            }
-            $product->forceDelete();
-        }
-        //realTimeProduct
-        broadcast(new ProductChanged);
-        return back()->with('success', 'Đã xóa vĩnh viễn tất cả sản phẩm!');
-    }
+    // // Xóa vĩnh viễn tất cả sản phẩm đã xóa mềm
+
+    // public function deleteAll()
+    // {
+    //     $products = Product::onlyTrashed()->with('variants')->get();
+
+    //     foreach ($products as $product) {
+    //         foreach ($product->variants as $variant) {
+    //             if (method_exists($variant, 'stock')) {
+    //                 $variant->stock()->delete();
+    //             }
+    //             if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+    //                 Storage::disk('public')->delete($variant->image);
+    //             }
+    //             $variant->forceDelete();
+    //         }
+    //         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+    //             Storage::disk('public')->delete($product->thumbnail);
+    //         }
+    //         $product->forceDelete();
+    //     }
+    //     //realTimeProduct
+    //     broadcast(new ProductChanged);
+    //     return back()->with('success', 'Đã xóa vĩnh viễn tất cả sản phẩm!');
+    // }
 }

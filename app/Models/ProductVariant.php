@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property int $product_id
@@ -131,4 +131,8 @@ class ProductVariant extends Model
 
 
     protected $appends = ['img', 'images_urls','thumbnail'];
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class, 'product_variant_id');
+    }
 }

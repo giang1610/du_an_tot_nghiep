@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 <style>
     .row{
-         background-image: linear-gradient(rgb(148, 114, 87), rgb(198, 210, 223));
+        background-image: url('https://i.pinimg.com/736x/6d/38/13/6d38136429fa84b7f4011209e74bdc8c.jpg');
          border-radius: 10px;
     }
 </style>
@@ -21,7 +21,7 @@
 <script>
     window.chatUserId = {{ $user->id }};
 </script>
-<script src="{{ asset('js/chat-realtime.js') }}"></script>
+<script src="{{ asset('js/chat/chat-realtime.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const chatBox = document.getElementById('chat-box');

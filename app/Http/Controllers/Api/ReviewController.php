@@ -13,58 +13,69 @@ class ReviewController extends Controller
 {
     public function store(Request $request)
     {
+        // Validate cơ bản
         $request->validate([
             'order_id' => 'required|exists:orders,id',
             'product_variant_id' => 'required|exists:product_variants,id',
             'rating' => 'required|integer|min:1|max:5',
             'content' => 'nullable|string',
-            'media' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // 10MB
+            'media' => 'nullable|array',
+            'media.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240', // Mỗi file <= 10MB
         ]);
 
         $user = auth()->user();
         $order = Order::findOrFail($request->order_id);
 
-        // Kiểm tra quyền sở hữu đơn hàng
+        // ✅ 1. Kiểm tra quyền sở hữu đơn hàng
         if ($order->user_id !== $user->id) {
-            return response()->json(['error' => 'Bạn không có quyền đánh giá đơn hàng này.'], 403);
+            return response()->json(['message' => 'Bạn không có quyền đánh giá đơn hàng này.'], 403);
         }
 
-        // Kiểm tra trạng thái đơn hàng
-        if ($order->status !== 'delivered') {
-            return response()->json(['error' => 'Chỉ có thể đánh giá khi đơn đã được nhận.'], 400);
+        // ✅ 2. Kiểm tra trạng thái đơn hàng
+        if ($order->status !== 'completed') {
+            return response()->json(['message' => 'Chỉ có thể đánh giá khi đơn đã được nhận.'], 400);
         }
 
-        // Kiểm tra số lần đánh giá
+        // ✅ 3. Kiểm tra số lần đánh giá trước đó
         $existingReviews = Review::where([
             ['user_id', '=', $user->id],
             ['order_id', '=', $order->id],
             ['product_variant_id', '=', $request->product_variant_id]
-        ])->get();
+        ])->orderByDesc('created_at')->get();
 
-        if ($existingReviews->count() >= 2) {
-            return response()->json(['error' => 'Bạn chỉ được đánh giá tối đa 2 lần cho sản phẩm này.'], 400);
+        $reviewCount = $existingReviews->count();
+
+        if ($reviewCount >= 2) {
+            return response()->json(['message' => 'Bạn chỉ được đánh giá tối đa 2 lần cho sản phẩm này.'], 400);
         }
 
-        // Xác định lần đánh giá
+        // ✅ 4. Xác định lần đánh giá
         $reviewRound = $existingReviews->contains('review_round', 1) ? 2 : 1;
 
-        // Nếu là lần 2 thì kiểm tra ngày giao hàng >= 7 ngày
+        // ✅ 5. Nếu là lần 2: kiểm tra ngày giao hàng >= 7 ngày
         if ($reviewRound === 2) {
-            if (empty($order->delivered_at)) {
-                return response()->json(['error' => 'Không xác định được ngày giao hàng.'], 400);
+            if (empty($order->completed_at)) {
+                return response()->json(['message' => 'Không xác định được ngày hoàn tất đơn hàng.'], 400);
             }
-            if (Carbon::parse($order->delivered_at)->diffInDays(now()) < 7) {
-                return response()->json(['error' => 'Bạn chỉ có thể đánh giá lần 2 sau 7 ngày kể từ ngày giao hàng.'], 400);
+
+            $daysSinceCompleted = Carbon::parse($order->completed_at)->diffInDays(now());
+
+            if ($daysSinceCompleted < 7) {
+                return response()->json([
+                    'message' => 'Bạn chỉ có thể đánh giá lần 2 sau 7 ngày kể từ ngày giao hàng.'
+                ], 422);
             }
         }
 
-        $mediaPath = null;
-        // Xử lý file media nếu có
+        // ✅ 6. Xử lý media nếu có
+        $mediaPaths = [];
         if ($request->hasFile('media')) {
-            $mediaPath = $request->file('media')->store('reviews', 'public');
+            foreach ($request->file('media') as $file) {
+                $mediaPaths[] = $file->store('reviews', 'public');
+            }
         }
 
-            // Tạo đánh giá
+        // ✅ 7. Tạo đánh giá
         $review = Review::create([
             'user_id' => $user->id,
             'order_id' => $order->id,
@@ -72,11 +83,16 @@ class ReviewController extends Controller
             'review_round' => $reviewRound,
             'rating' => $request->rating,
             'content' => $request->content,
-            'media' => $mediaPath,
+            'media' => json_encode($mediaPaths),
+            'status' => 1, // mặc định hiển thị
         ]);
 
-        return response()->json(['message' => 'Đánh giá thành công', 'review' => $review], 201);
+        return response()->json([
+            'message' => 'Đánh giá thành công.',
+            'review' => $review
+        ], 201);
     }
+
 
     // Lấy danh sách đánh giá cho 1 sản phẩm (theo variant hoặc tổng hợp)
     public function listByProduct($productId)
@@ -93,30 +109,30 @@ class ReviewController extends Controller
 
     // Lấy danh sách đánh giá cho 1 variant cụ thể
     public function receivedOrders(Request $request)
-{
-    $user = $request->user();
-    $variantId = $request->query('product_variant_id');
+    {
+        $user = $request->user();
+        $variantId = $request->query('product_variant_id');
 
-    $order = Order::where('user_id', $user->id)
-        ->where('status', 'delivered')
-        ->whereHas('items', fn($q) => $q->where('product_variant_id', $variantId))
-        ->latest()->first();
+        $order = Order::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->whereHas('items', fn($q) => $q->where('product_variant_id', $variantId))
+            ->latest()->first();
 
-    return response()->json([
-        'received' => !!$order,
-        'order_id' => $order?->id
-    ]);
-}
-// Lấy review qua query ?product_id=...
-public function getByProductQuery(Request $request)
-{
-    $productId = $request->query('product_id');
-    if (!$productId) {
-        return response()->json(['error' => 'Thiếu product_id'], 400);
+        return response()->json([
+            'received' => !!$order,
+            'order_id' => $order?->id
+        ]);
     }
+    // Lấy review qua query ?product_id=...
+    public function getByProductQuery(Request $request)
+    {
+        $productId = $request->query('product_id');
+        if (!$productId) {
+            return response()->json(['error' => 'Thiếu product_id'], 400);
+        }
 
-    return $this->listByProduct($productId);
-}
+        return $this->listByProduct($productId);
+    }
 
 
 }

@@ -15,56 +15,31 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+    const FILTER_TODAY = 'today';
+    const FILTER_WEEK = '7days';
+    const FILTER_MONTH = '30days';
+    const FILTER_THIS_MONTH = 'this_month';
+    const FILTER_YEAR = '1year';
+    const FILTER_THIS_YEAR = 'this_year';
+    const FILTER_CUSTOM = 'custom';
+
     public function revenueReport(Request $request)
     {
-        // Xử lý các tùy chọn lọc nhanh
-        $filter = $request->input('filter', 'today');
-
-        // Thiết lập ngày mặc định
-        switch ($filter) {
-            case 'today':
-                $startDate = Carbon::today()->startOfDay();
-                $endDate = Carbon::now()->endOfDay();
-                $fromDate = $startDate->toDateString();
-                $toDate = $endDate->toDateString();
-                break;
-
-            case '7days':
-                $startDate = Carbon::now()->subDays(7)->startOfDay();
-                $endDate = Carbon::now()->endOfDay();
-                $fromDate = $startDate->toDateString();
-                $toDate = $endDate->toDateString();
-                break;
-
-            case '30days':
-                $startDate = Carbon::now()->subDays(30)->startOfDay();
-                $endDate = Carbon::now()->endOfDay();
-                $fromDate = $startDate->toDateString();
-                $toDate = $endDate->toDateString();
-                break;
-
-            case 'thismonth':
-                $startDate = Carbon::now()->startOfMonth()->startOfDay();
-                $endDate = Carbon::now()->endOfDay();
-                $fromDate = $startDate->toDateString();
-                $toDate = $endDate->toDateString();
-                break;
-
-            case 'custom':
-                $fromDate = $request->input('from_date', Carbon::now()->subDays(30)->toDateString());
-                $toDate = $request->input('to_date', Carbon::now()->toDateString());
-                $startDate = Carbon::parse($fromDate)->startOfDay();
-                $endDate = Carbon::parse($toDate)->endOfDay();
-                break;
+        $filter = $request->input('filter', self::FILTER_TODAY);
+        $compareWith = $request->input('compare_with', null);
+        
+        $dateRange = $this->getDateRange($filter, $request);
+        $startDate = $dateRange['start'];
+        $endDate = $dateRange['end'];
+        $fromDate = $dateRange['from'];
+        $toDate = $dateRange['to'];
+        
+        $compareData = null;
+        if ($compareWith) {
+            $compareRange = $this->getComparisonDateRange($filter, $compareWith, $startDate, $endDate);
+            $compareData = $this->getReportData($compareRange['start'], $compareRange['end']);
         }
 
-        // Validate
-        $request->validate([
-            'from_date' => 'nullable|date',
-            'to_date' => 'nullable|date|after_or_equal:from_date',
-        ]);
-
-        // Lấy dữ liệu
         $reportData = $this->getReportData($startDate, $endDate);
         $isEmpty = $reportData['summary']->completed_orders === 0;
 
@@ -72,26 +47,118 @@ class ReportController extends Controller
             'fromDate' => $fromDate,
             'toDate' => $toDate,
             'filter' => $filter,
+            'compareWith' => $compareWith,
             'isEmpty' => $isEmpty,
-            'dateRange' => $this->generateDateRangeArray($startDate, $endDate)
+            'compareData' => $compareData,
         ]));
     }
 
-    // public function exportRevenueReport(Request $request)
-    // {
-    //     $fromDate = $request->input('from_date', Carbon::now()->subDays(30)->toDateString());
-    //     $toDate = $request->input('to_date', Carbon::now()->toDateString());
-    //     $startDate = Carbon::parse($fromDate)->startOfDay();
-    //     $endDate = Carbon::parse($toDate)->endOfDay();
+    protected function getDateRange($filter, $request)
+    {
+        switch ($filter) {
+            case self::FILTER_TODAY:
+                $startDate = Carbon::today()->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                $fromDate = $startDate->toDateString();
+                $toDate = $endDate->toDateString();
+                break;
 
-    //     $reportData = $this->getReportData($startDate, $endDate);
+            case self::FILTER_WEEK:
+                $startDate = Carbon::now()->subDays(7)->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                $fromDate = $startDate->toDateString();
+                $toDate = $endDate->toDateString();
+                break;
 
-    //     $fileName = 'bao_cao_doanh_thu_' . $fromDate . '_den_' . $toDate . '.xlsx';
+            case self::FILTER_MONTH:
+                $startDate = Carbon::now()->subDays(30)->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                $fromDate = $startDate->toDateString();
+                $toDate = $endDate->toDateString();
+                break;
 
-    //     return Excel::download(new RevenueReportExport($reportData, $fromDate, $toDate), $fileName);
-    // }
+            case self::FILTER_THIS_MONTH:
+                $startDate = Carbon::now()->startOfMonth()->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                $fromDate = $startDate->toDateString();
+                $toDate = $endDate->toDateString();
+                break;
 
-    protected function getReportData($startDate, $endDate) // Lấy dữ liệu báo cáo
+            case self::FILTER_YEAR:
+                $startDate = Carbon::now()->subYear()->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                $fromDate = $startDate->toDateString();
+                $toDate = $endDate->toDateString();
+                break;
+
+            case self::FILTER_THIS_YEAR:
+                $startDate = Carbon::now()->startOfYear()->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                $fromDate = $startDate->toDateString();
+                $toDate = $endDate->toDateString();
+                break;
+
+            case self::FILTER_CUSTOM:
+                $fromDate = $request->input('from_date', Carbon::now()->subDays(30)->toDateString());
+                $toDate = $request->input('to_date', Carbon::now()->toDateString());
+                $startDate = Carbon::parse($fromDate)->startOfDay();
+                $endDate = Carbon::parse($toDate)->endOfDay();
+                break;
+
+            default:
+                $startDate = Carbon::now()->subDays(30)->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                $fromDate = $startDate->toDateString();
+                $toDate = $endDate->toDateString();
+        }
+
+        return [
+            'start' => $startDate,
+            'end' => $endDate,
+            'from' => $fromDate,
+            'to' => $toDate,
+        ];
+    }
+
+    protected function getComparisonDateRange($currentFilter, $compareWith, $currentStart, $currentEnd)
+    {
+        $daysDiff = $currentStart->diffInDays($currentEnd);
+        
+        switch ($compareWith) {
+            case 'previous_period':
+                $periodDiff = $currentEnd->diffInDays($currentStart);
+                return [
+                    'start' => $currentStart->copy()->subDays($periodDiff + 1),
+                    'end' => $currentStart->copy()->subDay(),
+                ];
+                
+            case 'previous_year':
+                return [
+                    'start' => $currentStart->copy()->subYear(),
+                    'end' => $currentEnd->copy()->subYear(),
+                ];
+                
+            case 'previous_month':
+                return [
+                    'start' => $currentStart->copy()->subMonth(),
+                    'end' => $currentEnd->copy()->subMonth(),
+                ];
+                
+            case 'previous_week':
+                return [
+                    'start' => $currentStart->copy()->subWeek(),
+                    'end' => $currentEnd->copy()->subWeek(),
+                ];
+                
+            default:
+                return [
+                    'start' => $currentStart->copy()->subDays($daysDiff + 1),
+                    'end' => $currentStart->copy()->subDay(),
+                ];
+        }
+    }
+
+    protected function getReportData($startDate, $endDate)
     {
         return [
             'summary' => $this->getRevenueSummary($startDate, $endDate),
@@ -102,67 +169,37 @@ class ReportController extends Controller
         ];
     }
 
-    protected function generateDateRangeArray($startDate, $endDate) // Tạo mảng ngày trong khoảng thời gian
-    {
-        $dates = [];
-        $current = clone $startDate;
-
-        while ($current <= $endDate) {
-            $dates[] = $current->toDateString();
-            $current->addDay();
-        }
-
-        return $dates;
-    }
-
-    protected function getRevenueSummary($startDate, $endDate) // Lấy tóm tắt doanh thu
+    protected function getRevenueSummary($startDate, $endDate)
     {
         return DB::table('orders')
             ->select([
-                DB::raw("SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END) as total_revenue"),
-                DB::raw('COUNT(*) as total_orders'),
                 DB::raw("SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END) as completed_revenue"),
                 DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_orders"),
-                DB::raw("SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as paid_orders"),
                 DB::raw("AVG(CASE WHEN status = 'completed' THEN total ELSE NULL END) as avg_order_value"),
-                DB::raw("MAX(total) as max_order_value"),
-                DB::raw("MIN(CASE WHEN status = 'completed' THEN total ELSE NULL END) as min_completed_order_value")
+                // Tính lợi nhuận dựa trên giá gốc (nếu không có cost_price thì coi như lợi nhuận = doanh thu)
+                DB::raw("SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END) as gross_profit"),
+                DB::raw("100 as profit_margin") // Giả sử lợi nhuận 100% nếu không có giá gốc
             ])
             ->whereBetween('created_at', [$startDate, $endDate])
             ->first();
     }
 
-    protected function getRevenueByDate($startDate, $endDate) // Lấy doanh thu theo ngày
+    protected function getRevenueByDate($startDate, $endDate)
     {
-        $rawData = DB::table('orders')
+        return DB::table('orders')
             ->select([
                 DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(total) as total_revenue'),
-                DB::raw('COUNT(*) as order_count')
+                DB::raw('SUM(CASE WHEN status = "completed" THEN total ELSE 0 END) as total_revenue'),
+                DB::raw('SUM(CASE WHEN status = "completed" THEN total ELSE 0 END) as gross_profit'),
+                DB::raw('COUNT(CASE WHEN status = "completed" THEN 1 ELSE NULL END) as order_count')
             ])
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', 'completed')
             ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy('date')
             ->get();
-
-        // Điền đầy đủ các ngày trong khoảng
-        $dateRange = $this->generateDateRangeArray($startDate, $endDate);
-        $result = [];
-
-        foreach ($dateRange as $date) {
-            $found = $rawData->firstWhere('date', $date);
-            $result[] = [
-                'date' => $date,
-                'total_revenue' => $found ? $found->total_revenue : 0,
-                'order_count' => $found ? $found->order_count : 0
-            ];
-        }
-
-        return collect($result);
     }
 
-    protected function getTopProducts($startDate, $endDate, $limit = 10) // Lấy top sản phẩm bán chạy
+    protected function getTopProducts($startDate, $endDate, $limit = 10)
     {
         return DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -176,10 +213,13 @@ class ReportController extends Controller
                 'product_variants.image',
                 'product_variants.sku',
                 DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue')
+                DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue'),
+                // Giả sử lợi nhuận = doanh thu nếu không có giá gốc
+                DB::raw('SUM(order_items.quantity * order_items.price) as gross_profit'),
+                DB::raw('100 as profit_margin')
             ])
             ->groupBy('products.id', 'products.name', 'product_variants.image', 'product_variants.sku')
-            ->orderByDesc('total_quantity')
+            ->orderByDesc('total_revenue')
             ->limit($limit)
             ->get();
     }
@@ -201,13 +241,8 @@ class ReportController extends Controller
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',
             'processing' => 'Đang xử lý',
-            'pending' => 'Chờ xác nhận',
+            'pending' => 'Chờ xử lý',
             'shipped' => 'Đã giao hàng',
-            'picking' => 'Đang lấy hàng',
-            'shipping' => 'Đang vận chuyển',
-            'refunded' => 'Đã hoàn tiền',
-            'failed' => 'Thất bại',
-            'returned' => 'Đã trả hàng',
         ];
 
         return $statuses->map(function ($item) use ($statusMap) {
@@ -216,7 +251,7 @@ class ReportController extends Controller
         });
     }
 
-    protected function getRevenueByCategory($startDate, $endDate) // Thống kê doanh thu theo danh mục
+    protected function getRevenueByCategory($startDate, $endDate)
     {
         return Category::query()
             ->select([
@@ -224,7 +259,10 @@ class ReportController extends Controller
                 'categories.name',
                 'categories.slug',
                 DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue'),
-                DB::raw('SUM(order_items.quantity) as total_quantity')
+                DB::raw('SUM(order_items.quantity) as total_quantity'),
+                // Giả sử lợi nhuận = doanh thu nếu không có giá gốc
+                DB::raw('SUM(order_items.quantity * order_items.price) as gross_profit'),
+                DB::raw('100 as profit_margin')
             ])
             ->join('products', 'categories.id', '=', 'products.category_id')
             ->join('product_variants', 'products.id', '=', 'product_variants.product_id')
@@ -237,37 +275,14 @@ class ReportController extends Controller
             ->get();
     }
 
-    public function inventoryReport(Request $request) // Báo cáo tồn kho
+    public function exportRevenueReport(Request $request)
     {
-        // Báo cáo tồn kho
-        $inventoryStats = Product::query()
-            ->with(['variants', 'category'])
-            ->select([
-                'products.id',
-                'products.name',
-                'products.sku',
-                'products.price',
-                DB::raw('SUM(product_variants.quantity) as total_quantity'),
-                DB::raw('SUM(product_variants.quantity * products.price) as inventory_value')
-            ])
-            ->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
-            ->groupBy('products.id', 'products.name', 'products.sku', 'products.price')
-            ->orderBy('total_quantity')
-            ->get();
+        $filter = $request->input('filter', self::FILTER_TODAY);
+        $dateRange = $this->getDateRange($filter, $request);
+        
+        $reportData = $this->getReportData($dateRange['start'], $dateRange['end']);
+        $fileName = 'revenue_report_' . $dateRange['from'] . '_to_' . $dateRange['to'] . '.xlsx';
 
-        // Sản phẩm sắp hết hàng (dưới 10)
-        $lowStockProducts = Product::query()
-            ->whereHas('variants', function ($query) {
-                $query->where('quantity', '<', 10);
-            })
-            ->with(['variants' => function ($query) {
-                $query->where('quantity', '<', 10);
-            }, 'category'])
-            ->get();
-
-        return view('admin.reports.inventory', compact(
-            'inventoryStats',
-            'lowStockProducts'
-        ));
+        return Excel::download(new RevenueReportExport($reportData, $dateRange['from'], $dateRange['to']), $fileName);
     }
 }

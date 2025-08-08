@@ -47,4 +47,25 @@
   75% { transform: translateX(-5px); }
   100% { transform: translateX(0); }
 }
+.cart-icon:hover {
+  color: #0d6efd;
+  transform: scale(1.1);
+  transition: all 0.2s ease-in-out;
+}
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.03);
+}
+.cart-icon .cart-badge {
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 

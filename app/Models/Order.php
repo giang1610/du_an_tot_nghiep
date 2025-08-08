@@ -73,17 +73,21 @@ class Order extends Model
         'voucher_code',
         'voucher_discount',
         'voucher_type',
+         'voucher_id',
+        'discount_amount',
         'notes',
-        'delivered_at',
-        'completed_at',
+        'delivered_at'=> 'datetime',
+        'completed_at' => 'datetime',
         'return_requested_at',
         'return_reason',
         'return_media',
-        'returned_at',
+        'returned_at'=> 'datetime',
         'return_status',
         'note_admin',
     ];
-
+    protected $casts = [
+        'expired_at' => 'datetime',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);

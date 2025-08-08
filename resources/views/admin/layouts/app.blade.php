@@ -4,16 +4,56 @@
   <meta charset="UTF-8">
   <title>@yield('title', 'Admin Dashboard')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <!-- Poppins + Bootstrap + Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <link href="vendors/simplebar/simplebar.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
+    <link href="assets/css/theme-rtl.min.css" type="text/css" rel="stylesheet" id="style-rtl">
+    <link href="assets/css/theme.min.css" type="text/css" rel="stylesheet" id="style-default">
+    <link href="assets/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
+    <link href="assets/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
+    <script>
+      var phoenixIsRTL = window.config.config.phoenixIsRTL;
+      if (phoenixIsRTL) {
+        var linkDefault = document.getElementById('style-default');
+        var userLinkDefault = document.getElementById('user-style-default');
+        linkDefault.setAttribute('disabled', true);
+        userLinkDefault.setAttribute('disabled', true);
+        document.querySelector('html').setAttribute('dir', 'rtl');
+      } else {
+        var linkRTL = document.getElementById('style-rtl');
+        var userLinkRTL = document.getElementById('user-style-rtl');
+        linkRTL.setAttribute('disabled', true);
+        userLinkRTL.setAttribute('disabled', true);
+      }
+    </script>
+    <link href="vendors/leaflet/leaflet.css" rel="stylesheet">
+    <link href="vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
+    <link href="vendors/leaflet.markercluster/MarkerCluster.Default.css" rel="stylesheet">
+        <link rel="apple-touch-icon" sizes="180x180" href="assets/img/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicons/favicon-16x16.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicons/favicon.ico">
+    <link rel="manifest" href="assets/img/favicons/manifest.json">
+    <meta name="msapplication-TileImage" content="assets/img/favicons/mstile-150x150.png">
+    <meta name="theme-color" content="#ffffff">
+    <script src="vendors/simplebar/simplebar.min.js"></script>
+    <script src="assets/js/config.js"></script>
 
  
   <!-- linkcss Notification -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
+
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root{--full:260px;--mini:72px;--radius:10px;--primary:#2563eb;--active-dark:#1e2a48}
@@ -92,6 +132,7 @@
     .dark-mode .btn-icon{background:#1f2937;border-color:#3b3f63;color:#cbd5e1}
     .dark-mode .admin-name{color:#fff}
   </style>
+  @stack('styles')
 </head>
 <body>
 
@@ -107,7 +148,7 @@
   <ul class="nav flex-column px-2" id="menuList">
     <!-- Dashboard -->
 <li class="nav-item menu-item" data-title="dashboard">
-  <a href="{{ route('admin') }}" class="nav-link {{ request()->routeIs('admin') ? 'active' : '' }}">
+  <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
     <i class="bi bi-grid"></i><span class="menu-text">Dashboard</span>
   </a>
 </li>
@@ -120,6 +161,16 @@
   <div id="catMenu" class="collapse ps-3 {{ request()->routeIs('categories.*') ? 'show' : '' }}">
     <a href="{{ route('categories.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('categories.index') ? 'active' : '' }}" data-title="danh sách danh mục">Danh sách</a>
     <a href="{{ route('categories.create') }}" class="nav-link py-2 menu-item {{ request()->routeIs('categories.create') ? 'active' : '' }}" data-title="thêm danh mục">Thêm mới</a>
+  </div>
+</li>
+
+<!-- Bình luận -->
+<li class="nav-item menu-parent" data-title="reviews">
+  <a class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catMenu2" aria-expanded="{{ request()->routeIs('reviews.*') ? 'true' : 'false' }}">
+    <i class="bi bi-chat-dots"></i><span class="menu-text">Bình luận</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <div id="catMenu2" class="collapse ps-3 {{ request()->routeIs('reviews.*') ? 'show' : '' }}">
+    <a href="{{ route('reviews.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('reviews.index') ? 'active' : '' }}" data-title="danh sách bình luận">Danh sách</a>
   </div>
 </li>
 
@@ -139,10 +190,10 @@
   <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#ordersMenu" aria-expanded="{{ request()->routeIs('orders.*') ? 'true' : 'false' }}">
     <i class="bi bi-receipt"></i><span class="menu-text">Đơn hàng</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
-  <div id="ordersMenu" class="collapse ps-3">
+  <div id="ordersMenu" class="collapse ps-3 overflow-auto " style="max-height: 300px;">
         <a href="{{ route('orders.index') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Danh sách</a>
         <a href="{{ route('orders.cancelled') }}" class="nav-link py-2 menu-item" data-title="danh sách sản phẩm">Đơn đã huỷ</a>
-        <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lí</a>
+        <a href="{{ route('orders.pending') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn chờ xử lý</a>
         <a href="{{ route('orders.processing') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đơn đang xử lý</a>
         <a href="{{ route('orders.picking') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang lấy hàng</a>
         <a href="{{ route('orders.shipping') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đang giao hàng</a>
@@ -154,18 +205,18 @@
         <a href="{{ route('orders.returned') }}" class="nav-link py-2 menu-item" data-title="thêm sản phẩm">Đã trả hàng</a>
     </li>
     <!-- Khuyến mãi -->
-    <!-- <li class="nav-item menu-parent" data-title="vouchers">
-      <a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#voucherMenu" aria-expanded="{{ request()->routeIs('vouchers.*') ? 'true' : 'false' }}">
+    {{-- <li class="nav-item menu-parent" data-title="vouchers">
+      <a class="nav-link" data-bs-toggle="collapse" href="#catMenu2">
         <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
       </a>
-      <div id="catMenu" class="collapse ps-3">
+      <div id="catMenu2" class="collapse ps-3">
         <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item" data-title="danh sách khuyến mãi">Danh sách</a>
         <a href="{{ route('vouchers.create') }}" class="nav-link py-2 menu-item" data-title="thêm khuyến mãi">Thêm mới</a>
       </div>
-    </li> -->
+    </li>  --}}
 <li class="nav-item menu-parent" data-title="vouchers">
   <a class="nav-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catvoucher" aria-expanded="{{ request()->routeIs('vouchers.*') ? 'true' : 'false' }}">
-    <i class="bi bi-folder"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-gift"></i><span class="menu-text">Khuyến mãi</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <div id="catvoucher" class="collapse ps-3 {{ request()->routeIs('vouchers.*') ? 'show' : '' }}">
     <a href="{{ route('vouchers.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('vouchers.index') ? 'active' : '' }}" data-title="danh sách danh mục">Danh sách</a>
@@ -231,8 +282,8 @@
         <ul class="dropdown-menu dropdown-menu-end shadow">
           <li class="dropdown-header">{{ Auth::user()->name ?? 'Admin' }}<br><small class="text-muted">{{ Auth::user()->email ?? 'admin@example.com' }}</small></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li>
+          {{-- <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
+          <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li> --}}
           <li><hr class="dropdown-divider"></li>
           <li>
             <form action="{{ route('logout') }}" method="POST">@csrf
@@ -243,6 +294,7 @@
       </div>
     </div>
   </header>
+  
 
   <!-- MAIN CONTENT -->
   <main class="pt-1" id="mainContent">
@@ -258,6 +310,8 @@
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script src="{{ asset('js/echo-setup.js') }}"></script>
 <script src="{{ asset('js/notification_RealTime.js') }}"></script>
+<script src="{{ asset('js/fail.js') }}"></script>
+
 
 {{-- chatbox --}}
 
@@ -265,7 +319,7 @@
     window.currentUserId = {!! json_encode(Auth::id()) !!};
 </script>
 
-<script src="{{ asset('js/typing.js') }}"></script>
+<script src="{{ asset('js/chat/typing.js') }}"></script>
 
 
 {{-- chatbox --}}
@@ -332,6 +386,7 @@
 
 
 @yield('scripts')
+@stack('scripts')
 
 </body>
 </html>

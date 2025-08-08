@@ -49,9 +49,10 @@
                         <option value="failed_2" {{ request('status') == 'failed_2' ? 'selected' : '' }}>Giao hàng thất bại lần 2</option>
                         <option value="returning" {{ request('status') == 'returning' ? 'selected' : '' }}>Đang trả hàng</option>
                         <option value="return_requested" {{ request('status') == 'return_requested' ? 'selected' : '' }}>Yêu cầu trả hàng</option>
-                        <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
-                        
-                        
+                        <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Đồng ý hoàn hàng</option>
+                        <option value="restocked" {{ request('status') == 'restocked' ? 'selected' : '' }}>Hàng đã trả về kho</option>
+
+
                     </select>
                 </div>
 
@@ -122,6 +123,11 @@
                     </thead>
                     <tbody>
                         @forelse ($orders as $order)
+                        @php
+                            $isOnline = in_array($order->payment_method, ['vnpay', 'momo']);
+                            $isUnpaid = $order->payment_status != 'paid';
+                        @endphp
+                         @if(!($isOnline && $isUnpaid))
                         <tr>
                             <td>
                                 <strong>{{ $order->order_number ?? 'ORD-' . $order->id }}</strong>
@@ -183,6 +189,11 @@
                                     <i class="fas fa-mobile-alt me-1"></i> Momo
                                 </span>
                                 @break
+                                @case('vnpay')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                    </span>
+                                    @break
                                 @default
                                 <span class="badge bg-light text-dark">
                                     <i class="fas fa-question me-1"></i> Khác
@@ -200,15 +211,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td>
-                                <strong>{{ number_format($order->total) }} VNĐ</strong>
-                                @if($order->discount > 0)
-                                <div class="text-danger small">
-                                    <i class="fas fa-tag me-1"></i> Giảm {{ number_format($order->discount) }}₫
-                                </div>
-                                @endif
-                            </td>
-                            <td>
+                            <td id="order-status-{{ $order->id }}">
                                 @switch($order->status)
                                 @case('pending')
                                 <span class="badge bg-warning text-dark">
@@ -235,11 +238,6 @@
                                     <i class="fas fa-check-circle me-1"></i> Đã giao hàng
                                 </span>
                                 @break
-                                {{-- @case('delivered')
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i> Hoàn thành
-                                </span>
-                                @break --}}
                                 @case('completed')
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-double me-1"></i> Hoàn thành
@@ -260,10 +258,11 @@
                                     <i class="fas fa-times-circle me-1"></i> Giao hàng thất bại lần 2
                                 </span>
                                 @break
-                                @case('returning')
-                                <span class="badge bg-warning text-dark">
-                                    <i class="fas fa-undo me-1"></i> Đang hoàn hàng
+                                @case('restocked')
+                                <span class="badge bg-success">
+                                    <i class="fas fa-warehouse me-1"></i> Hàng đã trả về kho
                                 </span>
+                                @break
                                 @break
                                 @case('return_requested')
                                 <span class="badge bg-info">
@@ -272,9 +271,14 @@
                                 @break
                                 @case('returned')
                                 <span class="badge bg-secondary">
-                                    <i class="fas fa-undo-alt me-1"></i> Hoàn hàng
+                                    <i class="fas fa-undo-alt me-1"></i> Đồng ý hoàn hàng
+                                </span>
+                                 @case('shipper_en_route')
+                                <span class="badge bg-info text-dark">
+                                    <i class="fas fa-truck-loading me-1"></i> Shipper lấy hàng
                                 </span>
                                 @break
+
                                 @case('cancelled')
                                 <span class="badge bg-danger">
                                     <i class="fas fa-times-circle me-1"></i> Đã hủy
@@ -287,27 +291,111 @@
                                 @endswitch
                             </td>
                             <td>
-                                <div class="d-flex flex-column gap-2">
-                                    <a href="{{ route('orders.show', $order->id) }}"
-                                        class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="tooltip"
-                                        title="Xem chi tiết">
-                                        <span class="d-none d-md-inline">Xem chi tiết</span>
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                               {{-- xem chi tiết --}}
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <a href="{{ route('orders.show', $order->id) }}"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="tooltip"
+                                            title="Xem chi tiết">
+                                            
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {{-- chỉnh sửa trạng thái --}}
+                                        @if (!in_array($order->status, ['completed', 'cancelled', 'restocked','shipped','return_requested']))
+                                            
+                                           
+                                            <!-- Nút đổi trạng thái -->
+                                            <a href="javascript:void(0);"
+                                            class="btn btn-sm btn-outline-warning show-status-select"
+                                            id="button-remove-{{$order->id}}"
+                                            data-order-id="{{ $order->id }}"
+                                            title="Đổi trạng thái đơn hàng">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </a>
+                                            
+                                                {{-- Form đổi trạng thái, ẩn mặc định --}}
+                                                <form action="{{ route('orders.update', $order->id) }}" method="POST"
+                                                    class="status-select-form position-absolute bg-white p-2 rounded shadow d-none"
+                                                    id="status-form-{{ $order->id }}"
+                                                    style="top: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; width: max-content;">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    @php
+                                                        $statusOptions = [
+                                                            'cancelled' => 'Hủy đơn hàng',
+                                                            'pending' => 'Chờ xử lý',
+                                                            'processing' => 'Đang xử lý',
+                                                            'picking' => 'Đang lấy hàng',
+                                                            'shipping' => 'Đang giao hàng',
+                                                            'shipped' => 'Đã giao hàng',
+                                                            'return_requested' => 'Yêu cầu hoàn hàng',
+                                                            'delivered' => 'Đã nhận hàng',
+                                                            'returned' => 'Đồng ý hoàn hàng',
+                                                            'restocked' => 'Hàng đã trả về kho',
+                                                            'completed' => 'Đơn hàng hoàn thành',
+                                                            'failed_1' => 'Giao hàng thất bại lần 1',
+                                                            'failed_2' => 'Giao hàng thất bại lần 2',
+                                                            'failed' => 'Giao hàng thất bại',
+                                                            'shipper_en_route' => 'Shipper đang đến lấy hàng',
+                                                        ];
+                                                        $statusFlow = ['pending', 'processing', 'picking', 'shipping', 'shipped'];
+                                                        $currentStatus = $order->status;
+                                                        $currentIndex = array_search($currentStatus, $statusFlow);
+                                                        $nextStatus = $statusFlow[$currentIndex + 1] ?? null;
+                                                    @endphp
 
-                                    @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
-                                    <a href="{{ route('orders.edit', $order->id) }}"
-                                        class="btn btn-sm btn-outline-success"
-                                        data-bs-toggle="tooltip"
-                                        title="Cập nhật trạng thái">
-                                        <span class="d-none d-md-inline">Cập nhật</span>
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @endif
-                                </div>
+                                                    <select name="status" class="form-select form-select-sm" required onchange="this.form.submit()">
+                                                        <option value="{{ $currentStatus }}" selected disabled>
+                                                            {{ $statusOptions[$currentStatus] }} (hiện tại)
+                                                        </option>
+                                                        {{-- Trạng thái tiếp theo trong flow --}}
+                                                        @if(in_array($currentStatus, $statusFlow) && $nextStatus)
+                                                            <option value="{{ $nextStatus }}">{{ $statusOptions[$nextStatus] }}</option>
+                                                        @endif
+
+                                                        {{-- Các trạng thái đặc biệt --}}
+                                                        @if ($currentStatus === 'shipping')
+                                                            {{-- <option value="shipped">{{ $statusOptions['shipped'] }}</option> --}}
+                                                            <option value="failed_1">{{ $statusOptions['failed_1'] }}</option>
+                                                        @elseif ($currentStatus === 'failed_1')
+                                                            <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                                            <option value="failed_2">{{ $statusOptions['failed_2'] }}</option>
+                                                        @elseif ($currentStatus === 'failed_2')
+                                                            <option value="shipped">{{ $statusOptions['shipped'] }}</option>
+                                                            <option value="failed">{{ $statusOptions['failed'] }}</option>
+                                                        @elseif ($currentStatus === 'failed')
+                                                            <option value="restocked">{{ $statusOptions['restocked'] }}</option>
+                                                        @elseif ($currentStatus === 'returned')
+                                                            <option value="shipper_en_route">{{ $statusOptions['shipper_en_route'] }}</option>
+                                                        @elseif ($currentStatus === 'shipper_en_route')
+                                                            <option value="restocked">{{ $statusOptions['restocked'] }}</option>
+                                                        @endif
+
+                                                        {{-- Luôn cho phép hủy nếu chưa hoàn thành/hủy --}}
+                                                        @if (!in_array($currentStatus, ['cancelled', 'completed', 'shipped', 'shipping', 'restocked','failed','failed_1', 'failed_2','shipper_en_route','returned']))
+                                                            <option value="cancelled">{{ $statusOptions['cancelled'] }}</option>
+                                                        @endif
+                                                    </select>
+                                                    </form>
+                                            
+                                        @endif
+
+                                        {{-- xử lý hoàn hàng --}}
+                                        @if (in_array($order->status, ['return_requested']))
+                                        <a href="{{ route('orders.edit', $order->id) }}"
+                                            class="btn btn-sm btn-outline-success"
+                                            data-bs-toggle="tooltip"
+                                            id="order-actions-{{ $order->id }}"
+                                            title="Yêu cầu hoàn hàng">
+                                            <span class="d-none d-md-inline"></span>
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        @endif
+                                        </div>
+                                
                             </td>
                         </tr>
+                        @endif
                         @empty
                         <tr>
                             <td colspan="8" class="text-center py-4">
@@ -327,7 +415,7 @@
                 </table>
 
                 <!-- Mobile view -->
-                <div class="d-md-none">
+                {{-- <div class="d-md-none">
                     @forelse ($orders as $order)
                     <div class="card mb-3">
                         <div class="card-header bg-light d-flex justify-content-between">
@@ -379,14 +467,6 @@
                                     <i class="fas fa-question me-1"></i> Không rõ
                                 </span>
                                 @endswitch
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 7a55765037e668cddf5d993c421aca690eda95b5
-=======
-                                
->>>>>>> 07d2692ccc54961bf57ca6f74b42ec96b2ff8671
                             </div>
                         </div>
                         <div class="card-body">
@@ -431,29 +511,26 @@
                                 <strong>Thanh toán:</strong>
                                 @switch($order->payment_method)
                                 @case('cod')
-                                <span class="badge bg-secondary">
-                                    <i class="fas fa-money-bill-wave me-1"></i> COD
-                                </span>
-                                @break
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-money-bill-wave me-1"></i> COD
+                                    </span>
+                                    @break
                                 @case('momo')
-                                <span class="badge bg-danger">
-                                    <i class="fas fa-mobile-alt me-1"></i> Momo
-                                </span>
-                                @break
+                                    <span style="background-color: #A50064; color: white" class="badge">
+                                        <i class="fas fa-mobile-alt me-1"></i> Momo
+                                    </span>
+                                    @break
+
+                                @case('vnpay')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                    </span>
+                                    @break
                                 @default
-                                <span class="badge bg-light text-dark">
-                                    <i class="fas fa-question me-1"></i> Khác
-                                </span>
-                                @endswitch
-                                @if($order->payment_status == 'paid')
-                                <span class="text-success ms-2">
-                                    <i class="fas fa-check-circle me-1"></i> Đã thanh toán
-                                </span>
-                                @else
-                                <span class="text-warning ms-2">
-                                    <i class="fas fa-clock me-1"></i> Chưa thanh toán
-                                </span>
-                                @endif
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-question me-1"></i> Khác
+                                    </span>
+                            @endswitch
                             </div>
 
                             <div class="mb-3">
@@ -471,7 +548,7 @@
                                     class="btn btn-sm btn-outline-primary flex-grow-1">
                                     <i class="fas fa-eye me-1"></i> Chi tiết
                                 </a>
-                                
+
                                 @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
                                 <a href="{{ route('orders.edit', $order->id) }}"
                                     class="btn btn-sm btn-outline-success flex-grow-1">
@@ -494,7 +571,7 @@
                         </div>
                     </div>
                     @endforelse
-                </div>
+                </div> --}}
             </div>
 
             @if($orders->hasPages())
@@ -552,4 +629,45 @@
         });
     });
 </script>
+<script src="{{ asset('js/new_product.js') }}"></script>
+<script src="{{ asset('js/admin_status.js') }}"></script>
+
+
+
+<style>
+      .status-select-form {
+        min-width: 200px;
+        max-width: 250px;
+        animation: fadeIn 0.15s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+
+{{-- xử lý chuyển trạng thái --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.show-status-select').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var orderId = btn.getAttribute('data-order-id');
+            var form = document.getElementById('status-form-' + orderId);
+            if (form) {
+                form.classList.toggle('d-none');
+            }
+        });
+    });
+});
+</script>
+
+
 @endpush
