@@ -2,6 +2,13 @@
 
 @section('content')
     <div class="container-fluid px-4">
+        @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
         <nav aria-label="breadcrumb" class="mt-2">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/admin" style="text-decoration: none">Trang chủ</a></li>
@@ -39,13 +46,21 @@
                 @case('cancelled') bg-danger @break
                 @default bg-light text-dark @endswitch ms-2">
                         {{ match ($order->status) {
+                             'cancelled' => 'Hủy đơn hàng',
                             'pending' => 'Chờ xử lý',
                             'processing' => 'Đang xử lý',
                             'picking' => 'Đang lấy hàng',
                             'shipping' => 'Đang giao hàng',
                             'shipped' => 'Đã giao hàng',
-                            'completed' => 'Hoàn thành',
-                            'cancelled' => 'Đã hủy',
+                            'return_requested' => 'Yêu cầu hoàn hàng',
+                            'delivered' => 'Đã nhận hàng',
+                            'returned' => 'Đồng ý hoàn hàng',
+                            'restocked' => 'Hàng đã trả về kho',
+                            'completed' => 'Đơn hàng hoàn thành',
+                            'failed_1' => 'Giao hàng thất bại lần 1',
+                            'failed_2' => 'Giao hàng thất bại lần 2',
+                            'failed' => 'Giao hàng thất bại',
+                            'shipper_en_route' => 'Shipper đang đến lấy hàng',
                             default => ucfirst($order->status),
                         } }}
                     </span>
@@ -62,6 +77,42 @@
                         <div class="card h-100">
                             <div class="card-header bg-light">
                                 <h5 class="mb-0"><i class="bi bi-person "></i>Thông tin khách hàng</h5>
+                                <a href="#"  class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editCustomerModal"><i class="bi bi-pencil-square"></i></a>
+                            </div>
+                            <!-- Modal cập nhật thông tin khách hàng -->
+                            <div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <form method="POST" action="{{ route('orders.change_phone_address', $order->id) }}">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="editCustomerModalLabel">Cập nhật số điện thoại và địa chỉ khách hàng</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="customer_phone" class="form-label">Số điện thoại</label>
+                                            <input type="text" class="form-control" id="customer_phone" name="customer_phone" value="{{ old('customer_phone', $order->customer_phone) }}">
+                                            @error('customer_phone')
+                                                <div class="text-danger small">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="shipping_address" class="form-label">Địa chỉ giao hàng</label>
+                                            <input type="text" class="form-control" id="shipping_address" name="shipping_address"  value="{{ old('shipping_address', $order->shipping_address) }}">
+                                            @error('shipping_address')
+                                                <div class="text-danger small">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                                        </div>
+                                    </div>
+                                    </form>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <ul class="list-unstyled mb-0">
@@ -286,6 +337,10 @@
 
         .card-header {
             padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
         }
 
         @media (max-width: 767.98px) {
@@ -388,5 +443,19 @@
                 printWindow.close();
             }, 500);
         }
+
+
     </script>
+    {{-- Giữ nguyên trạng thái khi lỗi cập nhập địa chỉ và số điện thoại --}}
+        @if ($errors->hasAny(['customer_phone', 'shipping_address']))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var editCustomerModalEl = document.getElementById('editCustomerModal');
+            if (editCustomerModalEl) {
+                var modal = new bootstrap.Modal(editCustomerModalEl);
+                modal.show();
+            }
+        });
+    </script>
+    @endif
 @endsection
