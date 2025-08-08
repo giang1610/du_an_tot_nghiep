@@ -4,12 +4,49 @@
   <meta charset="UTF-8">
   <title>@yield('title', 'Admin Dashboard')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <!-- Poppins + Bootstrap + Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <link href="vendors/simplebar/simplebar.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
+    <link href="assets/css/theme-rtl.min.css" type="text/css" rel="stylesheet" id="style-rtl">
+    <link href="assets/css/theme.min.css" type="text/css" rel="stylesheet" id="style-default">
+    <link href="assets/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
+    <link href="assets/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
+    <script>
+      var phoenixIsRTL = window.config.config.phoenixIsRTL;
+      if (phoenixIsRTL) {
+        var linkDefault = document.getElementById('style-default');
+        var userLinkDefault = document.getElementById('user-style-default');
+        linkDefault.setAttribute('disabled', true);
+        userLinkDefault.setAttribute('disabled', true);
+        document.querySelector('html').setAttribute('dir', 'rtl');
+      } else {
+        var linkRTL = document.getElementById('style-rtl');
+        var userLinkRTL = document.getElementById('user-style-rtl');
+        linkRTL.setAttribute('disabled', true);
+        userLinkRTL.setAttribute('disabled', true);
+      }
+    </script>
+    <link href="vendors/leaflet/leaflet.css" rel="stylesheet">
+    <link href="vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
+    <link href="vendors/leaflet.markercluster/MarkerCluster.Default.css" rel="stylesheet">
+        <link rel="apple-touch-icon" sizes="180x180" href="assets/img/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicons/favicon-16x16.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicons/favicon.ico">
+    <link rel="manifest" href="assets/img/favicons/manifest.json">
+    <meta name="msapplication-TileImage" content="assets/img/favicons/mstile-150x150.png">
+    <meta name="theme-color" content="#ffffff">
+    <script src="vendors/simplebar/simplebar.min.js"></script>
+    <script src="assets/js/config.js"></script>
 
  
   <!-- linkcss Notification -->
@@ -127,6 +164,16 @@
   </div>
 </li>
 
+<!-- Bình luận -->
+<li class="nav-item menu-parent" data-title="reviews">
+  <a class="nav-link {{ request()->routeIs('reviews.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catMenu2" aria-expanded="{{ request()->routeIs('reviews.*') ? 'true' : 'false' }}">
+    <i class="bi bi-chat-dots"></i><span class="menu-text">Bình luận</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <div id="catMenu2" class="collapse ps-3 {{ request()->routeIs('reviews.*') ? 'show' : '' }}">
+    <a href="{{ route('reviews.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('reviews.index') ? 'active' : '' }}" data-title="danh sách bình luận">Danh sách</a>
+  </div>
+</li>
+
 <!-- Sản phẩm -->
 <li class="nav-item menu-parent" data-title="products">
   <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#prodMenu" aria-expanded="{{ request()->routeIs('products.*') ? 'true' : 'false' }}">
@@ -235,8 +282,8 @@
         <ul class="dropdown-menu dropdown-menu-end shadow">
           <li class="dropdown-header">{{ Auth::user()->name ?? 'Admin' }}<br><small class="text-muted">{{ Auth::user()->email ?? 'admin@example.com' }}</small></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
-          <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li>
+          {{-- <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Hồ sơ</a></li>
+          <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Cài đặt</a></li> --}}
           <li><hr class="dropdown-divider"></li>
           <li>
             <form action="{{ route('logout') }}" method="POST">@csrf

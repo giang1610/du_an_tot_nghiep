@@ -267,15 +267,7 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
 
-                                    @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
-                                    <a href="{{ route('orders.edit', $order->id) }}"
-                                        class="btn btn-sm btn-outline-success"
-                                        data-bs-toggle="tooltip"
-                                        title="Cập nhật trạng thái">
-                                        <span class="d-none d-md-inline">Cập nhật</span>
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @endif
+                                    
                                 </div>
                             </td>
                         </tr>
@@ -435,12 +427,7 @@
                                     class="btn btn-sm btn-outline-primary flex-grow-1">
                                     <i class="fas fa-eye me-1"></i> Chi tiết
                                 </a>
-                                @if (!in_array($order->status, ['completed', 'cancelled', 'failed']))
-                                <a href="{{ route('orders.edit', $order->id) }}"
-                                    class="btn btn-sm btn-outline-success flex-grow-1">
-                                    <i class="fas fa-edit me-1"></i> Cập nhật
-                                </a>
-                                @endif
+                               
                             </div>
                         </div>
                     </div>
