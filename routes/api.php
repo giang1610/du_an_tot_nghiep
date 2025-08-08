@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Orders
+
 Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index']);
     Route::get('/{order}', [OrderController::class, 'show']);

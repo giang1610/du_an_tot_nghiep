@@ -30,7 +30,9 @@ const ProductSummary = ({ items }) => {
               <Card.Title>{item.product_name || item.name}</Card.Title>
               <Card.Text>
                 Số lượng: {item.quantity} <br />
+
                 Giá: {formatCurrency(item.price)} VNĐ <br />
+
                 {item.color && <>Màu: {item.color}<br /></>}
                 {item.size && <>Size: {item.size}<br /></>}
 
@@ -161,8 +163,10 @@ export default function Checkout() {
     const token = localStorage.getItem('token');
     if (!token) return setError('Bạn cần đăng nhập để áp dụng mã giảm giá.');
 
+
     // total to send to /vouchers/apply
     const amountContext = type === 'product' ? totals.subtotal : totals.shipping;
+
 
     try {
       // We send type so backend can validate (product/shipping)
@@ -203,9 +207,12 @@ export default function Checkout() {
     const token = localStorage.getItem('token') || user?.token;
     if (!token) return setError('Bạn cần đăng nhập để đặt hàng.');
     if (selectedItems.length === 0) return setError('Không có sản phẩm nào để đặt hàng.');
+
     if (selectedItems.some(item => item.stock === 0 || item.quantity > item.stock)) {
       return setError('Có sản phẩm đã hết hàng hoặc vượt quá số lượng tồn kho. Vui lòng kiểm tra lại.');
     }
+
+
 
     const itemsPayload = selectedItems.map(item => ({
       product_variant_id: item.product_variant_id || item.variant_id,
@@ -229,11 +236,13 @@ export default function Checkout() {
       shipping: totals.shipping,
       discount_amount: totals.discount,
       total: totals.total,
+
       // send both voucher codes to backend (null if none)
       product_voucher_code: productVoucherInfo?.code ?? null,
       shipping_voucher_code: shippingVoucherInfo?.code ?? null,
       // helpful flag so backend knows if it's buy-now (optional)
       buy_now: isBuyNow ? 1 : 0,
+
     };
 
     try {
@@ -265,12 +274,14 @@ export default function Checkout() {
         if (data?.data?.payment_url) {
           localStorage.removeItem('buy_now');
           if (!isBuyNow) await removeSelectedItems();
+
           window.location.href = data.data.payment_url;
         } else {
           toast.error("Không nhận được liên kết thanh toán VNPay");
         }
       } else {
         // COD / orders/checkout
+
         const { data } = await axios.post(
           `${process.env.REACT_APP_API_URL}/orders/checkout`,
           payload,
@@ -441,6 +452,7 @@ export default function Checkout() {
                   <option value="">-- Không áp dụng --</option>
                   {availableProductVouchers.map(voucher => (
                     <option key={voucher.code} value={voucher.code}>
+
                       {voucher.code} - {voucher.type === 'percent'
                         ? `${voucher.value ?? 0}%`
                         : `${formatCurrency(voucher.value)} VNĐ`}
@@ -458,6 +470,7 @@ export default function Checkout() {
                     </div>
                   )}
                 </div>
+
               </Form.Group>
 
               <Form.Group className="mb-3">
@@ -471,7 +484,8 @@ export default function Checkout() {
                     <option key={voucher.code} value={voucher.code}>
                       {voucher.code} - {voucher.type === 'percent'
                         ? `${voucher.value ?? 0}%`
-                        : `${formatCurrency(voucher.value)} VNĐ`}
+     : `${formatCurrency(voucher.value)} VNĐ`}
+
                     </option>
                   ))}
                 </Form.Select>
@@ -488,6 +502,7 @@ export default function Checkout() {
                 </div>
               </Form.Group>
 
+
               <p>Tạm tính: {formatCurrency(totals.subtotal)} VNĐ</p>
               <p>Phí vận chuyển: {formatCurrency(totals.shipping)} VNĐ</p>
               <p>Thuế: {formatCurrency(totals.tax)} VNĐ</p>
@@ -495,6 +510,7 @@ export default function Checkout() {
                 <p className="text-success">Giảm giá: -{formatCurrency(totals.discount).replace(/\.00$/, '')} VNĐ</p>
               )}
               <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} VNĐ</h5>
+
             </>
           )}
         </Col>
