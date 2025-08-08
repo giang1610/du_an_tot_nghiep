@@ -467,7 +467,7 @@ class OrderController extends Controller
 {
     $order = Order::findOrFail($id);
     $newStatus = $request->input('status');
-    
+
 
 
     $order->status = $newStatus;
@@ -563,8 +563,7 @@ class OrderController extends Controller
         Mail::to($order->customer_email)->queue(new \App\Mail\ReturnRejected($order));
     }
 
-    return redirect()->route('orders.edit', $order->id)
+    return redirect()->route('orders.index', $order->id)
         ->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
 }
-
 }
