@@ -315,7 +315,7 @@ class MomoPaymentController extends Controller
         try {
             if ((int)$data['resultCode'] === 0) {
                 $order->update([
-                    'status' => 'processing',
+                    'status' => 'pending',
                     'payment_status' => 'paid',
                     'transaction_id' => $data['transId'],
                 ]);
