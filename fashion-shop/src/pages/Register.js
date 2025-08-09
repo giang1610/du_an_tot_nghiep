@@ -25,7 +25,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // 3. The Modal state is no longer needed
   // const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -62,7 +62,7 @@ export default function Register() {
           title: 'Đăng Ký Thành Công!',
           text: 'Vui lòng kiểm tra email để xác thực. Đang chuyển hướng...',
           icon: 'success',
-          timer: 2000, 
+          timer: 2000,
           timerProgressBar: true,
           showConfirmButton: false,
           didClose: () => {
@@ -147,7 +147,7 @@ export default function Register() {
         </Form>
         </div>
           </div>
-       
+
          <ToastContainer position="top-right" className="p-5" autoClose={2000} hideProgressBar={false} />
 
         <div className="login-prompt">
