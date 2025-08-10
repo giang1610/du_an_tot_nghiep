@@ -3,7 +3,6 @@ import HeroBanner from '../components/HeroBanner';
 import ServiceBar from '../components/ServiceBar';
 import ProductSection from '../components/ProductSection';
 import SpecialOffers from '../components/SpecialOffers';
-import CategoryBanner from '../components/CategoryBanner';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);

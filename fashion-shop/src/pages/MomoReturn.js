@@ -42,7 +42,7 @@ export default function MomoReturn() {
     };
 
     fetchResult();
-  }, [searchParams]);
+  }, [searchParams],[removeSelectedItems]);
 
   if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
