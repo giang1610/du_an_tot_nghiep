@@ -20,7 +20,7 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with('user')->orderBy('created_at', 'desc');
+        $query = Order::with('user')->orderBy('id', 'desc');
 
         // Lọc theo status nếu có
         if ($request->filled('status')) {
@@ -49,7 +49,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(5)->withQueryString(); // Trả về danh sách đơn hàng với 10 bản ghi/trang
+        $orders = $query->paginate(15)->withQueryString(); // Trả về danh sách đơn hàng với 10 bản ghi/trang
 
 
         return view('admin.orders.index', compact('orders'));

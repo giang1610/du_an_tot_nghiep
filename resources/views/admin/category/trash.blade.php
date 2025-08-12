@@ -38,6 +38,7 @@
                             <th width="100">ID</th>
                             <th>Tên danh mục</th>
                             <th>Trạng thái</th>
+                            <th>số ngày còn trong thùng rác</th>
                             <th width="150" class="text-center">Thao tác</th>
                         </tr>
                     </thead>
@@ -59,6 +60,23 @@
                                 @else
                                     <span class="badge bg-secondary">Không hoạt động</span>
                                 @endif
+                            </td>
+                            <td>
+                                @if($category->deleted_at)
+                                    @php
+                                        $daysLeft = 20 - $category->deleted_at->diffInDays(now());
+                                        $daysLeft = $daysLeft > 0 ? $daysLeft : 0;
+                                    @endphp
+                                    <span class="badge {{ $daysLeft > 3 ? 'bg-info' : 'bg-danger' }}">
+                                        {{ $daysLeft }} ngày
+                                    </span>
+                                    <div class="text-muted small">
+                                        (Tự động xóa sau {{ $daysLeft }} ngày)
+                                    </div>
+                                @else
+                                    <span class="badge bg-secondary">Không xác định</span>
+                                @endif
+                            </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center">
                                     <form action="{{ route('categories.restore', $category->id) }}" method="POST" class="me-2">

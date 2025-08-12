@@ -54,6 +54,7 @@
                             <th>Size</th>
                             <th width="120">Ảnh</th>
                             <th width="120">Trạng thái</th>
+                            <th>Số ngày còn trong thùng rác</th>
                             <th width="120">Hành động</th>
                         </tr>
                     </thead>
@@ -129,6 +130,24 @@
                                 <span class="badge bg-warning text-dark">Chưa xuất bản</span>
                                 @else
                                 <span class="badge bg-secondary">Tạm dừng</span>
+                                @endif
+                            </td>
+                             <td>
+                                @if($p->deleted_at)
+                                {{-- tính ngày xóa --}}
+                                    @php
+                                        $daysLeft = 20 - $p->deleted_at->diffInDays(now());
+                                        $daysLeft = $daysLeft > 0 ? $daysLeft : 0;
+                                    @endphp
+                                    {{-- hiển thị số ngày còn lại --}}
+                                    <span class="badge {{ $daysLeft > 3 ? 'bg-info' : 'bg-danger' }}">
+                                        {{ $daysLeft }} ngày
+                                    </span>
+                                    <div class="text-muted small">
+                                        (Tự động xóa sau {{ $daysLeft }} ngày)
+                                    </div>
+                                @else
+                                    <span class="badge bg-secondary">Không xác định</span>
                                 @endif
                             </td>
                             <td>
