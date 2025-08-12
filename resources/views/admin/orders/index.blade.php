@@ -306,7 +306,7 @@
                                            
                                             <!-- Nút đổi trạng thái -->
                                              <div class="position-relative">
-                                                <a href="javascript:void(0);" class="btn btn-sm btn-outline-warning show-status-select" data-order-id="{{ $order->id }}" title="Đổi trạng thái đơn hàng">
+                                                <a href="javascript:void(0);" class="btn btn-sm btn-outline-warning show-status-select" id="button-remove-{{$order->id}}" data-order-id="{{ $order->id }}" title="Đổi trạng thái đơn hàng">
                                                     <i class="fas fa-exchange-alt"></i>
                                                 </a>
                                                 
@@ -378,6 +378,7 @@
                                         @if (in_array($order->status, ['return_requested']))
                                         <a href="{{ route('orders.edit', $order->id) }}"
                                             class="btn btn-sm btn-outline-success"
+                                            id="order-actions-{{ $order->id }}"
                                             data-bs-toggle="tooltip"
                                             title="Yêu cầu hoàn hàng">
                                             <span class="d-none d-md-inline"></span>
@@ -466,8 +467,9 @@
     });
 </script>
 <script src="{{ asset('js/new_product.js') }}"></script>
-<script src="{{ asset('js/order/index.js') }}"></script>
 <script src="{{ asset('js/admin_status.js') }}"></script>
+
+
 
 
 {{-- 
@@ -505,6 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
 
 
 @endpush

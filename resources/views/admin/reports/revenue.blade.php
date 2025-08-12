@@ -143,8 +143,9 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ asset($product->image ?? '/images/default-product.jpg') }}" 
+                                       <img src="{{ asset('storage/' .$product->image ?? '/images/default-product.jpg') }}" 
                                              width="40" height="40" class="rounded mr-2">
+                                       
                                         {{ $product->product_name }}
                                     </div>
                                 </td>
