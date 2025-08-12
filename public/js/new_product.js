@@ -117,7 +117,7 @@
                     ${paymentStatusHTML}
                 </div>
             </td>
-            <td>
+            <td id="order-status-${order.id}">
                 ${orderStatusHTML}
             </td>
             <td>
@@ -189,5 +189,4 @@
 
     button.parentElement.appendChild(form);
 }
-
 

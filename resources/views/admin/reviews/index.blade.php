@@ -43,15 +43,27 @@
                     <tr>
                         <td>{{ $review->id }}</td>
                         <td>{{ $review->user->name ?? 'Không có khách hàng' }}</td>
-                        <td>
-                            {{ $review->product->name ?? 'Không có biến thể' }}
-                            @if($review->productVariant)
-                                <div class="text-muted small">
-                                    {{ $review->productVariant->color->name ?? '' }} -
-                                    {{ $review->productVariant->size->name ?? '' }}
+                       <td>
+                            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                <img src="{{ asset('storage/' . (
+                                    $review->productVariant->image 
+                                    ?? $review->product->image 
+                                    ?? 'images/default-product.jpg'
+                                )) }}" 
+                                width="40" height="40" class="rounded" style="object-fit: cover;">
+
+                                <div>
+                                    <div>{{ $review->product->name ?? 'Không có biến thể' }}</div>
+                                    @if($review->productVariant)
+                                        <div class="text-muted small">
+                                            {{ $review->productVariant->color->name ?? '' }} -
+                                            {{ $review->productVariant->size->name ?? '' }}
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
+                            </div>
                         </td>
+
                         <td>
                             @php
                                 $mediaList = [];

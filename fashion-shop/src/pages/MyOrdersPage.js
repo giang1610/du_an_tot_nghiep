@@ -522,37 +522,36 @@ export default function MyOrdersPage() {
                                             Đã nhận hàng
                                         </Button>
                                     )}
+                                    {order.status === 'pending' 
+                                            && order.payment_method !== 'cod' 
+                                            && order.payment_status !== 'paid' // ✅ Thêm điều kiện này
+                                            && (
+                                                <Button
+                                                    variant="warning"
+                                                    size="sm"
+                                                    className="me-2"
+                                                    onClick={() => {
+                                                        let method = order.payment_method;
+                                                        if (method && typeof method === 'object') {
+                                                            method = method.code || method.name || '';
+                                                        }
+                                                        method = String(method).toLowerCase().trim();
 
-                                    {order.status === 'pending' && order.payment_method !== 'cod' && (
-                                        <Button
-                                            variant="btn btn-outline-warning"
-                                            size="sm"
-                                            className="me-2"
-                                            onClick={() => {
-                                                if (isPaymentExpired(order)) {
-                                                    alert('Đơn hàng đã hết thời gian thanh toán. Vui lòng tạo đơn mới hoặc liên hệ hỗ trợ.');
-                                                    return;
-                                                }
-                                                let method = order.payment_method;
-                                                if (method && typeof method === 'object') {
-                                                    method = method.code || method.name || '';
-                                                }
-                                                method = String(method).toLowerCase().trim();
+                                                        const orderId = String(order.id ?? order.order_id ?? '').trim();
 
-                                                const orderId = String(order.id ?? order.order_id ?? '').trim();
+                                                        if (!method || !orderId || ['momo', 'vnpay'].indexOf(method) === -1) {
+                                                            console.error("❌ Lỗi: Không có method hoặc orderId hợp lệ", { method, orderId });
+                                                            alert("Không thể tiếp tục thanh toán. Dữ liệu đơn hàng không hợp lệ.");
+                                                            return;
+                                                        }
 
-                                                if (!method || !orderId || ['momo', 'vnpay'].indexOf(method) === -1) {
-                                                    console.error("❌ Lỗi: Không có method hoặc orderId hợp lệ", { method, orderId });
-                                                    alert("Không thể tiếp tục thanh toán. Dữ liệu đơn hàng không hợp lệ.");
-                                                    return;
-                                                }
-
-                                                navigate(`/continue-payment/${method}/${orderId}`);
-                                            }}
-                                        >
-                                            Tiếp tục thanh toán
-                                        </Button>
-                                    )}
+                                                        navigate(`/continue-payment/${method}/${orderId}`);
+                                                    }}
+                                                >
+                                                    Tiếp tục thanh toán
+                                                </Button>
+                                            )
+                                        }
 
                                     {(order.status === 'pending' || order.status === 'processing') && (
                                         <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>

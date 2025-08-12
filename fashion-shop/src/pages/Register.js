@@ -99,7 +99,7 @@ export default function Register() {
           </Alert>
         )}
           <div className="img_card">
-          <div>
+          <div className="img_card_content">
             <img src='https://cellphones.com.vn/sforum/wp-content/uploads/2023/12/hinh-nen-xanh-duong-15.jpg'></img>
          </div>
         <div>

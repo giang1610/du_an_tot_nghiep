@@ -23,9 +23,9 @@
             <a href="{{ route('products.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Thêm mới
             </a>
-            {{-- <a href="{{ route('products.trash') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('products.trash') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-trash3-fill me-1"></i> Thùng rác
-            </a> --}}
+            </a>
         </div>
     </div>
 
@@ -146,7 +146,7 @@
                                         <button type="submit"
                                             class="btn btn-sm btn-outline-danger"
                                             title="Xóa"
-                                            onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm này không ?')">
+                                            onclick="return confirm('Bạn chắc chắn muốn đưa sản phẩm này vào thùng rác không ?')">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>

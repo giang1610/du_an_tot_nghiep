@@ -250,34 +250,56 @@ export default function ProductDetail() {
             ))}
           </ButtonGroup>
 
-          {selectedVariant && (
+
+
+         {selectedVariant && (
             <>
               <h4 className="text-primary">
-                {Number(selectedVariant?.sale_price ?? selectedVariant?.price ?? product.price_original).toLocaleString('vi-VN')}₫
+                {Number(
+                  selectedVariant?.sale_price ??
+                  selectedVariant?.price ??
+                  product.price_original
+                ).toLocaleString('vi-VN')}₫
               </h4>
-              <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
 
-              <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
-                <Form.Label>Số lượng:</Form.Label>
-                <Form.Control
-                  type="number"
-                  min={1}
-                  max={maxQuantity}
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                />
-              </Form.Group>
+              {maxQuantity > 0 ? (
+                <>
+                  <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
+
+                  <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
+                    <Form.Label>Số lượng:</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min={1}
+                      max={maxQuantity}
+                      value={quantity}
+                      onChange={handleQuantityChange}
+                    />
+                  </Form.Group>
+
+                  <div className="mt-4 d-flex gap-3 flex-wrap">
+                    <Button
+                      variant="primary"
+                      onClick={handleAddToCart}
+                      disabled={!selectedVariant}
+                    >
+                      🛒 Thêm vào giỏ
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={handleBuyNow}
+                      disabled={!selectedVariant}
+                    >
+                      ⚡ Mua ngay
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-danger">Hết hàng</p>
+              )}
             </>
           )}
 
-          <div className="mt-4 d-flex gap-3 flex-wrap">
-            <Button variant="primary" onClick={handleAddToCart} disabled={!selectedVariant}>
-              🛒 Thêm vào giỏ
-            </Button>
-            <Button variant="primary" onClick={handleBuyNow} disabled={!selectedVariant}>
-              ⚡ Mua ngay
-            </Button>
-          </div>
 
           <div className="mt-5">
             <h4 className="mb-4">Đánh giá sản phẩm</h4>
