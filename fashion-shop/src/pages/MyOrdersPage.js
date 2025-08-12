@@ -17,8 +17,8 @@ const STATUS_LABELS = {
     pending: 'Chờ xử lý',
     processing: 'Đang xử lý',
     picking: 'Đang lấy hàng',
-    shipper_arrived: 'Shipper đến lấy hàng', // ← thêm
-    in_warehouse: 'Hàng về kho',             // ← thêm
+    shipper_arrived: 'Shipper đến lấy hàng',
+    in_warehouse: 'Hàng về kho',
     shipping: 'Đang giao hàng',
     shipped: 'Đã giao hàng',
     completed: 'Hoàn thành',
@@ -35,8 +35,8 @@ const STATUS_VARIANTS = {
     pending: 'warning',
     processing: 'info',
     picking: 'primary',
-    shipper_arrived: 'secondary', // ← thêm (bạn đổi variant nếu muốn)
-    in_warehouse: 'dark',         // ← thêm (bạn đổi variant nếu muốn)
+    shipper_arrived: 'secondary',
+    in_warehouse: 'dark',
     shipping: 'primary',
     shipped: 'info',
     completed: 'success',
@@ -44,7 +44,6 @@ const STATUS_VARIANTS = {
     failed: 'danger',
     returned: 'success',
 };
-
 
 const PAYMENT_STATUS_LABELS = {
     paid: 'Đã thanh toán',
@@ -169,6 +168,50 @@ export default function MyOrdersPage() {
         }
     }, []);
 
+    // === Helper kiểm tra hết hạn thanh toán ===
+    const parseDate = (v) => {
+        if (!v) return null;
+        if (v instanceof Date) return v;
+        if (typeof v === 'number') return new Date(v);
+        const d = new Date(v);
+        if (!isNaN(d)) return d;
+        return null;
+    };
+
+    const isPaymentExpired = (order) => {
+        if (order.is_expired === true || order.expired === true) return true;
+        if (typeof order.status === 'string' && ['expired', 'cancelled'].includes(order.status.toLowerCase())) return true;
+
+        const candidateFields = [
+            'payment_expires_at',
+            'payment_expire_at',
+            'expires_at',
+            'payment_deadline',
+            'expire_at',
+            'expired_at',
+            'payment_due',
+            'payment_due_at'
+        ];
+
+        for (const key of candidateFields) {
+            if (order[key]) {
+                const dt = parseDate(order[key]);
+                if (dt) {
+                    return new Date() > dt;
+                }
+            }
+        }
+
+        const nested = order.payment || order.meta || {};
+        for (const key of candidateFields) {
+            if (nested && nested[key]) {
+                const dt = parseDate(nested[key]);
+                if (dt) return new Date() > dt;
+            }
+        }
+
+        return false;
+    };
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -269,7 +312,7 @@ export default function MyOrdersPage() {
         const token = localStorage.getItem('token');
         const formData = new FormData();
         formData.append('reason', returnReason);
-        returnMedia.forEach(file => formData.append('media[]', file)); // <-- sửa lại
+        returnMedia.forEach(file => formData.append('media[]', file));
 
         setReturnLoading(true);
         try {
@@ -345,25 +388,6 @@ export default function MyOrdersPage() {
         setReturnMediaPreviews(files.map(file => URL.createObjectURL(file)));
     };
 
-    // const handleReturnOrder = async (orderId) => {
-    //     if (!window.confirm('Bạn xác nhận muốn hoàn hàng đơn này?')) return;
-    //     const token = localStorage.getItem('token');
-
-    //     try {
-    //         await axios.post(`${process.env.REACT_APP_API_URL}/orders/${orderId}/request-return`, {}, {
-    //             headers: { Authorization: `Bearer ${token}` }
-    //         });
-    //         setOrders(prev =>
-    //             prev.map(order =>
-    //                 order.id === orderId ? { ...order, status: 'return_requested' } : order
-    //             )
-    //         );
-    //         alert('Yêu cầu hoàn hàng đã được gửi!');
-    //     } catch {
-    //         alert('Không thể yêu cầu hoàn hàng. Vui lòng thử lại.');
-    //     }
-    // };
-
     return (
         <>
             <Container className="py-4">
@@ -394,9 +418,12 @@ export default function MyOrdersPage() {
                                         {order.items.map(item => {
                                             const reviews = item.reviews || [];
                                             const count = reviews.length;
-                                            const completedAt = new Date(order.completed_at);
+                                            const completedAt = new Date(order.completed_at || order.updated_at || order.created_at || null);
                                             const now = new Date();
-                                            const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+                                            let diffDays = 0;
+                                            if (completedAt && !isNaN(completedAt)) {
+                                                diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+                                            }
                                             let canReview = false;
                                             if (count === 0) canReview = true;
                                             else if (count === 1 && diffDays >= 7) canReview = true;
@@ -474,44 +501,38 @@ export default function MyOrdersPage() {
                                     {order.items.some(item => {
                                         const reviews = item.reviews || [];
                                         const count = reviews.length;
-                                        const completedAt = new Date(order.completed_at);
+                                        const completedAt = new Date(order.completed_at || order.updated_at || order.created_at || null);
                                         const now = new Date();
-                                        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+                                        let diffDays = 0;
+                                        if (completedAt && !isNaN(completedAt)) {
+                                            diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+                                        }
                                         return (
                                             (count === 0 || (count === 1 && diffDays >= 7)) &&
                                             order.status === 'completed'
                                         );
                                     }) && (
-                                            <Link to={`/orders/${order.id}`}>
-                                                <Button variant="primary" size="sm">Đánh giá</Button>
-                                            </Link>
-                                        )}
-
-                                    {/* {(order.status === 'completed') && (() => {
-                                        const completedAt = new Date(order.completed_at || order.updated_at);
-                                        const now = new Date();
-                                        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
-                                        if (diffDays <= 7) {
-                                            return (
-                                                <Button variant="warning" size="sm" onClick={() => handleShowReturnModal(order.id)}>
-                                                    Hoàn hàng
-                                                </Button>
-                                            );
-                                        }
-                                        return null;
-                                    })()} */}
+                                        <Link to={`/orders/${order.id}`}>
+                                            <Button variant="primary" size="sm">Đánh giá</Button>
+                                        </Link>
+                                    )}
 
                                     {order.status === 'shipped' && (
                                         <Button variant="success" size="sm" onClick={() => handleConfirmReceived(order.id)}>
                                             Đã nhận hàng
                                         </Button>
                                     )}
+
                                     {order.status === 'pending' && order.payment_method !== 'cod' && (
                                         <Button
-                                            variant="warning"
+                                            variant="btn btn-outline-warning"
                                             size="sm"
                                             className="me-2"
                                             onClick={() => {
+                                                if (isPaymentExpired(order)) {
+                                                    alert('Đơn hàng đã hết thời gian thanh toán. Vui lòng tạo đơn mới hoặc liên hệ hỗ trợ.');
+                                                    return;
+                                                }
                                                 let method = order.payment_method;
                                                 if (method && typeof method === 'object') {
                                                     method = method.code || method.name || '';
@@ -533,16 +554,12 @@ export default function MyOrdersPage() {
                                         </Button>
                                     )}
 
-
-
                                     {(order.status === 'pending' || order.status === 'processing') && (
                                         <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>
                                             Hủy đơn
                                         </Button>
-
                                     )}
 
-                                    {/* Nút hoàn đơn */}
                                     {order.status === 'shipped' && (
                                         <Button variant="warning" size="sm" className="ms-2" onClick={() => handleShowReturnModal(order.id)}>
                                             Hoàn đơn
@@ -554,6 +571,7 @@ export default function MyOrdersPage() {
                     ))
                 )}
             </Container>
+
             {/* Modal HOÀN ĐƠN */}
             <Modal show={showReturnModal} onHide={() => setShowReturnModal(false)} centered>
                 <Modal.Header closeButton>
@@ -571,7 +589,7 @@ export default function MyOrdersPage() {
                         <div className="d-flex flex-wrap gap-2 mt-2">
                             {returnMediaPreviews.map((url, idx) => {
                                 const file = returnMedia[idx];
-                                if (!file) return null; // Fix lỗi undefined
+                                if (!file) return null;
                                 return file.type && file.type.startsWith('image/')
                                     ? (
                                         <div key={idx} style={{ position: 'relative' }}>

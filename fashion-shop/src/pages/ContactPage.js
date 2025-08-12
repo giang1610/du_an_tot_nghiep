@@ -1,4 +1,6 @@
+
 // pages/ContactPage.js
+
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -28,7 +30,9 @@ export default function ContactPage() {
           color: #222;
         }
 
+
         .container_content {
+
           max-width: 960px;
           margin: 3rem auto 5rem;
           display: flex;
@@ -136,6 +140,7 @@ export default function ContactPage() {
       `}</style>
 
       <div className="container_content" role="main" aria-label="Trang liên hệ MG Fashion">
+
         <section className="contact-info" aria-labelledby="contact-info-title">
           <h2 id="contact-info-title">Thông tin liên hệ</h2>
           <div className="info-item">
@@ -216,4 +221,6 @@ export default function ContactPage() {
       </div>
     </>
   );
+
 }
+
