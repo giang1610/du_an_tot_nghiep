@@ -884,7 +884,7 @@ class OrderController extends Controller
 
                             $order->update([
                                 'payment_status' => 'paid',
-                                'status' => 'processing',
+                                'status' => 'pending',
                                 'transaction_id' => $inputData['vnp_TransactionNo'] ?? null,
                             ]);
                             broadcast(new  newOder($order));
