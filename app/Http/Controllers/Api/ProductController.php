@@ -66,6 +66,15 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        $sort = $request->input('sort');
+        if ($sort === 'price_asc') {
+            $query->orderBy('price_products', 'asc');
+        } elseif ($sort === 'price_desc') {
+            $query->orderBy('price_products', 'desc');
+        } else {
+            $query->latest();
+        }
+
         $products = $query->with([
             'variants:id,product_id,price,sale_price,sale_start_date,sale_end_date,size_id,color_id',
             'images:id,product_id,url'
