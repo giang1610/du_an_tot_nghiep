@@ -13,7 +13,7 @@ Cảm ơn bạn đã mua sắm tại {{ config('app.name') }}!
 @endcomponent --}}
 @component('mail::message')
 <div style="text-align: center; margin-bottom: 20px;">
-    <img src="{{ asset('images/logo.png') }}" alt="MG Fashion Store" style="max-height: 80px;">
+     @include('mg-logo', ['size' => 80] )
     <h1 style="color: #2d3748; margin-top: 10px;">Đơn hàng của bạn đã giao thất bại sau 1 lần. Bạn chú ý nhận hàng lại hoặc liên hệ với chúng tôi để được hỗ trợ!</h1>
 </div>
 

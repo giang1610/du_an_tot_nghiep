@@ -15,7 +15,7 @@ Cảm ơn bạn đã sử dụng dịch vụ của {{ config('app.name') }}!
 @endcomponent --}}
 @component('mail::message')
 <div style="text-align: center; margin-bottom: 20px;">
-    <img src="{{ asset('images/logo.png') }}" alt="MG Fashion Store" style="max-height: 80px;">
+     @include('mg-logo', ['size' => 80] )
     <h1 style="color: #2d3748; margin-top: 10px;">Yêu cầu hoàn hàng của bạn đã được chấp nhận!</h1>
 </div>
 
