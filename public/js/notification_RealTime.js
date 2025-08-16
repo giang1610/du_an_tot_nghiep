@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     window.Echo.connector.pusher.connection.bind('connected', function () {
-        console.log('[Pusher] ✅ Kết nối thành công!');
+        // console.log('[Pusher]  Kết nối thành công!');
     });
 
     window.Echo.channel('admin-orders')

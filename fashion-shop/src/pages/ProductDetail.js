@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form
+  Container, Row, Col, Spinner, Alert, Button, ButtonGroup, ToggleButton, Form, Modal, Carousel
 } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -24,6 +24,10 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [quantity, setQuantity] = useState(1);
+
+  // State modal xem ảnh lớn
+  const [showModal, setShowModal] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -149,7 +153,7 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
-     if (!selectedVariant) return;
+    if (!selectedVariant) return;
     if (!requireLoginAndVariant()) return;
 
     if (quantity > maxQuantity) {
@@ -174,6 +178,14 @@ export default function ProductDetail() {
     navigate('/checkout?buy_now=1');
   };
 
+  // Hàm mở modal và set ảnh đang xem theo ảnh chính
+  const openModal = () => {
+    const mainImage = selectedVariant?.img || product?.img;
+    const idx = imageList.findIndex(img => img.url === mainImage);
+    setModalImageIndex(idx === -1 ? 0 : idx);
+    setShowModal(true);
+  };
+
   if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
   if (!product) return <Alert variant="danger">Sản phẩm không tồn tại</Alert>;
 
@@ -184,8 +196,9 @@ export default function ProductDetail() {
         <Col md={6}>
           <ProductImageGallery
             images={imageList}
-            mainImage={selectedVariant?.img || product.img}
             productName={product.name}
+            mainImage={selectedVariant?.img || product.img}
+            onClickMain={openModal}
           />
         </Col>
 
@@ -217,7 +230,6 @@ export default function ProductDetail() {
             ))}
           </ButtonGroup>
 
-
           <h5 className="mt-4">Chọn màu sắc:</h5>
           <ButtonGroup className="mb-3 d-flex flex-wrap gap-2">
             {colors.map(color => (
@@ -237,8 +249,6 @@ export default function ProductDetail() {
               </ToggleButton>
             ))}
           </ButtonGroup>
-
-
 
           {selectedVariant && (
             <>
@@ -269,7 +279,6 @@ export default function ProductDetail() {
             </Button>
           </div>
 
-
           <div className="mt-5">
             <h4 className="mb-4">Đánh giá sản phẩm</h4>
             {reviews.length === 0 && <p>Chưa có đánh giá nào.</p>}
@@ -284,6 +293,40 @@ export default function ProductDetail() {
           </div>
         </Col>
       </Row>
+
+      {/* Modal xem ảnh lớn */}
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{product.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Carousel
+            activeIndex={modalImageIndex}
+            onSelect={setModalImageIndex}
+            interval={null}
+            indicators={imageList.length > 1}
+            prevLabel="Ảnh trước"
+            nextLabel="Ảnh tiếp"
+          >
+            {imageList.map((img, idx) => (
+              <Carousel.Item key={idx}>
+                <img
+                  src={img.url}
+                  className="d-block w-100"
+                  alt={`${product.name} ảnh ${idx + 1}`}
+                  style={{ maxHeight: '70vh', objectFit: 'contain' }}
+                  draggable={false}
+                />
+              </Carousel.Item>
+            ))}
+          </Carousel>
+        </Modal.Body>
+      </Modal>
 
       <div className="mt-5">
         <h4>Sản phẩm liên quan</h4>
