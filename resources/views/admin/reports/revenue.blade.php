@@ -261,51 +261,35 @@
             }
         });
 
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart');
-        if (revenueCtx) {
-            const revenueChart = new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: @json($revenueByDate->pluck('date')),
-                    datasets: [{
-                        label: 'Doanh thu',
-                        data: @json($revenueByDate->pluck('total_revenue')),
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString('vi-VN') + 'đ';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    label += context.parsed.y.toLocaleString('vi-VN') + 'đ';
-                                    return label;
-                                }
-                            }
-                        }
-                    }
+        // Revenue Chart - Phiên bản đơn giản hơn
+const revenueCtx = document.getElementById('revenueChart');
+if (revenueCtx) {
+    const revenueData = {
+        labels: @json($revenueByDate->pluck('date')->toArray()),
+        datasets: [{
+            label: 'Doanh thu',
+            data: @json($revenueByDate->pluck('total_revenue')->toArray()),
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    };
+    
+    console.log('Revenue Chart Data:', revenueData); // Debug
+    
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: revenueData,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
-            });
+            }
         }
-
+    });
+}
         // Order Status Chart
         const statusCtx = document.getElementById('orderStatusChart');
         if (statusCtx) {

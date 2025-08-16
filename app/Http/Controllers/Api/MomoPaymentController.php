@@ -68,7 +68,7 @@ class MomoPaymentController extends Controller
 
                     if ($reqQty > $stock->quantity) {
                         return response()->json([
-                            'message' => "Sản phẩm đã hết hàng."
+                            'message' => "Sản phẩm trong kho không đủ số lượng."
                         ], 400);
                     }
                 }

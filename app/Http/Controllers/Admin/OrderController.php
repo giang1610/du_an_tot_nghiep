@@ -456,7 +456,12 @@ class OrderController extends Controller
         $order->customer_phone = $validated['customer_phone'];
         $order->shipping_address = $validated['shipping_address'];
         $order->save();
-
+        // Gửi email thông báo cập nhật thông tin khách hàng
+            
+        if ($order->customer_email) {
+            \Mail::to($order->customer_email)->send(new \App\Mail\OrderCustomerInfoChanged($order));
+        }
+        
         return redirect()->route('orders.show', $order->id)
             ->with('success', 'Cập nhật thông tin khách hàng thành công!');
     }

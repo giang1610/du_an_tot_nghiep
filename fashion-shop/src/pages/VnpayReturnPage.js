@@ -1,5 +1,5 @@
 // src/pages/VnpayReturn.jsx
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Spinner, Row, Col, Image, Badge, Button, Card } from 'react-bootstrap';
 import axios from 'axios';
@@ -24,6 +24,7 @@ export default function VnpayReturn() {
 
   const { removeSelectedItems } = useCart();
 
+  // Lấy dữ liệu từ URL
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const data = {
@@ -35,47 +36,48 @@ export default function VnpayReturn() {
       transaction_id: query.get('transaction_id'),
     };
     setUrlData(data);
-  }, [location]);
+  }, [location.search]);
 
-  const fetchOrder = useCallback(async () => {
-    if (!token) {
-      setLoading(false);
-      return setError('Bạn chưa đăng nhập');
-    }
-    if (!urlData.order_id) return;
-
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${urlData.order_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Giả sử API trả về { data: { ... orderDetail ... } }
-      const ord = res.data.data ?? res.data ?? null;
-      setOrderDetail(ord);
-
-      // Nếu backend báo thanh toán thành công thì clear cart
-      if (urlData.payment_status === 'paid') {
-        await removeSelectedItems();
-        localStorage.removeItem('buy_now');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('Không thể tải chi tiết đơn hàng.');
-    } finally {
-      setLoading(false);
-    }
-  }, [urlData.order_id, urlData.payment_status, token, removeSelectedItems]);
-
+  // Fetch order khi có order_id
   useEffect(() => {
+    const fetchOrder = async () => {
+      if (!token) {
+        setLoading(false);
+        setError('Bạn chưa đăng nhập');
+        return;
+      }
+      if (!urlData.order_id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${urlData.order_id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const ord = res.data.data ?? res.data ?? null;
+        setOrderDetail(ord);
+
+        // Nếu thanh toán thành công thì clear cart
+        if (urlData.payment_status === 'paid') {
+          await removeSelectedItems();
+          localStorage.removeItem('buy_now');
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Không thể tải chi tiết đơn hàng.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchOrder();
-  }, [fetchOrder]);
+  }, [urlData.order_id]); // Chỉ chạy khi order_id thay đổi
 
   if (loading) return <Spinner animation="border" className="d-block mx-auto mt-5" />;
   if (error) return <div className="text-danger text-center mt-4">{error}</div>;
 
-  // LẤY TỔNG CHÍNH XÁC TỪ BACKEND:
-  // Nếu API của bạn dùng tên khác (ví dụ orderDetail.totalPrice, orderDetail.summary.total, orderDetail.grand_total)
-  // hãy đổi orderTotal = orderDetail.total tương ứng.
   const orderTotal = Number(orderDetail?.total ?? orderDetail?.grand_total ?? orderDetail?.summary?.total ?? 0);
 
   return (
@@ -95,7 +97,6 @@ export default function VnpayReturn() {
           ) : (
             <div>
               {orderDetail.items.map((item, idx) => {
-                // Giá từng item: ưu tiên backend trả item.total, fallback price * qty
                 const itemTotal = Number(item.total ?? (item.price * item.quantity) ?? 0);
                 const itemPrice = Number(item.price ?? 0);
 

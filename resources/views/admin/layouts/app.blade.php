@@ -196,11 +196,21 @@
     </li> -->
 
     <!-- 👉 Khách hàng (mới, chưa có route) -->
-    <li class="nav-item menu-item" data-title="khách hàng customers">
+    {{-- <li class="nav-item menu-item" data-title="khách hàng customers">
       <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
         <i class="bi bi-people"></i><span class="menu-text">Khách hàng</span>
       </a>
-    </li>
+    </li> --}}
+
+    <li class="nav-item menu-parent" data-title="users">
+    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#4" aria-expanded="{{ request()->routeIs('users.*') ? 'true' : 'false' }}">
+      <i class="bi bi-people"></i><span class="menu-text">Người dùng</span><i class="bi bi-chevron-down ms-auto"></i>
+    </a>
+    <div id="4" class="collapse ps-3 {{ request()->routeIs('users.*') ? 'show' : '' }}">
+      <a href="{{ route('users.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('users.index') ? 'active' : '' }}" data-title="danh sách khách hàng">Khách hàng</a>
+      {{-- <a href="{{ route('users.create') }}" class="nav-link py-2 menu-item {{ request()->routeIs('users.create') ? 'active' : '' }}" data-title="danh sách nhân viên">Nhân viên</a> --}}
+    </div>
+  </li>
 
     <!-- 👉 Doanh thu (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="doanh thu revenue">

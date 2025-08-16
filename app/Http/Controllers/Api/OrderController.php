@@ -473,7 +473,7 @@ class OrderController extends Controller
             Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
 
             return response()->json([
-                'message' => 'Không thể tạo đơn hàng. Vì kho đã hết sản phẩm.',
+                'message' => 'Không thể tạo đơn hàng. Vì kho không đủ số lượng sản phẩm.',
                 'error' => $e->getMessage(),
             ], 400);
         }
@@ -625,7 +625,7 @@ class OrderController extends Controller
 
                     if ($reqQty > $stock->quantity) {
                         return response()->json([
-                            'message' => "Sản phẩm đã hết hàng."
+                            'message' => "Sản phẩm trong kho không đủ số lượng."
                         ], 400);
                     }
                 }
