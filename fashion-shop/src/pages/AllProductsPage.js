@@ -101,11 +101,11 @@ export default function AllProductsPage() {
           result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           break;
         case 'price_asc':
-          result.sort((a, b) => (Number(a.price_original ?? a.price ?? 0)) - (Number(b.price_original ?? b.price ?? 0)));
-          break;
+            result.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0));
+            break;
         case 'price_desc':
-          result.sort((a, b) => (Number(b.price_original ?? b.price ?? 0)) - (Number(a.price_original ?? a.price ?? 0)));
-          break;
+            result.sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0));
+            break;
         default:
           break;
       }

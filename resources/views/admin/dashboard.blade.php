@@ -598,7 +598,7 @@
             background-color: var(--primary-color);
             color: #fff;
         }
-    
+
     </style>
 @endpush
 
