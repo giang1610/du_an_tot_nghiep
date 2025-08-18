@@ -1,6 +1,6 @@
 // Khi kết nối thành công với Pusher
 window.Echo.connector.pusher.connection.bind('connected', function () {
-    console.log('hello ưin');
+    console.log('hello ưinsdasdasd');
 });
 
 // Lắng nghe sự kiện thay đổi trạng thái đơn hàng
@@ -23,6 +23,7 @@ window.Echo.channel('admin_status')
                 // Xoá nút thao tác cũ (nếu có)
                 const oldBtn = document.getElementById(`button-remove-${order.id}`);
                 if (oldBtn) oldBtn.remove();
+                console.log('xóa button ok');
                 break;
 
             case 'return_requested':
@@ -46,14 +47,14 @@ function appendReturnRequestButton(order) {
     const returnBtn = document.createElement('a');
     returnBtn.id = `order-actions-${order.id}`;
     returnBtn.href = `/admin/orders/${order.id}/edit`;
-    returnBtn.className = 'btn btn-sm btn-outline-success me-2'; 
+    returnBtn.className = 'btn btn-sm btn-outline-success me-2';
     returnBtn.setAttribute('data-bs-toggle', 'tooltip');
     returnBtn.setAttribute('title', 'Yêu cầu hoàn hàng');
 
     returnBtn.innerHTML = `
         <i class="fas fa-edit me-1"></i>
     `;
-    returnBtn.style.margin = '2px';          
+    returnBtn.style.margin = '1px';
 
     // Tìm ô thao tác trong hàng đơn hàng
     const actionsTd = document.querySelector(`#order-status-${order.id}`)

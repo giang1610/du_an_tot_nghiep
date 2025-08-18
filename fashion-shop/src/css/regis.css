@@ -21,9 +21,9 @@
   background-clip:content-box ;
   background-size: cover;
   background-position-x:600px;
-  
+
 }
-img{
+.img_card_content img{
     width: 400px;
     max-height: 400px;
     border-radius: 20px;
@@ -32,7 +32,7 @@ img{
 }
 
 .img_card{
-   display: flex;   
+   display: flex;
 }
 
 /* Thiết kế chính cho form đăng ký dạng "card" */
@@ -40,14 +40,14 @@ img{
   background-color: var(--card-background-color);
   padding: 2.5rem;
   border-radius: 15px;
- 
+
   max-width: 900px;
   width: 100%;
   border: 1px solid #e9ecef;
   margin: 10%;
  animation: glow 1.5s infinite alternate ;
 
-  
+
 }
 
 @keyframes glow {
@@ -64,12 +64,12 @@ img{
   text-align: center;
   margin-bottom: 2rem;
   color: var(--text-color);
-  
+
 
 }
 .form-title{
-  font-weight: 900;         
-  letter-spacing: 2px;    
+  font-weight: 900;
+  letter-spacing: 2px;
   text-transform: uppercase;
 background: linear-gradient(45deg, #0c8aff, #7928ca) ;
 -webkit-background-clip: text;
@@ -135,7 +135,7 @@ background: linear-gradient(45deg, #0c8aff, #7928ca) ;
 }
 
 @media (max-width: 920px) {
-img{
+.img_card_content img{
   max-width: 200px;
 }
 }
@@ -144,7 +144,7 @@ img{
   .img_card{
    display:inline-block;
 }
-  img {
+.img_card_content img {
     display: none;
   }
 }

@@ -117,15 +117,15 @@
                     ${paymentStatusHTML}
                 </div>
             </td>
-            <td>
+            <td id="order-status-${order.id}">
                 ${orderStatusHTML}
             </td>
             <td>
                 <div class="d-flex gap-2 align-items-center">
-                    <a href="/admin/orders/${order.id}" 
-                        class="btn btn-sm btn-outline-primary" 
-                        data-bs-toggle="tooltip" 
-                        title="Xem chi tiết" 
+                    <a href="/admin/orders/${order.id}"
+                        class="btn btn-sm btn-outline-primary"
+                        data-bs-toggle="tooltip"
+                        title="Xem chi tiết"
                         aria-label="Xem chi tiết đơn hàng">
                         <i class="fas fa-eye"></i>
                     </a>
@@ -189,5 +189,4 @@
 
     button.parentElement.appendChild(form);
 }
-
 

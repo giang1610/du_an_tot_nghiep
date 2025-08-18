@@ -29,6 +29,9 @@ export default function Register() {
   // 3. The Modal state is no longer needed
   // const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  // 3. The Modal state is no longer needed
+  // const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const navigate = useNavigate();
 
   const handleChange = useCallback((e) => {
@@ -99,7 +102,7 @@ export default function Register() {
           </Alert>
         )}
           <div className="img_card">
-          <div>
+          <div className="img_card_content">
             <img src='https://cellphones.com.vn/sforum/wp-content/uploads/2023/12/hinh-nen-xanh-duong-15.jpg'></img>
          </div>
         <div>
