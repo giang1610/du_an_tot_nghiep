@@ -11,7 +11,7 @@
         <div class="card-header bg-primary text-white">
             <div class="d-flex justify-content-between align-items-center flex-column flex-md-row">
                 <h4 class="mb-2 mb-md-0">
-                    <i class="fas fa-users me-2"></i>Quản lý khách hàng
+                    <i class="fas fa-users me-2"></i>Quản lý nhân viên
                     <span class="badge bg-white text-primary ms-2">{{ $totalUsers }}</span>
                 </h4>
                 <!-- <div class="mt-2 mt-md-0">
@@ -24,7 +24,7 @@
 
         <div class="card-body">
             {{-- Form tìm kiếm --}}
-            <form method="GET" action="{{ route('users.index') }}" class="mb-4">
+            <form method="GET" action="{{ route('users.staff') }}" class="mb-4">
                 <div class="row g-2">
                     <div class="col-12 col-md-8">
                         <div class="input-group">
@@ -42,6 +42,13 @@
                             <span class="d-none d-md-inline">Tìm kiếm</span>
                         </button>
                     </div>
+                    <div class="col-6 col-md-2">
+                        <a href="{{ route('users.createStaff') }}" class="btn btn-success w-50">
+                            <i class="bi bi-plus-circle me-1"></i> 
+                            <span class="d-inline d-md-none">Thêm</span>
+                          
+                        </a>
+
                    
                 </div>
             </form>
@@ -52,7 +59,7 @@
                     <thead class="table-light">
                         <tr>
                             <th width="80" class="text-center">ID</th>
-                            <th>Tên khách hàng</th>
+                            <th>Tên nhân viên</th>
                             <th>Email</th>
                             <th>Điện thoại</th>
                             <th>Địa chỉ</th>
@@ -100,7 +107,7 @@
                                         {{ $user->created_at->format('d/m/Y') }}
                                     </span>
                                 </td>
-                                <td class="text-center">
+                                {{-- <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-primary" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
@@ -108,14 +115,14 @@
                                         
                                        
                                     </div>
-                                </td>
+                                </td> --}}
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center py-4">
                                     <div class="empty-state">
                                         <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
-                                        <h4 class="text-muted">Không tìm thấy khách hàng nào</h4>
+                                        <h4 class="text-muted">Không tìm thấy nhân viên nào</h4>
                                         @if($search)
                                             <p class="text-muted">Thử lại với từ khóa tìm kiếm khác</p>
                                         @endif
@@ -126,7 +133,7 @@
                     </tbody>
                 </table>
 
-                {{-- Mobile view --}}
+                {{-- Mobile view
                 <div class="d-block d-md-none">
                     @forelse ($users as $user)
                         <div class="card mb-3 shadow-sm">
@@ -177,7 +184,7 @@
                             @endif
                         </div>
                     @endforelse
-                </div>
+                </div> --}}
             </div>
 
             {{-- Phân trang --}}
