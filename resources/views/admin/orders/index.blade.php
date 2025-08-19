@@ -273,6 +273,7 @@
                                 <span class="badge bg-secondary">
                                     <i class="fas fa-undo-alt me-1"></i> Đồng ý hoàn hàng
                                 </span>
+                                @break
                                  @case('shipper_en_route')
                                 <span class="badge bg-info text-dark">
                                     <i class="fas fa-truck-loading me-1"></i> Shipper lấy hàng

@@ -976,6 +976,29 @@ class OrderController extends Controller
         }
     }
 
+    public function verifyReturn(Request $request)
+    {
+        $orderId = $request->query('orderId');
+        $user = auth()->user();
+
+        if (!$orderId) {
+            return response()->json(['success' => false, 'message' => 'Thiếu orderId'], 400);
+        }
+
+        $order = Order::with(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
+            ->where('id', $orderId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $order
+        ]);
+    }
     /**
      * Cho phép người dùng tiếp tục thanh toán VNPay nếu đơn hàng chưa được thanh toán
      */

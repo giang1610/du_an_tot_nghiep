@@ -122,6 +122,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
+    Route::get('/payment/vnpay/verify', [OrderController::class, 'verifyReturn']);
     // Payment VNPAY
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vnpay/pay', [OrderController::class, 'processVnpayPayment']);

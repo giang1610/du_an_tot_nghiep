@@ -79,7 +79,7 @@ export default function AllProductsPage() {
         const min = Number(minStr ?? 0);
         const max = Number(maxStr ?? Infinity);
         result = result.filter(p => {
-          const price = Number(p.price_original ?? p.price ?? 0);
+          const price = Number(p.price_products ?? p.price ?? 0);
           return price >= min && price <= max;
         });
       }
@@ -211,9 +211,9 @@ export default function AllProductsPage() {
             />
 
             <div className="d-grid gap-2">
-              <Button type="submit" variant="primary">
+              {/* <Button type="submit" variant="primary">
                 🔍 Lọc
-              </Button>
+              </Button> */}
               <Button variant="outline-primary" onClick={handleResetFilters}>
                 🔄 Đặt lại
               </Button>

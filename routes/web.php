@@ -29,8 +29,7 @@ use App\Http\Controllers\Auth\EmailVerifiFotnController;
 use App\Http\Controllers\Auth\NewEmailVerificationController;
 
 use App\Http\Controllers\AdminChatController;
-
-
+use App\Models\Order;
 
 /*
 |--------------------------------------------------------------------------
@@ -112,7 +111,11 @@ Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->
 // Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
  
 Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/', function () {
+        return Auth::user()->role == 1
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('orders.index');
+    })->name('admin.dashboard');
     // nhân viên
     Route::get('users/staff', [UserController::class, 'staff'])->name('users.staff');
     Route::get('users/createStaff', [UserController::class, 'createStaff'])->name('users.createStaff');

@@ -147,7 +147,8 @@ class MomoPaymentController extends Controller
 
             // shipping voucher (áp dụng trên shipping)
             if ($request->shipping_voucher_code) {
-                $svr = $this->validateAndApplyVoucher($request->shipping_voucher_code, $user, $shipping, 'shipping');
+                
+                $svr = $this->validateAndApplyVoucher($request->product_voucher_code,$request->shipping_voucher_code, $user, $shipping, 'shipping');
                 if (!$svr['success']) {
                     return response()->json(['message' => $svr['message']], 400);
                 }
