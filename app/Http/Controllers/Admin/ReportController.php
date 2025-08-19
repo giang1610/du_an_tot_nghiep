@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Category;
 use App\Models\User;
+use App\Models\Voucher;
 use App\Exports\RevenueReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -29,7 +30,6 @@ class ReportController extends Controller
 
     public function revenueReport(Request $request)
     {
-        // Xử lý thời gian báo cáo
         $timePeriod = $request->input('time_period', self::PERIOD_THIS_MONTH);
         $compareWith = $request->input('compare_with', null);
         
@@ -39,24 +39,20 @@ class ReportController extends Controller
         $fromDate = $dateRange['from'];
         $toDate = $dateRange['to'];
         
-        // Lấy dữ liệu so sánh nếu có
         $compareData = null;
         if ($compareWith) {
             $compareRange = $this->getComparisonDateRange($timePeriod, $compareWith, $startDate, $endDate);
             $compareData = $this->getReportData($compareRange['start'], $compareRange['end']);
         }
 
-        // Lấy dữ liệu báo cáo chính
         $reportData = $this->getReportData($startDate, $endDate);
         $isEmpty = $reportData['summary']->total_orders === 0;
 
-        // Xuất Excel nếu có yêu cầu
         if ($request->has('export')) {
             $fileName = 'bao_cao_doanh_thu_' . $fromDate . '_den_' . $toDate . '.xlsx';
             return Excel::download(new RevenueReportExport($reportData, $fromDate, $toDate), $fileName);
         }
 
-        // Hiển thị view
         return view('admin.reports.revenue', array_merge($reportData, [
             'fromDate' => $fromDate,
             'toDate' => $toDate,
@@ -67,6 +63,17 @@ class ReportController extends Controller
             'periodOptions' => $this->getPeriodOptions(),
             'compareOptions' => $this->getCompareOptions(),
         ]));
+    }
+
+    public function exportRevenueReport(Request $request)
+    {
+        $timePeriod = $request->input('time_period', self::PERIOD_THIS_MONTH);
+        $dateRange = $this->getDateRange($timePeriod, $request);
+        
+        $reportData = $this->getReportData($dateRange['start'], $dateRange['end']);
+        
+        $fileName = 'bao_cao_doanh_thu_' . $dateRange['from'] . '_den_' . $dateRange['to'] . '.xlsx';
+        return Excel::download(new RevenueReportExport($reportData, $dateRange['from'], $dateRange['to']), $fileName);
     }
 
     protected function getPeriodOptions()
@@ -218,15 +225,13 @@ class ReportController extends Controller
         return [
             'summary' => $this->getRevenueSummary($startDate, $endDate),
             'revenueByDate' => $this->getRevenueByDate($startDate, $endDate),
-            'revenueByChannel' => $this->getRevenueByChannel($startDate, $endDate),
+            'revenueByPaymentMethod' => $this->getRevenueByPaymentMethod($startDate, $endDate),
             'topProducts' => $this->getTopProducts($startDate, $endDate),
             'orderStatusStats' => $this->getOrderStatusStats($startDate, $endDate),
             'revenueByCategory' => $this->getRevenueByCategory($startDate, $endDate),
             'customerLoyalty' => $this->getCustomerLoyalty($startDate, $endDate),
-            'purchaseFrequency' => $this->getPurchaseFrequency($startDate, $endDate),
-            'customerRegions' => $this->getCustomerRegions($startDate, $endDate),
+            'voucherUsage' => $this->getVoucherUsage($startDate, $endDate),
             'inventoryStats' => $this->getInventoryStats(),
-            'inventoryProducts' => $this->getInventoryProducts(),
         ];
     }
 
@@ -235,10 +240,12 @@ class ReportController extends Controller
         return Order::whereBetween('created_at', [$startDate, $endDate])
             ->select([
                 DB::raw("SUM(total) as total_revenue"),
+                DB::raw("SUM(subtotal) as subtotal"),
+                DB::raw("SUM(tax) as total_tax"),
+                DB::raw("SUM(shipping) as total_shipping"),
+                DB::raw("SUM(discount_amount) as total_discount"),
                 DB::raw("COUNT(*) as total_orders"),
                 DB::raw("AVG(total) as avg_order_value"),
-                DB::raw("MAX(total) as max_order_value"),
-                DB::raw("MIN(total) as min_order_value"),
             ])
             ->first();
     }
@@ -256,15 +263,15 @@ class ReportController extends Controller
             ->get();
     }
 
-    protected function getRevenueByChannel($startDate, $endDate)
+    protected function getRevenueByPaymentMethod($startDate, $endDate)
     {
         return Order::whereBetween('created_at', [$startDate, $endDate])
             ->select([
-                'channel',
+                'payment_method',
                 DB::raw('SUM(total) as total_revenue'),
                 DB::raw('COUNT(*) as order_count')
             ])
-            ->groupBy('channel')
+            ->groupBy('payment_method')
             ->orderByDesc('total_revenue')
             ->get();
     }
@@ -278,12 +285,11 @@ class ReportController extends Controller
             ->select([
                 'products.id',
                 'products.name as product_name',
-                'product_variants.image',
                 'product_variants.sku',
                 DB::raw('SUM(order_items.quantity) as total_quantity'),
                 DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue'),
             ])
-            ->groupBy('products.id', 'products.name', 'product_variants.image', 'product_variants.sku')
+            ->groupBy('products.id', 'products.name', 'product_variants.sku')
             ->orderByDesc('total_revenue')
             ->limit($limit)
             ->get();
@@ -302,11 +308,11 @@ class ReportController extends Controller
             ->get();
 
         $statusMap = [
+            'pending' => 'Chờ xử lý',
+            'processing' => 'Đang xử lý',
+            'shipped' => 'Đã giao hàng',
             'completed' => 'Hoàn thành',
             'cancelled' => 'Đã hủy',
-            'processing' => 'Đang xử lý',
-            'pending' => 'Chờ xử lý',
-            'shipped' => 'Đã giao hàng',
             'returned' => 'Đã hoàn trả',
         ];
 
@@ -350,66 +356,26 @@ class ReportController extends Controller
             'new_customers' => $userOrders->where('order_count', 1)->count(),
             'returning_customers' => $userOrders->where('order_count', 2)->count(),
             'loyal_customers' => $userOrders->where('order_count', '>', 2)->count(),
+            'total_customers' => $userOrders->count(),
         ];
     }
 
-    protected function getPurchaseFrequency($startDate, $endDate)
+    protected function getVoucherUsage($startDate, $endDate)
     {
-        $userOrders = Order::join('users', 'orders.user_id', '=', 'users.id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
+        return Voucher::leftJoin('orders', function($join) use ($startDate, $endDate) {
+                $join->on('vouchers.id', '=', 'orders.voucher_id')
+                     ->whereBetween('orders.created_at', [$startDate, $endDate]);
+            })
             ->select([
-                'users.id',
-                DB::raw('COUNT(orders.id) as order_count')
+                'vouchers.id',
+                'vouchers.name',
+                'vouchers.code',
+                'vouchers.type',
+                DB::raw('COUNT(orders.id) as usage_count'),
+                DB::raw('SUM(orders.discount_amount) as total_discount')
             ])
-            ->groupBy('users.id')
-            ->get();
-
-        $frequencyRanges = [
-            '1 lần' => 0,
-            '2-3 lần' => 0,
-            '4-5 lần' => 0,
-            '6-10 lần' => 0,
-            'Trên 10 lần' => 0
-        ];
-
-        foreach ($userOrders as $user) {
-            if ($user->order_count == 1) {
-                $frequencyRanges['1 lần']++;
-            } elseif ($user->order_count >= 2 && $user->order_count <= 3) {
-                $frequencyRanges['2-3 lần']++;
-            } elseif ($user->order_count >= 4 && $user->order_count <= 5) {
-                $frequencyRanges['4-5 lần']++;
-            } elseif ($user->order_count >= 6 && $user->order_count <= 10) {
-                $frequencyRanges['6-10 lần']++;
-            } else {
-                $frequencyRanges['Trên 10 lần']++;
-            }
-        }
-
-        $result = [];
-        foreach ($frequencyRanges as $range => $count) {
-            $result[] = (object) [
-                'frequency_range' => $range,
-                'count' => $count
-            ];
-        }
-
-        return collect($result);
-    }
-
-    protected function getCustomerRegions($startDate, $endDate)
-    {
-        return Order::join('users', 'orders.user_id', '=', 'users.id')
-            ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->whereNotNull('users.address')
-            ->select([
-                'users.address as region',
-                DB::raw('COUNT(DISTINCT users.id) as count'),
-                DB::raw('SUM(orders.total) as total_revenue')
-            ])
-            ->groupBy('users.address')
-            ->orderByDesc('total_revenue')
-            ->limit(10)
+            ->groupBy('vouchers.id', 'vouchers.name', 'vouchers.code', 'vouchers.type')
+            ->orderByDesc('usage_count')
             ->get();
     }
 
@@ -417,37 +383,18 @@ class ReportController extends Controller
     {
         return (object) [
             'total_products' => Product::count(),
-            'total_inventory_value' => DB::table('product_variants')
-                ->select(DB::raw('SUM(stock_quantity * price) as total_value'))
-                ->first()->total_value ?? 0,
+            'total_variants' => ProductVariant::count(),
+            'total_inventory_value' => ProductVariant::sum(DB::raw('price * (SELECT quantity FROM stocks WHERE stocks.product_variant_id = product_variants.id)')),
             'in_stock_products' => Product::whereHas('variants', function($query) {
-                $query->where('stock_quantity', '>', 0);
-            })->count(),
-            'low_stock_products' => Product::whereHas('variants', function($query) {
-                $query->where('stock_quantity', '>', 0)
-                      ->whereColumn('stock_quantity', '<=', 'low_stock_threshold');
+                $query->whereHas('stock', function($q) {
+                    $q->where('quantity', '>', 0);
+                });
             })->count(),
             'out_of_stock_products' => Product::whereDoesntHave('variants', function($query) {
-                $query->where('stock_quantity', '>', 0);
+                $query->whereHas('stock', function($q) {
+                    $q->where('quantity', '>', 0);
+                });
             })->count(),
         ];
-    }
-
-    protected function getInventoryProducts($limit = 10)
-    {
-        return Product::with(['variants' => function($query) {
-                $query->select(['id', 'product_id', 'stock_quantity', 'low_stock_threshold', 'price'])
-                      ->orderBy('stock_quantity');
-            }])
-            ->select(['id', 'name'])
-            ->addSelect([
-                'stock_quantity' => ProductVariant::select(DB::raw('SUM(stock_quantity)'))
-                    ->whereColumn('product_variants.product_id', 'products.id'),
-                'inventory_value' => ProductVariant::select(DB::raw('SUM(stock_quantity * price)'))
-                    ->whereColumn('product_variants.product_id', 'products.id'),
-            ])
-            ->orderBy('stock_quantity')
-            ->limit($limit)
-            ->get();
     }
 }

@@ -8,6 +8,7 @@ import axios from 'axios';
 import '../css/OrderDetail.css';
 import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
 import InteractiveStarRating from '../components/InteractiveStarRating';
+import { useNavigate } from "react-router-dom";
 
 const STATUS_LABELS = {
     pending: 'Chờ xử lý',
@@ -22,6 +23,7 @@ const STATUS_LABELS = {
     returned: 'Hoàn hàng',
     failed_1: 'Giao hàng thất bại lần 1',
     failed_2: 'Giao hàng thất bại lần 2',
+    restocked: 'Hàng đã trả kho',
 };
 
 const PAYMENT_STATUS_LABELS = {
@@ -65,6 +67,7 @@ export default function OrderDetailPage() {
     const [newAddress, setNewAddress] = useState('');
     const [editingAddress, setEditingAddress] = useState(false);
     const [updatingAddress, setUpdatingAddress] = useState(false);
+    const navigate = useNavigate();
 
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [returnReason, setReturnReason] = useState('');
@@ -83,16 +86,61 @@ export default function OrderDetailPage() {
     const [returnMediaPreviews, setReturnMediaPreviews] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
 
-    useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setCurrentUserId(payload.sub || payload.id); // Tuỳ JWT bạn
-        } catch (err) {
-        console.error('Decode JWT thất bại:', err);
+    // === Helper kiểm tra hết hạn thanh toán ===
+    const parseDate = (v) => {
+        if (!v) return null;
+        if (v instanceof Date) return v;
+        if (typeof v === 'number') return new Date(v);
+        const d = new Date(v);
+        if (!isNaN(d)) return d;
+        return null;
+    };
+
+    const isPaymentExpired = (orderObj) => {
+        if (!orderObj) return false;
+        // check explicit flags
+        if (orderObj.is_expired === true || orderObj.expired === true) return true;
+        if (typeof orderObj.status === 'string' && ['expired', 'cancelled'].includes(orderObj.status.toLowerCase())) return true;
+
+        const candidateFields = [
+            'payment_expires_at',
+            'payment_expire_at',
+            'expires_at',
+            'payment_deadline',
+            'expire_at',
+            'expired_at',
+            'payment_due',
+            'payment_due_at'
+        ];
+
+        for (const key of candidateFields) {
+            if (orderObj[key]) {
+                const dt = parseDate(orderObj[key]);
+                if (dt) return new Date() > dt;
+            }
         }
-    }
+
+        const nested = orderObj.payment || orderObj.meta || {};
+        for (const key of candidateFields) {
+            if (nested && nested[key]) {
+                const dt = parseDate(nested[key]);
+                if (dt) return new Date() > dt;
+            }
+        }
+
+        return false;
+    };
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setCurrentUserId(payload.sub || payload.id); // Tuỳ JWT bạn
+            } catch (err) {
+                console.error('Decode JWT thất bại:', err);
+            }
+        }
     }, []);
 
     useEffect(() => {
@@ -212,12 +260,28 @@ export default function OrderDetailPage() {
 
     const handleSubmitReview = async () => {
         if (!reviewItem) return;
+        // Lấy danh sách review của sản phẩm này
+        const reviews = reviewItem.reviews || [];
+        const count = reviews.length;
+        const completedAt = new Date(order.completed_at);
+        const now = new Date();
+        const diffDays = Math.floor((now - completedAt) / (1000 * 60 * 60 * 24));
+
+        // Nếu đã có 1 đánh giá và chưa đủ 7 ngày thì không cho đánh giá lần 2
+        if (count === 1 && diffDays < 7) {
+            alert('Bạn chỉ có thể đánh giá lần 2 sau khi đủ 7 ngày kể từ lần đánh giá đầu tiên.');
+            return;
+        }
+        if (reviewMedia.length > 5) {
+            alert("Chỉ được chọn tối đa 5 file ảnh/video!");
+            return;
+        }
         setReviewLoading(true);
         try {
             const formData = new FormData();
             formData.append('order_id', order.id);
-            formData.append('product_id', reviewItem.product_variant.product_id);
-            formData.append('product_variant_id', reviewItem.product_variant_id);
+            formData.append('product_id', reviewItem.product_variant?.product_id || reviewItem.product_variant?.product?.id);
+            formData.append('product_variant_id', reviewItem.product_variant?.id || reviewItem.product_variant_id);
             formData.append('rating', reviewRating);
             formData.append('content', reviewContent);
             reviewMedia.forEach(file => formData.append('media[]', file));
@@ -233,12 +297,12 @@ export default function OrderDetailPage() {
             setReviewMedia([]);
             fetchOrder();
         } catch (err) {
-            alert('Gửi đánh giá thất bại.');
-            if (err.response) {
-                console.error('Lỗi API:', err.response.data);
+             if (err.response?.data?.message) {
+                alert(err.response.data.message);
             } else {
-                console.error('Lỗi:', err);
+                alert('Gửi đánh giá thất bại.');
             }
+            console.error(err);
         } finally {
             setReviewLoading(false);
         }
@@ -250,7 +314,7 @@ export default function OrderDetailPage() {
         setReviewMediaPreviews(files.map(file => URL.createObjectURL(file)));
     };
 
-        const handleReturnMediaChange = (e) => {
+    const handleReturnMediaChange = (e) => {
         const files = Array.from(e.target.files);
         setReturnMedia(files);
         setReturnMediaPreviews(files.map(file => URL.createObjectURL(file)));
@@ -471,22 +535,53 @@ export default function OrderDetailPage() {
                             })()}
 
                         </div>
+                        {/* Tiếp tục thanh toán — show khi chưa thanh toán, chưa hủy và là momo/vnpay */}
+                        {order.payment_status !== 'paid' &&
+                            order.status !== 'cancelled' &&
+                            (() => {
+                                let method = order.payment_method;
+                                if (method && typeof method === 'object') {
+                                    method = method.code || method.name || '';
+                                }
+                                method = String(method ?? '').toLowerCase().trim();
+
+                                return ['momo', 'vnpay'].includes(method);
+                            })() && (
+                                <Button
+                                    variant="btn btn-outline-warning"
+                                    size="sm"
+                                    className="me-2"
+                                    onClick={() => {
+                                        if (isPaymentExpired(order)) {
+                                            alert('Đơn hàng đã hết thời gian thanh toán. Vui lòng tạo đơn mới hoặc liên hệ hỗ trợ.');
+                                            return;
+                                        }
+
+                                        let method = order.payment_method;
+                                        if (method && typeof method === 'object') {
+                                            method = method.code || method.name || '';
+                                        }
+                                        method = String(method ?? '').toLowerCase().trim();
+
+                                        const orderId = String(order.id ?? order.order_id ?? '').trim();
+                                        if (!orderId) {
+                                            alert('ID đơn hàng không hợp lệ.');
+                                            return;
+                                        }
+
+                                        navigate(`/continue-payment/${method}/${orderId}`);
+                                    }}
+                                >
+                                    Tiếp tục thanh toán
+                                </Button>
+                            )}
+
 
                         <p className="mt-3 mb-0">
                             <strong>Thanh toán:</strong>{' '}
                             <Badge bg={paymentStatusBadgeVariant[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'secondary'}>
                                 {PAYMENT_STATUS_LABELS[order.status === 'cancelled' ? 'failed' : order.payment_status] || 'Không rõ'}
                             </Badge>
-                            {order.payment_status !== 'paid' && order.payment_method === 'vnpay' && (
-                                <div className="mt-2">
-                                    <Link
-                                        to={`/vnpay-continue/${order.id}`}
-                                        className="btn btn-outline-warning btn-sm"
-                                    >
-                                        Tiếp tục thanh toán
-                                    </Link>
-                                </div>
-                            )}
                         </p>
                         {order.status === 'pending' && (
                             <Button variant="danger" size="sm" onClick={() => setShowCancelConfirm(true)} className='mt-2'>

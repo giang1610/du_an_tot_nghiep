@@ -123,7 +123,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::resource('categories', CategoryController::class); // Đảm bảo route categories.index tồn tại
     Route::resource('products', ProductController::class);
     Route::resource('vouchers', VoucherController::class);
-    // Route::resource('reviews', ReviewController::class);
+    Route::resource('reviews', ReviewController::class);
 
     Route::resource('orders', OrderController::class);
     // Route::resource('pending', OrderController::class);

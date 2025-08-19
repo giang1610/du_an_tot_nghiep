@@ -3,181 +3,70 @@
 @section('title', 'Báo cáo khuyến mãi')
 
 @section('content')
-<div class="card">
-    <div class="card-body">
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <form method="GET" class="form-inline">
-                    <div class="form-group mr-3">
-                        <select name="filter" class="form-control">
-                            <option value="active" {{ request('filter') == 'active' ? 'selected' : '' }}>Đang chạy</option>
-                            <option value="ended" {{ request('filter') == 'ended' ? 'selected' : '' }}>Đã kết thúc</option>
-                            <option value="custom" {{ request('filter') == 'custom' ? 'selected' : '' }}>Tùy chọn</option>
-                        </select>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Hiệu quả chiến dịch khuyến mãi</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Chọn chiến dịch</label>
+                                <select class="form-control" id="promotionSelect">
+                                    <option value="">Tất cả chiến dịch</option>
+                                    @foreach($promotions as $promotion)
+                                        <option value="{{ $promotion->id }}">{{ $promotion->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Khoảng thời gian</label>
+                                <select class="form-control" id="promotionPeriod">
+                                    <option value="all">Tất cả</option>
+                                    <option value="month">Tháng này</option>
+                                    <option value="year">Năm nay</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-success btn-block" id="filterPromotions">
+                                    <i class="fas fa-filter"></i> Lọc
+                                </button>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="form-group mr-3" id="date-range" style="{{ request('filter') != 'custom' ? 'display:none' : '' }}">
-                        <input type="date" name="from_date" class="form-control" value="{{ request('from_date', Carbon::now()->subDays(30)->toDateString()) }}">
-                        <span class="mx-2">đến</span>
-                        <input type="date" name="to_date" class="form-control" value="{{ request('to_date', Carbon::now()->toDateString()) }}">
+                    
+                    <div class="chart">
+                        <canvas id="promotionChart" height="150"></canvas>
                     </div>
-
-                    <button type="submit" class="btn btn-primary">Lọc</button>
-                    <a href="{{ route('admin.reports.export.promotions', request()->query()) }}" class="btn btn-success ml-2">
-                        <i class="fas fa-file-excel"></i> Xuất Excel
-                    </a>
-                </form>
-            </div>
-        </div>
-
-        @if(request('filter') == 'active' || !request('filter'))
-        <!-- Active Promotions -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Chương trình khuyến mãi đang chạy</h5>
-            </div>
-            <div class="card-body">
-                @if($activePromotions->isEmpty())
-                <div class="alert alert-info">Không có chương trình khuyến mãi nào đang chạy</div>
-                @else
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Tên chương trình</th>
-                                <th>Mã</th>
-                                <th>Loại</th>
-                                <th>Giảm giá</th>
-                                <th>Ngày bắt đầu</th>
-                                <th>Ngày kết thúc</th>
-                                <th>Số đơn</th>
-                                <th>Tổng giảm</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($activePromotions as $promotion)
-                            <tr>
-                                <td>{{ $promotion->name }}</td>
-                                <td><span class="badge badge-info">{{ $promotion->code }}</span></td>
-                                <td>{{ $promotion->type == 'shipping' ? 'Vận chuyển' : 'Sản phẩm' }}</td>
-                                <td>
-                                    @if($promotion->discount_type == 'amount')
-                                    {{ number_format($promotion->discount_amount) }}đ
-                                    @else
-                                    {{ $promotion->discount_percent }}%
-                                    @endif
-                                </td>
-                                <td>{{ $promotion->start_date->format('d/m/Y') }}</td>
-                                <td>{{ $promotion->end_date->format('d/m/Y') }}</td>
-                                <td>{{ $promotion->orders_count }}</td>
-                                <td>{{ number_format($promotion->orders_sum_discount_amount) }}đ</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    
+                    <div class="table-responsive mt-4">
+                        <table class="table table-bordered" id="promotionTable">
+                            <thead>
+                                <tr>
+                                    <th>Chiến dịch</th>
+                                    <th>Tổng đơn</th>
+                                    <th>Đơn hoàn thành</th>
+                                    <th>Tỷ lệ hoàn thành</th>
+                                    <th>Doanh thu</th>
+                                    <th>Hiệu quả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Promotion data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                @endif
             </div>
         </div>
-        @endif
-
-        @if(request('filter') == 'ended')
-        <!-- Ended Promotions -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Chương trình khuyến mãi đã kết thúc</h5>
-            </div>
-            <div class="card-body">
-                @if($endedPromotions->isEmpty())
-                <div class="alert alert-info">Không có chương trình khuyến mãi nào đã kết thúc</div>
-                @else
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Tên chương trình</th>
-                                <th>Mã</th>
-                                <th>Loại</th>
-                                <th>Giảm giá</th>
-                                <th>Ngày bắt đầu</th>
-                                <th>Ngày kết thúc</th>
-                                <th>Số đơn</th>
-                                <th>Tổng giảm</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($endedPromotions as $promotion)
-                            <tr>
-                                <td>{{ $promotion->name }}</td>
-                                <td><span class="badge badge-secondary">{{ $promotion->code }}</span></td>
-                                <td>{{ $promotion->type == 'shipping' ? 'Vận chuyển' : 'Sản phẩm' }}</td>
-                                <td>
-                                    @if($promotion->discount_type == 'amount')
-                                    {{ number_format($promotion->discount_amount) }}đ
-                                    @else
-                                    {{ $promotion->discount_percent }}%
-                                    @endif
-                                </td>
-                                <td>{{ $promotion->start_date->format('d/m/Y') }}</td>
-                                <td>{{ $promotion->end_date->format('d/m/Y') }}</td>
-                                <td>{{ $promotion->orders_count }}</td>
-                                <td>{{ number_format($promotion->orders_sum_discount_amount) }}đ</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @endif
-            </div>
-        </div>
-        @endif
-
-        @if(request('filter') == 'custom' && $promotionPerformance)
-        <!-- Promotion Performance -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Hiệu quả chương trình khuyến mãi ({{ $fromDate }} đến {{ $toDate }})</h5>
-            </div>
-            <div class="card-body">
-                @if($promotionPerformance->isEmpty())
-                <div class="alert alert-info">Không có dữ liệu hiệu quả khuyến mãi trong khoảng thời gian này</div>
-                @else
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Tên chương trình</th>
-                                <th>Mã</th>
-                                <th>Số đơn</th>
-                                <th>Tổng doanh thu</th>
-                                <th>Tổng giảm giá</th>
-                                <th>Tỷ lệ sử dụng</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($promotionPerformance as $promotion)
-                            <tr>
-                                <td>{{ $promotion->name }}</td>
-                                <td><span class="badge badge-info">{{ $promotion->code }}</span></td>
-                                <td>{{ $promotion->orders_count }}</td>
-                                <td>{{ number_format($promotion->orders_sum_total) }}đ</td>
-                                <td>{{ number_format($promotion->orders_sum_discount_amount) }}đ</td>
-                                <td>
-                                    @if($promotion->quantity)
-                                    {{ round(($promotion->orders_count / $promotion->quantity) * 100, 2) }}%
-                                    @else
-                                    Unlimited
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @endif
-            </div>
-        </div>
-        @endif
     </div>
 </div>
 @endsection
@@ -185,14 +74,136 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Show/hide date range picker based on filter
-    $('select[name="filter"]').change(function() {
-        if ($(this).val() === 'custom') {
-            $('#date-range').show();
-        } else {
-            $('#date-range').hide();
+    // Initialize chart
+    const promotionChart = new Chart($('#promotionChart'), {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Tổng đơn',
+                    backgroundColor: '#007bff',
+                    data: []
+                },
+                {
+                    label: 'Đơn hoàn thành',
+                    backgroundColor: '#28a745',
+                    data: []
+                },
+                {
+                    label: 'Doanh thu',
+                    backgroundColor: '#ffc107',
+                    data: [],
+                    type: 'line',
+                    yAxisID: 'y-axis-1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                'y-axis-1': {
+                    position: 'right',
+                    beginAtZero: true,
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' đ';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label === 'Doanh thu') {
+                                return label + ': ' + context.raw.toLocaleString() + ' đ';
+                            }
+                            return label + ': ' + context.raw;
+                        }
+                    }
+                }
+            }
         }
     });
+    
+    // Load initial promotion data
+    loadPromotionStats();
+    
+    // Filter promotions
+    $('#filterPromotions').click(loadPromotionStats);
+    
+    // Function to load promotion stats
+    function loadPromotionStats() {
+        const promotionId = $('#promotionSelect').val();
+        const period = $('#promotionPeriod').val();
+        
+        $.get('{{ route("admin.revenue.promotion-stats") }}', {
+            promotion_id: promotionId,
+            period: period
+        }, function(data) {
+            // Update chart
+            const labels = [];
+            const totalOrders = [];
+            const completedOrders = [];
+            const revenues = [];
+            
+            data.forEach(promotion => {
+                labels.push(promotion.name);
+                totalOrders.push(promotion.total_orders);
+                completedOrders.push(promotion.completed_orders);
+                revenues.push(promotion.revenue);
+            });
+            
+            promotionChart.data.labels = labels;
+            promotionChart.data.datasets[0].data = totalOrders;
+            promotionChart.data.datasets[1].data = completedOrders;
+            promotionChart.data.datasets[2].data = revenues;
+            promotionChart.update();
+            
+            // Update table
+            let html = '';
+            
+            if (data.length > 0) {
+                data.forEach(promotion => {
+                    const completionRate = promotion.total_orders > 0 
+                        ? Math.round((promotion.completed_orders / promotion.total_orders) * 100) 
+                        : 0;
+                    
+                    const efficiency = promotion.completed_orders > 0 
+                        ? Math.round(promotion.revenue / promotion.completed_orders)
+                        : 0;
+                    
+                    html += `
+                        <tr>
+                            <td>${promotion.name}</td>
+                            <td>${promotion.total_orders}</td>
+                            <td>${promotion.completed_orders}</td>
+                            <td>
+                                <div class="progress progress-xs">
+                                    <div class="progress-bar bg-success" style="width: ${completionRate}%"></div>
+                                </div>
+                                <span class="badge bg-success">${completionRate}%</span>
+                            </td>
+                            <td>${promotion.revenue.toLocaleString()} đ</td>
+                            <td>${efficiency.toLocaleString()} đ/đơn</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = '<tr><td colspan="6" class="text-center">Không có dữ liệu</td></tr>';
+            }
+            
+            $('#promotionTable tbody').html(html);
+        });
+    }
 });
 </script>
 @endpush
