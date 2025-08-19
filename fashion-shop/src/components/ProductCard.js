@@ -16,7 +16,8 @@ export default function ProductCard({ product }) {
   }
 
   const variant = product.variants?.[0] || {};
-  const price = Number(variant?.sale_price ?? variant?.price ?? 0);
+  const price = Number(product?.price_products ?? 0);
+//   const price = Number(variant?.sale_price ?? variant?.price ?? 0);
   const originalPrice = Number(variant?.price ?? 0);
 
   const discountPercent =

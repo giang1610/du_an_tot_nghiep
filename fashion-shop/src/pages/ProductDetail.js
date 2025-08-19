@@ -193,8 +193,12 @@ export default function ProductDetail() {
           <h2>{product.name}</h2>
           <p className="text-muted">{product.category?.name}</p>
           <h4 className="text-danger">
-            {Number(selectedVariant?.sale_price ?? selectedVariant?.price ?? product.price_original).toLocaleString('vi-VN')}₫
+            {selectedVariant
+                ? Number(selectedVariant?.sale_price ?? selectedVariant?.price).toLocaleString('vi-VN')
+                : Number(product.price_products).toLocaleString('vi-VN')
+            }₫
           </h4>
+
           <p>{product.description}</p>
 
           <h5 className="mt-4">Chọn kích cỡ:</h5>
