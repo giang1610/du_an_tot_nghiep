@@ -98,37 +98,18 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Orders
-Route::middleware('auth:sanctum')->group(function () {
-
-    // Orders
-    Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index']);
-        Route::get('/{order}', [OrderController::class, 'show']);
-        Route::post('/checkout', [OrderController::class, 'checkout']);
-        Route::post('/checkout/validate-voucher', [OrderController::class, 'validateVoucher']);
-        Route::post('/{order}/cancel', [OrderController::class, 'cancel']);
-        Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
-        Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
-        // Gửi yêu cầu hoàn đơn
-        Route::post('/{id}/request-return', [OrderController::class, 'requestReturn']);
-    });
-
-    // Payment Momo
-
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/payment/momo', [MomoPaymentController::class, 'processMomoPayment']);
-        Route::post('/momo/retry-payment', [MomoPaymentController::class, 'retryMomoPayment']);
-
-    });
-
-    Route::get('/payment/vnpay/verify', [OrderController::class, 'verifyReturn']);
-    // Payment VNPAY
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/vnpay/pay', [OrderController::class, 'processVnpayPayment']);
-        Route::post('/vnpay/retry-payment', [OrderController::class, 'retryVnpayPayment']);
-    });
+Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']);
+    Route::get('/{order}', [OrderController::class, 'show']);
+    Route::post('/checkout', [OrderController::class, 'checkout']);
+    Route::post('/checkout/validate-voucher', [OrderController::class, 'validateVoucher']);
+    Route::post('/{order}/cancel', [OrderController::class, 'cancel']);
+    Route::put('/{order}/update-address', [OrderController::class, 'updateAddress']);
+    Route::post('/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
+    // Gửi yêu cầu hoàn đơn
+    Route::post('/{id}/request-return', [OrderController::class, 'requestReturn']);
 });
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vouchers', [VoucherController::class, 'index']);
@@ -137,9 +118,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vouchers/suggestions', [VoucherController::class, 'suggest']);
     Route::post('/vouchers/apply', [VoucherController::class, 'apply']);
 });
-// Không cho vào trong auth:sanctum
+
+// Payment Momo
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/payment/momo', [MomoPaymentController::class, 'processMomoPayment']);
+    Route::post('/momo/retry-payment', [MomoPaymentController::class, 'retryMomoPayment']);
+
+});
 Route::post('/payment/momo/webhook', [MomoPaymentController::class, 'momoIpn']); // IPN
 Route::get('/payment/momo/return', [MomoPaymentController::class, 'momoReturn']);
 
 
-Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']);
+// Payment VNPAY
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/vnpay/pay', [OrderController::class, 'processVnpayPayment']);
+    Route::post('/vnpay/retry-payment', [OrderController::class, 'retryVnpayPayment']);
+    Route::get('/payment/vnpay/verify', [OrderController::class, 'verifyReturn']); // FE xác minh
+});
+Route::get('/payment/vnpay/ipn', [OrderController::class, 'vnpayIpn']); // IPN
+Route::get('/payment/vnpay/return-url', [OrderController::class, 'vnpayReturn']); // Redirect

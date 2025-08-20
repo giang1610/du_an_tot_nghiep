@@ -120,6 +120,8 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::get('users/staff', [UserController::class, 'staff'])->name('users.staff');
     Route::get('users/createStaff', [UserController::class, 'createStaff'])->name('users.createStaff');
     Route::post('users/createStaff', [UserController::class, 'storeStaff'])->name('users.storeStaff');
+    Route::delete('users/staff/{user}', [UserController::class, 'destroyStaff'])->name('users.destroyStaff');
+    Route::get('users/{user}/showStaff', [UserController::class, 'showStaff'])->name('users.showStaff');
     //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

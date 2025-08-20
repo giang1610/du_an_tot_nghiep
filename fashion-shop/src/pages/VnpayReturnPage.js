@@ -1,74 +1,39 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Container,
-  Spinner,
-  Row,
-  Col,
-  Image,
-  Badge,
-  Button,
-  Alert,
-  Card,
-} from "react-bootstrap";
-import axios from "axios";
-import { ArrowLeft, CheckCircleFill, XCircleFill } from "react-bootstrap-icons";
-import { useCart } from "../context/CartContext";
-const styles = {
-  card: {
-    borderRadius: "25px",
-  },
-  body: {
-    borderRadius: "10px",
-    marginTop: "-5px",
-  }
-};
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Container, Spinner, Row, Col, Image, Badge, Button, Alert, Card } from 'react-bootstrap';
+import axios from 'axios';
+import { ArrowLeft } from 'react-bootstrap-icons';
+import { useCart } from '../context/CartContext';
 
 export default function VnpayReturn() {
   const location = useLocation();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
 
   const [urlData, setUrlData] = useState({});
   const [orderDetail, setOrderDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [fetched, setFetched] = useState(false);
 
   const { removeSelectedItems } = useCart();
-  const STATUS_LABELS = {
-    pending: 'Chờ xử lý',
-    processing: 'Đang xử lý',
-    picking: 'Đang lấy hàng',
-    shipper_arrived: 'Shipper đến lấy hàng',
-    in_warehouse: 'Hàng về kho',
-    shipping: 'Đang giao hàng',
-    shipped: 'Đã giao hàng',
-    completed: 'Hoàn thành',
-    return_requested: 'Đã yêu cầu hoàn hàng',
-    returned: 'Hoàn hàng',
-    cancelled: 'Đã hủy',
-    failed: 'Giao hàng thất bại',
-    failed_1: 'Giao hàng thất bại lần 1',
-    failed_2: 'Giao hàng thất bại lần 2',
-    restocked: 'Hàng đã trả kho',
-};
+
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const data = {
-      message: query.get("message"),
-      order_id: query.get("orderId") || query.get("order_id"),
-      order_number: query.get("order_number"),
-      status: query.get("status"),
-      payment_status: query.get("payment_status"),
-      transaction_id: query.get("transaction_id"),
+      message: query.get('message'),
+      order_id: query.get('orderId') || query.get('order_id'),
+      order_number: query.get('order_number'),
+      status: query.get('status'),
+      payment_status: query.get('payment_status'),
+      transaction_id: query.get('transaction_id'),
     };
     setUrlData(data);
   }, [location.search]);
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!token) return setError("Bạn chưa đăng nhập");
+      if (!token) return setError('Bạn chưa đăng nhập');
       if (!urlData.order_id || fetched) return;
 
       try {
@@ -79,10 +44,10 @@ export default function VnpayReturn() {
         setOrderDetail(res.data.data);
         if (res.data.success) {
           await removeSelectedItems();
-          localStorage.removeItem("buy_now");
+          localStorage.removeItem('buy_now');
         }
       } catch {
-        setError("Không thể tải chi tiết đơn hàng.");
+        setError('Không thể tải chi tiết đơn hàng.');
       } finally {
         setFetched(true);
         setLoading(false);
@@ -92,70 +57,51 @@ export default function VnpayReturn() {
     fetchOrder();
   }, [urlData.order_id, token, removeSelectedItems, fetched]);
 
-  if (loading)
-    return <Spinner animation="border" className="d-block mx-auto mt-5" />;
-  if (error)
-    return (
-      <Container className="py-5">
-        <Alert variant="danger" className="text-center shadow-sm rounded">
-          <h4>Đã xảy ra lỗi</h4>
-          <div>{error}</div>
-          <Button
-            variant="outline-danger"
-className="mt-3"
-            onClick={() => navigate("../orders")}
-          >
-            <ArrowLeft className="me-2" />
-            Quay lại trang đơn hàng
-          </Button>
-        </Alert>
-      </Container>
-    );
-
-  const isPaid = orderDetail?.payment_status === "paid";
+  if (loading) return <Spinner animation="border" className="d-block mx-auto mt-5" />;
+  if (error) return (
+    <Container className="py-5">
+      <Alert variant="danger" className="text-center">
+        <h4>Đã xảy ra lỗi</h4>
+        <div>{error}</div>
+        <Button variant="outline-danger" className="mt-3" onClick={() => navigate('../orders')}>
+          <ArrowLeft className="me-2" />
+          Quay lại trang đơn hàng
+        </Button>
+      </Alert>
+    </Container>
+  );
 
   return (
-    <Container className="py-15">
-      <Card className="shadow-lg border-0 rounded-0 overflow-hidden"  style={{ width: "900px",  justifyContent: "center", margin: "0 auto" }}>
-        <Card.Header
-          className={`text-center py-4 ${isPaid ? "bg-success text-white" : "bg-danger text-white"
-            }`}
-        >
-          <div className="d-flex justify-content-center align-items-center gap-2">
-            {isPaid ? (
-              <CheckCircleFill size={30} />
-            ) : (
-              <XCircleFill size={30} />
-            )}
-            <h3 className="mb-0">
-              {urlData.message || (isPaid ? "Thanh toán thành công" : "Thanh toán thất bại")}
-            </h3>
-          </div>
-        </Card.Header>
-        <Card.Body className="p-4">
+    <Container className="py-5">
+      <Card className="mb-4 shadow-sm">
+        <Card.Body>
+          <h3 className="text-center mb-4">
+            Kết quả thanh toán:{" "}
+            <span className={orderDetail?.payment_status === 'paid' ? "text-success" : "text-danger"}>
+              {urlData.message || (orderDetail?.payment_status === 'paid' ? "Thành công" : "Chưa hoàn tất")}
+            </span>
+          </h3>
           <Row>
-            {/* Thông tin đơn hàng */}
-            <Col md={5}>
-              <h5 className="mb-3">Thông tin đơn hàng</h5>
-              <ul className="list-group shadow-sm rounded-3">
+            <Col md={6}>
+              <ul className="list-group shadow-sm">
                 <li className="list-group-item d-flex justify-content-between">
                   <strong>Mã đơn hàng:</strong>
                   <span>{orderDetail?.order_number}</span>
                 </li>
                 <li className="list-group-item d-flex justify-content-between">
-                  <strong>Trạng thái:</strong>
-                  <Badge bg="primary">
-                    {STATUS_LABELS[orderDetail?.status] || orderDetail?.status || "Không xác định"}
-                  </Badge>
+                  <strong>Trạng thái đơn hàng:</strong>{' '}
+                  {orderDetail?.status === 'processing' ? (
+                    <span className="badge bg-primary">Đang xử lý</span>
+                  ) : (
+                    <span className="badge bg-secondary"></span>
+                  )}
                 </li>
                 <li className="list-group-item d-flex justify-content-between">
-                  <strong>Thanh toán:</strong>{" "}
-                  {isPaid ? (
-                    <Badge bg="success">Đã thanh toán</Badge>
+                  <strong>Thanh toán:</strong>{' '}
+                  {orderDetail?.payment_status === 'paid' ? (
+                    <span className="badge bg-success">Đã thanh toán</span>
                   ) : (
-                    <Badge bg="warning" text="dark">
-                      Chưa thanh toán
-                    </Badge>
+                    <span className="badge bg-warning text-dark">Chưa thanh toán</span>
                   )}
                 </li>
                 <li className="list-group-item d-flex justify-content-between">
@@ -167,87 +113,66 @@ className="mt-3"
                   <span>{orderDetail?.user?.phone}</span>
                 </li>
                 <li className="list-group-item d-flex justify-content-between">
+                  <strong>Địa chỉ:</strong>
+                  <span>{orderDetail?.shipping_address}</span>
+                </li>
+                <li className="list-group-item d-flex justify-content-between">
                   <strong>Email:</strong>
                   <span>{orderDetail?.user?.email}</span>
                 </li>
-                <li className="list-group-item">
-                  <strong>Địa chỉ:</strong>
-                  <div className="text-muted">{orderDetail?.shipping_address}</div>
-                </li>
               </ul>
-</Col>
+            </Col>
+            <Col md={6}>
+              <h5 className="mb-1">Sản phẩm</h5>
+              {orderDetail?.items?.map((item, idx) => {
+                const variant = item.product_variant || {};
+                const product = variant.product || {};
+                const color = variant.color || {};
+                const size = variant.size || {};
+                const price = Number(item.price) * Number(item.quantity);
+                const tax = price * 0.1;
+                const shipping = Number(orderDetail.shipping) || 0;
+                const total = price + tax + shipping;
 
-            {/* Sản phẩm */}
-            <Col md={7}>
-              <h5 className="mb-3">Danh sách sản phẩm</h5>
-              <div className="d-flex flex-column gap-3">
-                {orderDetail?.items?.map((item, idx) => {
-                  const variant = item.product_variant || {};
-                  const product = variant.product || {};
-                  const color = variant.color || {};
-                  const size = variant.size || {};
-                  const price = Number(item.price) * Number(item.quantity);
-                  const tax = price * 0.1;
-                  const shipping = Number(orderDetail.shipping) || 0;
-                  const total = price + tax + shipping;
-
-                  return (
-                    <Card key={idx} className="shadow-sm border-0 custom-card"  >
-                      <Card.Body className="d-flex align-items-center custom-card-body"   style={{ marginTop: "-28px" }}>
-                        <Image
-                          src={variant.thumbnail}
-                          rounded
-                          width={100}
-                          height={100}
-                          style={{ objectFit: "cover" }}
-                          className="me-3 border"
-                        />
-                        <div className="flex-grow-1">
-                      <div className="fw-bold">{product.name}</div>
-
-                      <div className="d-flex justify-content-between text-muted small flex-wrap">
-                        <span>Màu sắc:</span>
-                        <span>{color.name}</span>
+                return (
+                  <Card key={idx} className="mb-3 shadow-sm">
+                    <Card.Body className="d-flex">
+                      <Image
+                        src={variant.thumbnail}
+                        rounded
+                        width={230}
+                        height={230}
+                        style={{ objectFit: 'cover' }}
+                        className="me-5"
+                      />
+                      <div className="flex-grow-1">
+                        <div><strong>{product.name}</strong></div>
+                        <div className="text-muted">Màu: {color.name}</div>
+                        <div className="text-muted">Size: {size.name}</div>
+                        <div className="text-muted">Số lượng: {item.quantity}</div>
+                        <div className="mt-2">
+                          <span className="me-2">Giá: <strong>{Number(item.price).toLocaleString()} ₫</strong></span>
+                        </div>
+                        <div className="mt-1">
+                          <span className="me-2">Thuế (10%): <strong>{tax.toLocaleString()} ₫</strong></span>
+                        </div>
+                        <div className="mt-1">
+                          <span className="me-2">Phí ship: <strong>{shipping.toLocaleString()} ₫</strong></span>
+                        </div>
+                        <div className="mt-2 text-success">
+                          Tổng: <strong>{total.toLocaleString()} ₫</strong>
+                        </div>
                       </div>
-
-                      <div className="d-flex justify-content-between text-muted small flex-wrap">
-                        <span>Kích cỡ:</span>
-                        <span>{size.name}</span>
-                      </div>
-
-                      <div className="d-flex justify-content-between text-muted small">
-                        <span>Số lượng:</span>
-                        <span>{item.quantity}</span>
-                      </div>
-
-                      <div className="d-flex justify-content-between fw-semibold mt-2">
-                        <span>Giá:</span>
-                        <span>{Number(item.price).toLocaleString()} ₫</span>
-                      </div>
-
-                      <div className="d-flex justify-content-between text-success mt-1">
-                        <span>Tổng:</span>
-                        <strong>{total.toLocaleString()} ₫</strong>
-                      </div>
-                    </div>
-
-                      </Card.Body>
-                    </Card>
-                  );
-                })}
-              </div>
+                    </Card.Body>
+                  </Card>
+                );
+              })}
             </Col>
           </Row>
         </Card.Body>
       </Card>
-
       <div className="text-center mt-4">
-        <Button
-          variant="outline-primary"
-          size="lg"
-          className="px-4 rounded-pill"
-          onClick={() => navigate("../orders")}
-        >
+        <Button variant="outline-primary" size="lg" onClick={() => navigate('../orders')}>
           <ArrowLeft className="me-2" />
           Quay về đơn hàng của tôi
         </Button>

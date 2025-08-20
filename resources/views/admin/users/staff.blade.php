@@ -65,7 +65,7 @@
                             <th>Địa chỉ</th>
                             <th>Ảnh đại diện</th>
                             <th width="180" class="text-center">Ngày tạo</th>
-                            <th class="text-center">Thao tác</th>
+                            <th >Thao tác</th>
 
                         </tr>
                     </thead>
@@ -106,6 +106,20 @@
                                     <span class="badge bg-light text-dark">
                                         {{ $user->created_at->format('d/m/Y') }}
                                     </span>
+                                </td>
+                                <td>
+                                    <form action="{{ route('users.destroyStaff', $user->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Xóa"
+                                            onclick="return confirm('Bạn chắc chắn muốn xóa nhân viên này không không ?')">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                    <a href="{{ route('users.showStaff', $user->id) }}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
                                 </td>
                                 {{-- <td class="text-center">
                                     <div class="btn-group btn-group-sm">
