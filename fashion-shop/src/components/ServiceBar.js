@@ -1,43 +1,28 @@
-import { Container, Row, Col } from 'react-bootstrap';
-import { Truck, Gift, Repeat, Headphones } from 'react-bootstrap-icons';
+import React from "react";
 
 export default function ServiceBar() {
   const services = [
-    {
-      icon: <Truck size={32} className="text-warning" />,
-      title: 'MIỄN PHÍ GIAO HÀNG ĐƠN TỪ 500K',
-      desc: 'Giao hàng toàn quốc'
-    },
-    {
-      icon: <Gift size={32} className="text-warning" />,
-      title: 'KIỂM TRA HÀNG KHI THANH TOÁN',
-      desc: 'Nhận hàng, kiểm tra ưng ý mới thanh toán'
-    },
-    {
-      icon: <Repeat size={32} className="text-warning" />,
-      title: 'ĐỔI HÀNG LINH HOẠT',
-      desc: 'Đổi hàng lên tới 30 ngày kể từ ngày mua'
-    },
-    {
-      icon: <Headphones size={32} className="text-warning" />,
-      title: 'TƯ VẤN NHANH CHÓNG',
-      desc: 'Hỗ trợ 24/7 qua hotline:\n0888.566.599'
-    }
+    { icon: "🚚", title: "Miễn phí giao hàng", desc: "Đơn từ 500K" },
+    { icon: "🔁", title: "Đổi trả dễ dàng", desc: "Trong 7 ngày" },
+    { icon: "💳", title: "Thanh toán an toàn", desc: "Bảo mật" },
+    { icon: "📞", title: "Hỗ trợ 24/7", desc: "Tư vấn mọi lúc" },
   ];
 
   return (
-    <Container className="py-4">
-      <Row className="text-center">
-        {services.map((item, idx) => (
-          <Col key={idx} xs={12} sm={6} md={3} className="mb-4">
-            <div className="d-flex flex-column align-items-center">
-              <div className="mb-2">{item.icon}</div>
-              <div className="fw-bold">{item.title}</div>
-              <div className="text-muted small text-center" style={{ whiteSpace: 'pre-line' }}>{item.desc}</div>
+    <section className="bg-white border-top border-bottom">
+      <div className="container py-3">
+        <div className="row text-center g-3">
+          {services.map((s, i) => (
+            <div key={i} className="col-6 col-md-3">
+              <div className="d-flex flex-column align-items-center">
+                <div className="fs-2 mb-2">{s.icon}</div>
+                <div className="fw-bold">{s.title}</div>
+                <small className="text-muted">{s.desc}</small>
+              </div>
             </div>
-          </Col>
-        ))}
-      </Row>
-    </Container>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,11 +1,17 @@
 @extends('admin.layouts.app')
 @section('content')
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 <div class="container-fluid py-3 py-lg-4">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <div class="d-flex justify-content-between align-items-center flex-column flex-md-row">
                 <h4 class="mb-2 mb-md-0">
-                    <i class="fas fa-users me-2"></i>Quản lý người dùng
+                    <i class="fas fa-users me-2"></i>Quản lý khách hàng
                     <span class="badge bg-white text-primary ms-2">{{ $totalUsers }}</span>
                 </h4>
                 <!-- <div class="mt-2 mt-md-0">
@@ -36,13 +42,7 @@
                             <span class="d-none d-md-inline">Tìm kiếm</span>
                         </button>
                     </div>
-                    {{-- <div class="col-6 col-md-2">
-                        @if($search)
-                            <a href="{{ route('users.index') }}" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-times me-1 d-none d-md-inline"></i> Xóa lọc
-                            </a>
-                        @endif
-                    </div> --}}
+                   
                 </div>
             </form>
 
@@ -52,9 +52,14 @@
                     <thead class="table-light">
                         <tr>
                             <th width="80" class="text-center">ID</th>
-                            <th>Tên người dùng</th>
+                            <th>Tên khách hàng</th>
                             <th>Email</th>
+                            <th>Điện thoại</th>
+                            <th>Địa chỉ</th>
+                            <th>Ảnh đại diện</th>
                             <th width="180" class="text-center">Ngày tạo</th>
+                            <th class="text-center">Thao tác</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -75,31 +80,42 @@
                                     </div>
                                 </td>
                                 <td>{{ $user->email }}</td>
+                                <td>{{ $user->phone }}</td>
+                                <td>{{ $user->address }}</td>
+                                <td>
+                                @if($user->img_thumbnail)
+                                    <img src="{{ asset('storage/' . $user->img_thumbnail) }}" 
+                                        alt="{{ $user->name }}" class="img-fluid rounded-circle" 
+                                        style="width: 40px; height: 40px; object-fit: cover;">
+                                @else
+                                    <span class="avatar-title rounded-circle bg-secondary text-white" 
+                                        style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </span>
+                                @endif
+                            </td>
+
                                 <td class="text-center">
                                     <span class="badge bg-light text-dark">
                                         {{ $user->created_at->format('d/m/Y') }}
                                     </span>
                                 </td>
-                                {{-- <td class="text-center">
+                                <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="#" class="btn btn-outline-primary" title="Xem chi tiết">
+                                        <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-primary" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="#" class="btn btn-outline-success" title="Chỉnh sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button class="btn btn-outline-danger" title="Xóa">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        
+                                       
                                     </div>
-                                </td> --}}
+                                </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center py-4">
                                     <div class="empty-state">
                                         <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
-                                        <h4 class="text-muted">Không tìm thấy người dùng nào</h4>
+                                        <h4 class="text-muted">Không tìm thấy khách hàng nào</h4>
                                         @if($search)
                                             <p class="text-muted">Thử lại với từ khóa tìm kiếm khác</p>
                                         @endif

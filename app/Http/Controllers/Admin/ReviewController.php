@@ -10,7 +10,7 @@ class ReviewController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Review::with(['user','product']);
+        $query = Review::with(['user','product','productVariant']);
         if($request->has('search')){
             $query->where('content','like','%' . $request->search .'%');
         }

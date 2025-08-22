@@ -21,7 +21,7 @@
 <script>
     window.chatUserId = {{ $user->id }};
 </script>
-<script src="{{ asset('js/chat/chat-realtime.js') }}"></script>
+<script src="{{ asset('js/chat-realtime.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const chatBox = document.getElementById('chat-box');

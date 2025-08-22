@@ -79,7 +79,7 @@ export default function AllProductsPage() {
         const min = Number(minStr ?? 0);
         const max = Number(maxStr ?? Infinity);
         result = result.filter(p => {
-          const price = Number(p.price_original ?? p.price ?? 0);
+          const price = Number(p.price_products ?? p.price ?? 0);
           return price >= min && price <= max;
         });
       }
@@ -101,11 +101,11 @@ export default function AllProductsPage() {
           result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           break;
         case 'price_asc':
-          result.sort((a, b) => (Number(a.price_original ?? a.price ?? 0)) - (Number(b.price_original ?? b.price ?? 0)));
-          break;
+            result.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0));
+            break;
         case 'price_desc':
-          result.sort((a, b) => (Number(b.price_original ?? b.price ?? 0)) - (Number(a.price_original ?? a.price ?? 0)));
-          break;
+            result.sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0));
+            break;
         default:
           break;
       }
@@ -211,9 +211,9 @@ export default function AllProductsPage() {
             />
 
             <div className="d-grid gap-2">
-              <Button type="submit" variant="primary">
+              {/* <Button type="submit" variant="primary">
                 🔍 Lọc
-              </Button>
+              </Button> */}
               <Button variant="outline-primary" onClick={handleResetFilters}>
                 🔄 Đặt lại
               </Button>
