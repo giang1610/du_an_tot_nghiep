@@ -273,6 +273,7 @@
                                 <span class="badge bg-secondary">
                                     <i class="fas fa-undo-alt me-1"></i> Đồng ý hoàn hàng
                                 </span>
+                                @break
                                  @case('shipper_en_route')
                                 <span class="badge bg-info text-dark">
                                     <i class="fas fa-truck-loading me-1"></i> Shipper lấy hàng
@@ -366,7 +367,7 @@
                                                         @endif
 
                                                         {{-- Luôn cho phép hủy nếu chưa hoàn thành/hủy --}}
-                                                        @if (!in_array($currentStatus, ['cancelled', 'completed', 'shipped', 'shipping', 'restocked','failed','failed_1', 'failed_2','shipper_en_route','returned']))
+                                                        @if (!in_array($currentStatus, ['cancelled', 'completed', 'shipped', 'restocked','failed','failed_1', 'failed_2','shipper_en_route','returned']))
                                                             <option value="cancelled">{{ $statusOptions['cancelled'] }}</option>
                                                         @endif
                                                     </select>

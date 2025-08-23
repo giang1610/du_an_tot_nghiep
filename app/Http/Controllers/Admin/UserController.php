@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Hash;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -37,7 +38,7 @@ public function index(Request $request)
 
         $query = User::query()
             ->whereNotIn('role', [1 , 0]); // Loại bỏ user có role = 1 và 0
-            
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
@@ -58,7 +59,9 @@ public function index(Request $request)
     {
         return view('admin.users.createStaff');
     }
-    
+
+
+    //Thêm nhân viên
     public function storeStaff(Request $request)
     {
         $request->validate([
@@ -110,12 +113,42 @@ public function index(Request $request)
 
         return redirect()->route('users.staff')->with('success', 'Thêm nhân viên thành công.');
     }
+
+    //xóa nhân viên
+    public function destroyStaff(User $user)
+    {
+        if ($user->role == 1) {
+            return redirect()->route('users.staff')->with('error', 'Không thể xóa quản trị viên.');
+        }
+        if ($user->role == 0) {
+            return redirect()->route('users.staff')->with('error', 'Không thể xóa khách hàng.');
+        }
+        if ($user->img_thumbnail) {
+            \Storage::disk('public')->delete($user->img_thumbnail);
+        }
+        $user->delete();
+        return redirect()->route('users.staff')->with('success', 'Xóa nhân viên thành công.');
+    }
+
+    // Hiển thị thông tin chi tiết của nhân viên
+    public function showStaff(User $user)
+    {
+        $user = User::where('id', $user->id)
+                ->where('role', 2)
+                ->firstOrFail();
+        // if ($request->filled('password')) {
+        //     $user->password = Hash::make($request->password);
+        // }
+
+
+       return view('admin.users.showStaff', compact('user'));
+    }
     public function show(User $user)
     {
         return view('admin.users.show', compact('user'));
     }
 
-   
+
     public function update(Request $request, User $user)
     {
         $request->validate([

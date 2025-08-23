@@ -29,8 +29,7 @@ use App\Http\Controllers\Auth\EmailVerifiFotnController;
 use App\Http\Controllers\Auth\NewEmailVerificationController;
 
 use App\Http\Controllers\AdminChatController;
-
-
+use App\Models\Order;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,13 +109,19 @@ Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->
 // Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
 // //xóa vĩnh viễn tất cả sản phẩm
 // Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
- 
+
 Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/', function () {
+        return Auth::user()->role == 1
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('orders.index');
+    })->name('admin.dashboard');
     // nhân viên
     Route::get('users/staff', [UserController::class, 'staff'])->name('users.staff');
     Route::get('users/createStaff', [UserController::class, 'createStaff'])->name('users.createStaff');
     Route::post('users/createStaff', [UserController::class, 'storeStaff'])->name('users.storeStaff');
+    Route::delete('users/staff/{user}', [UserController::class, 'destroyStaff'])->name('users.destroyStaff');
+    Route::get('users/{user}/showStaff', [UserController::class, 'showStaff'])->name('users.showStaff');
     //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -127,7 +132,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::resource('vouchers', VoucherController::class);
     Route::resource('reviews', ReviewController::class);
     Route::resource('users', UserController::class);
-   
+
 
     Route::resource('orders', OrderController::class);
     // Route::resource('pending', OrderController::class);

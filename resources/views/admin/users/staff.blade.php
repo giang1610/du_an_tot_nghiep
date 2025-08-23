@@ -31,25 +31,25 @@
                             <span class="input-group-text bg-white">
                                 <i class="fas fa-search text-primary"></i>
                             </span>
-                            <input type="text" name="search" class="form-control" 
+                            <input type="text" name="search" class="form-control"
                                    placeholder="Tìm kiếm theo tên, email..." value="{{ $search }}">
                         </div>
                     </div>
                     <div class="col-6 col-md-2">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search me-1 d-none d-md-inline"></i> 
+                            <i class="fas fa-search me-1 d-none d-md-inline"></i>
                             <span class="d-inline d-md-none">Tìm</span>
                             <span class="d-none d-md-inline">Tìm kiếm</span>
                         </button>
                     </div>
                     <div class="col-6 col-md-2">
                         <a href="{{ route('users.createStaff') }}" class="btn btn-success w-50">
-                            <i class="bi bi-plus-circle me-1"></i> 
+                            <i class="bi bi-plus-circle me-1"></i>
                             <span class="d-inline d-md-none">Thêm</span>
-                          
+
                         </a>
 
-                   
+
                 </div>
             </form>
 
@@ -65,7 +65,7 @@
                             <th>Địa chỉ</th>
                             <th>Ảnh đại diện</th>
                             <th width="180" class="text-center">Ngày tạo</th>
-                            <th class="text-center">Thao tác</th>
+                            <th >Thao tác</th>
 
                         </tr>
                     </thead>
@@ -91,11 +91,11 @@
                                 <td>{{ $user->address }}</td>
                                 <td>
                                 @if($user->img_thumbnail)
-                                    <img src="{{ asset('storage/' . $user->img_thumbnail) }}" 
-                                        alt="{{ $user->name }}" class="img-fluid rounded-circle" 
+                                    <img src="{{ asset('storage/' . $user->img_thumbnail) }}"
+                                        alt="{{ $user->name }}" class="img-fluid rounded-circle"
                                         style="width: 40px; height: 40px; object-fit: cover;">
                                 @else
-                                    <span class="avatar-title rounded-circle bg-secondary text-white" 
+                                    <span class="avatar-title rounded-circle bg-secondary text-white"
                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </span>
@@ -107,13 +107,27 @@
                                         {{ $user->created_at->format('d/m/Y') }}
                                     </span>
                                 </td>
+                                <td>
+                                    <form action="{{ route('users.destroyStaff', $user->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Xóa"
+                                            onclick="return confirm('Bạn chắc chắn muốn xóa nhân viên này không không ?')">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                    <a href="{{ route('users.showStaff', $user->id) }}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                </td>
                                 {{-- <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-primary" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        
-                                       
+
+
                                     </div>
                                 </td> --}}
                             </tr>
@@ -155,7 +169,7 @@
                                         #{{ $user->id }}
                                     </span>
                                 </div>
-                                
+
                                 <div class="mt-3 d-flex justify-content-between align-items-center">
                                     <small class="text-muted">
                                         <i class="fas fa-calendar-alt me-1"></i>
@@ -191,7 +205,7 @@
             @if($users->hasPages())
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4">
                     <div class="text-muted mb-2 mb-md-0 text-center text-md-start">
-                        Hiển thị <b>{{ $users->firstItem() }}</b> đến <b>{{ $users->lastItem() }}</b> 
+                        Hiển thị <b>{{ $users->firstItem() }}</b> đến <b>{{ $users->lastItem() }}</b>
                         trong tổng số <b>{{ $users->total() }}</b> người dùng
                     </div>
                     <div>

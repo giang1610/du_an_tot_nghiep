@@ -1,6 +1,6 @@
 // Khi kết nối thành công với Pusher
 window.Echo.connector.pusher.connection.bind('connected', function () {
-    console.log('hello ưinsdasdasd');
+    console.log('hello ưin');
 });
 
 // Lắng nghe sự kiện thay đổi trạng thái đơn hàng
