@@ -162,6 +162,11 @@
                                     <i class="fas fa-mobile-alt me-1"></i> Momo
                                 </span>
                                 @break
+                                 @case('vnpay')
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-credit-card me-1"></i> vnpay
+                                    </span>
+                                    @break
                                 @default
                                 <span class="badge bg-light text-dark">
                                     <i class="fas fa-question me-1"></i> Khác
@@ -258,14 +263,14 @@
                                 @endswitch
                             </td>
                             <td>
-                                <div class="d-flex flex-column gap-2">
-                                    <a href="{{ route('orders.show', $order->id) }}"
-                                        class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="tooltip"
-                                        title="Xem chi tiết">
-                                        <span class="d-none d-md-inline">Xem chi tiết</span>
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                <div class="d-flex gap-2 align-items-center">
+                                        <a href="{{ route('orders.show', $order->id) }}"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="tooltip"
+                                            title="Xem chi tiết">
+                                            
+                                            <i class="fas fa-eye"></i>
+                                        </a>
 
                                     
                                 </div>

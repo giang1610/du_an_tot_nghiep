@@ -22,9 +22,9 @@
                 <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách </a>
             <div class="btn-group">
                 @if (!in_array($order->status, ['completed', 'cancelled']))
-                    <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-primary">
+                    {{-- <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-primary">
                         <i class="bi bi-pencil-square me-2"></i>Cập nhật trạng thái
-                    </a>
+                    </a> --}}
                 @endif
                 <button class="btn btn-success" onclick="printOrder()">
                     <i class="bi bi-printer me-2"></i>In đơn hàng

@@ -1,0 +1,129 @@
+
+.cart-page {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f4f7; /* Màu nền xám nhạt cho cả trang */
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  border-radius: 12px;
+  margin: 40px;
+  box-shadow: 10px 10px 5px rgb(24, 96, 219) ;
+}
+
+/* --- Tiêu đề "Giỏ hàng" --- */
+.cart-page h2 {
+  font-weight: 600;
+  margin-bottom: 2rem !important;
+  color: #343a40;
+}
+
+/* --- Tùy chỉnh bảng --- */
+.cart-page .table {
+  border-collapse: separate; /* Quan trọng để tạo khoảng cách giữa các hàng */
+  border-spacing: 0 1rem; /* Khoảng cách dọc giữa các hàng */
+  background-color: transparent;
+  border: none;
+  margin: 0px  ;
+}
+
+/* --- Tiêu đề của bảng (Sản phẩm, Số lượng,...) --- */
+.cart-page .table thead th {
+  border: none;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  padding-bottom: 1rem;
+}
+
+/* --- Tùy chỉnh các hàng sản phẩm --- */
+.cart-page .table tbody tr {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  overflow: hidden; /* Giúp bo góc hoạt động cho các ô con */
+}
+
+/* Hiệu ứng khi di chuột vào hàng */
+.cart-page .table tbody tr:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Tùy chỉnh các ô trong bảng --- */
+.cart-page .table td {
+  border: none;
+  vertical-align: middle; /* Căn giữa các nội dung theo chiều dọc */
+  padding: 1rem 1.25rem;
+}
+
+/* Bo góc cho ô đầu tiên và cuối cùng của mỗi hàng */
+.cart-page .table td:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+.cart-page .table td:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+
+/* --- Hình ảnh sản phẩm --- */
+.cart-page .table img {
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+/* --- Ô nhập số lượng --- */
+.cart-page .form-control {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  text-align: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-page .form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* --- Nút Xóa --- */
+.cart-page .btn-danger {
+  background-color: transparent;
+  color: #dc3545;
+  border: 1px solid #ffebee;
+  transition: all 0.2s ease-in-out;
+}
+
+.cart-page .btn-danger:hover {
+  background-color: #dc3545;
+  color: rgb(187, 45, 45);
+  border-color: #dc3545;
+  transform: scale(1.05);
+}
+
+/* --- Phần tổng cộng và thanh toán --- */
+.cart-page h4 {
+  font-weight: 600;
+  color: #212529;
+}
+
+.cart-page .btn-success {
+  background: linear-gradient(45deg, #28a745, #218838);
+  border: none;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  border-radius: 50px; /* Bo tròn nút */
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.cart-page .btn-success:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px rgba(40, 167, 69, 0.4);
+}
+
+.cart-page .btn-success:disabled {
+  background: #6c757d;
+  box-shadow: none;
+}

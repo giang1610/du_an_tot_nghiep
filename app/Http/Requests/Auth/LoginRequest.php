@@ -54,12 +54,19 @@ class LoginRequest extends FormRequest
         $email = $this->input('email');
         $password = $this->input('password');
 
+         
         // Kiểm tra nếu không nhập email hoặc pass
         if (empty($email)) {
             throw ValidationException::withMessages([
                 'email' => 'Vui lòng nhập email ',
             ]);
         }
+       
+        // if (Auth::user()->role == 2) {
+        //     return redirect()->route('orders.index');
+        // }
+        // return redirect()->route('admin.dashboard');
+
         if (empty($password)) {
             throw ValidationException::withMessages([
                 'password' => 'Vui lòng nhập mật khẩu',
@@ -74,11 +81,11 @@ class LoginRequest extends FormRequest
                 'email' => 'Email không tồn tại.',
             ]);
         }
-
-        if ($user->status === 1) {
-            throw ValidationException::withMessages([
-                'email' => 'Bạn không có quyền truy cập vào hệ thống.',
-            ]);
+        // Kiểm tra quyền của user
+        if (!in_array($user->role, [1, 2])) {
+        throw ValidationException::withMessages([
+            'email' => 'Tài khoản của bạn không có quyền đăng nhập hệ thống.',
+        ]);
         }
 
         // Nếu trạng thái == 0, kiểm tra mật khẩu

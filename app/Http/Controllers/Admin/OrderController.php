@@ -20,7 +20,7 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with('user')->orderBy('created_at', 'desc');
+        $query = Order::with('user')->orderBy('id', 'desc');
 
         // Lọc theo status nếu có
         if ($request->filled('status')) {
@@ -49,7 +49,7 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $orders = $query->paginate(5)->withQueryString(); // Trả về danh sách đơn hàng với 10 bản ghi/trang
+        $orders = $query->paginate(15)->withQueryString(); // Trả về danh sách đơn hàng với 10 bản ghi/trang
 
 
         return view('admin.orders.index', compact('orders'));
@@ -456,7 +456,12 @@ class OrderController extends Controller
         $order->customer_phone = $validated['customer_phone'];
         $order->shipping_address = $validated['shipping_address'];
         $order->save();
-
+        // Gửi email thông báo cập nhật thông tin khách hàng
+            
+        if ($order->customer_email) {
+            \Mail::to($order->customer_email)->send(new \App\Mail\OrderCustomerInfoChanged($order));
+        }
+        
         return redirect()->route('orders.show', $order->id)
             ->with('success', 'Cập nhật thông tin khách hàng thành công!');
     }
@@ -584,7 +589,7 @@ class OrderController extends Controller
         Mail::to($order->customer_email)->queue(new \App\Mail\ReturnRejected($order));
     }
 
-    return redirect()->route('orders.edit', $order->id)
+    return redirect()->route('orders.index', $order->id)
         ->with('success', 'Đã xử lý yêu cầu hoàn hàng.');
 }
 

@@ -44,12 +44,13 @@ class ChatController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+    
 
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
         ]);
 
-        broadcast(new NewMessageEvent($validated['message'], $user->id,'user',$request['avatar']));
+        broadcast(new NewMessageEvent($validated['message'], $user->id,$user->name,'user',$request['avatar']));
 
         $chat = Chat::create([
             'user_id' => $user->id,
