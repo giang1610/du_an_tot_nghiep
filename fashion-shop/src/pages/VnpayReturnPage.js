@@ -1,3 +1,4 @@
+// src/pages/VnpayReturn.jsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -27,23 +28,26 @@ export default function VnpayReturn() {
   const [fetched, setFetched] = useState(false);
 
   const { removeSelectedItems } = useCart();
+
   const STATUS_LABELS = {
-    pending: 'Chờ xử lý',
-    processing: 'Đang xử lý',
-    picking: 'Đang lấy hàng',
-    shipper_arrived: 'Shipper đến lấy hàng',
-    in_warehouse: 'Hàng về kho',
-    shipping: 'Đang giao hàng',
-    shipped: 'Đã giao hàng',
-    completed: 'Hoàn thành',
-    return_requested: 'Đã yêu cầu hoàn hàng',
-    returned: 'Hoàn hàng',
-    cancelled: 'Đã hủy',
-    failed: 'Giao hàng thất bại',
-    failed_1: 'Giao hàng thất bại lần 1',
-    failed_2: 'Giao hàng thất bại lần 2',
-    restocked: 'Hàng đã trả kho',
-};
+    pending: "Chờ xử lý",
+    processing: "Đang xử lý",
+    picking: "Đang lấy hàng",
+    shipper_arrived: "Shipper đến lấy hàng",
+    in_warehouse: "Hàng về kho",
+    shipping: "Đang giao hàng",
+    shipped: "Đã giao hàng",
+    completed: "Hoàn thành",
+    return_requested: "Đã yêu cầu hoàn hàng",
+    returned: "Hoàn hàng",
+    cancelled: "Đã hủy",
+    failed: "Giao hàng thất bại",
+    failed_1: "Giao hàng thất bại lần 1",
+    failed_2: "Giao hàng thất bại lần 2",
+    restocked: "Hàng đã trả kho",
+  };
+
+  // Lấy dữ liệu từ query string
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const data = {
@@ -57,6 +61,7 @@ export default function VnpayReturn() {
     setUrlData(data);
   }, [location.search]);
 
+  // Xác thực thanh toán VNPay
   useEffect(() => {
     const fetchOrder = async () => {
       if (!token) return setError("Bạn chưa đăng nhập");
@@ -68,11 +73,12 @@ export default function VnpayReturn() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setOrderDetail(res.data.data);
+
         if (res.data.success) {
           await removeSelectedItems();
           localStorage.removeItem("buy_now");
         }
-      } catch {
+      } catch (err) {
         setError("Không thể tải chi tiết đơn hàng.");
       } finally {
         setFetched(true);
@@ -85,6 +91,7 @@ export default function VnpayReturn() {
 
   if (loading)
     return <Spinner animation="border" className="d-block mx-auto mt-5" />;
+
   if (error)
     return (
       <Container className="py-5">
@@ -109,17 +116,15 @@ export default function VnpayReturn() {
     <Container className="py-5">
       <Card className="shadow-lg border-0 rounded-4 overflow-hidden">
         <Card.Header
-          className={`text-center py-4 ${isPaid ? "bg-success text-white" : "bg-danger text-white"
-            }`}
+          className={`text-center py-4 ${
+            isPaid ? "bg-success text-white" : "bg-danger text-white"
+          }`}
         >
           <div className="d-flex justify-content-center align-items-center gap-2">
-            {isPaid ? (
-              <CheckCircleFill size={30} />
-            ) : (
-              <XCircleFill size={30} />
-            )}
+            {isPaid ? <CheckCircleFill size={30} /> : <XCircleFill size={30} />}
             <h3 className="mb-0">
-              {urlData.message || (isPaid ? "Thanh toán thành công" : "Thanh toán thất bại")}
+              {urlData.message ||
+                (isPaid ? "Thanh toán thành công" : "Thanh toán thất bại")}
             </h3>
           </div>
         </Card.Header>
@@ -136,11 +141,13 @@ export default function VnpayReturn() {
                 <li className="list-group-item d-flex justify-content-between">
                   <strong>Trạng thái:</strong>
                   <Badge bg="primary">
-                    {STATUS_LABELS[orderDetail?.status] || orderDetail?.status || "Không xác định"}
+                    {STATUS_LABELS[orderDetail?.status] ||
+                      orderDetail?.status ||
+                      "Không xác định"}
                   </Badge>
                 </li>
                 <li className="list-group-item d-flex justify-content-between">
-                  <strong>Thanh toán:</strong>{" "}
+                  <strong>Thanh toán:</strong>
                   {isPaid ? (
                     <Badge bg="success">Đã thanh toán</Badge>
                   ) : (
@@ -163,24 +170,24 @@ export default function VnpayReturn() {
                 </li>
                 <li className="list-group-item">
                   <strong>Địa chỉ:</strong>
-                  <div className="text-muted">{orderDetail?.shipping_address}</div>
+                  <div className="text-muted">
+                    {orderDetail?.shipping_address}
+                  </div>
                 </li>
               </ul>
             </Col>
 
-            {/* Sản phẩm */}
+            {/* Danh sách sản phẩm + Tóm tắt thanh toán */}
             <Col md={7}>
               <h5 className="mb-3">Danh sách sản phẩm</h5>
-              <div className="d-flex flex-column gap-3">
+              <div className="d-flex flex-column gap-3 mb-4">
                 {orderDetail?.items?.map((item, idx) => {
                   const variant = item.product_variant || {};
                   const product = variant.product || {};
                   const color = variant.color || {};
                   const size = variant.size || {};
-                  const price = Number(item.price) * Number(item.quantity);
-                  const tax = price * 0.1;
-                  const shipping = Number(orderDetail.shipping) || 0;
-                  const total = price + tax + shipping;
+
+                  const subtotal = Number(item.price) * Number(item.quantity);
 
                   return (
                     <Card key={idx} className="shadow-sm border-0 rounded-3">
@@ -192,6 +199,7 @@ export default function VnpayReturn() {
                           height={100}
                           style={{ objectFit: "cover" }}
                           className="me-3 border"
+                          alt={product.name}
                         />
                         <div className="flex-grow-1">
                           <div className="fw-bold">{product.name}</div>
@@ -205,7 +213,8 @@ export default function VnpayReturn() {
                             {Number(item.price).toLocaleString()} ₫
                           </div>
                           <div className="text-success mt-1">
-                            Tổng: <strong>{total.toLocaleString()} ₫</strong>
+                            Tổng:{" "}
+                            <strong>{subtotal.toLocaleString()} ₫</strong>
                           </div>
                         </div>
                       </Card.Body>
@@ -213,6 +222,47 @@ export default function VnpayReturn() {
                   );
                 })}
               </div>
+
+              {/* Tóm tắt thanh toán */}
+              <Card className="shadow-sm border-0 rounded-3">
+                <Card.Body>
+                  <h5 className="mb-3">Tóm tắt thanh toán</h5>
+                  <ul className="list-group list-group-flush">
+                    <li className="list-group-item d-flex justify-content-between">
+                      <span>Tạm tính:</span>
+                      <strong>
+                        {Number(orderDetail?.subtotal || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                    <li className="list-group-item d-flex justify-content-between">
+                      <span>Thuế (10%):</span>
+                      <strong>
+                        {Number(orderDetail?.tax || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                    <li className="list-group-item d-flex justify-content-between">
+                      <span>Phí vận chuyển:</span>
+                      <strong>
+                        {Number(orderDetail?.shipping || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                    {orderDetail?.voucher_discount > 0 && (
+                      <li className="list-group-item d-flex justify-content-between text-success">
+                        <span>Giảm giá voucher:</span>
+                        <strong>
+                          -{Number(orderDetail?.voucher_discount).toLocaleString()} ₫
+                        </strong>
+                      </li>
+                    )}
+                    <li className="list-group-item d-flex justify-content-between fs-5">
+                      <span>Thành tiền:</span>
+                      <strong className="text-danger">
+                        {Number(orderDetail?.total || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                  </ul>
+                </Card.Body>
+              </Card>
             </Col>
           </Row>
         </Card.Body>

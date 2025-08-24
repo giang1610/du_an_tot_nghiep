@@ -216,7 +216,7 @@ export default function MomoReturn() {
                             {Number(item.price).toLocaleString()} ₫
                           </div>
                           <div className="text-success mt-1">
-                            Thành tiền:{" "}
+                            Tổng:{" "}
                             <strong>{subtotal.toLocaleString()} ₫</strong>
                           </div>
                         </div>
