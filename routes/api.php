@@ -26,7 +26,6 @@ use App\Http\Controllers\Api\Auth\GetUserController;
 // route chat
 use App\Http\Controllers\Api\Chat\ChatController;
 use App\Http\Controllers\Api\MomoPaymentController;
-use App\Http\Controllers\Api\VnpayPaymentController;
 
 // ========== PUBLIC ROUTES ========== //
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
@@ -123,9 +122,10 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payment/momo', [MomoPaymentController::class, 'processMomoPayment']);
     Route::post('/momo/retry-payment', [MomoPaymentController::class, 'retryMomoPayment']);
+    Route::get('/payment/momo/verify', [MomoPaymentController::class, 'verifyReturn']);
 
 });
-Route::post('/payment/momo/webhook', [MomoPaymentController::class, 'momoIpn']); // IPN
+Route::post('/payment/momo/webhook', [MomoPaymentController::class, 'momoIpn']);
 Route::get('/payment/momo/return', [MomoPaymentController::class, 'momoReturn']);
 
 
@@ -136,4 +136,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payment/vnpay/verify', [OrderController::class, 'verifyReturn']); // FE xác minh
 });
 Route::get('/payment/vnpay/ipn', [OrderController::class, 'vnpayIpn']); // IPN
-Route::get('/payment/vnpay/return-url', [OrderController::class, 'vnpayReturn']); // Redirect
+Route::get('/payment/vnpay/return', [OrderController::class, 'vnpayReturn']); // Redirect

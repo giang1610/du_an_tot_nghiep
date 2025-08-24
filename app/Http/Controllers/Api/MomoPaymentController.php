@@ -303,6 +303,8 @@ class MomoPaymentController extends Controller
 
     public function momoIpn(Request $request)
     {
+        
+Log::info('MoMo IPN received', ['data' => $request->all()]);
         $data = $request->all();
         $secretKey = env('MOMO_SECRET_KEY');
         $accessKey = env('MOMO_ACCESS_KEY');
@@ -401,66 +403,32 @@ class MomoPaymentController extends Controller
         }
     }
 
-    public function momoReturn(Request $request)
-    {
-        $orderId = $request->query('orderId');
-        $resultCode = $request->query('resultCode');
+   public function momoReturn(Request $request)
+{
+    $orderId = $request->input('orderId');
+    $resultCode = $request->input('resultCode'); // 0 = thành công
 
-        if (is_null($orderId) || is_null($resultCode)) {
-            return response()->json(['message' => 'Tham số không hợp lệ'], 400);
-        }
+    $order = Order::where('order_number', $orderId)->first();
+    if (!$order) {
+        return response()->json(['success' => false, 'message' => 'Order not found'], 404);
+    }
 
-        $orderId = explode('-', $orderId)[0];
+    if ($resultCode == 0) {
+        $order->payment_status = 'paid';
+        $order->status = 'pending'; // hoặc "processing"
+        $order->save();
+    } else {
+        $order->payment_status = 'unpaid';
+        $order->save();
+    }
 
-        $order = Order::with([
-            'items.productVariant.product',
-            'items.productVariant.color',
-            'items.productVariant.size'
-        ])->find($orderId);
-
-        if (!$order) {
-            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
-        }
-
-        if ((int)$resultCode === 0 && $order->payment_status === 'pending') {
-            $order->update([
-                'status' => 'pending',
-                'payment_status' => 'paid',
-            ]);
-
-            // update voucher usage nếu chưa cập nhật
-            if ($order->product_voucher_id) {
-                $voucher = Voucher::find($order->product_voucher_id);
-                if ($voucher) $this->updateVoucherUsage($voucher, $order->user);
-            }
-            if ($order->shipping_voucher_id) {
-                $voucher = Voucher::find($order->shipping_voucher_id);
-                if ($voucher) $this->updateVoucherUsage($voucher, $order->user);
-            }
-
-            // decrement stock an toàn
-            foreach ($order->items as $item) {
-                if (isset($item->productVariant) && method_exists($item->productVariant, 'stock')) {
-                    $item->productVariant->stock()->decrement('quantity', $item->quantity);
-                } elseif (isset($item->variant) && method_exists($item->variant, 'stock')) {
-                    $item->variant->stock()->decrement('quantity', $item->quantity);
-                }
-            }
-        }
-
-        return response()->json([
-        'message' => (int)$resultCode === 0 ? 'Thanh toán thành công' : 'Thanh toán thất bại hoặc đã hủy',
-        'data' => [
-
-            'total' => $order->total,
-            'order_id' => $order->id,
-            'order_number' => $order->order_number,
-            'status' => $order->status,
-            'payment_status' => $order->payment_status,
-            'items' => $order->items // => sẽ có đầy đủ product, size, color
-        ]
-    ], (int)$resultCode === 0 ? 200 : 400);
+    return response()->json([
+        'success' => $resultCode == 0,
+        'message' => $resultCode == 0 ? 'Thanh toán thành công' : 'Thanh toán thất bại',
+        'data'    => $order
+    ]);
 }
+
 
     protected function refundMomoPayment(Order $order, $amount = null)
     {
@@ -554,6 +522,37 @@ class MomoPaymentController extends Controller
             return response()->json(['message' => 'Lỗi khi tạo lại link thanh toán MoMo'], 500);
         }
     }
+public function verifyReturn(Request $request)
+{
+    $orderId = $request->query('orderId');
+    $user = auth()->user();
+
+    if (!$orderId) {
+        return response()->json(['success' => false, 'message' => 'Thiếu orderId'], 400);
+    }
+
+    // Nếu orderId có dạng "87-1755602207", chỉ lấy phần trước dấu "-"
+    $orderId = explode('-', $orderId)[0];
+
+    $order = Order::with([
+        'user',
+        'items.productVariant.product',
+        'items.productVariant.color',
+        'items.productVariant.size'
+    ])
+    ->where('id', $orderId)
+    ->where('user_id', $user->id)
+    ->first();
+
+    if (!$order) {
+        return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng'], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => $order
+    ]);
+}
 
     /**
      * validateAndApplyVoucher: Bây giờ hỗ trợ $amountContext và $appliesTo = 'product'|'shipping'

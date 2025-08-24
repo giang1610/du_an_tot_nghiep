@@ -1,6 +1,6 @@
 @component('mail::message')
 <div style="text-align: center; margin-bottom: 20px;">
-     @include('mg-logo', ['size' => 80] )
+      <img src="{{ asset('storage/logo/logo.png') }}" alt="MG Logo" width="80" style="margin-bottom: 10px;">
     <h1 style="color: #2d3748; margin-top: 10px;">Shipper đang đến lấy hàng. Bạn chuẩn bị trả hàng để nhận lại tiền hàng!</h1>
 </div>
 

@@ -27,6 +27,7 @@ import MyVouchers from './pages/MyVouchers';
 import VnpayReturn from './pages/VnpayReturnPage';
 import ContinuePaymentMomo from './components/ContinuePaymentMomo';
 import ContinuePaymentVnpay from './components/ContinuePaymentVnpay';
+// import VnpayReturnMock from './pages/VnpayReturnMock';
 
 
 
@@ -88,7 +89,7 @@ function App() {
         <Route path="*" element={<h1 className="text-center mt-5">Trang không tìm thấy</h1>} />
 
 
-
+        {/* <Route path="/vnpay-return-mock" element={<VnpayReturnMock />} /> */}
       </Routes>
       <ChatApp />
       <Footer />
