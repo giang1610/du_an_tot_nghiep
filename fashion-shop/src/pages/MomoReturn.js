@@ -182,19 +182,16 @@ export default function MomoReturn() {
               </ul>
             </Col>
 
-            {/* Sản phẩm */}
+            {/* Sản phẩm + Tóm tắt */}
             <Col md={7}>
               <h5 className="mb-3">Danh sách sản phẩm</h5>
-              <div className="d-flex flex-column gap-3">
+              <div className="d-flex flex-column gap-3 mb-4">
                 {orderDetail?.items?.map((item, idx) => {
                   const variant = item.product_variant || {};
                   const product = variant.product || {};
                   const color = variant.color || {};
                   const size = variant.size || {};
-                  const price = Number(item.price) * Number(item.quantity);
-                  const tax = price * 0.1;
-                  const shipping = Number(orderDetail.shipping) || 0;
-                  const total = price + tax + shipping;
+                  const subtotal = Number(item.price) * Number(item.quantity);
 
                   return (
                     <Card key={idx} className="shadow-sm border-0 rounded-3">
@@ -219,7 +216,8 @@ export default function MomoReturn() {
                             {Number(item.price).toLocaleString()} ₫
                           </div>
                           <div className="text-success mt-1">
-                            Tổng: <strong>{total.toLocaleString()} ₫</strong>
+                            Thành tiền:{" "}
+                            <strong>{subtotal.toLocaleString()} ₫</strong>
                           </div>
                         </div>
                       </Card.Body>
@@ -227,6 +225,47 @@ export default function MomoReturn() {
                   );
                 })}
               </div>
+
+              {/* Tóm tắt thanh toán */}
+              <Card className="shadow-sm border-0 rounded-3">
+                <Card.Body>
+                  <h5 className="mb-3">Tóm tắt thanh toán</h5>
+                  <ul className="list-group list-group-flush">
+                    <li className="list-group-item d-flex justify-content-between">
+                      <span>Tạm tính:</span>
+                      <strong>
+                        {Number(orderDetail?.subtotal || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                    <li className="list-group-item d-flex justify-content-between">
+                      <span>Thuế (10%):</span>
+                      <strong>
+                        {Number(orderDetail?.tax || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                    <li className="list-group-item d-flex justify-content-between">
+                      <span>Phí vận chuyển:</span>
+                      <strong>
+                        {Number(orderDetail?.shipping || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                    {orderDetail?.voucher_discount > 0 && (
+                      <li className="list-group-item d-flex justify-content-between text-success">
+                        <span>Giảm giá voucher:</span>
+                        <strong>
+                          -{Number(orderDetail?.voucher_discount).toLocaleString()} ₫
+                        </strong>
+                      </li>
+                    )}
+                    <li className="list-group-item d-flex justify-content-between fs-5">
+                      <span>Thành tiền:</span>
+                      <strong className="text-danger">
+                        {Number(orderDetail?.total || 0).toLocaleString()} ₫
+                      </strong>
+                    </li>
+                  </ul>
+                </Card.Body>
+              </Card>
             </Col>
           </Row>
         </Card.Body>
