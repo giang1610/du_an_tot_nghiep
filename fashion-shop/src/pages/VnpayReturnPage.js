@@ -129,10 +129,6 @@ export default function VnpayReturn() {
                 const product = variant.product || {};
                 const color = variant.color || {};
                 const size = variant.size || {};
-                const price = Number(item.price) * Number(item.quantity);
-                const tax = price * 0.1;
-                const shipping = Number(orderDetail.shipping) || 0;
-                const total = price + tax + shipping;
 
                 return (
                   <Card key={idx} className="mb-3 shadow-sm">
@@ -154,13 +150,16 @@ export default function VnpayReturn() {
                           <span className="me-2">Giá: <strong>{Number(item.price).toLocaleString()} ₫</strong></span>
                         </div>
                         <div className="mt-1">
-                          <span className="me-2">Thuế (10%): <strong>{tax.toLocaleString()} ₫</strong></span>
+                          <span className="me-2">Thuế (10%): <strong>{Number(orderDetail?.tax).toLocaleString()} ₫</strong></span>
                         </div>
                         <div className="mt-1">
-                          <span className="me-2">Phí ship: <strong>{shipping.toLocaleString()} ₫</strong></span>
+                          <span className="me-2">Phí ship: <strong>{Number(orderDetail?.shipping).toLocaleString()} ₫</strong></span>
+                        </div>
+                        <div className="mt-1">
+                          <span className="me-2">Áp dụng Voucher: <strong>{Number(orderDetail?.discount_amount).toLocaleString()} ₫</strong></span>
                         </div>
                         <div className="mt-2 text-success">
-                          Tổng: <strong>{total.toLocaleString()} ₫</strong>
+                          Tổng: <strong>{Number(orderDetail?.total).toLocaleString()} ₫</strong>
                         </div>
                       </div>
                     </Card.Body>

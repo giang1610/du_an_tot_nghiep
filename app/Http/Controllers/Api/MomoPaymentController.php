@@ -402,66 +402,81 @@ class MomoPaymentController extends Controller
         }
     }
 
-    public function momoReturn(Request $request)
-    {
-        $orderId = $request->query('orderId');
-        $resultCode = $request->query('resultCode');
+public function momoReturn(Request $request)
+{
+    $orderId = $request->query('orderId');
+    $resultCode = $request->query('resultCode');
 
-        if (is_null($orderId) || is_null($resultCode)) {
-            return response()->json(['message' => 'Tham số không hợp lệ'], 400);
-        }
+    if (is_null($orderId) || is_null($resultCode)) {
+        return response()->json(['message' => 'Tham số không hợp lệ'], 400);
+    }
 
+    // Nếu orderId dạng 123-abc thì chỉ lấy số đầu
+    if (strpos($orderId, '-') !== false) {
         $orderId = explode('-', $orderId)[0];
+    }
 
-        $order = Order::with([
-            'items.productVariant.product',
-            'items.productVariant.color',
-            'items.productVariant.size'
-        ])->find($orderId);
+    // Lấy đơn hàng kèm user + các quan hệ cần thiết
+    $order = Order::with([
+        'items.productVariant.product',
+        'items.productVariant.color',
+        'items.productVariant.size',
+        'user', // load thêm user trực tiếp từ DB
+        // 'shipping_address'
+    ])->where('id', $orderId)->first();
 
-        if (!$order) {
-            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
+    if (!$order) {
+        return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
+    }
+
+    // Nếu thanh toán thành công và chưa update payment_status
+    if ((int)$resultCode === 0 && $order->payment_status === 'pending') {
+        $order->update([
+            'status' => 'confirmed',   // confirmed hoặc processing tùy business
+            'payment_status' => 'paid',
+        ]);
+
+        // update voucher usage
+        if ($order->product_voucher_id) {
+            $voucher = Voucher::find($order->product_voucher_id);
+            if ($voucher) $this->updateVoucherUsage($voucher, $order->user);
+        }
+        if ($order->shipping_voucher_id) {
+            $voucher = Voucher::find($order->shipping_voucher_id);
+            if ($voucher) $this->updateVoucherUsage($voucher, $order->user);
         }
 
-        if ((int)$resultCode === 0 && $order->payment_status === 'pending') {
-            $order->update([
-                'status' => 'pending',
-                'payment_status' => 'paid',
-            ]);
-
-            // update voucher usage nếu chưa cập nhật
-            if ($order->product_voucher_id) {
-                $voucher = Voucher::find($order->product_voucher_id);
-                if ($voucher) $this->updateVoucherUsage($voucher, $order->user);
-            }
-            if ($order->shipping_voucher_id) {
-                $voucher = Voucher::find($order->shipping_voucher_id);
-                if ($voucher) $this->updateVoucherUsage($voucher, $order->user);
-            }
-
-            // decrement stock an toàn
-            foreach ($order->items as $item) {
-                if (isset($item->productVariant) && method_exists($item->productVariant, 'stock')) {
-                    $item->productVariant->stock()->decrement('quantity', $item->quantity);
-                } elseif (isset($item->variant) && method_exists($item->variant, 'stock')) {
-                    $item->variant->stock()->decrement('quantity', $item->quantity);
-                }
+        // decrement stock
+        foreach ($order->items as $item) {
+            if ($item->productVariant && $item->productVariant->stock) {
+                $item->productVariant->stock()->decrement('quantity', $item->quantity);
             }
         }
+    }
 
-        return response()->json([
-        'message' => (int)$resultCode === 0 ? 'Thanh toán thành công' : 'Thanh toán thất bại hoặc đã hủy',
+    // Trả về response
+    return response()->json([
+        'message' => (int)$resultCode === 0 
+            ? 'Thanh toán thành công' 
+            : 'Thanh toán thất bại hoặc đã hủy',
         'data' => [
-
             'total' => $order->total,
             'order_id' => $order->id,
             'order_number' => $order->order_number,
             'status' => $order->status,
             'payment_status' => $order->payment_status,
-            'items' => $order->items // => sẽ có đầy đủ product, size, color
+            'items' => $order->items,   // có đầy đủ product, size, color
+            'user' => $order->user,      // 👈 luôn trả về thông tin user từ DB
+            'shipping_address' => $order->shipping_address,
+            'tax' => $order->tax,
+            'shipping' => $order->shipping,
+            'discount_amount' => $order->discount_amount,
+
         ]
     ], (int)$resultCode === 0 ? 200 : 400);
 }
+
+
 
     protected function refundMomoPayment(Order $order, $amount = null)
     {

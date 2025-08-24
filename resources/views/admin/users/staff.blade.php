@@ -82,7 +82,7 @@
                                         </div> -->
                                         <div>
                                             <h6 class="mb-0">{{ $user->name }}</h6>
-                                            <small class="text-muted">@if($user->is_admin) Quản trị @else Người dùng @endif</small>
+                                            <small class="text-muted">Nhân viên</small>
                                         </div>
                                     </div>
                                 </td>

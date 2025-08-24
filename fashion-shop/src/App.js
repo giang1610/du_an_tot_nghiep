@@ -27,6 +27,7 @@ import MyVouchers from './pages/MyVouchers';
 import VnpayReturn from './pages/VnpayReturnPage';
 import ContinuePaymentMomo from './components/ContinuePaymentMomo';
 import ContinuePaymentVnpay from './components/ContinuePaymentVnpay';
+import NotFound from './components/NotFound';
 
 
 
@@ -85,7 +86,7 @@ function App() {
         <Route path="/continue-payment/momo/:orderId" element={<ContinuePaymentMomo />} />
         <Route path="/continue-payment/vnpay/:orderId" element={<ContinuePaymentVnpay />} />
         {/* Các trang không tìm thấy */}
-        <Route path="*" element={<h1 className="text-center mt-5">Trang không tìm thấy</h1>} />
+        <Route path="*" element={<NotFound />} />
 
 
 

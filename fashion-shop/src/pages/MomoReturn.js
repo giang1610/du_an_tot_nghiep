@@ -155,9 +155,9 @@ useEffect(() => {
                   <strong>Email:</strong>
                   <span>{orderDetail?.user?.email}</span>
                 </li>
-                <li className="list-group-item">
+                <li className="list-group-item d-flex justify-content-between">
                   <strong>Địa chỉ:</strong>
-                  <div className="text-muted">{orderDetail?.shipping_address}</div>
+                  <span>{orderDetail?.shipping_address}</span>
                 </li>
               </ul>
             </Col>
@@ -205,6 +205,18 @@ useEffect(() => {
                           <div className="d-flex justify-content-between fw-semibold mt-2">
                             <span>Giá sản phẩm:</span>
                             <span>{Number(item.price).toLocaleString()} ₫</span>
+                          </div>
+                          <div className="d-flex justify-content-between text-muted small">
+                            <span>Thuế:</span>
+                            <span>+{Number(orderDetail?.tax).toLocaleString()} ₫</span>
+                          </div>
+                          <div className="d-flex justify-content-between text-muted small">
+                            <span>Ship:</span>
+                            <span>+{Number(orderDetail?.shipping).toLocaleString()} ₫</span>
+                          </div>
+                          <div className="d-flex justify-content-between text-muted small">
+                            <span>Áp dụng Voucher:</span>
+                            <span>-{Number(orderDetail?.discount_amount).toLocaleString()} ₫</span>
                           </div>
 
                           <div className="d-flex justify-content-between text-success mt-1">
