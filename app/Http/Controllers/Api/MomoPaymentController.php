@@ -343,7 +343,7 @@ class MomoPaymentController extends Controller
         try {
             if ((int)$data['resultCode'] === 0) {
                 $order->update([
-                    'status' => 'pending',
+                    'status' => 'processing',
                     'payment_status' => 'paid',
                     'transaction_id' => $data['transId'],
                 ]);
@@ -422,7 +422,6 @@ public function momoReturn(Request $request)
         'items.productVariant.color',
         'items.productVariant.size',
         'user', // load thêm user trực tiếp từ DB
-        // 'shipping_address'
     ])->where('id', $orderId)->first();
 
     if (!$order) {
@@ -432,7 +431,7 @@ public function momoReturn(Request $request)
     // Nếu thanh toán thành công và chưa update payment_status
     if ((int)$resultCode === 0 && $order->payment_status === 'pending') {
         $order->update([
-            'status' => 'confirmed',   // confirmed hoặc processing tùy business
+            'status' => 'processing',
             'payment_status' => 'paid',
         ]);
 
@@ -469,6 +468,7 @@ public function momoReturn(Request $request)
             'user' => $order->user,      // 👈 luôn trả về thông tin user từ DB
             'shipping_address' => $order->shipping_address,
             'tax' => $order->tax,
+            'subtotal' => $order->subtotal,
             'shipping' => $order->shipping,
             'discount_amount' => $order->discount_amount,
 

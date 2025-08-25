@@ -38,9 +38,11 @@ import NotFound from './components/NotFound';
 
 function App() {
   return (
-    <Router>
+    <div className="app-wrapper d-flex flex-column min-vh-100">
+      <Router>
       <CustomNavbar />
-      <Routes>
+      <div className='flex-grow-1'>
+        <Routes>
         {/* Trang home */}
         <Route path="/" element={<Home />} />
 
@@ -91,9 +93,11 @@ function App() {
 
 
       </Routes>
+      </div>
       <ChatApp />
       <Footer />
     </Router>
+    </div>
   );
 }
 
