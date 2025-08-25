@@ -61,7 +61,6 @@ class ReportController extends Controller
             $fromDate = $dateRange['from'];
             $toDate = $dateRange['to'];
             $daysCount = $startDate->diffInDays($endDate) + 1;
-
             // Generate cache key based on parameters
             $cacheKey = "revenue_report_{$timePeriod}_{$fromDate}_{$toDate}";
             if ($compareWith) {
@@ -77,7 +76,6 @@ class ReportController extends Controller
             if ($compareWith) {
                 $compareRange = $this->getComparisonDateRange($timePeriod, $compareWith, $startDate, $endDate);
                 $compareCacheKey = "compare_data_{$compareWith}_{$compareRange['start']}_{$compareRange['end']}";
-
                 $compareData = Cache::remember($compareCacheKey, self::CACHE_TIME, function() use ($compareRange) {
                     return $this->getReportData($compareRange['start'], $compareRange['end']);
                 });
@@ -200,6 +198,18 @@ class ReportController extends Controller
                 return [
                     'start' => $currentStart->copy()->subWeek(),
                     'end' => $currentEnd->copy()->subWeek(),
+                ];
+
+            case 'same_period_last_month':
+                return [
+                    'start' => $currentStart->copy()->subMonth(),
+                    'end' => $currentEnd->copy()->subMonth(),
+                ];
+
+            case 'same_period_last_year':
+                return [
+                    'start' => $currentStart->copy()->subYear(),
+                    'end' => $currentEnd->copy()->subYear(),
                 ];
 
             case 'same_period_last_month':
@@ -405,7 +415,6 @@ class ReportController extends Controller
 
         foreach ($customersInPeriod as $customerId) {
             $orderCount = $customerOrders->get($customerId)->order_count ?? 0;
-
             if ($orderCount === 1) {
                 $newCustomers++;
             } elseif ($orderCount === 2) {

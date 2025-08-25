@@ -37,10 +37,6 @@ use App\Models\Order;
 |--------------------------------------------------------------------------
 */
 
-
-
-
-
 // Trang chủ
 Route::get('/', function () {
     return view('welcome');
@@ -173,8 +169,8 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
 
     Route::get('revenue', [ReportController::class, 'revenueReport'])->name('admin.reports.revenue');
     // Route::get('/revenue', [ReportController::class, 'advancedReport'])->name('admin.reports.revenue');
-     Route::get('reports/revenue/export', [ReportController::class, 'exportRevenueReport'])
-         ->name('reports.revenue.export');
+    Route::get('reports/revenue/export', [ReportController::class, 'exportRevenueReport'])
+        ->name('reports.revenue.export');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 

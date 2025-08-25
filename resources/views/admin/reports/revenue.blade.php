@@ -1,5 +1,7 @@
 @extends('admin.layouts.app')
 
+@section('title', 'Doanh thu')
+
 @section('content')
     <div class="container-fluid py-4">
         <div class="row mb-4">
@@ -28,17 +30,14 @@
                                         <option value="custom" {{ request('time_period') == 'custom' ? 'selected' : '' }}>Tùy chỉnh</option>
                                     </select>
                                 </div>
-
                                 <div class="col-md-2" id="from_date_group" style="{{ request('time_period') == 'custom' ? '' : 'display:none' }}">
                                     <label class="form-label"><i class="bi bi-calendar-minus me-1"></i> Từ ngày</label>
                                     <input type="date" name="from_date" class="form-control" value="{{ request('from_date', date('Y-m-d', strtotime('-30 days'))) }}">
                                 </div>
-
                                 <div class="col-md-2" id="to_date_group" style="{{ request('time_period') == 'custom' ? '' : 'display:none' }}">
                                     <label class="form-label"><i class="bi bi-calendar-plus me-1"></i> Đến ngày</label>
                                     <input type="date" name="to_date" class="form-control" value="{{ request('to_date', date('Y-m-d')) }}">
                                 </div>
-
                                 <div class="col-md-3">
                                     <label class="form-label"><i class="bi bi-compass me-1"></i> So sánh với</label>
                                     <select name="compare_with" class="form-select select2">
@@ -49,7 +48,6 @@
                                         <option value="same_period_last_year" {{ request('compare_with') == 'same_period_last_year' ? 'selected' : '' }}>Cùng kỳ năm trước</option>
                                     </select>
                                 </div>
-
                                 <div class="col-md-2 d-flex align-items-end">
                                     <div class="d-grid gap-2 d-md-flex">
                                         <button type="submit" class="btn btn-primary flex-fill">
@@ -66,7 +64,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Thông tin khoảng thời gian -->
         <div class="alert alert-info">
             <div class="d-flex">
@@ -87,7 +84,6 @@
                 </div>
             </div>
         </div>
-
         @if($isEmpty)
         <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-2"></i> Không có dữ liệu trong khoảng thời gian đã chọn.
@@ -696,7 +692,6 @@
                                     </table>
                                 </div>
                             </div>
-
                             <!-- Thông tin tồn kho -->
                             <div class="tab-pane fade" id="inventory" role="tabpanel" aria-labelledby="inventory-tab">
                                 <div class="row">
@@ -820,7 +815,6 @@
             theme: 'bootstrap-5',
             width: '100%'
         });
-
         // Hiển thị/ẩn ngày tùy chọn
         $('select[name="time_period"]').change(function() {
             if ($(this).val() === 'custom') {
@@ -829,12 +823,10 @@
                 $('#from_date_group, #to_date_group').slideUp();
             }
         });
-
         // Fullscreen toggle
         $('.fullscreen-btn').click(function() {
             const chartCard = $('#revenueChartCard');
             chartCard.toggleClass('fullscreen');
-
             if (chartCard.hasClass('fullscreen')) {
                 chartCard.css({
                     'position': 'fixed',
@@ -863,12 +855,10 @@
             const allDates = [];
             const currentDate = new Date('{{ $fromDate }}');
             const endDate = new Date('{{ $toDate }}');
-
             while (currentDate <= endDate) {
                 allDates.push(new Date(currentDate).toISOString().split('T')[0]);
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-
             // Tạo object để dễ dàng truy cập doanh thu theo ngày
             const revenueByDateMap = {};
             @foreach($revenueByDate as $revenue)
@@ -883,7 +873,6 @@
                 const d = new Date(date);
                 return `${d.getDate()}/${d.getMonth() + 1}`;
             });
-
             new Chart(revenueCtx, {
                 type: 'line',
                 data: {
@@ -948,7 +937,6 @@
                 }
             });
         }
-
         // Biểu đồ phương thức thanh toán
         const paymentMethodsCtx = document.getElementById('paymentMethodsChart');
         if (paymentMethodsCtx) {
@@ -956,7 +944,6 @@
             const labels = paymentData.map(item => item.payment_method);
             const data = paymentData.map(item => item.total_revenue);
             const colors = ['rgba(13, 110, 253, 0.8)', 'rgba(25, 135, 84, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(220, 53, 69, 0.8)', 'rgba(108, 117, 125, 0.8)'];
-
             new Chart(paymentMethodsCtx, {
                 type: 'doughnut',
                 data: {
@@ -989,14 +976,12 @@
                 }
             });
         }
-
         // Biểu đồ danh mục
         const categoriesCtx = document.getElementById('categoriesChart');
         if (categoriesCtx) {
             const categoryData = @json($revenueByCategory);
             const labels = categoryData.map(item => item.name);
             const data = categoryData.map(item => item.total_revenue);
-
             new Chart(categoriesCtx, {
                 type: 'bar',
                 data: {
@@ -1045,7 +1030,6 @@
                 }
             });
         }
-
         // Biểu đồ trạng thái đơn hàng
         const statusesCtx = document.getElementById('statusesChart');
         if (statusesCtx) {
@@ -1053,7 +1037,6 @@
             const labels = statusData.map(item => item.status_name);
             const data = statusData.map(item => item.count);
             const colors = ['rgba(25, 135, 84, 0.8)', 'rgba(13, 110, 253, 0.8)', 'rgba(13, 202, 240, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(220, 53, 69, 0.8)'];
-
             new Chart(statusesCtx, {
                 type: 'pie',
                 data: {
@@ -1086,14 +1069,12 @@
                 }
             });
         }
-
         // Biểu đồ khách hàng
         const customersCtx = document.getElementById('customersChart');
         if (customersCtx) {
             const customerData = @json($customerLoyalty);
             const labels = ['Khách hàng mới', 'Khách quay lại', 'Khách hàng thân thiết'];
             const data = [customerData.new_customers, customerData.returning_customers, customerData.loyal_customers];
-
             new Chart(customersCtx, {
                 type: 'doughnut',
                 data: {
@@ -1131,14 +1112,12 @@
                 }
             });
         }
-
         // Biểu đồ tồn kho
         const inventoryCtx = document.getElementById('inventoryChart');
         if (inventoryCtx) {
             const inventoryData = @json($inventoryStats);
             const labels = ['Có hàng', 'Hết hàng'];
             const data = [inventoryData.in_stock_products, inventoryData.out_of_stock_products];
-
             new Chart(inventoryCtx, {
                 type: 'pie',
                 data: {
@@ -1192,7 +1171,6 @@
             --dark: #212529;
             --purple: #6f42c1;
         }
-
         .info-box {
             box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
             border-radius: 0.5rem;
@@ -1203,7 +1181,6 @@
             padding: 0.5rem;
             position: relative;
         }
-
         .info-box .info-box-icon {
             border-radius: 0.5rem;
             align-items: center;
@@ -1213,7 +1190,6 @@
             text-align: center;
             width: 70px;
         }
-
         .info-box .info-box-content {
             display: flex;
             flex-direction: column;
@@ -1222,18 +1198,15 @@
             flex: 1;
             padding: 0 10px;
         }
-
         .info-box .info-box-number {
             font-size: 1.5rem;
             font-weight: 700;
         }
-
         .info-box .progress {
             background-color: rgba(0,0,0,.125);
             height: 2px;
             margin: 5px 0;
         }
-
         .chart-container {
             position: relative;
             height: 350px;
@@ -1271,13 +1244,11 @@
             color: var(--secondary);
             font-weight: 500;
         }
-
         .nav-tabs .nav-link.active {
             color: var(--primary);
             border-bottom-color: var(--primary);
             background-color: transparent;
         }
-
         .select2-container--bootstrap-5 .select2-selection {
             min-height: calc(1.5em + 0.75rem + 2px);
         }
