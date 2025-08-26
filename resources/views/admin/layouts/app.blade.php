@@ -110,7 +110,7 @@
               font-size:.75rem;color:#6b7280;border:1px solid #d1d5db;border-radius:6px;padding:2px 6px}
 
     .avatar{width:38px;height:38px;border-radius:50%;
-            background:#cbd5e1  center/cover no-repeat}
+            background:#cbd5e1 url('https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png') center/cover no-repeat}
 
     .dropdown-menu{border-radius:var(--radius);padding:.75rem;min-width:230px;font-size:.9rem}
     .dropdown-item i{width:20px;text-align:center;margin-right:6px}
@@ -232,23 +232,11 @@
     </li> -->
 
     <!-- 👉 Khách hàng (mới, chưa có route) -->
-    {{-- <li class="nav-item menu-item" data-title="khách hàng customers">
+    <li class="nav-item menu-item" data-title="khách hàng customers">
       <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
         <i class="bi bi-people"></i><span class="menu-text">Khách hàng</span>
       </a>
-    </li> --}}
-
-    <li class="nav-item menu-parent" data-title="users">
-    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#4" aria-expanded="{{ request()->routeIs('users.*') ? 'true' : 'false' }}">
-      <i class="bi bi-people"></i><span class="menu-text">Người dùng</span><i class="bi bi-chevron-down ms-auto"></i>
-    </a>
-    <div id="4" class="collapse ps-3 {{ request()->routeIs('users.*') ? 'show' : '' }}">
-      <a href="{{ route('users.index') }}" class="nav-link py-2 menu-item {{ request()->routeIs('users.index') ? 'active' : '' }}" data-title="danh sách khách hàng">Khách hàng</a>
-      {{-- <a href="{{ route('users.create') }}" class="nav-link py-2 menu-item {{ request()->routeIs('users.create') ? 'active' : '' }}" data-title="danh sách nhân viên">Nhân viên</a> --}}
-      <a href="{{ route('users.staff') }}" class="nav-link py-2 menu-item {{ request()->routeIs('users.index') ? 'active' : '' }}" data-title="danh sách khách hàng">Nhân viên</a>
-
-    </div>
-  </li>
+    </li>
 
     <!-- 👉 Doanh thu (mới, chưa có route) -->
     <li class="nav-item menu-item" data-title="doanh thu revenue">
@@ -288,13 +276,7 @@
 
       <div class="dropdown">
         <a href="#" class="d-flex align-items-center gap-2 dropdown-toggle text-decoration-none" data-bs-toggle="dropdown">
-          {{-- <div class="avatar"></div> --}}
-          @php
-            $avatar = Auth::user()->img_thumbnail
-                ? asset('storage/' . Auth::user()->img_thumbnail)
-                : asset('images/default-avatar.png');
-        @endphp
-        <div class="avatar" style="background-image: url('{{ $avatar }}')"></div>
+          <div class="avatar"></div>
           <span class="admin-name fw-medium d-none d-md-inline">{{ Auth::user()->name ?? 'Admin' }}</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-end shadow">
