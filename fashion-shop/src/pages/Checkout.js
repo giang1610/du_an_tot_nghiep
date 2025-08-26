@@ -93,6 +93,7 @@ export default function Checkout() {
     const tax = subtotal * 0.1;
     let shipping = BASE_SHIPPING;
     let productDiscount = 0;
+    let shippingDiscount = 0;
 
     if (productVoucherInfo) {
       if (productVoucherInfo.type === 'percent') productDiscount = (subtotal * productVoucherInfo.value) / 100;
@@ -100,12 +101,12 @@ export default function Checkout() {
     }
 
     if (shippingVoucherInfo) {
-      if (shippingVoucherInfo.type === 'fixed') shipping = Math.max(0, shipping - shippingVoucherInfo.value);
-      else if (shippingVoucherInfo.type === 'percent') shipping = shipping * (1 - (shippingVoucherInfo.value ?? 0) / 100);
+      if (shippingVoucherInfo.type === 'fixed') shippingDiscount = shippingVoucherInfo.value;
+      else if (shippingVoucherInfo.type === 'percent') shippingDiscount = shipping * (1 - (shippingVoucherInfo.value ?? 0) / 100);
     }
     // console.log('productVoucherInfo:', productVoucherInfo);
-    const total = subtotal + tax + shipping - productDiscount;
-    return { subtotal, tax, shipping, discount: productDiscount, total: Math.max(0, total) };
+    const total = subtotal + tax + shipping - productDiscount - shippingDiscount;
+    return { subtotal, tax, shipping, discount: productDiscount, ship: shippingDiscount, total: Math.max(0, total) };
   }, [selectedItems, productVoucherInfo, shippingVoucherInfo]);
 
   const setField = (name, value) => {
@@ -168,7 +169,7 @@ export default function Checkout() {
 
       // Expect backend to return voucher object: { code, type: 'percent'|'fixed', value, applies_to }
       const voucher = res.data;
-
+      // console.log('Voucher trả về:', voucher);
       if (!voucher || (!voucher.type && !voucher.applies_to && voucher.value == null)) {
         return setError('Mã giảm giá không hợp lệ.');
       }
@@ -442,6 +443,7 @@ export default function Checkout() {
                         {voucher.code} - {voucher.type === 'percent'
                           ? `${voucher.value ?? 0}%`
                           : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
+                        {voucher.name ? ` (${voucher.name})` : ''}
                       </option>
                     ))}
                   </select>
@@ -520,6 +522,7 @@ export default function Checkout() {
                         {voucher.code} - {voucher.type === 'percent'
                           ? `${voucher.value ?? 0}%`
                           : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
+                        {voucher.name ? ` (${voucher.name})` : ''}
                       </option>
                     ))}
                   </select>
@@ -590,6 +593,9 @@ export default function Checkout() {
                 <p style={{ color: '#4a5568' }}>Thuế: {formatCurrency(totals.tax)} VNĐ</p>
                 {totals.discount > 0 && (
                   <p style={{ color: '#10b981' }}>Giảm giá: -{formatCurrency(totals.discount).replace(/\.00$/, '')} VNĐ</p>
+                )}
+                {totals.ship > 0 && (
+                  <p style={{ color: '#10b981' }}>Giảm giá ship: -{Number(totals.ship).toLocaleString()} VNĐ</p>
                 )}
                 <h4 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#e53e3e', marginTop: '0.5rem' }}>Tổng cộng: {formatCurrency(totals.total)} VNĐ</h4>
               </>

@@ -37,9 +37,9 @@
 | {{ $color->name ?? '---' }} 
 | {{ $size->name ?? '---' }} 
 | {{ $item->quantity }} 
-| {{ number_format($variant->price ?? 0, 0, ',', '.') }}₫ 
+| {{ number_format($variant->price ?? 0, 0, ',', '.') }} VNĐ   
 | {{ $isOnSale ? number_format($item->sale_price, 0, ',', '.') . '₫' : '---' }} 
-| **{{ number_format($rowTotal, 0, ',', '.') }}₫** |
+| **{{ number_format($rowTotal, 0, ',', '.') }} VNĐ  ** |
 @endforeach
 @endcomponent
 
@@ -47,13 +47,13 @@
 
 @component('mail::panel')
 ### 💰 Chi tiết thanh toán
-- Tổng giá sản phẩm: {{ number_format($order->subtotal + ($order->discount ?? 0), 0, ',', '.') }}₫  
+- Tổng giá sản phẩm: {{ number_format($order->subtotal + ($order->discount ?? 0), 0, ',', '.') }} VNĐ  
 @if($order->discount > 0)
-- Giảm giá: <span style="color:red;">-{{ number_format($order->discount, 0, ',', '.') }}₫</span>  
+- Giảm giá: <span style="color:red;">-{{ number_format($order->discount, 0, ',', '.') }} VNĐ</span>  
 @endif
-- Phí vận chuyển: {{ number_format($order->shipping, 0, ',', '.') }}₫  
-- Thuế (VAT): {{ number_format($order->tax, 0, ',', '.') }}₫  
-- 👉 **Tổng cộng cần thanh toán: {{ number_format($order->total, 0, ',', '.') }}₫**
+- Phí vận chuyển: {{ number_format($order->shipping, 0, ',', '.') }} VNĐ    
+- Thuế (VAT): {{ number_format($order->tax, 0, ',', '.') }} VNĐ    
+- 👉 **Tổng cộng cần thanh toán: {{ number_format($order->total, 0, ',', '.') }} VNĐ  **
 @endcomponent
 
 ---
