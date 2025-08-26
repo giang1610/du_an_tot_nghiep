@@ -356,7 +356,7 @@ class OrderController extends Controller
             $voucherData = null;
             $discountAmount = 0;
 
-            if ($request->voucher_code) {
+            if ($request->product_voucher_code || $request->shipping_voucher_code) {
                 $voucherResponse = $this->validateAndApplyVoucher(
                     $request->product_voucher_code,
                     $request->shipping_voucher_code,
@@ -370,6 +370,14 @@ class OrderController extends Controller
 
                 $voucherData = $voucherResponse['voucher'];
                 $discountAmount = $voucherResponse['discount_amount'];
+
+                  // Log để debug
+    Log::info('Voucher processing:', [
+        'product_voucher' => $request->product_voucher_code,
+        'shipping_voucher' => $request->shipping_voucher_code,
+        'discount_amount' => $discountAmount,
+        'voucher_data' => $voucherData
+    ]);
             }
 
             // Tạo đơn hàng
@@ -383,7 +391,8 @@ class OrderController extends Controller
                 'subtotal' => $request->subtotal,
                 'tax' => $request->tax,
                 'shipping' => $request->shipping,
-                'voucher_code' => $request->voucher_code ?? null,
+                // 'voucher_code' => $request->voucher_code ?? null,
+                 'voucher_code' => $request->product_voucher_code ?? $request->shipping_voucher_code ?? null,
                 'voucher_discount' => $discountAmount ?? null,
                 'voucher_type' => $voucherData->type ?? null,
                 'voucher_id' => $voucherData->id ?? null,
@@ -577,6 +586,11 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
             ], 400);
         }
+        Log::info('Request data:', $request->all());
+Log::info('Voucher codes:', [
+    'product_voucher' => $request->product_voucher_code,
+    'shipping_voucher' => $request->shipping_voucher_code
+]);
     }
 
     /**

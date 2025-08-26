@@ -223,14 +223,14 @@ class VoucherController extends Controller
             'data' => $validVouchers
         ]);
     }
-    public function apply(Request $request)
+    public function apply(Request $request)  // Áp dụng voucher vào đơn hàng
     {
         $user = $request->user();
         $code = $request->input('code');
         $subtotal = $request->input('total');
 
         if (!$code || !$subtotal) {
-            return response()->json(['success' => false, 'message' => 'Thiếu thông tin'], 422);
+            return response()->json(['success' => false, 'message' => 'Thiếu thông tin'], 422); 
         }
 
         $result = $this->validateAndApplyVoucher($code, $user, $subtotal);
