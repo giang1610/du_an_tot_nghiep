@@ -93,6 +93,7 @@ export default function MomoReturn() {
   }
 
   const isPaid = orderDetail?.payment_status === "paid";
+  const ship = 20000;
 
   return (
     <div style={{ minHeight: '100vh',  padding: '3rem 1rem' }}>
@@ -203,7 +204,7 @@ export default function MomoReturn() {
                     </li>
                     <li style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: '#4a5568' }}>Phí vận chuyển:</span>
-                      <span style={{ fontWeight: '600' }}>{Number(orderDetail?.shipping || 0).toLocaleString()} ₫</span>
+                      <span style={{ fontWeight: '600' }}>{Number(ship || 0).toLocaleString()} ₫</span>
                     </li>
                     {orderDetail?.discount_amount > 0 && (
                       <li style={{ display: 'flex', justifyContent: 'space-between', color: '#48bb78' }}>
