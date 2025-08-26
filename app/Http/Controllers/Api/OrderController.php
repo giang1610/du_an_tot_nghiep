@@ -267,216 +267,165 @@ class OrderController extends Controller
      * Xử lý thanh toán (COD hoặc MOMO)
      */
     public function checkout(Request $request)
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
 
-        // Nếu client gửi items (buy_now) -> dùng trực tiếp, không cần lấy từ cart
-        $requestItems = $request->input('items', null);
+    // Lấy items từ buy_now hoặc cart
+    $items = $this->getCheckoutItems($request, $user);
+    if (!$items) {
+        return response()->json(['message' => 'Không có sản phẩm nào để thanh toán'], 400);
+    }
 
-        if ($requestItems && is_array($requestItems) && count($requestItems) > 0) {
-            // Chuẩn hoá items nếu cần, đảm bảo key product_variant_id tồn tại
-            $items = array_map(function ($it) {
-                return [
-                    'product_variant_id' => $it['product_variant_id'] ?? $it['variant_id'] ?? $it['id'] ?? null,
-                    'quantity' => $it['quantity'] ?? 1,
-                ];
-            }, $requestItems);
+    $validator = Validator::make($request->all(), [
+        'payment_method' => 'required|string|in:cod,vnpay,momo',
+        'shipping_address' => 'required|string',
+        'customer_phone' => 'required|string',
+        'customer_email' => 'required|email',
+        'product_voucher_code' => 'nullable|string|exists:vouchers,code',
+        'shipping_voucher_code' => 'nullable|string|exists:vouchers,code',
+        'subtotal' => 'required|numeric|min:0',
+        'tax' => 'required|numeric|min:0',
+        'shipping' => 'required|numeric|min:0',
+        'total' => 'required|numeric|min:0',
+        'items' => 'required|array|min:1',
+        'items.*.product_variant_id' => 'required|exists:product_variants,id',
+        'items.*.quantity' => 'required|integer|min:1',
+    ]);
 
-            // Nếu không có product_variant_id hợp lệ thì trả lỗi
-            foreach ($items as $it) {
-                if (empty($it['product_variant_id'])) {
-                    return response()->json(['message' => 'Dữ liệu sản phẩm không hợp lệ.'], 400);
-                }
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Dữ liệu không hợp lệ',
+            'errors' => $validator->errors()
+        ], 400);
+    }
+
+    DB::beginTransaction();
+    try {
+        // Kiểm tra tồn kho
+        foreach ($items as $item) {
+            $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
+            if (!$variant || !$variant->stock || $variant->stock->quantity < $item['quantity']) {
+                throw new \Exception("Không đủ tồn kho cho sản phẩm: {$item['product_variant_id']}");
             }
-
-            // Merge items vào request để validate tiếp như trước
-            $request->merge(['items' => $items]);
-        } else {
-            // Không có items gửi lên -> lấy từ cart (selected = true)
-            $cart = Cart::where('user_id', $user->id)->first();
-            if (!$cart) {
-                return response()->json(['message' => 'Không tìm thấy giỏ hàng.'], 404);
-            }
-
-            $cartItems = CartItem::with('productVariant')
-                ->where('cart_id', $cart->id)
-                ->where('selected', true)
-                ->get();
-
-            if ($cartItems->isEmpty()) {
-                return response()->json(['message' => 'Không có sản phẩm nào được chọn để thanh toán.'], 400);
-            }
-
-            // Tạo array items từ cartItems như cũ
-            $items = $cartItems->map(function ($item) {
-                return [
-                    'product_variant_id' => $item->product_variant_id,
-                    'quantity' => $item->quantity,
-                ];
-            })->toArray();
-
-            $request->merge(['items' => $items]);
         }
 
-        // Continue: validate dữ liệu (giữ nguyên validator cũ)
-        $validator = Validator::make($request->all(), [
-            'payment_method' => 'required|string|in:cod,vnpay,momo',
-            'shipping_address' => 'required|string',
-            'customer_phone' => 'required|string',
-            'customer_email' => 'required|email',
-            'voucher_code' => 'nullable|string|exists:vouchers,code',
-            'discount_amount' => 'required|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.product_variant_id' => 'required|exists:product_variants,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'subtotal' => 'required|numeric|min:0',
-            'tax' => 'required|numeric|min:0',
-            'shipping' => 'required|numeric|min:0',
-            'total' => 'required|numeric|min:0',
+        // --- Áp dụng voucher ---
+        $codes = [];
+        $totalDiscount = 0;
+
+        if ($request->product_voucher_code) {
+            $voucherRes = $this->validateAndApplyVoucher(
+                $request->product_voucher_code,
+                'product',
+                $user,
+                $request->subtotal
+            );
+            if (!$voucherRes['success']) {
+                return response()->json(['message' => $voucherRes['message']], 400);
+            }
+            $codes[] = $request->product_voucher_code;
+            $totalDiscount += $voucherRes['discount_amount'];
+            $this->updateVoucherUsage($voucherRes['voucher'], $user);
+        }
+
+        if ($request->shipping_voucher_code) {
+            $voucherRes = $this->validateAndApplyVoucher(
+                $request->shipping_voucher_code,
+                'shipping',
+                $user,
+                $request->shipping
+            );
+            if (!$voucherRes['success']) {
+                return response()->json(['message' => $voucherRes['message']], 400);
+            }
+            $codes[] = $request->shipping_voucher_code;
+            $totalDiscount += $voucherRes['discount_amount'];
+            $this->updateVoucherUsage($voucherRes['voucher'], $user);
+        }
+
+        // Ghép code lại (nếu có nhiều)
+        $voucherCode = !empty($codes) ? implode('+', $codes) : null;
+
+        // --- Tạo đơn hàng ---
+        $order = Order::create([
+            'user_id' => $user->id,
+            'order_number' => 'ORD-' . strtoupper(uniqid()),
+            'payment_method' => $request->payment_method,
+            'shipping_address' => $request->shipping_address,
+            'customer_phone' => $request->customer_phone,
+            'customer_email' => $request->customer_email,
+            'subtotal' => $request->subtotal,
+            'tax' => $request->tax,
+            'shipping' => $request->shipping,
+            'total' => $request->total - $totalDiscount,
+            'status' => 'pending',
+            'notes' => $request->notes,
+            'voucher_code' => $voucherCode,
+            'voucher_discount' => $totalDiscount,
+            'voucher_type' => $voucherCode ? 'combined' : null,
+            'voucher_id' => null, // giữ null vì có thể nhiều voucher
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Dữ liệu không hợp lệ',
-                'errors' => $validator->errors()
-            ], 400);
-        }
-
-
-        DB::beginTransaction();
-
-        try {
-            // Kiểm tra tồn kho
-            foreach ($request->items as $item) {
-                $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
-                if (!$variant || !$variant->stock || $variant->stock->quantity < $item['quantity']) {
-                    throw new \Exception("Không đủ tồn kho cho sản phẩm: {$item['product_variant_id']}");
-                }
-            }
-
-            // Xử lý voucher
-            $voucherData = null;
-            $discountAmount = 0;
-
-            if ($request->voucher_code) {
-                $voucherResponse = $this->validateAndApplyVoucher(
-                    $request->product_voucher_code,
-                    $request->shipping_voucher_code,
-                    $user,
-                    $request->subtotal
-                );
-
-                if (!$voucherResponse['success']) {
-                    return response()->json(['message' => $voucherResponse['message']], 400);
-                }
-
-                $voucherData = $voucherResponse['voucher'];
-                $discountAmount = $voucherResponse['discount_amount'];
-            }
-
-            // Tạo đơn hàng
-            $order = Order::create([
-                'user_id' => $user->id,
-                'order_number' => 'ORD-' . strtoupper(uniqid()),
-                'payment_method' => $request->payment_method,
-                'shipping_address' => $request->shipping_address,
-                'customer_phone' => $request->customer_phone,
-                'customer_email' => $request->customer_email,
-                'subtotal' => $request->subtotal,
-                'tax' => $request->tax,
-                'shipping' => $request->shipping,
-                'voucher_code' => $request->voucher_code ?? null,
-                'voucher_discount' => $discountAmount ?? null,
-                'voucher_type' => $voucherData->type ?? null,
-                'voucher_id' => $voucherData->id ?? null,
-                'discount_amount' => $discountAmount ?? null,
-                'total' => $request->total - $discountAmount,
-                // 'total' => $request->total,
-                'status' => 'pending',
-                'notes' => $request->notes,
+        // Tạo order items
+        foreach ($items as $item) {
+            $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_variant_id' => $variant->id,
+                'quantity' => $item['quantity'],
+                'price' => $variant->sale_price ?? $variant->price,
+                'color_id' => $variant->color_id,
+                'size_id' => $variant->size_id,
             ]);
 
-            broadcast(new newOder($order));
-            // Tạo các order items
-
-            foreach ($request->items as $item) {
-                $variant = ProductVariant::with('stock')->find($item['product_variant_id']);
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_variant_id' => $variant->id,
-                    'quantity' => $item['quantity'],
-                    'price' => $variant->sale_price ?? $variant->price,
-                    'color_id' => $variant->color_id,
-                    'size_id' => $variant->size_id,
-                ]);
-
-                // Trừ kho nếu thanh toán COD
-                if ($request->payment_method === 'cod') {
-                    $variant->stock->decrement('quantity', $item['quantity']);
-
-                    // Broadcast cập nhật tồn kho
-                    broadcast(new ProductStockUpdated(
-                        $variant->id,
-                        $variant->fresh()->stock->quantity
-                    ));
-                }
+            if ($request->payment_method === 'cod') {
+                $variant->stock->decrement('quantity', $item['quantity']);
+                broadcast(new ProductStockUpdated($variant->id, $variant->fresh()->stock->quantity));
             }
-            if ($request->voucher_code && isset($voucherData)) {
-                $this->updateVoucherUsage($voucherData, $user);
-            }
-
-            // Gửi event
-            event(new NewOrderCreated($order->order_number, $order->id));
-
-            DB::commit();
-
-            // Xử lý theo phương thức thanh toán
-            switch ($request->payment_method) {
-                case 'momo':
-                    $momoResponse = $this->initiateMomoPayment($order, $order->total);
-                    return response()->json([
-                        'message' => 'Đã khởi tạo thanh toán MOMO',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'payment_url' => $momoResponse['payUrl'],
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
-                        ]
-                    ]);
-
-                case 'cod':
-                    // Gửi email xác nhận đơn hàng COD
-                    Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
-                    return response()->json([
-                        'message' => 'Đặt hàng COD thành công',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'payment_url' => null,
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
-                        ]
-                    ]);
-
-                case 'vnpay':
-                    $vnpResponse = $this->initiateVnpayPayment($order);
-                    return response()->json([
-                        'message' => 'Đã khởi tạo thanh toán VNPay',
-                        'data' => [
-                            'order_id' => $order->id,
-                            'payment_url' => $vnpResponse['payment_url'],
-                            'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
-                        ]
-                    ]);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
-
-            return response()->json([
-                'message' => 'Không thể tạo đơn hàng. Vì kho không đủ số lượng sản phẩm.',
-                'error' => $e->getMessage(),
-            ], 400);
         }
+
+        event(new NewOrderCreated($order->order_number, $order->id));
+        DB::commit();
+
+        // Xử lý thanh toán
+        switch ($request->payment_method) {
+            case 'momo':
+                $momoResponse = $this->initiateMomoPayment($order, $order->total);
+                return response()->json([
+                    'message' => 'Đã khởi tạo thanh toán MOMO',
+                    'data' => [
+                        'order_id' => $order->id,
+                        'payment_url' => $momoResponse['payUrl'],
+                        'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
+                    ]
+                ]);
+            case 'vnpay':
+                $vnpResponse = $this->initiateVnpayPayment($order);
+                return response()->json([
+                    'message' => 'Đã khởi tạo thanh toán VNPay',
+                    'data' => [
+                        'order_id' => $order->id,
+                        'payment_url' => $vnpResponse['payment_url'],
+                        'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
+                    ]
+                ]);
+            default:
+                Mail::to($request->customer_email)->queue(new OrderPlaced($order, $user));
+                return response()->json([
+                    'message' => 'Đặt hàng COD thành công',
+                    'data' => [
+                        'order_id' => $order->id,
+                        'order' => $order->load(['items.variant.product', 'items.variant.color', 'items.variant.size']),
+                    ]
+                ]);
+        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Lỗi tạo đơn hàng: ' . $e->getMessage());
+        return response()->json(['message' => 'Không thể tạo đơn hàng', 'error' => $e->getMessage()], 400);
     }
+}
+
 
 
 
@@ -497,19 +446,30 @@ class OrderController extends Controller
             }
 
             // Tạo đơn hàng
+            // Giả sử $totals đã có sẵn các giá trị này
             $order = $user->orders()->create([
                 'subtotal' => $totals['subtotal'],
                 'shipping' => $totals['shipping'],
                 'tax' => $totals['tax'],
                 'total' => $totals['total'],
                 'status' => 'processing',
-                'payment_method' => 'cod',
+                'payment_method' => $request->payment_method, // cod hoặc momo
                 'payment_status' => 'unpaid',
                 'shipping_address' => $request->shipping_address,
                 'billing_address' => $request->billing_address ?? $request->shipping_address,
                 'customer_email' => $user->email,
                 'customer_phone' => $request->customer_phone,
                 'notes' => $request->notes,
+
+                // voucher sản phẩm
+                'product_voucher_code' => $totals['product_voucher']['code'] ?? null,
+                'product_voucher_id' => $totals['product_voucher']['id'] ?? null,
+                'product_voucher_discount' => $totals['product_voucher']['discount'] ?? 0,
+
+                // voucher vận chuyển
+                'shipping_voucher_code' => $totals['shipping_voucher']['code'] ?? null,
+                'shipping_voucher_id' => $totals['shipping_voucher']['id'] ?? null,
+                'shipping_voucher_discount' => $totals['shipping_voucher']['discount'] ?? 0,
             ]);
 
             // Tạo items đơn hàng và cập nhật tồn kho

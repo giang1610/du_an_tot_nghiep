@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Container, Table, Button, Spinner, Form, Alert } from 'react-bootstrap';
 import axios from 'axios';
+import Footer from '../components/Footer';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -283,6 +284,9 @@ export default function CartPage() {
         Thanh toán sản phẩm đã chọn
       </Button>
     </div>
+   
   </Container>
+  
   );
+  
 }

@@ -35,3 +35,17 @@ code {
 .hover-scale:hover {
   transform: scale(1.03);
 }
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* chiếm hết màn hình */
+}
+
+.content {
+  flex: 1; /* chiếm khoảng trống còn lại */
+}
