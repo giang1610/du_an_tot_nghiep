@@ -27,6 +27,7 @@ class DashboardController extends Controller
         $userStats = $this->getUserStats();
         $latestOrders = $this->getLatestOrders();
         $lowStockProducts = $this->getLowStockProducts();
+        $lowStockVariants = $this->getLowStockVariants();
         $topProducts = $this->getTopProducts();
         $statusColors = $this->getStatusColors();
         $statusNames = $this->getStatusNames();
@@ -38,6 +39,7 @@ class DashboardController extends Controller
             'userStats',
             'latestOrders',
             'lowStockProducts',
+            'lowStockVariants',
             'topProducts',
             'statusColors',
             'statusNames'
@@ -293,8 +295,15 @@ class DashboardController extends Controller
     protected function getLatestOrders()
     {
         return Order::with('user')
+            ->where(function ($query) {
+                $query->whereNotIn('payment_method', ['vnpay', 'momo'])
+                    ->orWhere(function ($q) {
+                        $q->whereIn('payment_method', ['vnpay', 'momo'])
+                            ->where('payment_status', 'paid');
+                    });
+            })
             ->orderBy('created_at', 'desc')
-            ->limit(5)
+            ->limit(10)
             ->get()
             ->map(function ($order) {
                 $order->status_name = $this->getStatusName($order->status);
@@ -305,19 +314,45 @@ class DashboardController extends Controller
 
     protected function getLowStockProducts()
     {
+        // Lấy các sản phẩm có biến thể tồn kho < 10, 
+        // sắp xếp theo tồn kho tăng dần (sản phẩm tồn kho thấp nhất lên trên)
         return Product::whereHas('variants.stock', function ($query) {
             $query->where('quantity', '<', 10);
         })
-            ->with([
-                'variants' => function ($query) {
-                    $query->whereHas('stock', function ($q) {
+        ->with([
+            'variants' => function ($query) {
+                $query->whereHas('stock', function ($q) {
                         $q->where('quantity', '<', 10);
-                    })->with(['stock', 'color', 'size']);
-                },
-                'category'
-            ])
-            ->limit(5)
-            ->get();
+                    })
+                    ->with(['stock', 'color', 'size'])
+                    ->orderByRaw('(SELECT quantity FROM stocks WHERE stocks.product_variant_id = product_variants.id LIMIT 1) ASC');
+            },
+            'category'
+        ])
+        ->get()
+        // Sắp xếp lại danh sách sản phẩm theo tồn kho thấp nhất của các biến thể
+        ->sortBy(function ($product) {
+            return $product->variants->min(function ($variant) {
+                return $variant->stock->quantity ?? PHP_INT_MAX;
+            });
+        })
+        ->take(5)
+        ->values();
+    }
+
+    protected function getLowStockVariants()
+    {
+        // Lấy các biến thể có tồn kho < 10, sắp xếp theo tồn kho tăng dần
+        return ProductVariant::with(['product', 'color', 'size', 'stock'])
+            ->whereHas('stock', function ($q) {
+                $q->where('quantity', '<', 10);
+            })
+            ->get()
+            ->sortBy(function ($variant) {
+                return $variant->stock->quantity ?? PHP_INT_MAX;
+            })
+            ->take(10) // lấy 15 biến thể tồn kho thấp nhất
+            ->values();
     }
 
     protected function getTopProducts()

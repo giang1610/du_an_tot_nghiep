@@ -103,7 +103,7 @@ export default function Checkout() {
       if (shippingVoucherInfo.type === 'fixed') shipping = Math.max(0, shipping - shippingVoucherInfo.value);
       else if (shippingVoucherInfo.type === 'percent') shipping = shipping * (1 - (shippingVoucherInfo.value ?? 0) / 100);
     }
-
+    // console.log('productVoucherInfo:', productVoucherInfo);
     const total = subtotal + tax + shipping - productDiscount;
     return { subtotal, tax, shipping, discount: productDiscount, total: Math.max(0, total) };
   }, [selectedItems, productVoucherInfo, shippingVoucherInfo]);
@@ -441,28 +441,66 @@ export default function Checkout() {
                       <option key={voucher.code} value={voucher.code}>
                         {voucher.code} - {voucher.type === 'percent'
                           ? `${voucher.value ?? 0}%`
-                          : `${formatCurrency(voucher.value)} VNĐ`}
+                          : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
                       </option>
                     ))}
                   </select>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <button
-                      onClick={() => applyVoucher('product')}
-                      disabled={!productVoucherCode || loading}
-                      style={{ padding: '0.375rem 0.75rem', backgroundColor: '#34d399', color: 'white', borderRadius: '0.375rem', border: 'none', cursor: loading || !productVoucherCode ? 'not-allowed' : 'pointer', transition: 'background-color 0.3s' }}
-                      onMouseOver={e => !loading && !productVoucherCode && (e.target.style.backgroundColor = '#10b981')}
-                      onMouseOut={e => !loading && !productVoucherCode && (e.target.style.backgroundColor = '#34d399')}
-                    >
-                      Áp dụng
-                    </button>
+                  <button
+                    onClick={() => applyVoucher('product')}
+                    disabled={!productVoucherCode || loading}
+                    style={{
+                      padding: '0.375rem 1.25rem',
+                      background: 'linear-gradient(90deg, #34d399 0%, #10b981 100%)',
+                      color: '#fff',
+                      borderRadius: '0.5rem',
+                      border: 'none',
+                      cursor: loading || !productVoucherCode ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      boxShadow: '0 2px 8px rgba(16,185,129,0.10)',
+                      letterSpacing: '0.5px',
+                      transition: 'background 0.2s, box-shadow 0.2s'
+                    }}
+                    onMouseOver={e => {
+                      if (!loading && productVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+                        e.target.style.boxShadow = '0 4px 16px rgba(16,185,129,0.18)';
+                      }
+                    }}
+                    onMouseOut={e => {
+                      if (!loading && productVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #34d399 0%, #10b981 100%)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(16,185,129,0.10)';
+                      }
+                    }}
+                  >
+                    Áp dụng
+                  </button>
                     {productVoucherInfo && (
                       <div style={{ marginTop: '0.25rem', color: '#10b981', display: 'flex', alignItems: 'center' }}>
-                        ✅ {productVoucherInfo.code}
+                          <span style={{ marginLeft: 8, fontStyle: 'italic', color: '#059669' }}>
+                            {productVoucherInfo.name}
+                          </span>
                         <button
                           onClick={() => applyVoucher('remove_product')}
-                          style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#065f46', textDecoration: 'underline', cursor: 'pointer' }}
+                          style={{
+                            marginLeft: '0.5rem',
+                            fontSize: '0.85rem',
+                            color: '#fff',
+                            background: 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '2px 14px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            boxShadow: '0 2px 8px rgba(239,68,68,0.08)',
+                            transition: 'background 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseOver={e => (e.target.style.background = 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)')}
+                          onMouseOut={e => (e.target.style.background = 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)')}
                         >
-                          [Hủy]
+                          Hủy
                         </button>
                       </div>
                     )}
@@ -481,28 +519,66 @@ export default function Checkout() {
                       <option key={voucher.code} value={voucher.code}>
                         {voucher.code} - {voucher.type === 'percent'
                           ? `${voucher.value ?? 0}%`
-                          : `${formatCurrency(voucher.value)} VNĐ`}
+                          : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
                       </option>
                     ))}
                   </select>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <button
-                      onClick={() => applyVoucher('shipping')}
-                      disabled={!shippingVoucherCode || loading}
-                      style={{ padding: '0.375rem 0.75rem', backgroundColor: '#60a5fa', color: 'white', borderRadius: '0.375rem', border: 'none', cursor: loading || !shippingVoucherCode ? 'not-allowed' : 'pointer', transition: 'background-color 0.3s' }}
-                      onMouseOver={e => !loading && !shippingVoucherCode && (e.target.style.backgroundColor = '#3b82f6')}
-                      onMouseOut={e => !loading && !shippingVoucherCode && (e.target.style.backgroundColor = '#60a5fa')}
-                    >
-                      Áp dụng
-                    </button>
+                  <button
+                    onClick={() => applyVoucher('shipping')}
+                    disabled={!shippingVoucherCode || loading}
+                    style={{
+                      padding: '0.375rem 1.25rem',
+                      background: 'linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%)',
+                      color: '#fff',
+                      borderRadius: '0.5rem',
+                      border: 'none',
+                      cursor: loading || !shippingVoucherCode ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      boxShadow: '0 2px 8px rgba(59,130,246,0.10)',
+                      letterSpacing: '0.5px',
+                      transition: 'background 0.2s, box-shadow 0.2s'
+                    }}
+                    onMouseOver={e => {
+                      if (!loading && shippingVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)';
+                        e.target.style.boxShadow = '0 4px 16px rgba(59,130,246,0.18)';
+                      }
+                    }}
+                    onMouseOut={e => {
+                      if (!loading && shippingVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)';
+                      }
+                    }}
+                  >
+                    Áp dụng
+                  </button>
                     {shippingVoucherInfo && (
                       <div style={{ marginTop: '0.25rem', color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
-                        ✅ {shippingVoucherInfo.code}
+                          <span style={{ marginLeft: 8, fontStyle: 'italic', color: '#3b82f6' }}>
+                            {shippingVoucherInfo.name}
+                          </span>
                         <button
                           onClick={() => applyVoucher('remove_shipping')}
-                          style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#1e40af', textDecoration: 'underline', cursor: 'pointer' }}
+                          style={{
+                            marginLeft: '0.5rem',
+                            fontSize: '0.85rem',
+                            color: '#fff',
+                            background: 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '2px 14px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            boxShadow: '0 2px 8px rgba(239,68,68,0.08)',
+                            transition: 'background 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseOver={e => (e.target.style.background = 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)')}
+                          onMouseOut={e => (e.target.style.background = 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)')}
                         >
-                          [Hủy]
+                          Hủy
                         </button>
                       </div>
                     )}
