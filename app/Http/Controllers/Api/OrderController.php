@@ -228,9 +228,9 @@ class OrderController extends Controller
         $orders = $query->paginate($perPage);
 
         $orders->getCollection()->transform(function ($order) {
-        $order->applied_vouchers = $this->parseVoucherCodes($order->voucher_code);
-        return $order;
-    });
+            $order->applied_vouchers = $this->parseVoucherCodes($order->voucher_code);
+            return $order;
+        });
 
         return response()->json([
             'message' => 'Lấy danh sách đơn hàng thành công',
@@ -247,7 +247,7 @@ class OrderController extends Controller
         $order->load(['user', 'items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
 
         $order->voucher_details = $this->getVoucherDetails($order);
-    $order->applied_vouchers = $this->parseVoucherCodes($order->voucher_code);
+        $order->applied_vouchers = $this->parseVoucherCodes($order->voucher_code);
 
         return response()->json([
             'message' => 'Lấy thông tin đơn hàng thành công',
@@ -502,6 +502,15 @@ class OrderController extends Controller
             }
             if ($request->voucher_code && isset($voucherData)) {
                 $this->updateVoucherUsage($voucherData, $user);
+            }
+
+            // Cập nhật số lần sử dụng voucher
+            if ($request->product_voucher_code && isset($voucherResponse['voucher'])) {
+                $this->updateVoucherUsage($voucherResponse['voucher'], $user);
+            }
+
+            if ($request->shipping_voucher_code && isset($voucherResponse['voucher_shipping'])) {
+                $this->updateVoucherUsage($voucherResponse['voucher_shipping'], $user);
             }
 
             // Gửi event
@@ -1442,6 +1451,9 @@ class OrderController extends Controller
             Log::error('Voucher validation error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Lỗi khi kiểm tra voucher'];
         }
+
+        Log::info('Kiểm tra voucher', ['code' => $voucherCode, 'user' => $user->id, 'subtotal' => $amountContext]);
+
     }
 
     /**
@@ -1478,44 +1490,46 @@ class OrderController extends Controller
 
             $voucherUser->used = ($voucherUser->used ?? 0) + 1;
             $voucherUser->save();
+
+            Log::info('Cập nhập số lần sử dụng vouch', ['voucher_id' => $voucher->id, 'user_id' => $user->id]);
         });
     }
+
     /**
- * Phân tích mã voucher kết hợp thành mảng
- */
-protected function parseVoucherCodes($voucherCode)
-{
-    if (!$voucherCode) {
-        return [];
-    }
-    
-    return array_map('trim', explode(',', $voucherCode));
-}
-
-/**
- * Lấy thông tin chi tiết về các voucher đã áp dụng
- */
-protected function getVoucherDetails($order)
-{
-    $voucherCodes = $this->parseVoucherCodes($order->voucher_code);
-    $details = [];
-    
-    foreach ($voucherCodes as $code) {
-        $voucher = Voucher::where('code', $code)->first();
-        if ($voucher) {
-            $details[] = [
-                'code' => $voucher->code,
-                'type' => $voucher->type,
-                'discount_type' => $voucher->discount_type,
-                'discount_amount' => $voucher->discount_amount,
-                'discount_percent' => $voucher->discount_percent,
-                'max_discount' => $voucher->max_discount,
-            ];
+     * 
+     * Phân tích mã voucher kết hợp thành mảng
+     */
+    protected function parseVoucherCodes($voucherCode)
+    {
+        if (!$voucherCode) {
+            return [];
         }
+
+        return array_map('trim', explode(',', $voucherCode));
     }
-    
-    return $details;
-}
-}
 
+    /**
+     * Lấy thông tin chi tiết về các voucher đã áp dụng
+     */
+    protected function getVoucherDetails($order)
+    {
+        $voucherCodes = $this->parseVoucherCodes($order->voucher_code);
+        $details = [];
 
+        foreach ($voucherCodes as $code) {
+            $voucher = Voucher::where('code', $code)->first();
+            if ($voucher) {
+                $details[] = [
+                    'code' => $voucher->code,
+                    'type' => $voucher->type,
+                    'discount_type' => $voucher->discount_type,
+                    'discount_amount' => $voucher->discount_amount,
+                    'discount_percent' => $voucher->discount_percent,
+                    'max_discount' => $voucher->max_discount,
+                ];
+            }
+        }
+
+        return $details;
+    }
+}
