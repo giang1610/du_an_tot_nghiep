@@ -27,6 +27,7 @@ import MyVouchers from './pages/MyVouchers';
 import VnpayReturn from './pages/VnpayReturnPage';
 import ContinuePaymentMomo from './components/ContinuePaymentMomo';
 import ContinuePaymentVnpay from './components/ContinuePaymentVnpay';
+import NotFound from './components/NotFound';
 
 
 
@@ -37,9 +38,11 @@ import ContinuePaymentVnpay from './components/ContinuePaymentVnpay';
 
 function App() {
   return (
-    <Router>
+    <div className="app-wrapper d-flex flex-column min-vh-100">
+      <Router>
       <CustomNavbar />
-      <Routes>
+      <div className='flex-grow-1'>
+        <Routes>
         {/* Trang home */}
         <Route path="/" element={<Home />} />
 
@@ -85,14 +88,16 @@ function App() {
         <Route path="/continue-payment/momo/:orderId" element={<ContinuePaymentMomo />} />
         <Route path="/continue-payment/vnpay/:orderId" element={<ContinuePaymentVnpay />} />
         {/* Các trang không tìm thấy */}
-        <Route path="*" element={<h1 className="text-center mt-5">Trang không tìm thấy</h1>} />
+        <Route path="*" element={<NotFound />} />
 
 
 
       </Routes>
+      </div>
       <ChatApp />
       <Footer />
     </Router>
+    </div>
   );
 }
 

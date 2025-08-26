@@ -14,7 +14,7 @@ public function index(Request $request)
         $search = $request->input('search');
 
         $query = User::query()
-            ->where('role', '!=', 1); // Loại bỏ user có role = 1
+            ->whereNotIn('role', [1 , 2]); // Loại bỏ user có role = 1
 
         if ($search) {
             $query->where(function ($q) use ($search) {

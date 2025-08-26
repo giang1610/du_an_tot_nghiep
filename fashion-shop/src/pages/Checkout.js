@@ -1,52 +1,46 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  Container, Form, Button, Alert, Row, Col, Card, Image, Spinner
-} from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 import axios from 'axios';
 import { toast } from "react-toastify";
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 // Helper
 const formatCurrency = (num) => (num ?? 0).toLocaleString();
 
 const ProductSummary = ({ items }) => {
-  if (!items.length) return <p>Bạn chưa chọn sản phẩm nào để đặt hàng.</p>;
+  if (!items.length) return <p style={{ color: '#4a5568' }}>Bạn chưa chọn sản phẩm nào để đặt hàng.</p>;
   return (
     <>
       {items.map(item => (
-        <Card key={item.id || item.product_variant_id || item.variant_id} className="mb-3">
-          <Card.Body className="d-flex">
-            <Image
+        <div key={item.id || item.product_variant_id || item.variant_id} style={{ marginBottom: '1rem', backgroundColor: 'white', padding: '1rem', borderRadius: '0.75rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', transition: 'box-shadow 0.3s' }} onMouseOver={e => e.target.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'} onMouseOut={e => e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)'}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img
               src={item.image}
               alt={item.product_name || item.name}
               width={80}
               height={80}
-              className="me-3"
-              style={{ objectFit: 'cover' }}
+              style={{ borderRadius: '0.5rem', objectFit: 'cover', marginRight: '1rem' }}
             />
             <div>
-              <Card.Title>{item.product_name || item.name}</Card.Title>
-              <Card.Text>
+              <h4 style={{ fontWeight: '600', color: '#2d3748' }}>{item.product_name || item.name}</h4>
+              <p style={{ fontSize: '0.875rem', color: '#718096' }}>
                 Số lượng: {item.quantity} <br />
                 Giá: {formatCurrency(item.price)} VNĐ <br />
                 {item.color && <>Màu: {item.color}<br /></>}
                 {item.size && <>Size: {item.size}<br /></>}
-
                 {item.stock === 0 && (
-                  <span className="text-danger fw-bold">Sản phẩm đã hết hàng</span>
+                  <span style={{ color: '#e53e3e', fontWeight: 'bold' }}>Sản phẩm đã hết hàng</span>
                 )}
                 {item.quantity > item.stock && item.stock > 0 && (
-                  <span className="text-warning fw-bold">
+                  <span style={{ color: '#d69e2e', fontWeight: 'bold' }}>
                     Chỉ còn {item.stock} sản phẩm trong kho
                   </span>
                 )}
-              </Card.Text>
-
+              </p>
             </div>
-          </Card.Body>
-        </Card>
+          </div>
+        </div>
       ))}
     </>
   );
@@ -109,7 +103,7 @@ export default function Checkout() {
       if (shippingVoucherInfo.type === 'fixed') shipping = Math.max(0, shipping - shippingVoucherInfo.value);
       else if (shippingVoucherInfo.type === 'percent') shipping = shipping * (1 - (shippingVoucherInfo.value ?? 0) / 100);
     }
-
+    // console.log('productVoucherInfo:', productVoucherInfo);
     const total = subtotal + tax + shipping - productDiscount;
     return { subtotal, tax, shipping, discount: productDiscount, total: Math.max(0, total) };
   }, [selectedItems, productVoucherInfo, shippingVoucherInfo]);
@@ -248,9 +242,7 @@ export default function Checkout() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (data?.data?.payment_url) {
-          // remove buy_now local and selected cart items *before* redirect to avoid leftover state
           localStorage.removeItem('buy_now');
-          // Only remove cart items when not buy-now (removeSelectedItems likely handles selected items)
           if (!isBuyNow) await removeSelectedItems();
           window.location.href = data.data.payment_url;
           return;
@@ -342,165 +334,269 @@ export default function Checkout() {
   }, [user]);
 
   return (
-    <Container className="py-5">
-      <h3 className="mb-4">Thanh toán</h3>
-      <Row>
-        <Col md={6}>
-          {error && <Alert variant="danger">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #edf2f7, #ebf4ff)', padding: '3rem 1rem' }}>
+      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+        <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#2d3748', marginBottom: '1.5rem', textAlign: 'center' }}>Thanh toán</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', ...(window.innerWidth >= 768 && { gridTemplateColumns: '1fr 1fr' }) }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)', padding: '1.5rem' }}>
+            {error && <div style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{error}</div>}
+            {success && <div style={{ backgroundColor: '#d1fae5', color: '#065f46', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{success}</div>}
 
-          <Form noValidate onSubmit={handleSubmit}>
-            {['name', 'phone', 'address'].map(field => (
-              <Form.Group className="mb-3" key={field}>
-                <Form.Label>
-                  {field === 'name' && 'Họ tên'}
-                  {field === 'phone' && 'Số điện thoại'}
-                  {field === 'address' && 'Địa chỉ'}
-                </Form.Label>
-                <Form.Control
-                  type="text"
-                  name={field}
-                  value={form[field]}
-                  onChange={e => setField(field, e.target.value)}
-                  isInvalid={!!formErrors[field]}
-                  required
+            <form onSubmit={handleSubmit} noValidate>
+              {['name', 'phone', 'address'].map(field => (
+                <div style={{ marginBottom: '1rem' }} key={field}>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#4a5568', marginBottom: '0.25rem' }}>
+                    {field === 'name' && 'Họ tên'}
+                    {field === 'phone' && 'Số điện thoại'}
+                    {field === 'address' && 'Địa chỉ'}
+                  </label>
+                  <input
+                    type="text"
+                    name={field}
+                    value={form[field]}
+                    onChange={e => setField(field, e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: formErrors[field] ? '1px solid #ef4444' : '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.3s' }}
+                    required
+                  />
+                  {formErrors[field] && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors[field]}</p>}
+                </div>
+              ))}
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#4a5568', marginBottom: '0.25rem' }}>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={e => setField('email', e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#f7fafc', cursor: 'not-allowed' }}
+                  disabled
                 />
-                <Form.Control.Feedback type="invalid">{formErrors[field]}</Form.Control.Feedback>
-              </Form.Group>
-            ))}
+              </div>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={e => setField('email', e.target.value)}
-                disabled
-              />
-            </Form.Group>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#4a5568', marginBottom: '0.25rem' }}>Ghi chú</label>
+                <textarea
+                  rows={3}
+                  name="notes"
+                  value={form.notes}
+                  onChange={e => setField('notes', e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.3s' }}
+                />
+              </div>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Ghi chú</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="notes"
-                value={form.notes}
-                onChange={e => setField('notes', e.target.value)}
-              />
-            </Form.Group>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#4a5568', marginBottom: '0.25rem' }}>Phương thức thanh toán</label>
+                <select
+                  value={form.payment_method}
+                  onChange={e => setField('payment_method', e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.3s' }}
+                >
+                  <option value="cod">Thanh toán khi nhận hàng (COD)</option>
+                  <option value="momo">Thanh toán MoMo</option>
+                  <option value="vnpay">Thanh toán VNPay</option>
+                </select>
+              </div>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Phương thức thanh toán</Form.Label>
-              <Form.Select
-                value={form.payment_method}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    payment_method: e.target.value,
-                  }))
-                }
+              <button
+                type="submit"
+                disabled={loading}
+                style={{ width: '100%', padding: '0.75rem', backgroundColor: '#3182ce', color: 'white', borderRadius: '0.5rem', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', transition: 'background-color 0.3s' }}
+                onMouseOver={e => !loading && (e.target.style.backgroundColor = '#2b6cb0')}
+                onMouseOut={e => !loading && (e.target.style.backgroundColor = '#3182ce')}
               >
-                <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                <option value="momo">Thanh toán MoMo</option>
-                <option value="vnpay">Thanh toán VNPay</option>
-              </Form.Select>
-            </Form.Group>
+                {loading ? (
+                  <>
+                    <div style={{ borderTop: '2px solid white', borderRight: '2px solid transparent', borderBottom: '2px solid transparent', borderLeft: '2px solid transparent', width: '1.25rem', height: '1.25rem', animation: 'spin 1s linear infinite', marginRight: '0.5rem' }} />
+                    Đang xử lý...
+                  </>
+                ) : form.payment_method === 'momo' ? (
+                  'Thanh toán qua MoMo'
+                ) : form.payment_method === 'vnpay' ? (
+                  'Thanh toán qua VNPay'
+                ) : (
+                  'Xác nhận đặt hàng'
+                )}
+              </button>
+            </form>
+          </div>
 
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  Đang xử lý...
-                </>
-              ) : form.payment_method === 'momo' ? (
-                'Thanh toán qua MoMo'
-              ) : form.payment_method === 'vnpay' ? (
-                'Thanh toán qua VNPay'
-              ) : (
-                'Xác nhận đặt hàng'
-              )}
-            </Button>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)', padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#2d3748', marginBottom: '1rem' }}>Sản phẩm trong giỏ</h3>
+            <ProductSummary items={selectedItems} />
 
-          </Form>
-        </Col>
+            {selectedItems.length > 0 && (
+              <>
+                <hr style={{ margin: '1rem 0', borderColor: '#e2e8f0' }} />
 
-        <Col md={6}>
-          <h5>Sản phẩm trong giỏ</h5>
-          <ProductSummary items={selectedItems} />
-
-          {selectedItems.length > 0 && (
-            <>
-              <hr />
-
-              <Form.Group className="mb-3">
-                <Form.Label>Mã giảm giá sản phẩm</Form.Label>
-                <Form.Select
-                  value={productVoucherCode}
-                  onChange={e => setProductVoucherCode(e.target.value)}
-                >
-                  <option value="">-- Không áp dụng --</option>
-                  {availableProductVouchers.map(voucher => (
-                    <option key={voucher.code} value={voucher.code}>
-                      {voucher.code} - {voucher.type === 'percent'
-                        ? `${voucher.value ?? 0}%`
-                        : `${formatCurrency(voucher.value)} VNĐ`}
-                    </option>
-                  ))}
-                </Form.Select>
-                <div className="d-flex gap-2 mt-2">
-                  <Button variant="success" size="sm" onClick={() => applyVoucher('product')} disabled={!productVoucherCode || loading}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#4a5568', marginBottom: '0.25rem' }}>Mã giảm giá sản phẩm</label>
+                  <select
+                    value={productVoucherCode}
+                    onChange={e => setProductVoucherCode(e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.3s' }}
+                  >
+                    <option value="">-- Không áp dụng --</option>
+                    {availableProductVouchers.map(voucher => (
+                      <option key={voucher.code} value={voucher.code}>
+                        {voucher.code} - {voucher.type === 'percent'
+                          ? `${voucher.value ?? 0}%`
+                          : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button
+                    onClick={() => applyVoucher('product')}
+                    disabled={!productVoucherCode || loading}
+                    style={{
+                      padding: '0.375rem 1.25rem',
+                      background: 'linear-gradient(90deg, #34d399 0%, #10b981 100%)',
+                      color: '#fff',
+                      borderRadius: '0.5rem',
+                      border: 'none',
+                      cursor: loading || !productVoucherCode ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      boxShadow: '0 2px 8px rgba(16,185,129,0.10)',
+                      letterSpacing: '0.5px',
+                      transition: 'background 0.2s, box-shadow 0.2s'
+                    }}
+                    onMouseOver={e => {
+                      if (!loading && productVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+                        e.target.style.boxShadow = '0 4px 16px rgba(16,185,129,0.18)';
+                      }
+                    }}
+                    onMouseOut={e => {
+                      if (!loading && productVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #34d399 0%, #10b981 100%)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(16,185,129,0.10)';
+                      }
+                    }}
+                  >
                     Áp dụng
-                  </Button>
-                  {productVoucherInfo && (
-                    <div className="mt-1 text-success">
-                      ✅ {productVoucherInfo.code}
-                      <Button variant="link" size="sm" onClick={() => applyVoucher('remove_product')}>[Hủy]</Button>
-                    </div>
-                  )}
+                  </button>
+                    {productVoucherInfo && (
+                      <div style={{ marginTop: '0.25rem', color: '#10b981', display: 'flex', alignItems: 'center' }}>
+                          <span style={{ marginLeft: 8, fontStyle: 'italic', color: '#059669' }}>
+                            {productVoucherInfo.name}
+                          </span>
+                        <button
+                          onClick={() => applyVoucher('remove_product')}
+                          style={{
+                            marginLeft: '0.5rem',
+                            fontSize: '0.85rem',
+                            color: '#fff',
+                            background: 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '2px 14px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            boxShadow: '0 2px 8px rgba(239,68,68,0.08)',
+                            transition: 'background 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseOver={e => (e.target.style.background = 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)')}
+                          onMouseOut={e => (e.target.style.background = 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)')}
+                        >
+                          Hủy
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </Form.Group>
 
-              <Form.Group className="mb-3">
-                <Form.Label>Mã miễn phí vận chuyển</Form.Label>
-                <Form.Select
-                  value={shippingVoucherCode}
-                  onChange={e => setShippingVoucherCode(e.target.value)}
-                >
-                  <option value="">-- Không áp dụng --</option>
-                  {availableShippingVouchers.map(voucher => (
-                    <option key={voucher.code} value={voucher.code}>
-                      {voucher.code} - {voucher.type === 'percent'
-                        ? `${voucher.value ?? 0}%`
-                        : `${formatCurrency(voucher.value)} VNĐ`}
-                    </option>
-                  ))}
-                </Form.Select>
-                <div className="d-flex gap-2 mt-2">
-                  <Button variant="info" size="sm" onClick={() => applyVoucher('shipping')} disabled={!shippingVoucherCode || loading}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#4a5568', marginBottom: '0.25rem' }}>Mã miễn phí vận chuyển</label>
+                  <select
+                    value={shippingVoucherCode}
+                    onChange={e => setShippingVoucherCode(e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', outline: 'none', transition: 'border-color 0.3s' }}
+                  >
+                    <option value="">-- Không áp dụng --</option>
+                    {availableShippingVouchers.map(voucher => (
+                      <option key={voucher.code} value={voucher.code}>
+                        {voucher.code} - {voucher.type === 'percent'
+                          ? `${voucher.value ?? 0}%`
+                          : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button
+                    onClick={() => applyVoucher('shipping')}
+                    disabled={!shippingVoucherCode || loading}
+                    style={{
+                      padding: '0.375rem 1.25rem',
+                      background: 'linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%)',
+                      color: '#fff',
+                      borderRadius: '0.5rem',
+                      border: 'none',
+                      cursor: loading || !shippingVoucherCode ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      boxShadow: '0 2px 8px rgba(59,130,246,0.10)',
+                      letterSpacing: '0.5px',
+                      transition: 'background 0.2s, box-shadow 0.2s'
+                    }}
+                    onMouseOver={e => {
+                      if (!loading && shippingVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)';
+                        e.target.style.boxShadow = '0 4px 16px rgba(59,130,246,0.18)';
+                      }
+                    }}
+                    onMouseOut={e => {
+                      if (!loading && shippingVoucherCode) {
+                        e.target.style.background = 'linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)';
+                      }
+                    }}
+                  >
                     Áp dụng
-                  </Button>
-                  {shippingVoucherInfo && (
-                    <div className="mt-1 text-info">
-                      ✅ {shippingVoucherInfo.code}
-                      <Button variant="link" size="sm" onClick={() => applyVoucher('remove_shipping')}>[Hủy]</Button>
-                    </div>
-                  )}
+                  </button>
+                    {shippingVoucherInfo && (
+                      <div style={{ marginTop: '0.25rem', color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                          <span style={{ marginLeft: 8, fontStyle: 'italic', color: '#3b82f6' }}>
+                            {shippingVoucherInfo.name}
+                          </span>
+                        <button
+                          onClick={() => applyVoucher('remove_shipping')}
+                          style={{
+                            marginLeft: '0.5rem',
+                            fontSize: '0.85rem',
+                            color: '#fff',
+                            background: 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '2px 14px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            boxShadow: '0 2px 8px rgba(239,68,68,0.08)',
+                            transition: 'background 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseOver={e => (e.target.style.background = 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)')}
+                          onMouseOut={e => (e.target.style.background = 'linear-gradient(90deg, #f87171 0%, #ef4444 100%)')}
+                        >
+                          Hủy
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </Form.Group>
 
-              <p>Tạm tính: {formatCurrency(totals.subtotal)} VNĐ</p>
-              <p>Phí vận chuyển: {formatCurrency(totals.shipping)} VNĐ</p>
-              <p>Thuế: {formatCurrency(totals.tax)} VNĐ</p>
-              {totals.discount > 0 && (
-                <p className="text-success">Giảm giá: -{formatCurrency(totals.discount).replace(/\.00$/, '')} VNĐ</p>
-              )}
-              <h5 className="fw-bold">Tổng cộng: {formatCurrency(totals.total)} VNĐ</h5>
-            </>
-          )}
-        </Col>
-      </Row>
-    </Container>
+                <p style={{ color: '#4a5568' }}>Tạm tính: {formatCurrency(totals.subtotal)} VNĐ</p>
+                <p style={{ color: '#4a5568' }}>Phí vận chuyển: {formatCurrency(totals.shipping)} VNĐ</p>
+                <p style={{ color: '#4a5568' }}>Thuế: {formatCurrency(totals.tax)} VNĐ</p>
+                {totals.discount > 0 && (
+                  <p style={{ color: '#10b981' }}>Giảm giá: -{formatCurrency(totals.discount).replace(/\.00$/, '')} VNĐ</p>
+                )}
+                <h4 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#e53e3e', marginTop: '0.5rem' }}>Tổng cộng: {formatCurrency(totals.total)} VNĐ</h4>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
