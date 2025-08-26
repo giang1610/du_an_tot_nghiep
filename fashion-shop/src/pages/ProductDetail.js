@@ -193,8 +193,12 @@ export default function ProductDetail() {
           <h2>{product.name}</h2>
           <p className="text-muted">{product.category?.name}</p>
           <h4 className="text-danger">
-            {Number(selectedVariant?.sale_price ?? selectedVariant?.price ?? product.price_original).toLocaleString('vi-VN')}₫
+            {selectedVariant
+                ? Number(selectedVariant?.sale_price ?? selectedVariant?.price).toLocaleString('vi-VN')
+                : Number(product.price_products).toLocaleString('vi-VN')
+            }₫
           </h4>
+
           <p>{product.description}</p>
 
           <h5 className="mt-4">Chọn kích cỡ:</h5>
@@ -240,34 +244,54 @@ export default function ProductDetail() {
 
 
 
-          {selectedVariant && (
+         {selectedVariant && (
             <>
               <h4 className="text-primary">
-                {Number(selectedVariant?.sale_price ?? selectedVariant?.price ?? product.price_original).toLocaleString('vi-VN')}₫
+                {Number(
+                  selectedVariant?.sale_price ??
+                  selectedVariant?.price ??
+                  product.price_original
+                ).toLocaleString('vi-VN')}₫
               </h4>
-              <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
 
-              <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
-                <Form.Label>Số lượng:</Form.Label>
-                <Form.Control
-                  type="number"
-                  min={1}
-                  max={maxQuantity}
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                />
-              </Form.Group>
+              {maxQuantity > 0 ? (
+                <>
+                  <p className="text-muted">Kho: {maxQuantity} sản phẩm</p>
+
+                  <Form.Group className="mb-3" style={{ maxWidth: 120 }}>
+                    <Form.Label>Số lượng:</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min={1}
+                      max={maxQuantity}
+                      value={quantity}
+                      onChange={handleQuantityChange}
+                    />
+                  </Form.Group>
+
+                  <div className="mt-4 d-flex gap-3 flex-wrap">
+                    <Button
+                      variant="primary"
+                      onClick={handleAddToCart}
+                      disabled={!selectedVariant}
+                    >
+                      🛒 Thêm vào giỏ
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={handleBuyNow}
+                      disabled={!selectedVariant}
+                    >
+                      ⚡ Mua ngay
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-danger">Hết hàng</p>
+              )}
             </>
           )}
 
-          <div className="mt-4 d-flex gap-3 flex-wrap">
-            <Button variant="primary" onClick={handleAddToCart} disabled={!selectedVariant}>
-              🛒 Thêm vào giỏ
-            </Button>
-            <Button variant="primary" onClick={handleBuyNow} disabled={!selectedVariant}>
-              ⚡ Mua ngay
-            </Button>
-          </div>
 
 
           <div className="mt-5">

@@ -41,7 +41,12 @@ class Category extends Model
         'status',
     ];
     // hasMany là 1-n
-
+     protected static function booted()
+    {
+        static::addGlobalScope('autoPrune', function ($builder) {
+            
+        });
+    }
 
 
     public function products()

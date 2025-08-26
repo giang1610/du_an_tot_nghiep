@@ -64,7 +64,7 @@
 
         {{-- Liên kết dưới --}}
         <div class="mt-4 text-center text-sm text-gray-600">
-            <p><a href="{{ route('register') }}" class="text-blue-600 hover:underline">Chưa có tài khoản? Đăng ký</a></p>
+            {{-- <p><a href="{{ route('register') }}" class="text-blue-600 hover:underline">Chưa có tài khoản? Đăng ký</a></p> --}}
             <p><a href="{{ route('password.request') }}" class="text-blue-600 hover:underline">Quên mật khẩu?</a></p>
         </div>
     </div>

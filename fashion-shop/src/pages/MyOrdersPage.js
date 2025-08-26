@@ -5,6 +5,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { listenToOrderStatusRealtime } from '../realtime/orderStatusRealtime';
 import axios from 'axios';
+import InteractiveStarRating from '../components/InteractiveStarRating';
 
 const formatDate = (iso) => {
     const d = new Date(iso);
@@ -442,21 +443,55 @@ export default function MyOrdersPage() {
                                                         <small className="text-muted">
                                                             Phân loại: {item.product_variant?.color?.name || '—'} / {item.product_variant?.size?.name || '—'}
                                                         </small>
-                                                        <div>
-                                                            {reviews.map(r => (
-                                                                <div key={r.id} className="border p-1 my-1 rounded">
+                                                       <div>
+                                                            {reviews.filter(r => r.status || r.user_id === currentUserId).map(r => (
+                                                                <div key={r.id} className="border rounded mb-1 p-1">
                                                                     {'★'.repeat(r.rating)} - {r.content}
-                                                                    {r.media && (
-                                                                        <div className="mt-2">
-                                                                            {/\.(jpg|jpeg|png)$/i.test(r.media)
-                                                                                ? <img src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} alt="Ảnh đánh giá" width={120} />
-                                                                                : <video src={`${process.env.REACT_APP_API_URL}/storage/${r.media}`} controls width={180}></video>
-                                                                            }
-                                                                        </div>
-                                                                    )}
+                                                                    {r.media && (() => {
+                                                                        let mediaList = [];
+                                                                        try {
+                                                                            mediaList = Array.isArray(r.media) ? r.media : JSON.parse(r.media);
+                                                                        } catch {
+                                                                            mediaList = [];
+                                                                        }
+                                                                        return (
+                                                                            <div className="mt-2 d-flex flex-wrap gap-2">
+                                                                                {mediaList.map((path, idx) =>
+                                                                                    /\.(jpg|jpeg|png)$/i.test(path)
+                                                                                        ? (
+                                                                                            <img
+                                                                                                key={`review-media-${r.id}-${idx}`}
+                                                                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                                                alt="Ảnh đánh giá"
+                                                                                                width={120}
+                                                                                                style={{ borderRadius: 8 }}
+                                                                                            />
+                                                                                        )
+                                                                                        : (
+                                                                                            <video
+                                                                                                key={`review-media-${r.id}-${idx}`}
+                                                                                                src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${path}`}
+                                                                                                controls
+                                                                                                width={180}
+                                                                                                style={{ borderRadius: 8 }}
+                                                                                            />
+                                                                                        )
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })()}
                                                                 </div>
                                                             ))}
                                                             {count >= 2 && <span className="text-muted">Đã đánh giá đủ</span>}
+                                                            {canReview && count < 2 && order.status === 'completed' && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline-primary"
+                                                                    onClick={() => handleShowReviewModal(item, order.id, order.completed_at)}
+                                                                >
+                                                                    Đánh giá
+                                                                </Button>
+                                                            )}
                                                             {!canReview && count === 1 && (
                                                                 <span className="text-muted">Chờ đủ 7 ngày để đánh giá tiếp</span>
                                                             )}
@@ -498,7 +533,7 @@ export default function MyOrdersPage() {
                                 </Link>
 
                                 <div className="d-flex flex-wrap gap-2">
-                                    {order.items.some(item => {
+                                    {/* {order.items.some(item => {
                                         const reviews = item.reviews || [];
                                         const count = reviews.length;
                                         const completedAt = new Date(order.completed_at || order.updated_at || order.created_at || null);
@@ -515,44 +550,44 @@ export default function MyOrdersPage() {
                                         <Link to={`/orders/${order.id}`}>
                                             <Button variant="primary" size="sm">Đánh giá</Button>
                                         </Link>
-                                    )}
+                                    )} */}
+                                    
 
                                     {order.status === 'shipped' && (
                                         <Button variant="success" size="sm" onClick={() => handleConfirmReceived(order.id)}>
                                             Đã nhận hàng
                                         </Button>
                                     )}
+                                    {order.status === 'pending'
+                                            && order.payment_method !== 'cod'
+                                            && order.payment_status !== 'paid' // ✅ Thêm điều kiện này
+                                            && (
+                                                <Button
+                                                    variant="warning"
+                                                    size="sm"
+                                                    className="me-2"
+                                                    onClick={() => {
+                                                        let method = order.payment_method;
+                                                        if (method && typeof method === 'object') {
+                                                            method = method.code || method.name || '';
+                                                        }
+                                                        method = String(method).toLowerCase().trim();
 
-                                    {order.status === 'pending' && order.payment_method !== 'cod' && (
-                                        <Button
-                                            variant="btn btn-outline-warning"
-                                            size="sm"
-                                            className="me-2"
-                                            onClick={() => {
-                                                if (isPaymentExpired(order)) {
-                                                    alert('Đơn hàng đã hết thời gian thanh toán. Vui lòng tạo đơn mới hoặc liên hệ hỗ trợ.');
-                                                    return;
-                                                }
-                                                let method = order.payment_method;
-                                                if (method && typeof method === 'object') {
-                                                    method = method.code || method.name || '';
-                                                }
-                                                method = String(method).toLowerCase().trim();
+                                                        const orderId = String(order.id ?? order.order_id ?? '').trim();
 
-                                                const orderId = String(order.id ?? order.order_id ?? '').trim();
+                                                        if (!method || !orderId || ['momo', 'vnpay'].indexOf(method) === -1) {
+                                                            console.error("❌ Lỗi: Không có method hoặc orderId hợp lệ", { method, orderId });
+                                                            alert("Không thể tiếp tục thanh toán. Dữ liệu đơn hàng không hợp lệ.");
+                                                            return;
+                                                        }
 
-                                                if (!method || !orderId || ['momo', 'vnpay'].indexOf(method) === -1) {
-                                                    console.error("❌ Lỗi: Không có method hoặc orderId hợp lệ", { method, orderId });
-                                                    alert("Không thể tiếp tục thanh toán. Dữ liệu đơn hàng không hợp lệ.");
-                                                    return;
-                                                }
-
-                                                navigate(`/continue-payment/${method}/${orderId}`);
-                                            }}
-                                        >
-                                            Tiếp tục thanh toán
-                                        </Button>
-                                    )}
+                                                        navigate(`/continue-payment/${method}/${orderId}`);
+                                                    }}
+                                                >
+                                                    Tiếp tục thanh toán
+                                                </Button>
+                                            )
+                                        }
 
                                     {(order.status === 'pending' || order.status === 'processing') && (
                                         <Button variant="danger" size="sm" onClick={() => handleCancelOrder(order.id)}>
@@ -648,6 +683,79 @@ export default function MyOrdersPage() {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {/* Modal ĐÁNH GIÁ SẢN PHẨM */}
+            <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered>
+    <Modal.Header closeButton><Modal.Title>Đánh giá sản phẩm</Modal.Title></Modal.Header>
+    <Modal.Body>
+        <Form.Group className="mb-3">
+            <Form.Label>Đánh giá sao</Form.Label>
+            <InteractiveStarRating rating={reviewRating} onChange={setReviewRating} />
+        </Form.Group>
+        <Form.Group className="mt-2">
+            <Form.Label>Ảnh/Video sản phẩm</Form.Label>
+            <Form.Control
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleReviewMediaChange}
+            />
+            <div className="d-flex flex-wrap gap-2 mt-2">
+                {reviewMediaPreviews.map((url, idx) => {
+                    const file = reviewMedia[idx];
+                    if (!file) return null;
+                    return file.type && file.type.startsWith('image/')
+                        ? (
+                            <div key={idx} style={{ position: 'relative' }}>
+                                <img
+                                    src={url}
+                                    alt="preview"
+                                    style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="outline-danger"
+                                    style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                                    onClick={() => {
+                                        setReviewMedia(prev => prev.filter((_, i) => i !== idx));
+                                        setReviewMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                                    }}
+                                >X</Button>
+                            </div>
+                        )
+                        : (
+                            <div key={idx} style={{ position: 'relative' }}>
+                                <video
+                                    src={url}
+                                    controls
+                                    style={{ width: 120, height: 120, borderRadius: 8, border: '1px solid #ddd' }}
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="outline-danger"
+                                    style={{ position: 'absolute', top: 2, right: 2, padding: '2px 6px' }}
+                                    onClick={() => {
+                                        setReviewMedia(prev => prev.filter((_, i) => i !== idx));
+                                        setReviewMediaPreviews(prev => prev.filter((_, i) => i !== idx));
+                                    }}
+                                >X</Button>
+                            </div>
+                        );
+                })}
+            </div>
+        </Form.Group>
+        <Form.Group className="mt-2">
+            <Form.Label>Nội dung</Form.Label>
+            <Form.Control as="textarea" rows={3} value={reviewContent} onChange={e => setReviewContent(e.target.value)} />
+        </Form.Group>
+    </Modal.Body>
+    <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowReviewModal(false)}>Đóng</Button>
+        <Button variant="primary" onClick={handleSubmitReview} disabled={reviewLoading}>
+            {reviewLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
+        </Button>
+    </Modal.Footer>
+</Modal>
         </>
     );
 }

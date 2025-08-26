@@ -29,8 +29,7 @@ use App\Http\Controllers\Auth\EmailVerifiFotnController;
 use App\Http\Controllers\Auth\NewEmailVerificationController;
 
 use App\Http\Controllers\AdminChatController;
-
-
+use App\Models\Order;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,33 +87,41 @@ Route::get('/verify-new-email', [NewEmailVerificationController::class, 'verify'
 // Admin routes
 //xóa danh mục
 //thùng rác
-// Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
+Route::get('/categories/trash', [CategoryController::class, 'trash'])->name('categories.trash');
 // //xóa vĩnh viễn
 // Route::delete('/categories/delete-all', [CategoryController::class, 'deleteAll'])->name('categories.deleteAll');
-// //khôi phục tất cả
-// Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
+//khôi phục tất cả
+Route::post('/categories/restore-all', [CategoryController::class, 'restoreAll'])->name('categories.restoreAll');
 
-// //khôi phục từng danh mục
-// Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+//khôi phục từng danh mục
+Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
 // //xóa vĩnh viễn từng danh mục
 // Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.forceDelete');
 
-// //xóa sản phẩm
-// //thùng rác
-// Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
-// //khôi phục từng sản phẩm
-// Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-// //khôi phục tất cả sản phẩm
-// Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
-// //xóa vĩnh viễn từng sản phẩm
+//xóa sản phẩm
+//thùng rác
+Route::get('/products/trash', [ProductController::class, 'trash'])->name('products.trash');
+//khôi phục từng sản phẩm
+Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+//khôi phục tất cả sản phẩm
+Route::post('/products/restore-all', [ProductController::class, 'restoreAll'])->name('products.restoreAll');
+//xóa vĩnh viễn từng sản phẩm
 // Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.forceDelete');
 // //xóa vĩnh viễn tất cả sản phẩm
 // Route::delete('/products/delete-all', [ProductController::class, 'deleteAll'])->name('products.deleteAll');
+ 
 Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    
-
+    Route::get('/', function () {
+        return Auth::user()->role == 1
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('orders.index');
+    })->name('admin.dashboard');
+    // nhân viên
+    Route::get('users/staff', [UserController::class, 'staff'])->name('users.staff');
+    Route::get('users/createStaff', [UserController::class, 'createStaff'])->name('users.createStaff');
+    Route::post('users/createStaff', [UserController::class, 'storeStaff'])->name('users.storeStaff');
+    Route::delete('users/staff/{user}', [UserController::class, 'destroyStaff'])->name('users.destroyStaff');
+    Route::get('users/{user}/showStaff', [UserController::class, 'showStaff'])->name('users.showStaff');
     //cập nhật profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -124,6 +131,8 @@ Route::prefix('admin')->middleware(['auth', 'is_admin', 'verified'])->group(func
     Route::resource('products', ProductController::class);
     Route::resource('vouchers', VoucherController::class);
     Route::resource('reviews', ReviewController::class);
+    Route::resource('users', UserController::class);
+   
 
     Route::resource('orders', OrderController::class);
     // Route::resource('pending', OrderController::class);

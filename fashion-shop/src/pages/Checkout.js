@@ -237,6 +237,8 @@ export default function Checkout() {
     };
 
     try {
+      console.log('📦 Gửi dữ liệu đặt hàng:', payload);
+      
       setLoading(true);
 
       if (form.payment_method === 'momo') {

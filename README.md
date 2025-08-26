@@ -1,66 +1,92 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="320" alt="Laravel Logo">
 </p>
 
-## About Laravel
+<h1 align="center">MG Fashion Shop</h1>
+<p align="center">
+  <b>Website bán hàng thời trang hiện đại, chuyên nghiệp, thân thiện với người dùng</b><br>
+  <a href="https://laravel.com" target="_blank"><img src="https://img.shields.io/badge/Laravel-Framework-red?logo=laravel"></a>
+  <a href="https://react.dev/" target="_blank"><img src="https://img.shields.io/badge/React-Frontend-blue?logo=react"></a>
+  <a href="https://getbootstrap.com/" target="_blank"><img src="https://img.shields.io/badge/Bootstrap-UI-purple?logo=bootstrap"></a>
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛍️ Giới thiệu
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**MG Fashion Shop** là website thương mại điện tử chuyên về thời trang, được xây dựng với mục tiêu mang lại trải nghiệm mua sắm trực tuyến tiện lợi, nhanh chóng và an toàn cho khách hàng.
 
-## Learning Laravel
+Website sử dụng công nghệ **Laravel** (backend) và **ReactJS** (frontend), kết hợp với giao diện hiện đại từ **Bootstrap**.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🚀 Tính năng nổi bật
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Quản lý sản phẩm:** Duyệt, tìm kiếm, lọc sản phẩm theo danh mục, giá, size, màu sắc.
+- **Giỏ hàng thông minh:** Thêm/xóa/cập nhật sản phẩm, chọn nhiều sản phẩm, ghi chú, tính tổng tiền tự động.
+- **Thanh toán trực tuyến:** Tích hợp VNPay, Momo, COD, xác nhận đơn hàng qua email.
+- **Quản lý đơn hàng:** Theo dõi trạng thái, yêu cầu hoàn đơn, đánh giá sản phẩm sau khi nhận hàng.
+- **Quản lý tài khoản:** Đăng ký, đăng nhập, cập nhật thông tin cá nhân, quản lý địa chỉ giao hàng.
+- **Trang admin:** Quản lý sản phẩm, đơn hàng, voucher, người dùng, báo cáo doanh thu, đánh giá.
+- **Giao diện thân thiện:** Responsive, tối ưu cho cả desktop và mobile.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 📸 Demo giao diện
 
-### Premium Partners
+<p align="center">
+  <img src="https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=800&q=80" width="400" alt="Demo MG Fashion">
+</p>
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+## ⚙️ Công nghệ sử dụng
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Backend:** Laravel 10.x, MySQL
+- **Frontend:** ReactJS, Bootstrap 5
+- **Thanh toán:** VNPay, Momo
+- **Realtime:** Laravel Echo, Pusher
+- **Email:** SMTP, Mailgun
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 📦 Hướng dẫn cài đặt
 
-## Security Vulnerabilities
+### 1. Clone dự án
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+git clone https://github.com/your-username/du_an_tot_nghiep.git
+cd du_an_tot_nghiep
+```
 
-## License
+### 2. Cài đặt backend Laravel
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
+```
+
+### 3. Cài đặt frontend ReactJS
+
+```bash
+cd fashion-shop
+npm install
+npm start
+```
+
+---
+
+## 💡 Đóng góp & liên hệ
+
+- Nếu bạn có ý kiến đóng góp, vui lòng gửi về [trang liên hệ](./fashion-shop/src/pages/ContactPage.js) hoặc email: contact@mgfashion.com
+- Tác giả: **MG Fashion Team**
+
+---
+
+<p align="center">
+  <b>Cảm ơn bạn đã ghé thăm MG Fashion Shop!</b><br>
+  <i>Chúc bạn có trải nghiệm mua sắm tuyệt vời!</i>
+</p>

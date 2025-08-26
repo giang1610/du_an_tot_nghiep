@@ -76,7 +76,7 @@ class CategoryController extends Controller
     // {
     //     //
     // }
-    public function destroy($id)
+     public function destroy($id)
     {
         $category = Category::findOrFail($id);
 
@@ -90,21 +90,21 @@ class CategoryController extends Controller
         $category->delete();
 
         return redirect()->route('categories.index')
-            ->with('success', 'Danh mục đã bị xóa vĩnh viễn.');
+            ->with('success', 'Đã chuyển vào thùng rác');
     }
 
-    // public function trash()
-    // {
-    //     $categories = Category::onlyTrashed()->get();
-    // return view('admin.category.trash', compact('categories'));
-    // }
+    public function trash()
+    {
+        $categories = Category::onlyTrashed()->get();
+    return view('admin.category.trash', compact('categories'));
+    }
 
-    // // Khôi phục
-    // public function restore($id)
-    // {
-    //     Category::onlyTrashed()->findOrFail($id)->restore();
-    //     return redirect()->back()->with('success', 'Khôi phục thành công');
-    // }
+    // Khôi phục
+    public function restore($id)
+    {
+        Category::onlyTrashed()->findOrFail($id)->restore();
+        return redirect()->back()->with('success', 'Khôi phục thành công');
+    }
 
     // // Xóa vĩnh viễn
     // public function forceDelete($id)
@@ -120,10 +120,10 @@ class CategoryController extends Controller
     //     return redirect()->back()->with('success', 'Đã xóa tất cả danh mục.');
     // }
 
-    // public function restoreAll()
-    // {
-    //     Category::onlyTrashed()->restore();
+    public function restoreAll()
+    {
+        Category::onlyTrashed()->restore();
 
-    //     return redirect()->back()->with('success', 'Đã khôi phục tất cả danh mục.');
-    // }
+        return redirect()->back()->with('success', 'Đã khôi phục tất cả danh mục.');
+    }
 }

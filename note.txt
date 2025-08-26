@@ -21,3 +21,10 @@ NGUYEN VAN A
 03/07
 
 OTP
+
+
+----------------------
+Lệnh xóa trong thùng rác
+php artisan Categories:prune-old
+php artisan Products:prune-old
+

@@ -1173,6 +1173,8 @@
                     }
                 }
             });
+        } else {
+            console.error('Canvas #revenueChart not found!');
         }
         @endif
     });
@@ -1282,8 +1284,5 @@
             min-height: calc(1.5em + 0.75rem + 2px);
         }
 
-        .text-end {
-            margin-right: 16px !important;
-        }
     </style>
 @endpush
