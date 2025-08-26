@@ -13,7 +13,7 @@ use Log;
 
 class VoucherController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request) //
     {
         $type = $request->query('type'); // e.g., 'product'
 
