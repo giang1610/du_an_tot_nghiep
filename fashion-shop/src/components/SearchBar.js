@@ -115,7 +115,11 @@ export default function SearchBar() {
           {search && suggestions.map((item) => (
             <ListGroup.Item key={item.id} action onClick={() => handleSuggestionClick(item.name)}>
               <div className="d-flex align-items-center gap-2">
-                <img src={item.images?.[0]?.url || 'placeholder.jpg'} width="40" height="40" alt="" />
+                <img
+                  src={`http://localhost:8000/storage/${item.thumbnail}`}
+                  alt={item.name}
+                  style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
+                />
                 <span>{item.name}</span>
               </div>
             </ListGroup.Item>
