@@ -275,12 +275,6 @@ export default function AllProductsPage() {
                       ]}
                       onChange={val => handleFilterChange('price', val)}
                     />
-                    <SelectBox
-                      label="Size"
-                      value={filters.size}
-                      options={sizes}
-                      onChange={val => handleFilterChange('size', val)}
-                    />
                     <div className="d-grid gap-2 mt-3">
                       <Button variant="outline-primary" onClick={handleResetFilters}>
                         🔄 Đặt lại bộ lọc

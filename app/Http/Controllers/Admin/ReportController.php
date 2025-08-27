@@ -68,7 +68,7 @@ class ReportController extends Controller
             }
 
             // Use cache to improve performance
-            $reportData = Cache::remember($cacheKey, self::CACHE_TIME, function() use ($startDate, $endDate) {
+            $reportData = Cache::remember($cacheKey, self::CACHE_TIME, function () use ($startDate, $endDate) {
                 return $this->getReportData($startDate, $endDate);
             });
 
@@ -76,7 +76,8 @@ class ReportController extends Controller
             if ($compareWith) {
                 $compareRange = $this->getComparisonDateRange($timePeriod, $compareWith, $startDate, $endDate);
                 $compareCacheKey = "compare_data_{$compareWith}_{$compareRange['start']}_{$compareRange['end']}";
-                $compareData = Cache::remember($compareCacheKey, self::CACHE_TIME, function() use ($compareRange) {
+
+                $compareData = Cache::remember($compareCacheKey, self::CACHE_TIME, function () use ($compareRange) {
                     return $this->getReportData($compareRange['start'], $compareRange['end']);
                 });
             }
@@ -97,7 +98,6 @@ class ReportController extends Controller
                 'isEmpty' => $isEmpty,
                 'compareData' => $compareData,
             ]));
-
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Đã xảy ra lỗi khi tạo báo cáo: ' . $e->getMessage());
         }
@@ -212,18 +212,6 @@ class ReportController extends Controller
                     'end' => $currentEnd->copy()->subYear(),
                 ];
 
-            case 'same_period_last_month':
-                return [
-                    'start' => $currentStart->copy()->subMonth(),
-                    'end' => $currentEnd->copy()->subMonth(),
-                ];
-
-            case 'same_period_last_year':
-                return [
-                    'start' => $currentStart->copy()->subYear(),
-                    'end' => $currentEnd->copy()->subYear(),
-                ];
-
             default:
                 return [
                     'start' => $currentStart->copy()->subDays($daysDiff + 1),
@@ -290,18 +278,31 @@ class ReportController extends Controller
      * Get revenue by payment method - CHỈ TÍNH ĐƠN HÀNG ĐÃ HOÀN THÀNH
      */
     protected function getRevenueByPaymentMethod($startDate, $endDate)
-    {
-        return Order::where('status', 'completed')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->select([
-                'payment_method',
-                DB::raw('COALESCE(SUM(total), 0) as total_revenue'),
-                DB::raw('COUNT(*) as order_count')
-            ])
-            ->groupBy('payment_method')
-            ->orderByDesc('total_revenue')
-            ->get();
-    }
+{
+    $paymentMethods = Order::where('status', 'completed')
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->select([
+            'payment_method',
+            DB::raw('COALESCE(SUM(total), 0) as total_revenue'),
+            DB::raw('COUNT(*) as order_count')
+        ])
+        ->groupBy('payment_method')
+        ->orderByDesc('total_revenue')
+        ->get();
+
+    // Định nghĩa màu sắc cho từng phương thức thanh toán
+    $paymentColors = [
+        'cod' => '#14C9EF',    // Màu xanh dương nhạt cho COD
+        'momo' => '#A50063',   // Màu đỏ cam cho Momo
+        'vnpay' => '#288652',  // Màu xanh lá cho VNPay
+    ];
+
+    // Gán màu sắc cho mỗi phương thức thanh toán
+    return $paymentMethods->map(function ($item) use ($paymentColors) {
+        $item->color = $paymentColors[strtolower($item->payment_method)] ?? '#  ';
+        return $item;
+    });
+}
 
     /**
      * Get top products - CHỈ TÍNH ĐƠN HÀNG ĐÃ HOÀN THÀNH
@@ -342,16 +343,22 @@ class ReportController extends Controller
             ->get();
 
         $statusMap = [
-            'pending' => 'Chờ xử lý',
-            'processing' => 'Đang xử lý',
-            'shipped' => 'Đã giao hàng',
-            'completed' => 'Hoàn thành',
-            'cancelled' => 'Đã hủy',
-            'returned' => 'Đã hoàn trả',
+            'pending' => ['name' => 'Chờ xử lý', 'color' => '#FCC61D'],
+            'processing' => ['name' => 'Đang xử lý', 'color' => '#0B6FFD'],
+            'completed' => ['name' => 'Hoàn thành', 'color' => '#1B8655'],
+            'cancelled' => ['name' => 'Đã hủy', 'color' => '#e74a3b'],
+            'shipped' => ['name' => 'Đã giao hàng', 'color' => '#36b9cc'],
+            'failed' => ['name' => 'Giao hàng thất bại', 'color' => '#8C1007'],
+            'picking' => ['name' => 'Đang lấy hàng', 'color' => '#14C9EF'],
+            'shipping' => ['name' => 'Đang giao hàng', 'color' => '#6D747D'],
+            'returned' => ['name' => 'Đã hoàn trả', 'color' => '#7480AB'],
+            'return_requested' => ['name' => 'Yêu cầu hoàn trả', 'color' => '#f6c23e'],
         ];
 
         return $statuses->map(function ($item) use ($statusMap) {
-            $item->status_name = $statusMap[$item->status] ?? $item->status;
+            $statusInfo = $statusMap[$item->status] ?? ['name' => $item->status, 'color' => '#6c757d'];
+            $item->status_name = $statusInfo['name'];
+            $item->color = $statusInfo['color'];
             return $item;
         });
     }
@@ -437,11 +444,11 @@ class ReportController extends Controller
      */
     protected function getVoucherUsage($startDate, $endDate)
     {
-        return Voucher::leftJoin('orders', function($join) use ($startDate, $endDate) {
-                $join->on('vouchers.id', '=', 'orders.voucher_id')
-                     ->where('orders.status', 'completed')
-                     ->whereBetween('orders.created_at', [$startDate, $endDate]);
-            })
+        return Voucher::leftJoin('orders', function ($join) use ($startDate, $endDate) {
+            $join->on('vouchers.id', '=', 'orders.voucher_id')
+                ->where('orders.status', 'completed')
+                ->whereBetween('orders.created_at', [$startDate, $endDate]);
+        })
             ->select([
                 'vouchers.id',
                 'vouchers.name',
@@ -460,18 +467,30 @@ class ReportController extends Controller
      */
     protected function getInventoryStats()
     {
+        // Tính tổng giá trị tồn kho
         $inventoryValue = DB::table('product_variants')
             ->join('stocks', 'product_variants.id', '=', 'stocks.product_variant_id')
             ->select(DB::raw('COALESCE(SUM(product_variants.price * stocks.quantity), 0) as total_value'))
             ->value('total_value');
 
-        // Đếm số sản phẩm có ít nhất một biến thể còn hàng (>0)
-        $inStockProducts = Product::whereHas('variants.stock', function($query) {
+        // Đếm số biến thể còn hàng (>0)
+        $inStockVariants = ProductVariant::whereHas('stock', function ($query) {
             $query->where('quantity', '>', 0);
         })->count();
 
-        // Đếm số sản phẩm mà tất cả biến thể đều hết hàng (<=0)
-        $outOfStockProducts = Product::whereDoesntHave('variants.stock', function($query) {
+        // Đếm số biến thể hết hàng (<=0)
+        $outOfStockVariants = ProductVariant::whereDoesntHave('stock', function ($query) {
+            $query->where('quantity', '>', 0);
+        })->orWhereHas('stock', function ($query) {
+            $query->where('quantity', '<=', 0);
+        })->count();
+
+        // Thống kê theo sản phẩm (để giữ tính tương thích)
+        $inStockProducts = Product::whereHas('variants.stock', function ($query) {
+            $query->where('quantity', '>', 0);
+        })->count();
+
+        $outOfStockProducts = Product::whereDoesntHave('variants.stock', function ($query) {
             $query->where('quantity', '>', 0);
         })->count();
 
@@ -481,6 +500,8 @@ class ReportController extends Controller
             'total_inventory_value' => $inventoryValue,
             'in_stock_products' => $inStockProducts,
             'out_of_stock_products' => $outOfStockProducts,
+            'in_stock_variants' => $inStockVariants,
+            'out_of_stock_variants' => $outOfStockVariants,
         ];
     }
 
@@ -507,7 +528,6 @@ class ReportController extends Controller
 
             $fileName = 'bao_cao_doanh_thu_' . $dateRange['from'] . '_den_' . $dateRange['to'] . '.xlsx';
             return Excel::download(new RevenueReportExport($reportData, $dateRange['from'], $dateRange['to']), $fileName);
-
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Đã xảy ra lỗi khi xuất báo cáo: ' . $e->getMessage());
         }

@@ -240,6 +240,7 @@ class VoucherController extends Controller
                 'success' => true,
                 'code' => $result['voucher']->code,
                 'type' => $result['voucher']->discount_type === 'percent' ? 'percent' : 'fixed',
+                'name' => $result['voucher']->name,
                 'value' => $result['voucher']->discount_type === 'percent'
                     ? $result['voucher']->discount_percent
                     : $result['voucher']->discount_amount,

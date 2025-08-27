@@ -409,7 +409,9 @@
                                         <th>Mã đơn</th>
                                         <th>Khách hàng</th>
                                         <th class="text-right">Tổng tiền</th>
-                                        <th>Trạng thái</th>
+                                        <th>Trạng thái đơn hàng</th>
+                                        <th>Trạng thái thanh toán</th>
+                                        <th>PTTT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -419,9 +421,53 @@
                                             <td>{{ $order->user->name ?? 'Khách vãng lai' }}</td>
                                             <td class="text-right">{{ number_format($order->total) }} VNĐ</td>
                                             <td>
-                                                <span class="badge badge-{{ $order->status_color }}">
-                                                    {{ $order->status_name }}
-                                                </span>
+                                                @if($order->status == 'pending')
+                                                    <span class="badge badge-warning">Chờ xử lý</span>
+                                                @elseif($order->status == 'processing')
+                                                    <span class="badge badge-info">Đang xử lý</span>
+                                                @elseif($order->status == 'completed')
+                                                    <span class="badge badge-success">Hoàn thành</span>
+                                                @elseif($order->status == 'cancelled')
+                                                    <span class="badge badge-danger">Đã hủy</span>
+                                                @elseif($order->status == 'refunded')
+                                                    <span class="badge badge-secondary">Đã hoàn tiền</span>
+                                                @elseif($order->status == 'failed')
+                                                    <span class="badge badge-dark">Thất bại</span>
+                                                @elseif($order->status == 'shipped')
+                                                    <span class="badge badge-primary">Đã giao hàng</span>
+                                                @elseif($order->status == 'picking')
+                                                    <span class="badge" style="background-color: #14C9EF; color: #fff;">Đang lấy hàng</span>
+                                                @elseif($order->status == 'shipping')
+                                                    <span class="badge" style="background-color: #6D747D; color: #fff;">Đang giao hàng</span>
+                                                @elseif($order->status == 'returned')
+                                                    <span class="badge" style="background-color: #7480AB; color: #fff;">Đã hoàn trả</span>
+                                                @elseif($order->status == 'return_requested')
+                                                    <span class="badge" style="background-color: #f6c23e; color: #fff;">Yêu cầu hoàn trả</span>
+                                                @elseif($order->status == 'restocked')
+                                                    <span class="badge" style="background-color: #1cc88a; color: #fff;">Đã trả về kho</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($order->payment_status == 'paid')
+                                                    <span class="badge badge-success">Đã thanh toán</span>
+                                                @else
+                                                    <span class="badge badge-danger">Chưa thanh toán</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($order->payment_method == 'cod')
+                                                    <span class="badge badge-info">
+                                                        <i class="fas fa-money-bill-wave me-1"></i>COD
+                                                    </span>
+                                                @elseif($order->payment_method == 'momo')
+                                                    <span style="background-color: #A50064; color: white" class="badge ">
+                                                        <i class="fas fa-mobile-alt me-1"></i>MoMo
+                                                    </span>
+                                                @elseif($order->payment_method == 'vnpay')
+                                                    <span class="badge badge-success">
+                                                        <i class="fas fa-credit-card me-1"></i>VNpay
+                                                    </span>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -436,6 +482,7 @@
                 </div>
             </div>
 
+            <!-- Sản phẩm tồn kho thấp -->
             <div class="col-lg-6 mb-4">
                 <div class="card metric-card h-100">
                     <div class="card-header">
@@ -454,25 +501,22 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($lowStockProducts as $product)
-                                        @foreach($product->variants as $variant)
-                                            <tr>
-                                                <td>
-                                                    {{ $product->name }}
-                                                    @if($variant->color)
-                                                        - {{ $variant->color->name }}
-                                                    @endif
-                                                    @if($variant->size)
-                                                        - {{ $variant->size->name }}
-                                                    @endif
-                                                </td>
-                                                <td>{{ $variant->sku }}</td>
-                                                <td
-                                                    class="text-right {{ $variant->stock->quantity == 0 ? 'text-danger' : 'text-warning' }}">
-                                                    {{ $variant->stock->quantity }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
+                                    @forelse($lowStockVariants as $variant)
+                                        <tr>
+                                            <td>
+                                                {{ $variant->product->name ?? '' }}
+                                                @if($variant->color)
+                                                    - {{ $variant->color->name }}
+                                                @endif
+                                                @if($variant->size)
+                                                    - {{ $variant->size->name }}
+                                                @endif
+                                            </td>
+                                            <td>{{ $variant->sku }}</td>
+                                            <td class="text-right {{ $variant->stock->quantity == 0 ? 'text-danger' : 'text-warning' }}">
+                                                {{ $variant->stock->quantity }}
+                                            </td>
+                                        </tr>
                                     @empty
                                         <tr>
                                             <td colspan="3" class="text-center py-4">Không có sản phẩm nào tồn kho thấp</td>
