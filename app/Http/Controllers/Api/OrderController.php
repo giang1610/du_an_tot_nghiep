@@ -1491,7 +1491,7 @@ class OrderController extends Controller
             $voucherUser->used = ($voucherUser->used ?? 0) + 1;
             $voucherUser->save();
 
-            Log::info('Cập nhập số lần sử dụng vouch', ['voucher_id' => $voucher->id, 'user_id' => $user->id]);
+            // Log::info('Cập nhập số lần sử dụng vouch', ['voucher_id' => $voucher->id, 'user_id' => $user->id]);
         });
     }
 
