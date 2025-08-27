@@ -356,20 +356,6 @@ class MomoPaymentController extends Controller
 
         DB::beginTransaction();
         try {
-            Log::info('Xử lý IPN cho đơn hàng', ['order_id' => $order->id, 'resultCode' => $data['resultCode']]);
-            Log::info('Dữ liệu IPN MoMo', ['data' => $data]);
-            log::info('Dữ liệu đơn hàng trong IPN MoMo:', $order->toArray());
-            log::info('Các mục đơn hàng trong IPN MoMo:', OrderItem::where('order_id', $order->id)->get()->toArray());
-            log::info('Dữ liệu kho của các biến thể trong đơn hàng:', $order->items->map(function ($item) {
-                return [
-                    'product_variant_id' => $item->product_variant_id,
-                    'stock' => $item->productVariant && method_exists($item->productVariant, 'stock') ? $item->productVariant->stock->toArray() : null,
-                ];
-            })->toArray());
-            log::info('Dữ liệu voucher trong IPN MoMo:', [
-                'voucher_code' => $order->voucher_code,
-                'voucher_id' => $order->voucher_id,
-            ]);
             if ((int)$data['resultCode'] === 0) {
                 $order->update([
                     'status' => 'processing',
