@@ -1,23 +1,30 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-use Illuminate\Auth\Events\Registered;
+
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
+use App\Jobs\SendVerificationEmailJob;
+
 
 class AuthController extends Controller
 {
-   public function register(Request $request)
+    public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|confirmed|min:8', 
+            'name' => 'required|string|max:25',
+            'email' => 'required|string|email|max:40',
+            'password' => 'required|string|confirmed|min:8',
         ]);
+
+        if (User::where('email', $request->email)->exists()) {
+         return response()->json([
+        'message' => 'Email đã được đăng ký.',
+        ], 401); 
+        }
 
         // Tạo người dùng mới
         $user = User::create([
@@ -25,81 +32,53 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+      
+        
+       dispatch(new SendVerificationEmailJob($user));
 
 
-        $token = $user->createToken('api_token')->plainTextToken;
-        $verifyUrl = "http://localhost:3000/verify-email?email=" . urlencode($user->email);
-        // Kích hoạt sự kiện Registered.
-        // Laravel sẽ tự động gửi email xác thực nếu User model implement MustVerifyEmail.
-        event(new Registered($user));
-        // Tùy chọn: Tạo API token ngay sau khi đăng ký hoặc yêu cầu xác thực email trước.
-        // Nếu bạn muốn cấp token ngay:
-        // $token = $user->createToken('api_token_sau_dang_ky')->plainTextToken;
 
         return response()->json([
             'message' => 'Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản của bạn.',
-            'user' => [ // Trả về thông tin cơ bản của người dùng
+            'user' => [ 
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at, 
+            ],
+
+        ], 200);
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Email hoặc mật khẩu không đúng',
+            ], 401);
+        }
+
+        $token = $user->createToken('api_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Đăng nhập thành công',
+            'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'avatar' => $user->avatar ? asset('storage/avatars/' . $user->avatar) : null,
-                'email_verified_at' => $user->email_verified_at
+                'img_thumbnail' => $user->img_thumbnail ?? null
             ],
-            // 'token' => $token, // Nếu bạn tạo token ở trên
-        ], 201); // HTTP status 201 Created
+            'token' => $token,
+        ]);
     }
 
-   public function login(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required|string',
-    ]);
-
-    $user = User::where('email', $request->email)->first();
-
-    if (! $user || ! Hash::check($request->password, $user->password)) {
-        return response()->json([
-            'message' => 'Email hoặc mật khẩu không đúng',
-        ], 401);
-    }
-
-    // if (is_null($user->email_verified_at)) {
-    //     return response()->json([
-    //         'message' => 'Vui lòng xác nhận email trước khi đăng nhập.',
-    //     ], 403);
-    // }
-
-    $token = $user->createToken('api_token')->plainTextToken;
-
-    return response()->json([
-        'message' => 'Đăng nhập thành công',
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'avatar' => $user->avatar ? asset('storage/avatars/' . $user->avatar) : null,
-        ],
-        'token' => $token,
-    ]);
-}
-public function verifyEmail(Request $request)
-{
-    $user = User::where('email', $request->email)->first();
-
-    if (!$user) {
-        return response()->json(['message' => 'Người dùng không tồn tại.'], 404);
-    }
-
-    if ($user->email_verified_at) {
-        return response()->json(['message' => 'Email đã được xác thực.']);
-    }
-
-    $user->email_verified_at = now();
-    $user->save();
-
-    return response()->json(['message' => 'Email đã được xác thực thành công.']);
-}
+   
 
 
     public function logout(Request $request)

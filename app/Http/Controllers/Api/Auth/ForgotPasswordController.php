@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Jobs\SendResetPasswordEmail;
+
 
 class ForgotPasswordController extends Controller
 {
@@ -27,14 +29,9 @@ class ForgotPasswordController extends Controller
             ['email' => $request->email],
             ['token' => $token, 'created_at' => Carbon::now()]
         );
+        
+        SendResetPasswordEmail::dispatch($user, $token);
 
-        $resetUrl =  "http://localhost:5173/reset-password?token={$token}&email=" . urlencode($user->email);
-
-
-        Mail::raw("Đây là Thông Báo Từ Website nhấp vào link để đổi mật khẩu: $resetUrl", function ($message) use ($user) {
-            $message->to($user->email)
-                    ->subject('Khôi phục mật khẩu');
-        });
 
         return response()->json(['message' => 'Đã gửi email khôi phục mật khẩu.',
         'token' => $token

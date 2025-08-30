@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
+
 return [
 
     /*
@@ -16,7 +17,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'MGshop'),
 
     /*
     |--------------------------------------------------------------------------
@@ -55,7 +56,11 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL',),
+    //config fotn_url
+    'fotn_url' => env('FOTN_URL'),
+    'production_url' => env('FRONTEND_URL'),
+
 
     'asset_url' => env('ASSET_URL'),
 
@@ -70,7 +75,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // 'timezone' => 'UTC',
+    'timezone' => 'Asia/Ho_Chi_Minh',
+    'fotn_timezone' => 'Asia/Ho_Chi_Minh', // Thêm dòng này nếu cần thiết cho frontend
 
     /*
     |--------------------------------------------------------------------------
@@ -168,6 +175,10 @@ return [
         App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\FortifyServiceProvider::class,
+        
+        App\Providers\ViewServiceProvider::class,
+
     ])->toArray(),
 
     /*
