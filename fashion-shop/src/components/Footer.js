@@ -32,4 +32,5 @@ export default function Footer() {
       </Container>
     </footer>
   );
+  
 }

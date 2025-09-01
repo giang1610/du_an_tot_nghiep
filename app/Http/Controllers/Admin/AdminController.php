@@ -7,17 +7,17 @@ use Auth;
 
 class AdminController extends Controller
 {
-    public function index()
-    {
+    // public function index()
+    // {
       
    
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
+    //     if (!Auth::check()) {
+    //         return redirect()->route('login');
+    //     }
 
-        return Auth::user()->role == 1
-            ? redirect()->route('admin.dashboard')
-            : redirect()->route('orders.index');
-    }
+    //     return Auth::user()->role == 1
+    //         ? redirect()->route('admin.dashboard')
+    //         : redirect()->route('orders.index');
+    // }
     
 }

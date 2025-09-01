@@ -146,23 +146,39 @@ export default function VnpayReturn() {
                         className="me-5"
                       />
                       <div className="flex-grow-1">
-                        <div><strong>{product.name}</strong></div>
-                        <div className="text-muted">Màu: {color.name}</div>
-                        <div className="text-muted">Size: {size.name}</div>
-                        <div className="text-muted">Số lượng: {item.quantity}</div>
-                        <div className="mt-2">
-                          <span className="me-2">Giá: <strong>{Number(item.price).toLocaleString()} ₫</strong></span>
-                        </div>
-                        <div className="mt-1">
-                          <span className="me-2">Thuế (10%): <strong>{tax.toLocaleString()} ₫</strong></span>
-                        </div>
-                        <div className="mt-1">
-                          <span className="me-2">Phí ship: <strong>{shipping.toLocaleString()} ₫</strong></span>
-                        </div>
-                        <div className="mt-2 text-success">
-                          Tổng: <strong>{total.toLocaleString()} ₫</strong>
-                        </div>
-                      </div>
+                    <div className="d-flex justify-content-between">
+                      <strong>{product.name}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between text-muted">
+                      <span>Màu:</span>
+                      <span>{color.name}</span>
+                    </div>
+                    <div className="d-flex justify-content-between text-muted">
+                      <span>Size:</span>
+                      <span>{size.name}</span>
+                    </div>
+                    <div className="d-flex justify-content-between text-muted">
+                      <span>Số lượng:</span>
+                      <span>{item.quantity}</span>
+                    </div>
+                    <div className="d-flex justify-content-between mt-2">
+                      <span>Giá:</span>
+                      <strong>{Number(item.price).toLocaleString()} ₫</strong>
+                    </div>
+                    <div className="d-flex justify-content-between mt-1">
+                      <span>Thuế (10%):</span>
+                      <strong>{tax.toLocaleString()} ₫</strong>
+                    </div>
+                    <div className="d-flex justify-content-between mt-1">
+                      <span>Phí ship:</span>
+                      <strong>{shipping.toLocaleString()} ₫</strong>
+                    </div>
+                    <div className="d-flex justify-content-between mt-2 text-success">
+                      <span>Tổng:</span>
+                      <strong>{total.toLocaleString()} ₫</strong>
+                    </div>
+                  </div>
+
                     </Card.Body>
                   </Card>
                 );
