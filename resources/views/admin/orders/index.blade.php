@@ -381,6 +381,7 @@
                                             class="btn btn-sm btn-outline-success"
                                             id="order-actions-{{ $order->id }}"
                                             data-bs-toggle="tooltip"
+                                            id="order-actions-{{ $order->id }}"
                                             title="Yêu cầu hoàn hàng">
                                             <span class="d-none d-md-inline"></span>
                                             <i class="fas fa-edit"></i>

@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Mail\OrderPlaced;
-use Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +24,6 @@ use App\Events\ProductStockUpdated;
 use App\Events\NewOrderCreated;
 use App\Events\FailProduct;
 use App\Events\newOder;
-use App\Events\oderStatus;
 use App\Mail\OrderCanceledDueToTimeout;
 use App\Models\Voucher;
 use App\Models\VoucherUser;
@@ -251,7 +249,6 @@ class OrderController extends Controller
                 'payment_status' => ($order->payment_status === 'paid') ? 'refunded' : 'cancelled',
             ]);
             event(new FailProduct($order->order_number, $order->id));
-            broadcast( new oderStatus($order->order_number,$order->id, $order->status ));
 
 
             DB::commit();
@@ -585,7 +582,7 @@ class OrderController extends Controller
     /**
      * Xử lý thanh toán VNPay
      */
-   public function processVnpayPayment(Request $request)
+    public function processVnpayPayment(Request $request)
     {
         $user = Auth::user();
 
@@ -735,7 +732,6 @@ class OrderController extends Controller
                 'notes' => $request->notes,
             ]);
 
-
             // Tạo OrderItem dựa trên $cartItems (hoạt động cho stdClass hoặc Eloquent)
             $variantIdsForOrder = [];
             foreach ($cartItems as $ci) {
@@ -806,7 +802,7 @@ class OrderController extends Controller
 
 
             // Tạo mã đơn hàng duy nhất
-            $vnp_TxnRef = $order->id . '_' . time();
+            $vnp_TxnRef = $order->id;
             $vnp_OrderInfo = 'Thanh toan hoa don ' . $order->order_number;
             $vnp_OrderType = 'other';
             $vnp_Amount = $order->total * 100; // Nhân 100 theo yêu cầu VNPay
@@ -876,7 +872,7 @@ class OrderController extends Controller
     /**
      * Xử lý trả về từ VNPay
      */
-   public function vnpayIpn(Request $request)
+public function vnpayIpn(Request $request)
 {
     try {
         Log::info('VNPay IPN received', ['request' => $request->all()]);
@@ -1201,7 +1197,7 @@ public function verifyReturn(Request $request)
             return response()->json(['message' => 'Không thể xác nhận đơn hàng này'], 400);
         }
 
-        $order->status = 'completed';
+        $order->status = 'completed'; // Đã nhận hàng (coi là hoàn thành)
         $order->completed_at = now();
 
         // Nếu phương thức thanh toán là COD => khi nhận hàng => đã thanh toán
@@ -1242,8 +1238,6 @@ public function verifyReturn(Request $request)
         }
 
         $order->status = 'return_requested';
-        // realTime Hoàn Hàng
-        broadcast( new oderStatus($order->order_number,$order->id, $order->status ));
         $order->return_reason = $request->input('reason');
         $order->return_requested_at = now();
 
