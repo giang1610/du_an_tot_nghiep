@@ -66,7 +66,7 @@
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
-                body: JSON.stringify({ message: message })
+body: JSON.stringify({ message: message })
             })
             .then(response => {
                 if (!response.ok) throw new Error("Gửi thất bại");

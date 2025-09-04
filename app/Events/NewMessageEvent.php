@@ -48,4 +48,3 @@ class NewMessageEvent implements ShouldBroadcast
     }
 
 }
-

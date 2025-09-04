@@ -1,4 +1,3 @@
-
 <link rel="stylesheet" href="{{ asset('css/list.css') }}">
 <div class="card shadow-sm">
     <div class="card-header  d-flex justify-content-between"   >

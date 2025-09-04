@@ -440,10 +440,7 @@ export default function Checkout() {
                     <option value="">-- Không áp dụng --</option>
                     {availableProductVouchers.map(voucher => (
                       <option key={voucher.code} value={voucher.code}>
-                        {voucher.code} - {voucher.type === 'percent'
-                          ? `${voucher.value ?? 0}%`
-                          : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
-                        {voucher.name ? ` (${voucher.name})` : ''}
+                        {voucher.code} - {voucher.name ? ` (${voucher.name})` : ''}
                       </option>
                     ))}
                   </select>
@@ -519,10 +516,7 @@ export default function Checkout() {
                     <option value="">-- Không áp dụng --</option>
                     {availableShippingVouchers.map(voucher => (
                       <option key={voucher.code} value={voucher.code}>
-                        {voucher.code} - {voucher.type === 'percent'
-                          ? `${voucher.value ?? 0}%`
-                          : `${Number(voucher.discount_amount ?? 0).toLocaleString()} VNĐ`}
-                        {voucher.name ? ` (${voucher.name})` : ''}
+                        {voucher.code} - {voucher.name ? ` (${voucher.name})` : ''}
                       </option>
                     ))}
                   </select>
